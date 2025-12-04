@@ -54,3 +54,9 @@ typechain-types/
 .cache/
 tmp/
 temp/
+
+# Private keys
+*.key
+*.pem
+*.p12
+*.pfx
