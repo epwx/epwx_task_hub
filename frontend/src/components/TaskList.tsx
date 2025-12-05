@@ -1,144 +1,189 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import axios from 'axios';
-import Link from 'next/link';
-import { formatDistanceToNow } from 'date-fns';
+import { useReadContract, useAccount } from 'wagmi';
+import { formatUnits } from 'viem';
+
+const TASK_MANAGER_ADDRESS = process.env.NEXT_PUBLIC_TASK_MANAGER as `0x${string}`;
+
+const TASK_MANAGER_ABI = [
+  {
+    "inputs": [],
+    "name": "campaignCount",
+    "outputs": [{"name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{"name": "", "type": "uint256"}],
+    "name": "campaigns",
+    "outputs": [
+      {"name": "creator", "type": "address"},
+      {"name": "rewardPerTask", "type": "uint256"},
+      {"name": "maxCompletions", "type": "uint256"},
+      {"name": "completedCount", "type": "uint256"},
+      {"name": "endTime", "type": "uint256"},
+      {"name": "active", "type": "bool"}
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+] as const;
 
 interface Campaign {
-  id: string;
-  title: string;
-  taskType: string;
-  rewardPerTask: string;
-  maxCompletions: number;
-  completedCount: number;
-  deadline: string;
-  status: string;
+  id: number;
+  creator: string;
+  rewardPerTask: bigint;
+  maxCompletions: bigint;
+  completedCount: bigint;
+  endTime: bigint;
+  active: boolean;
 }
 
-interface TaskListProps {
-  limit?: number;
-}
+export function TaskList() {
+  const { address } = useAccount();
 
-export function TaskList({ limit }: TaskListProps) {
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Get total campaign count
+  const { data: campaignCount } = useReadContract({
+    address: TASK_MANAGER_ADDRESS,
+    abi: TASK_MANAGER_ABI,
+    functionName: 'campaignCount',
+  });
 
-  useEffect(() => {
-    fetchCampaigns();
-  }, []);
+  // Fetch campaigns (we'll fetch the last 10)
+  const campaigns: Campaign[] = [];
+  const count = Number(campaignCount || 0);
+  
+  // Create array of campaign IDs to fetch
+  const campaignIds = Array.from({ length: Math.min(count, 10) }, (_, i) => count - i);
 
-  const fetchCampaigns = async () => {
-    try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/campaigns`,
-        {
-          params: { status: 'active', limit: limit || 50 }
-        }
-      );
-      setCampaigns(response.data.data);
-      setLoading(false);
-    } catch (error) {
-      console.error('Failed to fetch campaigns:', error);
-      setLoading(false);
-    }
-  };
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-gray-900">Available Tasks</h2>
+        <span className="text-sm text-gray-600">
+          {count} Total Campaigns
+        </span>
+      </div>
 
-  const formatReward = (reward: string) => {
-    const amount = BigInt(reward);
-    const billions = Number(amount) / 1e9;
-    return `${billions.toFixed(1)}B`;
-  };
-
-  const getTaskIcon = (taskType: string) => {
-    switch (taskType) {
-      case 'like': return '❤️';
-      case 'repost': return '🔄';
-      case 'comment': return '💬';
-      case 'follow': return '👤';
-      default: return '✅';
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {[...Array(6)].map((_, i) => (
-          <div key={i} className="bg-white rounded-lg shadow-md p-6 animate-pulse">
-            <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+      {count === 0 ? (
+        <div className="bg-white rounded-lg shadow p-8 text-center">
+          <div className="text-gray-400 mb-4">
+            <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
           </div>
-        ))}
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">No Tasks Available</h3>
+          <p className="text-gray-600 mb-4">
+            Be the first to create a campaign!
+          </p>
+          <a
+            href="/advertise"
+            className="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Create Campaign
+          </a>
+        </div>
+      ) : (
+        <div className="grid gap-4">
+          {campaignIds.map((id) => (
+            <CampaignCard key={id} campaignId={id} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CampaignCard({ campaignId }: { campaignId: number }) {
+  const { data: campaign } = useReadContract({
+    address: TASK_MANAGER_ADDRESS,
+    abi: TASK_MANAGER_ABI,
+    functionName: 'campaigns',
+    args: [BigInt(campaignId)],
+  });
+
+  if (!campaign) {
+    return (
+      <div className="bg-white rounded-lg shadow p-6 animate-pulse">
+        <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+        <div className="h-4 bg-gray-200 rounded w-1/2"></div>
       </div>
     );
   }
 
-  if (campaigns.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-gray-500 text-lg">No active campaigns at the moment</p>
-      </div>
-    );
+  const [creator, rewardPerTask, maxCompletions, completedCount, endTime, active] = campaign;
+  const reward = formatUnits(rewardPerTask, 9); // EPWX has 9 decimals
+  const slotsLeft = Number(maxCompletions - completedCount);
+  const isExpired = Number(endTime) * 1000 < Date.now();
+
+  if (!active || isExpired) {
+    return null; // Don't show inactive or expired campaigns
   }
 
   return (
-    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {campaigns.map((campaign) => (
-        <div
-          key={campaign.id}
-          className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow p-6"
-        >
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">{getTaskIcon(campaign.taskType)}</span>
-              <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium capitalize">
-                {campaign.taskType}
-              </span>
-            </div>
-          </div>
-
-          <h3 className="text-xl font-semibold mb-2 text-gray-900">
-            {campaign.title}
+    <div className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6 border border-gray-200">
+      <div className="flex justify-between items-start mb-4">
+        <div>
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">
+            Campaign #{campaignId}
           </h3>
-
-          <div className="space-y-2 mb-4">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Reward:</span>
-              <span className="font-semibold text-green-600">
-                {formatReward(campaign.rewardPerTask)} EPWX
-              </span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Remaining:</span>
-              <span className="font-semibold">
-                {campaign.maxCompletions - campaign.completedCount} / {campaign.maxCompletions}
-              </span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Expires:</span>
-              <span className="font-semibold">
-                {formatDistanceToNow(new Date(campaign.deadline), { addSuffix: true })}
-              </span>
-            </div>
-          </div>
-
-          <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
-            <div
-              className="bg-blue-600 h-2 rounded-full"
-              style={{
-                width: `${(campaign.completedCount / campaign.maxCompletions) * 100}%`
-              }}
-            ></div>
-          </div>
-
-          <Link
-            href={`/tasks/${campaign.id}`}
-            className="block w-full text-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-          >
-            View Task
-          </Link>
+          <p className="text-sm text-gray-600">
+            Created by: {creator.slice(0, 6)}...{creator.slice(-4)}
+          </p>
         </div>
-      ))}
+        <span className="bg-green-100 text-green-800 text-xs font-medium px-3 py-1 rounded-full">
+          Active
+        </span>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="bg-blue-50 rounded-lg p-3">
+          <p className="text-sm text-gray-600 mb-1">Reward</p>
+          <p className="text-lg font-bold text-blue-600">
+            {Number(reward).toLocaleString()} EPWX
+          </p>
+        </div>
+        <div className="bg-purple-50 rounded-lg p-3">
+          <p className="text-sm text-gray-600 mb-1">Slots Left</p>
+          <p className="text-lg font-bold text-purple-600">
+            {slotsLeft} / {Number(maxCompletions)}
+          </p>
+        </div>
+      </div>
+
+      <div className="mb-4">
+        <p className="text-sm text-gray-600 mb-2">Progress</p>
+        <div className="w-full bg-gray-200 rounded-full h-2">
+          <div
+            className="bg-blue-600 h-2 rounded-full transition-all"
+            style={{
+              width: `${(Number(completedCount) / Number(maxCompletions)) * 100}%`
+            }}
+          ></div>
+        </div>
+      </div>
+
+      <div className="flex gap-3">
+        <button
+          onClick={() => alert('Task submission feature coming soon! Campaign ID: ' + campaignId)}
+          className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+        >
+          Complete Task
+        </button>
+        <button
+          onClick={() => window.open(`https://basescan.org/address/${TASK_MANAGER_ADDRESS}#readContract`, '_blank')}
+          className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+          title="View on BaseScan"
+        >
+          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+          </svg>
+        </button>
+      </div>
+
+      <p className="text-xs text-gray-500 mt-3">
+        Expires: {new Date(Number(endTime) * 1000).toLocaleDateString()}
+      </p>
     </div>
   );
 }

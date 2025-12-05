@@ -2,11 +2,8 @@
 
 import { Header } from "@/components/Header";
 import { TaskList } from "@/components/TaskList";
-import { useState } from "react";
 
 export default function TasksPage() {
-  const [taskType, setTaskType] = useState<string>('');
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
       <Header />
@@ -15,57 +12,60 @@ export default function TasksPage() {
         {/* Page Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            Available Tasks
+            Available Campaigns
           </h1>
           <p className="text-gray-600 text-lg">
-            Complete tasks and earn EPWX tokens instantly
+            Complete social tasks and earn EPWX tokens on Base network
           </p>
         </div>
 
-        {/* Filters */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <div className="flex flex-wrap gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Task Type
-              </label>
-              <select
-                value={taskType}
-                onChange={(e) => setTaskType(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="">All Types</option>
-                <option value="like">❤️ Like</option>
-                <option value="repost">🔄 Repost</option>
-                <option value="comment">💬 Comment</option>
-                <option value="follow">👤 Follow</option>
-              </select>
+        {/* Campaign Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Total Campaigns</p>
+                <p className="text-2xl font-bold text-gray-900">Live on Base</p>
+              </div>
+              <div className="bg-blue-100 rounded-full p-3">
+                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </div>
             </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Sort By
-              </label>
-              <select className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                <option value="newest">Newest First</option>
-                <option value="reward">Highest Reward</option>
-                <option value="expiring">Expiring Soon</option>
-              </select>
-            </div>
+          </div>
 
-            <div className="flex items-end">
-              <button
-                onClick={() => setTaskType('')}
-                className="px-4 py-2 text-blue-600 hover:text-blue-800 font-medium"
-              >
-                Clear Filters
-              </button>
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Total Rewards</p>
+                <p className="text-2xl font-bold text-gray-900">EPWX Tokens</p>
+              </div>
+              <div className="bg-green-100 rounded-full p-3">
+                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Network</p>
+                <p className="text-2xl font-bold text-gray-900">Base</p>
+              </div>
+              <div className="bg-purple-100 rounded-full p-3">
+                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Task List */}
-        <TaskList limit={50} />
+        <TaskList />
       </main>
 
       {/* Footer */}
