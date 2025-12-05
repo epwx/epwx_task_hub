@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: epwx-postgres
+    environment:
+      POSTGRES_DB: epwx_tasks
+      POSTGRES_USER: epwx_user
+      POSTGRES_PASSWORD: epwx_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - epwx-network
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    container_name: epwx-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - epwx-network
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: epwx-backend
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgresql://epwx_user:epwx_password@postgres:5432/epwx_tasks
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "4000:4000"
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - epwx-network
+    restart: unless-stopped
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: epwx-frontend
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: https://api.epowex.com
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - epwx-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  epwx-network:
+    driver: bridge
