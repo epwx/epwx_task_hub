@@ -3,6 +3,42 @@
 import { Header } from "@/components/Header";
 import { useAccount } from "wagmi";
 import { useState } from "react";
+import { useWriteContract, useReadContract } from "wagmi";
+import { parseUnits } from "viem";
+
+const TASK_MANAGER_ADDRESS = process.env.NEXT_PUBLIC_TASK_MANAGER as `0x${string}`;
+const EPWX_TOKEN_ADDRESS = process.env.NEXT_PUBLIC_EPWX_TOKEN as `0x${string}`;
+
+const ERC20_ABI = [
+  {
+    "inputs": [{"name": "spender", "type": "address"}, {"name": "amount", "type": "uint256"}],
+    "name": "approve",
+    "outputs": [{"name": "", "type": "bool"}],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{"name": "owner", "type": "address"}, {"name": "spender", "type": "address"}],
+    "name": "allowance",
+    "outputs": [{"name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  }
+] as const;
+
+const TASK_MANAGER_ABI = [
+  {
+    "inputs": [
+      {"name": "_rewardPerTask", "type": "uint256"},
+      {"name": "_maxCompletions", "type": "uint256"},
+      {"name": "_duration", "type": "uint256"}
+    ],
+    "name": "createCampaign",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+] as const;
 
 export default function AdvertisePage() {
   const { address, isConnected } = useAccount();
@@ -15,10 +51,101 @@ export default function AdvertisePage() {
     maxCompletions: '',
     durationInDays: '7'
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const { writeContract: approveToken } = useWriteContract();
+  const { writeContract: createCampaign } = useWriteContract();
+
+  const { data: allowance } = useReadContract({
+    address: EPWX_TOKEN_ADDRESS,
+    abi: ERC20_ABI,
+    functionName: 'allowance',
+    args: address ? [address, TASK_MANAGER_ADDRESS] : undefined,
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert('Smart contract deployed! Now implement the actual contract interaction.');
+    if (!address || !isConnected) return;
+
+    setIsSubmitting(true);
+
+    try {
+      const rewardPerTask = parseUnits(formData.rewardPerTask, 9); // EPWX has 9 decimals
+      const maxCompletions = BigInt(formData.maxCompletions);
+      const totalAmount = rewardPerTask * maxCompletions;
+
+      // Check if approval is needed
+      if (!allowance || allowance < totalAmount) {
+        alert('Step 1/2: Approve EPWX spending...');
+        
+        approveToken({
+          address: EPWX_TOKEN_ADDRESS,
+          abi: ERC20_ABI,
+          functionName: 'approve',
+          args: [TASK_MANAGER_ADDRESS, totalAmount],
+        }, {
+          onSuccess: () => {
+            alert('Approval successful! Now creating campaign...');
+            setTimeout(() => createCampaignOnChain(), 2000);
+          },
+          onError: (error) => {
+            alert('Approval failed: ' + error.message);
+            setIsSubmitting(false);
+          }
+        });
+      } else {
+        createCampaignOnChain();
+      }
+    } catch (error: any) {
+      alert('Error: ' + error.message);
+      setIsSubmitting(false);
+    }
+  };
+
+  const createCampaignOnChain = () => {
+    const rewardPerTask = parseUnits(formData.rewardPerTask, 9);
+    const maxCompletions = BigInt(formData.maxCompletions);
+    const duration = BigInt(formData.durationInDays) * BigInt(86400); // days to seconds
+
+    createCampaign({
+      address: TASK_MANAGER_ADDRESS,
+      abi: TASK_MANAGER_ABI,
+      functionName: 'createCampaign',
+      args: [rewardPerTask, maxCompletions, duration],
+    }, {
+      onSuccess: async (hash) => {
+        // Save campaign details to backend
+        try {
+          await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/campaigns`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              ...formData,
+              creator: address,
+              transactionHash: hash,
+            }),
+          });
+        } catch (err) {
+          console.error('Failed to save to backend:', err);
+        }
+
+        alert('Campaign created successfully! Transaction: ' + hash);
+        setFormData({
+          title: '',
+          description: '',
+          taskType: 'like',
+          targetUrl: '',
+          rewardPerTask: '',
+          maxCompletions: '',
+          durationInDays: '7'
+        });
+        setIsSubmitting(false);
+      },
+      onError: (error) => {
+        alert('Campaign creation failed: ' + error.message);
+        setIsSubmitting(false);
+      }
+    });
   };
 
   const calculateTotal = () => {
@@ -184,9 +311,10 @@ export default function AdvertisePage() {
             {/* Submit */}
             <button
               type="submit"
-              className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+              disabled={isSubmitting}
+              className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
-              Create Campaign
+              {isSubmitting ? 'Creating Campaign...' : 'Create Campaign'}
             </button>
 
             <p className="text-xs text-gray-500 mt-4 text-center">
