@@ -1,10 +1,10 @@
 'use client';
 
-import { useReadContract, useAccount } from 'wagmi';
+import { useEffect, useState } from 'react';
+import { useReadContract } from 'wagmi';
 import { formatUnits } from 'viem';
-import { useMemo } from 'react';
 
-const TASK_MANAGER_ADDRESS = process.env.NEXT_PUBLIC_TASK_MANAGER as `0x${string}`;
+const TASK_MANAGER_ADDRESS = (process.env.NEXT_PUBLIC_TASK_MANAGER || '') as `0x${string}`;
 
 const TASK_MANAGER_ABI = [
   {
@@ -31,35 +31,56 @@ const TASK_MANAGER_ABI = [
 ] as const;
 
 export function TaskList() {
-  const { address } = useAccount();
+  const [mounted, setMounted] = useState(false);
 
-  // Get total campaign count
-  const { data: campaignCount, isLoading } = useReadContract({
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return <LoadingSkeleton />;
+  }
+
+  return <TaskListContent />;
+}
+
+function LoadingSkeleton() {
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-gray-900">Available Tasks</h2>
+        <span className="text-sm text-gray-600">Loading...</span>
+      </div>
+      <div className="grid gap-4">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="bg-white rounded-lg shadow p-6 animate-pulse">
+            <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TaskListContent() {
+  const { data: campaignCount, isLoading, error } = useReadContract({
     address: TASK_MANAGER_ADDRESS,
     abi: TASK_MANAGER_ABI,
     functionName: 'campaignCount',
   });
 
-  const count = Number(campaignCount || 0);
-  const campaignIds = useMemo(() => {
-    return Array.from({ length: Math.min(count, 10) }, (_, i) => count - i);
-  }, [count]);
+  const count = campaignCount ? Number(campaignCount) : 0;
+  const campaignIds = count > 0 ? Array.from({ length: Math.min(count, 10) }, (_, i) => count - i) : [];
 
   if (isLoading) {
+    return <LoadingSkeleton />;
+  }
+
+  if (error) {
     return (
-      <div className="space-y-4">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Available Tasks</h2>
-          <span className="text-sm text-gray-600">Loading...</span>
-        </div>
-        <div className="grid gap-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-white rounded-lg shadow p-6 animate-pulse">
-              <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-            </div>
-          ))}
-        </div>
+      <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+        <p className="text-red-600">Error loading campaigns. Please check your wallet connection.</p>
       </div>
     );
   }
@@ -110,13 +131,17 @@ function CampaignCard({ campaignId }: { campaignId: number }) {
     args: [BigInt(campaignId)],
   });
 
-  if (isLoading || !campaign) {
+  if (isLoading) {
     return (
       <div className="bg-white rounded-lg shadow p-6 animate-pulse">
         <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
         <div className="h-4 bg-gray-200 rounded w-1/2"></div>
       </div>
     );
+  }
+
+  if (!campaign) {
+    return null;
   }
 
   const [creator, rewardPerTask, maxCompletions, completedCount, endTime, active] = campaign;
@@ -126,12 +151,12 @@ function CampaignCard({ campaignId }: { campaignId: number }) {
     return null;
   }
 
-  const reward = formatUnits(rewardPerTask, 9); // EPWX has 9 decimals
+  const reward = formatUnits(rewardPerTask, 9);
   const slotsLeft = Number(maxCompletions - completedCount);
   const isExpired = Number(endTime) * 1000 < Date.now();
 
   if (!active || isExpired) {
-    return null; // Don't show inactive or expired campaigns
+    return null;
   }
 
   return (
