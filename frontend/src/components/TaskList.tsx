@@ -2,6 +2,7 @@
 
 import { useReadContract, useAccount } from 'wagmi';
 import { formatUnits } from 'viem';
+import { useMemo } from 'react';
 
 const TASK_MANAGER_ADDRESS = process.env.NEXT_PUBLIC_TASK_MANAGER as `0x${string}`;
 
@@ -29,39 +30,46 @@ const TASK_MANAGER_ABI = [
   }
 ] as const;
 
-interface Campaign {
-  id: number;
-  creator: string;
-  rewardPerTask: bigint;
-  maxCompletions: bigint;
-  completedCount: bigint;
-  endTime: bigint;
-  active: boolean;
-}
-
 export function TaskList() {
   const { address } = useAccount();
 
   // Get total campaign count
-  const { data: campaignCount } = useReadContract({
+  const { data: campaignCount, isLoading } = useReadContract({
     address: TASK_MANAGER_ADDRESS,
     abi: TASK_MANAGER_ABI,
     functionName: 'campaignCount',
   });
 
-  // Fetch campaigns (we'll fetch the last 10)
-  const campaigns: Campaign[] = [];
   const count = Number(campaignCount || 0);
-  
-  // Create array of campaign IDs to fetch
-  const campaignIds = Array.from({ length: Math.min(count, 10) }, (_, i) => count - i);
+  const campaignIds = useMemo(() => {
+    return Array.from({ length: Math.min(count, 10) }, (_, i) => count - i);
+  }, [count]);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-gray-900">Available Tasks</h2>
+          <span className="text-sm text-gray-600">Loading...</span>
+        </div>
+        <div className="grid gap-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-white rounded-lg shadow p-6 animate-pulse">
+              <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Available Tasks</h2>
         <span className="text-sm text-gray-600">
-          {count} Total Campaigns
+          {count} Total Campaign{count !== 1 ? 's' : ''}
         </span>
       </div>
 
@@ -95,14 +103,14 @@ export function TaskList() {
 }
 
 function CampaignCard({ campaignId }: { campaignId: number }) {
-  const { data: campaign } = useReadContract({
+  const { data: campaign, isLoading } = useReadContract({
     address: TASK_MANAGER_ADDRESS,
     abi: TASK_MANAGER_ABI,
     functionName: 'campaigns',
     args: [BigInt(campaignId)],
   });
 
-  if (!campaign) {
+  if (isLoading || !campaign) {
     return (
       <div className="bg-white rounded-lg shadow p-6 animate-pulse">
         <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
@@ -112,6 +120,12 @@ function CampaignCard({ campaignId }: { campaignId: number }) {
   }
 
   const [creator, rewardPerTask, maxCompletions, completedCount, endTime, active] = campaign;
+  
+  // Validate data
+  if (!creator || creator === '0x0000000000000000000000000000000000000000') {
+    return null;
+  }
+
   const reward = formatUnits(rewardPerTask, 9); // EPWX has 9 decimals
   const slotsLeft = Number(maxCompletions - completedCount);
   const isExpired = Number(endTime) * 1000 < Date.now();
