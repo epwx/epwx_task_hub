@@ -12,8 +12,8 @@ const config = createConfig(
     transports: {
       [base.id]: http(process.env.NEXT_PUBLIC_RPC_URL || 'https://mainnet.base.org'),
     },
-    // Disable WalletConnect to avoid connection errors
-    walletConnectProjectId: undefined as any,
+    // Use a placeholder WalletConnect project ID if not set
+    walletConnectProjectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'a01e2f3b4c5d6e7f8g9h0i1j2k3l4m5n',
     appName: 'EPWX Task Platform',
     appDescription: 'Earn EPWX by completing social media tasks',
     appUrl: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
