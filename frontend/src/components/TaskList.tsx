@@ -173,13 +173,13 @@ function CampaignCard({ campaignId }: { campaignId: number }) {
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
               {taskType === 'like' && (
-                <span className="text-2xl">❤️</span>
+                <span className="text-lg">❤️</span>
               )}
               {taskType === 'follow' && (
-                <span className="text-2xl">👥</span>
+                <span className="text-lg">👥</span>
               )}
               {taskType === 'share' && (
-                <span className="text-2xl">🔗</span>
+                <span className="text-lg">🔗</span>
               )}
               <h3 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 {taskType.charAt(0).toUpperCase() + taskType.slice(1)} Campaign #{campaignId}
@@ -196,7 +196,7 @@ function CampaignCard({ campaignId }: { campaignId: number }) {
 
         <div className="grid grid-cols-2 gap-3 mb-5">
           <div className="relative bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200 hover:shadow-md transition-shadow">
-            <div className="absolute top-2 right-2 text-2xl opacity-20">💰</div>
+            <div className="absolute top-2 right-2 text-lg opacity-20">💰</div>
             <p className="text-xs font-semibold text-blue-600 mb-1 uppercase tracking-wide">Reward</p>
             <p className="text-xl font-black text-blue-700">
               {Number(reward).toLocaleString()}
@@ -204,7 +204,7 @@ function CampaignCard({ campaignId }: { campaignId: number }) {
             <p className="text-xs text-blue-600 font-medium">EPWX</p>
           </div>
           <div className="relative bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border border-purple-200 hover:shadow-md transition-shadow">
-            <div className="absolute top-2 right-2 text-2xl opacity-20">🎯</div>
+            <div className="absolute top-2 right-2 text-lg opacity-20">🎯</div>
             <p className="text-xs font-semibold text-purple-600 mb-1 uppercase tracking-wide">Slots Available</p>
             <p className="text-xl font-black text-purple-700">
               {slotsLeft}

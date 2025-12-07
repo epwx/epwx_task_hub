@@ -89,8 +89,8 @@ export function EPWXStats() {
       {/* Content */}
       <div className="relative z-10">
         <div className="flex items-center gap-3 mb-8">
-          <div className="p-3 bg-white/20 backdrop-blur rounded-2xl">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="p-2 bg-white/20 backdrop-blur rounded-xl">
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
             </svg>
           </div>
@@ -100,7 +100,7 @@ export function EPWXStats() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Price Card */}
           <div className="group relative bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6 hover:bg-white/15 transition-all duration-300 hover:scale-105 hover:shadow-2xl">
-            <div className="absolute top-3 right-3 text-3xl opacity-30">💰</div>
+            <div className="absolute top-3 right-3 text-xl opacity-20">💰</div>
             <p className="text-white/70 text-sm font-semibold mb-2 uppercase tracking-wider">Current Price</p>
             <p className="text-3xl font-black text-white mb-1 break-all">{formatPrice(priceData.priceUSD)}</p>
             <div className="mt-2 flex items-center gap-1 text-xs text-emerald-300 font-medium">
@@ -113,7 +113,7 @@ export function EPWXStats() {
 
           {/* Market Cap Card */}
           <div className="group relative bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6 hover:bg-white/15 transition-all duration-300 hover:scale-105 hover:shadow-2xl">
-            <div className="absolute top-3 right-3 text-3xl opacity-30">📊</div>
+            <div className="absolute top-3 right-3 text-xl opacity-20">📊</div>
             <p className="text-white/70 text-sm font-semibold mb-2 uppercase tracking-wider">Market Cap</p>
             <p className="text-3xl font-black text-white mb-1">
               ${(priceData.marketCap).toLocaleString(undefined, { maximumFractionDigits: 0 })}
@@ -123,7 +123,7 @@ export function EPWXStats() {
 
           {/* Liquidity Card */}
           <div className="group relative bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6 hover:bg-white/15 transition-all duration-300 hover:scale-105 hover:shadow-2xl">
-            <div className="absolute top-3 right-3 text-3xl opacity-30">💧</div>
+            <div className="absolute top-3 right-3 text-xl opacity-20">💧</div>
             <p className="text-white/70 text-sm font-semibold mb-2 uppercase tracking-wider">DEX Liquidity</p>
             <p className="text-3xl font-black text-white mb-1">
               ${priceData.liquidityUSD.toLocaleString(undefined, { maximumFractionDigits: 0 })}
@@ -133,7 +133,7 @@ export function EPWXStats() {
 
           {/* DEX Info Card */}
           <div className="group relative bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6 hover:bg-white/15 transition-all duration-300 hover:scale-105 hover:shadow-2xl">
-            <div className="absolute top-3 right-3 text-3xl opacity-30">🥞</div>
+            <div className="absolute top-3 right-3 text-xl opacity-20">🥞</div>
             <p className="text-white/70 text-sm font-semibold mb-2 uppercase tracking-wider">Trading On</p>
             <p className="text-2xl font-black text-white mb-1">PancakeSwap</p>
             <div className="mt-2 flex flex-col gap-1">
