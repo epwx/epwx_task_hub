@@ -34,11 +34,16 @@ export function EPWXStats() {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="animate-pulse flex space-x-4">
-          <div className="flex-1 space-y-4">
-            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-            <div className="h-4 bg-gray-200 rounded"></div>
+      <div className="bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-3xl shadow-2xl p-8">
+        <div className="animate-pulse">
+          <div className="h-8 bg-white/20 rounded-lg w-1/3 mb-6"></div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="bg-white/10 backdrop-blur rounded-2xl p-6 space-y-3">
+                <div className="h-4 bg-white/20 rounded w-2/3"></div>
+                <div className="h-8 bg-white/30 rounded w-full"></div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -76,25 +81,79 @@ export function EPWXStats() {
   };
 
   return (
-    <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-lg shadow-lg p-6 text-white">
-      <h3 className="text-xl font-semibold mb-4">EPWX Token Stats</h3>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-        <div>
-          <p className="text-blue-200 text-sm mb-1">Price</p>
-          <p className="text-2xl font-bold">{formatPrice(priceData.priceUSD)}</p>
+    <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-3xl shadow-2xl p-8">
+      {/* Animated background elements */}
+      <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
+      <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+      
+      {/* Content */}
+      <div className="relative z-10">
+        <div className="flex items-center gap-3 mb-8">
+          <div className="p-3 bg-white/20 backdrop-blur rounded-2xl">
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+            </svg>
+          </div>
+          <h3 className="text-3xl font-black text-white">EPWX Token Stats</h3>
         </div>
-        <div>
-          <p className="text-blue-200 text-sm mb-1">Market Cap</p>
-          <p className="text-2xl font-bold">${(priceData.marketCap).toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Price Card */}
+          <div className="group relative bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6 hover:bg-white/15 transition-all duration-300 hover:scale-105 hover:shadow-2xl">
+            <div className="absolute top-3 right-3 text-3xl opacity-30">💰</div>
+            <p className="text-white/70 text-sm font-semibold mb-2 uppercase tracking-wider">Current Price</p>
+            <p className="text-3xl font-black text-white mb-1 break-all">{formatPrice(priceData.priceUSD)}</p>
+            <div className="mt-2 flex items-center gap-1 text-xs text-emerald-300 font-medium">
+              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clipRule="evenodd" />
+              </svg>
+              <span>Live</span>
+            </div>
+          </div>
+
+          {/* Market Cap Card */}
+          <div className="group relative bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6 hover:bg-white/15 transition-all duration-300 hover:scale-105 hover:shadow-2xl">
+            <div className="absolute top-3 right-3 text-3xl opacity-30">📊</div>
+            <p className="text-white/70 text-sm font-semibold mb-2 uppercase tracking-wider">Market Cap</p>
+            <p className="text-3xl font-black text-white mb-1">
+              ${(priceData.marketCap).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+            </p>
+            <p className="text-xs text-white/60 font-medium mt-2">Total Value</p>
+          </div>
+
+          {/* Liquidity Card */}
+          <div className="group relative bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6 hover:bg-white/15 transition-all duration-300 hover:scale-105 hover:shadow-2xl">
+            <div className="absolute top-3 right-3 text-3xl opacity-30">💧</div>
+            <p className="text-white/70 text-sm font-semibold mb-2 uppercase tracking-wider">DEX Liquidity</p>
+            <p className="text-3xl font-black text-white mb-1">
+              ${priceData.liquidityUSD.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+            </p>
+            <p className="text-xs text-white/60 font-medium mt-2">Pool Depth</p>
+          </div>
+
+          {/* DEX Info Card */}
+          <div className="group relative bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6 hover:bg-white/15 transition-all duration-300 hover:scale-105 hover:shadow-2xl">
+            <div className="absolute top-3 right-3 text-3xl opacity-30">🥞</div>
+            <p className="text-white/70 text-sm font-semibold mb-2 uppercase tracking-wider">Trading On</p>
+            <p className="text-2xl font-black text-white mb-1">PancakeSwap</p>
+            <div className="mt-2 flex flex-col gap-1">
+              <p className="text-xs text-white/80 font-semibold">Base Network</p>
+              <a 
+                href={`https://pancakeswap.finance/swap?chain=base&outputCurrency=${process.env.NEXT_PUBLIC_EPWX_TOKEN}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-emerald-300 hover:text-emerald-200 font-bold flex items-center gap-1 group-hover:underline"
+              >
+                Trade Now →
+              </a>
+            </div>
+          </div>
         </div>
-        <div>
-          <p className="text-blue-200 text-sm mb-1">Liquidity</p>
-          <p className="text-2xl font-bold">${priceData.liquidityUSD.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
-        </div>
-        <div>
-          <p className="text-blue-200 text-sm mb-1">DEX</p>
-          <p className="text-lg font-semibold">PancakeSwap V2</p>
-          <p className="text-xs text-blue-200">Base Network</p>
+
+        {/* Last updated indicator */}
+        <div className="mt-6 flex items-center justify-center gap-2 text-white/60 text-xs">
+          <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+          <span className="font-medium">Updates every 30 seconds</span>
         </div>
       </div>
     </div>

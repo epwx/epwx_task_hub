@@ -3,30 +3,56 @@
 import Link from 'next/link';
 import { ConnectKitButton } from 'connectkit';
 import { useAccount } from 'wagmi';
+import { useState } from 'react';
 
 export function Header() {
   const { address, isConnected } = useAccount();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <header className="bg-white shadow-sm border-b">
+    <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl shadow-lg border-b border-gray-100">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <span className="text-2xl font-bold text-blue-600">EPWX</span>
-            <span className="text-xl text-gray-700">Tasks</span>
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg blur-md opacity-50 group-hover:opacity-75 transition-opacity"></div>
+              <div className="relative bg-gradient-to-r from-blue-600 to-purple-600 text-white px-3 py-2 rounded-lg font-black text-xl shadow-lg">
+                EP
+              </div>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xl font-black bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                EPWX Tasks
+              </span>
+              <span className="text-xs text-gray-500 font-medium -mt-1">Powered by Base</span>
+            </div>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-6">
-            <Link href="/tasks" className="text-gray-700 hover:text-blue-600 transition">
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center gap-8">
+            <Link 
+              href="/tasks" 
+              className="relative text-gray-700 hover:text-blue-600 font-medium transition-colors group"
+            >
               Browse Tasks
+              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
             </Link>
             {isConnected && (
               <>
-                <Link href="/dashboard" className="text-gray-700 hover:text-blue-600 transition">
+                <Link 
+                  href="/dashboard" 
+                  className="relative text-gray-700 hover:text-blue-600 font-medium transition-colors group"
+                >
                   Dashboard
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
                 </Link>
-                <Link href="/advertise" className="text-gray-700 hover:text-blue-600 transition">
+                <Link 
+                  href="/advertise" 
+                  className="relative text-gray-700 hover:text-blue-600 font-medium transition-colors group"
+                >
                   Create Campaign
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
                 </Link>
               </>
             )}
@@ -34,24 +60,100 @@ export function Header() {
               href="https://epowex.com" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="text-gray-700 hover:text-blue-600 transition"
+              className="relative text-gray-700 hover:text-blue-600 font-medium transition-colors group"
             >
               Main Site
+              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
             </a>
           </nav>
 
-          <div className="flex items-center gap-4">
+          {/* Action Buttons */}
+          <div className="hidden md:flex items-center gap-4">
             <a
               href={`https://pancakeswap.finance/swap?chain=base&outputCurrency=${process.env.NEXT_PUBLIC_EPWX_TOKEN}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden md:block px-4 py-2 text-sm bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition"
+              className="px-5 py-2.5 text-sm font-bold bg-gradient-to-r from-blue-50 to-purple-50 text-blue-600 rounded-xl hover:from-blue-100 hover:to-purple-100 transition-all shadow-md hover:shadow-lg hover:scale-105 border border-blue-200"
             >
-              Buy EPWX
+              💰 Buy EPWX
             </a>
-            <ConnectKitButton />
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl blur opacity-50"></div>
+              <div className="relative">
+                <ConnectKitButton />
+              </div>
+            </div>
           </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? (
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            )}
+          </button>
         </div>
+
+        {/* Mobile Menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden mt-4 py-4 border-t border-gray-200 animate-fadeIn">
+            <nav className="flex flex-col gap-4">
+              <Link 
+                href="/tasks" 
+                className="text-gray-700 hover:text-blue-600 font-medium transition-colors py-2"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Browse Tasks
+              </Link>
+              {isConnected && (
+                <>
+                  <Link 
+                    href="/dashboard" 
+                    className="text-gray-700 hover:text-blue-600 font-medium transition-colors py-2"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Dashboard
+                  </Link>
+                  <Link 
+                    href="/advertise" 
+                    className="text-gray-700 hover:text-blue-600 font-medium transition-colors py-2"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Create Campaign
+                  </Link>
+                </>
+              )}
+              <a 
+                href="https://epowex.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-gray-700 hover:text-blue-600 font-medium transition-colors py-2"
+              >
+                Main Site
+              </a>
+              <a
+                href={`https://pancakeswap.finance/swap?chain=base&outputCurrency=${process.env.NEXT_PUBLIC_EPWX_TOKEN}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-5 py-2.5 text-sm font-bold bg-gradient-to-r from-blue-50 to-purple-50 text-blue-600 rounded-xl hover:from-blue-100 hover:to-purple-100 transition-all shadow-md text-center"
+              >
+                💰 Buy EPWX
+              </a>
+              <div className="pt-2">
+                <ConnectKitButton />
+              </div>
+            </nav>
+          </div>
+        )}
       </div>
     </header>
   );
