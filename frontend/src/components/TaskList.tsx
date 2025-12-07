@@ -74,7 +74,7 @@ function TaskListContent() {
   });
 
   const count = campaignCount ? Number(campaignCount) : 0;
-  const campaignIds = count > 0 ? Array.from({ length: Math.min(count, 10) }, (_, i) => i + 1) : [];
+  const campaignIds = count > 0 ? Array.from({ length: Math.min(count, 10) }, (_, i) => i) : [];
 
   if (isLoading) {
     return <LoadingSkeleton />;
