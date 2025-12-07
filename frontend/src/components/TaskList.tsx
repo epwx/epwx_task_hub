@@ -9,7 +9,7 @@ const TASK_MANAGER_ADDRESS = (process.env.NEXT_PUBLIC_TASK_MANAGER || '') as `0x
 const TASK_MANAGER_ABI = [
   {
     "inputs": [],
-    "name": "campaignCount",
+    "name": "campaignIdCounter",
     "outputs": [{"name": "", "type": "uint256"}],
     "stateMutability": "view",
     "type": "function"
@@ -18,11 +18,14 @@ const TASK_MANAGER_ABI = [
     "inputs": [{"name": "", "type": "uint256"}],
     "name": "campaigns",
     "outputs": [
-      {"name": "creator", "type": "address"},
+      {"name": "advertiser", "type": "address"},
+      {"name": "taskType", "type": "string"},
+      {"name": "targetUrl", "type": "string"},
       {"name": "rewardPerTask", "type": "uint256"},
       {"name": "maxCompletions", "type": "uint256"},
       {"name": "completedCount", "type": "uint256"},
-      {"name": "endTime", "type": "uint256"},
+      {"name": "escrowedAmount", "type": "uint256"},
+      {"name": "deadline", "type": "uint256"},
       {"name": "active", "type": "bool"}
     ],
     "stateMutability": "view",
@@ -67,11 +70,11 @@ function TaskListContent() {
   const { data: campaignCount, isLoading, error } = useReadContract({
     address: TASK_MANAGER_ADDRESS,
     abi: TASK_MANAGER_ABI,
-    functionName: 'campaignCount',
+    functionName: 'campaignIdCounter',
   });
 
   const count = campaignCount ? Number(campaignCount) : 0;
-  const campaignIds = count > 0 ? Array.from({ length: Math.min(count, 10) }, (_, i) => count - i) : [];
+  const campaignIds = count > 0 ? Array.from({ length: Math.min(count, 10) }, (_, i) => i + 1) : [];
 
   if (isLoading) {
     return <LoadingSkeleton />;
@@ -144,16 +147,16 @@ function CampaignCard({ campaignId }: { campaignId: number }) {
     return null;
   }
 
-  const [creator, rewardPerTask, maxCompletions, completedCount, endTime, active] = campaign;
+  const [advertiser, taskType, targetUrl, rewardPerTask, maxCompletions, completedCount, escrowedAmount, deadline, active] = campaign;
   
   // Validate data
-  if (!creator || creator === '0x0000000000000000000000000000000000000000') {
+  if (!advertiser || advertiser === '0x0000000000000000000000000000000000000000') {
     return null;
   }
 
   const reward = formatUnits(rewardPerTask, 9);
   const slotsLeft = Number(maxCompletions - completedCount);
-  const isExpired = Number(endTime) * 1000 < Date.now();
+  const isExpired = Number(deadline) * 1000 < Date.now();
 
   if (!active || isExpired) {
     return null;
@@ -164,10 +167,10 @@ function CampaignCard({ campaignId }: { campaignId: number }) {
       <div className="flex justify-between items-start mb-4">
         <div>
           <h3 className="text-xl font-semibold text-gray-900 mb-2">
-            Campaign #{campaignId}
+            {taskType.charAt(0).toUpperCase() + taskType.slice(1)} Campaign #{campaignId}
           </h3>
           <p className="text-sm text-gray-600">
-            Created by: {creator.slice(0, 6)}...{creator.slice(-4)}
+            Created by: {advertiser.slice(0, 6)}...{advertiser.slice(-4)}
           </p>
         </div>
         <span className="bg-green-100 text-green-800 text-xs font-medium px-3 py-1 rounded-full">
@@ -221,7 +224,7 @@ function CampaignCard({ campaignId }: { campaignId: number }) {
       </div>
 
       <p className="text-xs text-gray-500 mt-3">
-        Expires: {new Date(Number(endTime) * 1000).toLocaleDateString()}
+        Expires: {new Date(Number(deadline) * 1000).toLocaleDateString()}
       </p>
     </div>
   );
