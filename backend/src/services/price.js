@@ -40,8 +40,8 @@ async function getEPWXPrice() {
     const epwxReserve = isEPWXToken0 ? reserve0 : reserve1;
     const wethReserve = isEPWXToken0 ? reserve1 : reserve0;
     
-    // Format reserves with correct decimals (EPWX has 6 decimals, WETH has 18)
-    const epwxReserveFormatted = Number(ethers.formatUnits(epwxReserve, 6));
+    // Format reserves with correct decimals (EPWX has 9 decimals, WETH has 18)
+    const epwxReserveFormatted = Number(ethers.formatUnits(epwxReserve, 9));
     const wethReserveFormatted = Number(ethers.formatEther(wethReserve));
     
     // Calculate EPWX price in WETH
