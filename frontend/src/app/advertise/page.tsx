@@ -29,12 +29,14 @@ const ERC20_ABI = [
 const TASK_MANAGER_ABI = [
   {
     "inputs": [
+      {"name": "_taskType", "type": "string"},
+      {"name": "_targetUrl", "type": "string"},
       {"name": "_rewardPerTask", "type": "uint256"},
       {"name": "_maxCompletions", "type": "uint256"},
       {"name": "_duration", "type": "uint256"}
     ],
     "name": "createCampaign",
-    "outputs": [],
+    "outputs": [{"name": "", "type": "uint256"}],
     "stateMutability": "nonpayable",
     "type": "function"
   }
@@ -111,7 +113,7 @@ export default function AdvertisePage() {
       address: TASK_MANAGER_ADDRESS,
       abi: TASK_MANAGER_ABI,
       functionName: 'createCampaign',
-      args: [rewardPerTask, maxCompletions, duration],
+      args: [formData.taskType, formData.targetUrl, rewardPerTask, maxCompletions, duration],
     }, {
       onSuccess: async (hash) => {
         // Save campaign details to backend
