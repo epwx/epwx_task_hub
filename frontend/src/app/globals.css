@@ -174,3 +174,26 @@ html {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+/* Image size constraints */
+img {
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+/* Prevent external content from breaking layout */
+iframe,
+embed,
+object {
+  max-width: 100%;
+}
+
+/* Specific constraints for embedded social media content */
+.twitter-tweet,
+.instagram-media,
+.fb-post {
+  max-width: 550px !important;
+  margin: 0 auto;
+}
+
