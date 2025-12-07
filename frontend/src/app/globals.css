@@ -201,6 +201,13 @@ svg:not([class*="w-"]):not([class*="h-"]) {
 }
 
 /* Override any inline width/height on SVGs with classes */
+svg[class*="w-3"] {
+  width: 0.75rem !important;
+  height: 0.75rem !important;
+  max-width: 0.75rem !important;
+  max-height: 0.75rem !important;
+}
+
 svg[class*="w-4"] {
   width: 1rem !important;
   height: 1rem !important;
