@@ -177,23 +177,54 @@ html {
 
 /* Image size constraints */
 img {
-  max-width: 100%;
-  height: auto;
-  object-fit: contain;
+  max-width: 100% !important;
+  max-height: 400px !important;
+  height: auto !important;
+  object-fit: contain !important;
+}
+
+/* SVG size constraints - prevent massive icons */
+svg {
+  max-width: 100% !important;
+  max-height: 100% !important;
+}
+
+svg:not([class*="w-"]):not([class*="h-"]) {
+  width: 24px !important;
+  height: 24px !important;
 }
 
 /* Prevent external content from breaking layout */
 iframe,
 embed,
-object {
-  max-width: 100%;
+object,
+video {
+  max-width: 100% !important;
+  max-height: 600px !important;
 }
 
 /* Specific constraints for embedded social media content */
 .twitter-tweet,
 .instagram-media,
-.fb-post {
+.fb-post,
+[data-twitter-embed],
+[data-instagram-embed] {
   max-width: 550px !important;
-  margin: 0 auto;
+  margin: 0 auto !important;
+}
+
+/* Open Graph / Social Media Preview Images */
+meta[property="og:image"],
+link[rel="image_src"] {
+  max-width: 100% !important;
+  max-height: 400px !important;
+}
+
+/* External link preview cards */
+a img,
+a svg:not([class*="w-"]) {
+  max-width: 100% !important;
+  max-height: 48px !important;
+  object-fit: contain !important;
 }
 
