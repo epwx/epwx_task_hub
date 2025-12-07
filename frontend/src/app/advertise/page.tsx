@@ -107,13 +107,13 @@ export default function AdvertisePage() {
   const createCampaignOnChain = () => {
     const rewardPerTask = parseUnits(formData.rewardPerTask, 9);
     const maxCompletions = BigInt(formData.maxCompletions);
-    const duration = BigInt(formData.durationInDays) * BigInt(86400); // days to seconds
+    const durationInDays = BigInt(formData.durationInDays); // Contract expects days, not seconds
 
     createCampaign({
       address: TASK_MANAGER_ADDRESS,
       abi: TASK_MANAGER_ABI,
       functionName: 'createCampaign',
-      args: [formData.taskType, formData.targetUrl, rewardPerTask, maxCompletions, duration],
+      args: [formData.taskType, formData.targetUrl, rewardPerTask, maxCompletions, durationInDays],
     }, {
       onSuccess: async (hash) => {
         // Save campaign details to backend
