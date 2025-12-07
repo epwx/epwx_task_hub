@@ -47,19 +47,29 @@ export function EPWXStats() {
 
   if (!priceData) return null;
 
-  // Format price to show exact value with all significant digits
+  // Format price to show exact value with subscript notation for leading zeros
   const formatPrice = (price: number) => {
     if (price === 0) return '$0';
     
-    // For very small numbers, show with proper decimal places
+    // For very small numbers, show with subscript notation
     if (price < 0.000001) {
-      // Count leading zeros after decimal point
-      const priceStr = price.toFixed(20); // Use 20 decimals for precision
+      // Convert to string with enough precision
+      const priceStr = price.toFixed(20);
       const match = priceStr.match(/^0\.(0*)([1-9]\d*)/);
       if (match) {
         const leadingZeros = match[1].length;
         const significantDigits = match[2].slice(0, 4); // Show 4 significant digits
-        return `$0.0${leadingZeros > 1 ? '₀' + leadingZeros : ''}${significantDigits}`;
+        
+        if (leadingZeros > 0) {
+          // Use subscript Unicode characters for the number
+          const subscriptMap: { [key: string]: string } = {
+            '0': '₀', '1': '₁', '2': '₂', '3': '₃', '4': '₄',
+            '5': '₅', '6': '₆', '7': '₇', '8': '₈', '9': '₉'
+          };
+          const subscriptCount = leadingZeros.toString().split('').map(d => subscriptMap[d]).join('');
+          return `$0.0${subscriptCount}${significantDigits}`;
+        }
+        return `$0.${significantDigits}`;
       }
     }
     return `$${price.toFixed(12)}`;
