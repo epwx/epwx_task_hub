@@ -47,13 +47,31 @@ export function EPWXStats() {
 
   if (!priceData) return null;
 
+  // Format price to show exact value with all significant digits
+  const formatPrice = (price: number) => {
+    if (price === 0) return '$0';
+    
+    // For very small numbers, show with proper decimal places
+    if (price < 0.000001) {
+      // Count leading zeros after decimal point
+      const priceStr = price.toFixed(20); // Use 20 decimals for precision
+      const match = priceStr.match(/^0\.(0*)([1-9]\d*)/);
+      if (match) {
+        const leadingZeros = match[1].length;
+        const significantDigits = match[2].slice(0, 4); // Show 4 significant digits
+        return `$0.0${leadingZeros > 1 ? '₀' + leadingZeros : ''}${significantDigits}`;
+      }
+    }
+    return `$${price.toFixed(12)}`;
+  };
+
   return (
     <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-lg shadow-lg p-6 text-white">
       <h3 className="text-xl font-semibold mb-4">EPWX Token Stats</h3>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
         <div>
           <p className="text-blue-200 text-sm mb-1">Price</p>
-          <p className="text-2xl font-bold">${priceData.priceUSD.toFixed(12)}</p>
+          <p className="text-2xl font-bold">{formatPrice(priceData.priceUSD)}</p>
         </div>
         <div>
           <p className="text-blue-200 text-sm mb-1">Market Cap</p>
