@@ -40,8 +40,12 @@ async function getEPWXPrice() {
     const epwxReserve = isEPWXToken0 ? reserve0 : reserve1;
     const wethReserve = isEPWXToken0 ? reserve1 : reserve0;
     
+    // Format reserves with correct decimals (EPWX has 6 decimals, WETH has 18)
+    const epwxReserveFormatted = Number(ethers.formatUnits(epwxReserve, 6));
+    const wethReserveFormatted = Number(ethers.formatEther(wethReserve));
+    
     // Calculate EPWX price in WETH
-    const epwxPriceInWETH = Number(wethReserve) / Number(epwxReserve);
+    const epwxPriceInWETH = wethReserveFormatted / epwxReserveFormatted;
     
     // Get ETH price in USD
     const ethPriceUSD = await getETHPriceUSD();
@@ -50,14 +54,13 @@ async function getEPWXPrice() {
     const epwxPriceUSD = epwxPriceInWETH * ethPriceUSD;
     
     // Calculate liquidity
-    const wethReserveFormatted = Number(ethers.formatEther(wethReserve));
     const liquidityUSD = wethReserveFormatted * ethPriceUSD * 2;
     
     return {
       priceUSD: epwxPriceUSD,
       priceWETH: epwxPriceInWETH,
       priceETH: epwxPriceInWETH, // Same as WETH
-      epwxReserve: Number(ethers.formatEther(epwxReserve)),
+      epwxReserve: epwxReserveFormatted,
       wethReserve: wethReserveFormatted,
       liquidityUSD: liquidityUSD,
       marketCap: epwxPriceUSD * 80e12, // 80 trillion total supply
