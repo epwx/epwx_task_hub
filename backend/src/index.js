@@ -1,10 +1,12 @@
+// Load environment variables FIRST before any other imports
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const session = require('express-session');
 const passport = require('./config/passport');
-require('dotenv').config();
 
 const app = express();
 
