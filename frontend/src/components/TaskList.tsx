@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useReadContract } from 'wagmi';
 import { formatUnits } from 'viem';
+import { TaskSubmissionModal } from './TaskSubmissionModal';
 
 const TASK_MANAGER_ADDRESS = (process.env.NEXT_PUBLIC_TASK_MANAGER || '') as `0x${string}`;
 
@@ -127,6 +128,7 @@ function TaskListContent() {
 }
 
 function CampaignCard({ campaignId }: { campaignId: number }) {
+  const [showModal, setShowModal] = useState(false);
   const { data: campaign, isLoading } = useReadContract({
     address: TASK_MANAGER_ADDRESS,
     abi: TASK_MANAGER_ABI,
@@ -234,7 +236,7 @@ function CampaignCard({ campaignId }: { campaignId: number }) {
 
         <div className="flex gap-3 mb-4">
           <button
-            onClick={() => alert('Task submission feature coming soon! Campaign ID: ' + campaignId)}
+            onClick={() => setShowModal(true)}
             className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 font-bold shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
           >
             <span>Complete Task</span>
@@ -271,6 +273,21 @@ function CampaignCard({ campaignId }: { campaignId: number }) {
           </a>
         </div>
       </div>
+
+      {/* Task Submission Modal */}
+      {showModal && (
+        <TaskSubmissionModal
+          campaignId={campaignId}
+          taskType={taskType}
+          targetUrl={targetUrl}
+          reward={Number(reward).toLocaleString()}
+          onClose={() => setShowModal(false)}
+          onSuccess={() => {
+            console.log('Task submitted successfully');
+            // Could trigger a refetch here
+          }}
+        />
+      )}
     </div>
   );
 }
