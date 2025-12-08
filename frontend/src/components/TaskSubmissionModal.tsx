@@ -6,6 +6,8 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import { TwitterConnect } from './TwitterConnect';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+
 interface TaskSubmissionModalProps {
   campaignId: number;
   taskType: string;
@@ -23,45 +25,42 @@ export function TaskSubmissionModal({
   onClose,
   onSuccess
 }: TaskSubmissionModalProps) {
-  const { address, isConnected } = useAccount();
-  const [twitterUsername, setTwitterUsername] = useState('');
+  const { address } = useAccount();
+  const [twitter Username, setTwitterUsername] = useState('');
   const [loading, setLoading] = useState(false);
+  const [checkingTwitter, setCheckingTwitter] = useState(true);
   const [isTwitterConnected, setIsTwitterConnected] = useState(false);
   const [verifiedTwitterUsername, setVerifiedTwitterUsername] = useState<string | null>(null);
-  const [checkingTwitter, setCheckingTwitter] = useState(true);
 
-  // Check Twitter connection status
   useEffect(() => {
-    const checkTwitterStatus = async () => {
-      if (!address) {
-        setCheckingTwitter(false);
-        return;
-      }
+    checkTwitterStatus();
+  }, [address]);
 
-      try {
-        const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL || 'https://api.epowex.com'}/api/twitter/status/${address}`
-        );
+  const checkTwitterStatus = async () => {
+    if (!address) return;
+    
+    setCheckingTwitter(true);
+    try {
+      const response = await axios.get(`${API_URL}/api/twitter/status/${address}`);
+      if (response.data.success) {
         setIsTwitterConnected(response.data.connected);
         setVerifiedTwitterUsername(response.data.twitterUsername);
         if (response.data.connected && response.data.twitterUsername) {
           setTwitterUsername(response.data.twitterUsername);
         }
-      } catch (error) {
-        console.error('Error checking Twitter status:', error);
-      } finally {
-        setCheckingTwitter(false);
       }
-    };
-
-    checkTwitterStatus();
-  }, [address]);
+    } catch (error) {
+      console.error('Error checking Twitter status:', error);
+    } finally {
+      setCheckingTwitter(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!isConnected) {
-      toast.error('Please connect your wallet first');
+    if (!address) {
+      toast.error('Please connect your wallet');
       return;
     }
 
@@ -71,32 +70,23 @@ export function TaskSubmissionModal({
     }
 
     const cleanUsername = twitterUsername.trim().replace(/^@/, '');
+
     setLoading(true);
-
     try {
-      const authToken = localStorage.getItem('authToken');
-      if (!authToken) {
-        toast.error('Please sign in to submit tasks');
-        setLoading(false);
-        return;
-      }
-
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL || 'https://api.epowex.com'}/api/tasks/submit`,
+        `${API_URL}/api/tasks/submit`,
         {
           campaignId,
+          walletAddress: address,
+          taskType,
+          targetUrl,
           twitterUsername: cleanUsername
         },
-        {
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-            'Content-Type': 'application/json'
-          }
-        }
+        { withCredentials: true }
       );
 
       if (response.data.success) {
-        toast.success(`Task verified! ${response.data.data.reward} EPWX sent to your wallet!`);
+        toast.success('Task verified and submitted successfully!');
         onSuccess();
         onClose();
       } else {
@@ -130,7 +120,31 @@ export function TaskSubmissionModal({
   };
 
   return (
-    <div 
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        {/* Header */}
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 rounded-t-2xl">
+          <div className="flex items-start justify-between">
+            <div>
+              <h2 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
+                <span>{getTaskIcon()}</span>
+                <span>Complete Task</span>
+              </h2>
+              <p className="text-blue-100">
+                {taskType.charAt(0).toUpperCase() + taskType.slice(1)} Campaign #{campaignId}
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-white hover:bg-white/20 rounded-lg p-2 transition-colors"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
         {/* Body */}
         <div className="p-6">
           {/* Reward Display */}
@@ -160,20 +174,8 @@ export function TaskSubmissionModal({
               </div>
               <TwitterConnect />
             </div>
-          ) : null}2 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
-                <span>{getTaskIcon()}</span>
-                <span>Complete Task</span>
-              </h2>
-              <p className="text-blue-100">
-                {taskType.charAt(0).toUpperCase() + taskType.slice(1)} Campaign #{campaignId}
-              </p>
-            </div>
-            <button
-              onClick={onClose}
-              className="text-white hover:bg-white/20 rounded-lg p-2 transition-colors"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          ) : null}
+
           {/* Instructions */}
           {isTwitterConnected && (
             <div className="mb-6">
@@ -197,24 +199,8 @@ export function TaskSubmissionModal({
                 </li>
               </ol>
             </div>
-          )}className="space-y-2 text-sm text-gray-700">
-              <li className="flex items-start gap-2">
-                <span className="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-bold">1</span>
-                <span>Complete the task on Twitter</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-bold">2</span>
-                <span>Enter your Twitter username below</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-bold">3</span>
-                <span>We verify instantly via Twitter API</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-bold">4</span>
-                <span>EPWX sent automatically to your wallet!</span>
-              </li>
-            </ol>
+          )}
+
           {/* Task URL */}
           {isTwitterConnected && (
             <a
@@ -259,14 +245,16 @@ export function TaskSubmissionModal({
                 <p className="text-xs text-green-600 mt-2">
                   ✅ Verified account - ready to submit tasks!
                 </p>
-              </div>Automatic verification - no screenshots needed!
-              </p>
-            </div>
+              </div>
 
-            {/* Info Box */}
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
-              <p className="text-sm text-blue-800">
-            {/* Submit Button */}
+              {/* Info Box */}
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+                <p className="text-sm text-blue-800">
+                  💡 <strong>Automatic verification</strong> - no screenshots needed!
+                </p>
+              </div>
+
+              {/* Submit Button */}
               <button
                 type="submit"
                 disabled={loading || !twitterUsername.trim()}
@@ -290,10 +278,6 @@ export function TaskSubmissionModal({
             </form>
           )}
         </div>
-      </div>
-    </div>
-  );
-}       </div>
       </div>
     </div>
   );
