@@ -26,7 +26,7 @@ export function TaskSubmissionModal({
   onSuccess
 }: TaskSubmissionModalProps) {
   const { address } = useAccount();
-  const [twitter Username, setTwitterUsername] = useState('');
+  const [twitterUsername, setTwitterUsername] = useState('');
   const [loading, setLoading] = useState(false);
   const [checkingTwitter, setCheckingTwitter] = useState(true);
   const [isTwitterConnected, setIsTwitterConnected] = useState(false);
