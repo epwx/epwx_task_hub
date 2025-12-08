@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const session = require('express-session');
+const passport = require('./config/passport');
 require('dotenv').config();
 
 const app = express();
@@ -20,6 +22,22 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Session middleware for OAuth
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'epwx-task-hub-secret-key-change-in-production',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
+
+// Initialize Passport
+app.use(passport.initialize());
+app.use(passport.session());
+
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -33,6 +51,7 @@ app.use('/api/campaigns', require('./routes/campaigns'));
 app.use('/api/tasks', require('./routes/tasks'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/price', require('./routes/price'));
+app.use('/api/twitter', require('./routes/twitter'));
 
 // Health check
 app.get('/health', (req, res) => {

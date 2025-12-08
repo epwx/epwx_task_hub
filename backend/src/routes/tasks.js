@@ -3,49 +3,111 @@ const router = express.Router();
 const { TaskSubmission, Campaign, User } = require('../models');
 const { authenticateToken } = require('./auth');
 const { taskManagerWithSigner } = require('../services/blockchain');
+const twitterVerification = require('../services/twitterVerification');
+const { ethers } = require('ethers');
 
 /**
  * POST /api/tasks/submit
- * Submit a task completion
+ * Submit a task completion with automatic Twitter verification
  */
 router.post('/submit', authenticateToken, async (req, res) => {
   try {
-    const { campaignId, proofUrl } = req.body;
+    const { campaignId, twitterUsername } = req.body;
+    const userAddress = req.user.walletAddress;
     
-    if (!campaignId || !proofUrl) {
+    if (!campaignId || !twitterUsername) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
     
-    const campaign = await Campaign.findByPk(campaignId);
-    if (!campaign || campaign.status !== 'active') {
-      return res.status(400).json({ error: 'Campaign not available' });
+    if (!userAddress) {
+      return res.status(400).json({ error: 'Wallet address not found' });
     }
     
-    // Check if user already submitted for this campaign
-    const existing = await TaskSubmission.findOne({
-      where: {
-        campaignId,
-        userId: req.user.userId
-      }
-    });
+    // ===== NEW: Verify Twitter ownership =====
+    const user = await User.findOne({ where: { walletAddress: userAddress } });
     
-    if (existing) {
-      return res.status(400).json({ error: 'Already submitted for this campaign' });
+    if (!user || !user.twitterUsername) {
+      return res.status(403).json({ 
+        error: 'Please connect your X/Twitter account first',
+        success: false,
+        requiresTwitterAuth: true
+      });
     }
     
-    // Create submission
-    const submission = await TaskSubmission.create({
+    // Normalize usernames for comparison (remove @ if present)
+    const normalizedSubmitted = twitterUsername.replace('@', '').toLowerCase();
+    const normalizedVerified = user.twitterUsername.replace('@', '').toLowerCase();
+    
+    if (normalizedSubmitted !== normalizedVerified) {
+      return res.status(403).json({ 
+        error: `You can only submit tasks using your verified X account: @${user.twitterUsername}`,
+        success: false,
+        verifiedUsername: user.twitterUsername
+      });
+    }
+    // ===== End Twitter ownership check =====
+    
+    // Fetch campaign from blockchain
+    const campaign = await taskManagerWithSigner.campaigns(campaignId);
+    
+    if (!campaign.active) {
+      return res.status(400).json({ error: 'Campaign not active' });
+    }
+    
+    // Check if user already completed this campaign on blockchain
+    const hasCompleted = await taskManagerWithSigner.hasCompleted(campaignId, userAddress);
+    if (hasCompleted) {
+      return res.status(400).json({ error: 'You already completed this campaign' });
+    }
+    
+    // Verify task via Twitter API
+    const verification = await twitterVerification.verifyTask(
+      campaign.taskType,
+      user.twitterUsername, // Use verified username from DB
+      campaign.targetUrl
+    );
+    
+    if (!verification.verified) {
+      return res.status(400).json({ 
+        error: verification.message || 'Task verification failed',
+        success: false
+      });
+    }
+    
+    // Submit completion to blockchain
+    const tx = await taskManagerWithSigner.submitCompletion(campaignId, userAddress);
+    const receipt = await tx.wait();
+    
+    // Get the completion ID from the event
+    const completionEvent = receipt.logs.find(
+      log => log.fragment?.name === 'CompletionSubmitted'
+    );
+    const completionId = completionEvent?.args?.completionId;
+    
+    // Auto-approve the completion
+    if (completionId !== undefined) {
+      const approveTx = await taskManagerWithSigner.verifyCompletion(completionId, true);
+      await approveTx.wait();
+    }
+    
+    // Save to database for records
+    await TaskSubmission.create({
       campaignId,
       userId: req.user.userId,
-      proofUrl,
-      status: 'pending',
-      rewardAmount: campaign.rewardPerTask
+      proofUrl: `@${user.twitterUsername}`,
+      status: 'approved',
+      rewardAmount: ethers.formatUnits(campaign.rewardPerTask, 9),
+      transactionHash: receipt.hash
     });
     
     res.json({
       success: true,
-      data: submission,
-      message: 'Task submitted for verification'
+      data: {
+        completionId,
+        txHash: receipt.hash,
+        reward: ethers.formatUnits(campaign.rewardPerTask, 9)
+      },
+      message: `Task verified! ${ethers.formatUnits(campaign.rewardPerTask, 9)} EPWX sent to your wallet!`
     });
   } catch (error) {
     console.error('Submit task error:', error);

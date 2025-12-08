@@ -1,0 +1,113 @@
+const express = require('express');
+const router = express.Router();
+const passport = require('../config/passport');
+const { User } = require('../models');
+
+/**
+ * POST /api/twitter/connect/start
+ * Start X/Twitter OAuth flow
+ * Body: { walletAddress: "0x..." }
+ */
+router.post('/connect/start', (req, res, next) => {
+  const { walletAddress } = req.body;
+  
+  if (!walletAddress) {
+    return res.status(400).json({ error: 'Wallet address required' });
+  }
+  
+  // Validate wallet address format
+  if (!/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) {
+    return res.status(400).json({ error: 'Invalid wallet address' });
+  }
+  
+  // Store wallet address in session for callback
+  req.session.walletAddress = walletAddress;
+  
+  // Redirect to Twitter OAuth
+  passport.authenticate('twitter')(req, res, next);
+});
+
+/**
+ * GET /api/twitter/callback
+ * Twitter OAuth callback
+ */
+router.get('/callback', 
+  passport.authenticate('twitter', { 
+    failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard?error=twitter_auth_failed`,
+    session: false 
+  }),
+  (req, res) => {
+    // Success - redirect to dashboard
+    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard?twitter_connected=true`);
+  }
+);
+
+/**
+ * GET /api/twitter/status
+ * Check if wallet has connected X/Twitter account
+ */
+router.get('/status/:walletAddress', async (req, res) => {
+  try {
+    const { walletAddress } = req.params;
+    
+    const user = await User.findOne({ 
+      where: { walletAddress },
+      attributes: ['twitterId', 'twitterUsername']
+    });
+    
+    if (!user || !user.twitterId) {
+      return res.json({
+        success: true,
+        connected: false,
+        twitterUsername: null
+      });
+    }
+    
+    res.json({
+      success: true,
+      connected: true,
+      twitterUsername: user.twitterUsername
+    });
+  } catch (error) {
+    console.error('Twitter status check error:', error);
+    res.status(500).json({ error: 'Failed to check Twitter status' });
+  }
+});
+
+/**
+ * POST /api/twitter/disconnect
+ * Disconnect X/Twitter account
+ */
+router.post('/disconnect', async (req, res) => {
+  try {
+    const { walletAddress } = req.body;
+    
+    if (!walletAddress) {
+      return res.status(400).json({ error: 'Wallet address required' });
+    }
+    
+    const user = await User.findOne({ where: { walletAddress } });
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    // Clear Twitter credentials
+    await user.update({
+      twitterId: null,
+      twitterUsername: null,
+      twitterAccessToken: null,
+      twitterRefreshToken: null
+    });
+    
+    res.json({
+      success: true,
+      message: 'X/Twitter account disconnected'
+    });
+  } catch (error) {
+    console.error('Twitter disconnect error:', error);
+    res.status(500).json({ error: 'Failed to disconnect Twitter' });
+  }
+});
+
+module.exports = router;
