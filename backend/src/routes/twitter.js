@@ -22,8 +22,10 @@ router.get('/connect/start', (req, res, next) => {
   // Store wallet address in session for callback
   req.session.walletAddress = walletAddress;
 
-  // Redirect to Twitter OAuth
-  passport.authenticate('twitter')(req, res, next);
+  // Pass walletAddress as query param through OAuth flow
+  passport.authenticate('twitter', {
+    state: JSON.stringify({ walletAddress })
+  })(req, res, next);
 });
 
 /**
@@ -36,6 +38,17 @@ router.get('/callback',
     session: false 
   }),
   (req, res) => {
+    // If walletAddress is missing in session, try to get it from state param
+    if (!req.session.walletAddress && req.query.state) {
+      try {
+        const stateObj = JSON.parse(req.query.state);
+        if (stateObj.walletAddress) {
+          req.session.walletAddress = stateObj.walletAddress;
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
     // Success - redirect to dashboard
     res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard?twitter_connected=true`);
   }
