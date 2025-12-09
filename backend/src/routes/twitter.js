@@ -33,38 +33,7 @@ router.get('/connect/start', (req, res, next) => {
  * Twitter OAuth callback
  */
 router.get('/callback', 
-    passport.authenticate('twitter', { 
-      failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard?error=twitter_auth_failed`,
-      session: false 
-    }),
-    (req, res) => {
-      console.log('OAuth callback route HIT');
-      // Debug: Log wallet address sources
-      console.log('OAuth callback: session.walletAddress:', req.session.walletAddress);
-      console.log('OAuth callback: state param:', req.query.state);
-
-      // If walletAddress is missing in session, try to get it from state param
-      if (!req.session.walletAddress && req.query.state) {
-        try {
-          const stateObj = JSON.parse(req.query.state);
-          if (stateObj.walletAddress) {
-            req.session.walletAddress = stateObj.walletAddress;
-            console.log('OAuth callback: walletAddress set from state param:', stateObj.walletAddress);
-          }
-        } catch (e) {
-          console.log('OAuth callback: failed to parse state param:', req.query.state);
-        }
-      }
-
-      // Fallback: try to get walletAddress from query param (if present)
-      if (!req.session.walletAddress && req.query.walletAddress) {
-        req.session.walletAddress = req.query.walletAddress;
-        console.log('OAuth callback: walletAddress set from query param:', req.query.walletAddress);
-      }
-
-      // Success - redirect to dashboard
-      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard?twitter_connected=true`);
-    }
+    console.log('OAuth callback route HIT');
   passport.authenticate('twitter', { 
     failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard?error=twitter_auth_failed`,
     session: false 
