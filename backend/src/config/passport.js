@@ -35,8 +35,10 @@ if (process.env.TWITTER_CLIENT_ID && process.env.TWITTER_CLIENT_SECRET) {
       try {
         // Get wallet address from session
         const walletAddress = req.session.walletAddress;
+        console.log('[OAuth callback] walletAddress from session:', walletAddress);
         
         if (!walletAddress) {
+          console.error('[OAuth callback] No wallet address in session');
           return done(new Error('No wallet address in session'), null);
         }
 
@@ -48,10 +50,10 @@ if (process.env.TWITTER_CLIENT_ID && process.env.TWITTER_CLIENT_SECRET) {
         });
 
         const twitterUser = userResponse.data.data;
+        console.log('[OAuth callback] Twitter user:', twitterUser);
 
         // Find or create user
         let user = await User.findOne({ where: { walletAddress } });
-        
         if (!user) {
           user = await User.create({
             walletAddress,
@@ -60,6 +62,7 @@ if (process.env.TWITTER_CLIENT_ID && process.env.TWITTER_CLIENT_SECRET) {
             twitterAccessToken: accessToken,
             twitterRefreshToken: refreshToken
           });
+          console.log('[OAuth callback] Created new user:', user.toJSON());
         } else {
           await user.update({
             twitterId: twitterUser.id,
@@ -67,6 +70,7 @@ if (process.env.TWITTER_CLIENT_ID && process.env.TWITTER_CLIENT_SECRET) {
             twitterAccessToken: accessToken,
             twitterRefreshToken: refreshToken
           });
+          console.log('[OAuth callback] Updated existing user:', user.toJSON());
         }
 
         return done(null, user);

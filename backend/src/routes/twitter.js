@@ -73,12 +73,12 @@ router.get('/callback',
 router.get('/status/:walletAddress', async (req, res) => {
   try {
     const { walletAddress } = req.params;
-    
+    console.log('[Twitter status] Checking status for walletAddress:', walletAddress);
     const user = await User.findOne({ 
       where: { walletAddress },
       attributes: ['twitterId', 'twitterUsername']
     });
-    
+    console.log('[Twitter status] User found:', user ? user.toJSON() : null);
     if (!user || !user.twitterId) {
       return res.json({
         success: true,
@@ -86,7 +86,6 @@ router.get('/status/:walletAddress', async (req, res) => {
         twitterUsername: null
       });
     }
-    
     res.json({
       success: true,
       connected: true,
