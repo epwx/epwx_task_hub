@@ -1,3 +1,5 @@
+// Debug: Print callback URL at runtime
+console.log('TWITTER_CALLBACK_URL at runtime:', process.env.TWITTER_CALLBACK_URL);
 const passport = require('passport');
 const OAuth2Strategy = require('passport-oauth2').Strategy;
 const { User } = require('../models');
