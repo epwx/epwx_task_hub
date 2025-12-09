@@ -4,25 +4,24 @@ const passport = require('../config/passport');
 const { User } = require('../models');
 
 /**
- * POST /api/twitter/connect/start
+ * GET /api/twitter/connect/start?walletAddress=0x...
  * Start X/Twitter OAuth flow
- * Body: { walletAddress: "0x..." }
  */
-router.post('/connect/start', (req, res, next) => {
-  const { walletAddress } = req.body;
-  
+router.get('/connect/start', (req, res, next) => {
+  const { walletAddress } = req.query;
+
   if (!walletAddress) {
-    return res.status(400).json({ error: 'Wallet address required' });
+    return res.status(400).send('Wallet address required');
   }
-  
+
   // Validate wallet address format
   if (!/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) {
-    return res.status(400).json({ error: 'Invalid wallet address' });
+    return res.status(400).send('Invalid wallet address');
   }
-  
+
   // Store wallet address in session for callback
   req.session.walletAddress = walletAddress;
-  
+
   // Redirect to Twitter OAuth
   passport.authenticate('twitter')(req, res, next);
 });
