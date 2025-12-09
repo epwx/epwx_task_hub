@@ -33,9 +33,9 @@ router.get('/connect/start', (req, res, next) => {
  * Twitter OAuth callback
  */
 router.get('/callback', 
-  passport.authenticate('twitter', { 
+  passport.authenticate('twitter', {
     failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard?error=twitter_auth_failed`,
-    session: false 
+    session: false
   }),
   function(req, res) {
     console.log('OAuth callback route HIT');
