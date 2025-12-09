@@ -37,7 +37,7 @@ router.get('/callback',
     failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard?error=twitter_auth_failed`,
     session: false 
   }),
-  (req, res) => {
+  function(req, res) {
     console.log('OAuth callback route HIT');
     console.log('OAuth callback: session.walletAddress:', req.session.walletAddress);
     console.log('OAuth callback: state param:', req.query.state);
