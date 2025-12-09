@@ -34,6 +34,12 @@ export function TaskSubmissionModal({
 
   useEffect(() => {
     checkTwitterStatus();
+    // Also check on URL change (OAuth callback)
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('twitter_connected') === 'true') {
+      checkTwitterStatus();
+      window.history.replaceState({}, '', window.location.pathname);
+    }
   }, [address]);
 
   const checkTwitterStatus = async () => {
