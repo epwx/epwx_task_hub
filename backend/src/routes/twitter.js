@@ -38,7 +38,7 @@ router.get('/callback',
     session: false 
   }),
   (req, res) => {
-    // Debug: Log wallet address sources
+    console.log('OAuth callback route HIT');
     console.log('OAuth callback: session.walletAddress:', req.session.walletAddress);
     console.log('OAuth callback: state param:', req.query.state);
 
