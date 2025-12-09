@@ -61,27 +61,8 @@ export function TwitterConnect() {
       return;
     }
 
-    setIsLoading(true);
-    try {
-      // Start OAuth flow - backend will redirect to Twitter
-      const response = await axios.post(`${API_URL}/api/twitter/connect/start`, {
-        walletAddress: address
-      }, {
-        withCredentials: true
-      });
-
-      // If response contains redirect URL, navigate to it
-      if (response.data.redirectUrl) {
-        window.location.href = response.data.redirectUrl;
-      } else {
-        // Fallback: directly trigger passport authentication
-        window.location.href = `${API_URL}/api/twitter/connect/start`;
-      }
-    } catch (error: any) {
-      console.error('Twitter connect error:', error);
-      toast.error(error.response?.data?.error || 'Failed to start X/Twitter authentication');
-      setIsLoading(false);
-    }
+    // Start OAuth flow by redirecting browser (GET)
+    window.location.href = `${API_URL}/api/twitter/connect/start?walletAddress=${address}`;
   };
 
   const handleDisconnect = async () => {
