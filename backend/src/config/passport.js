@@ -33,13 +33,27 @@ if (process.env.TWITTER_CLIENT_ID && process.env.TWITTER_CLIENT_SECRET) {
     },
     async (req, accessToken, refreshToken, params, profile, done) => {
       try {
-        // Get wallet address from session
-        const walletAddress = req.session.walletAddress;
-        console.log('[OAuth callback] walletAddress from session:', walletAddress);
-        
+        // Always extract walletAddress from state param if present
+        let walletAddress = null;
+        if (req.query && req.query.state) {
+          try {
+            const stateObj = JSON.parse(req.query.state);
+            if (stateObj.walletAddress) {
+              walletAddress = stateObj.walletAddress;
+              console.log('[OAuth callback] walletAddress from state param:', walletAddress);
+            }
+          } catch (e) {
+            console.error('[OAuth callback] Failed to parse state param:', req.query.state);
+          }
+        }
+        // Fallback to session if state param is missing
         if (!walletAddress) {
-          console.error('[OAuth callback] No wallet address in session');
-          return done(new Error('No wallet address in session'), null);
+          walletAddress = req.session.walletAddress;
+          console.log('[OAuth callback] walletAddress from session:', walletAddress);
+        }
+        if (!walletAddress) {
+          console.error('[OAuth callback] No wallet address in state or session');
+          return done(new Error('No wallet address in state or session'), null);
         }
 
         // Fetch user profile from Twitter API v2
