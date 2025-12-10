@@ -15,6 +15,8 @@ router.post('/submit', async (req, res) => {
     const { campaignId, twitterUsername, walletAddress } = req.body;
     const userAddress = walletAddress;
     
+    console.log('[Task Submit] Request:', { campaignId, twitterUsername, walletAddress });
+    
     if (!campaignId || !twitterUsername) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
@@ -47,8 +49,20 @@ router.post('/submit', async (req, res) => {
     }
     // ===== End Twitter ownership check =====
     
+    console.log('[Task Submit] Fetching campaign from blockchain, ID:', campaignId);
+    
     // Fetch campaign from blockchain
-    const campaign = await taskManagerWithSigner.campaigns(campaignId);
+    let campaign;
+    try {
+      campaign = await taskManagerWithSigner.campaigns(campaignId);
+      console.log('[Task Submit] Campaign data:', campaign);
+    } catch (error) {
+      console.error('[Task Submit] Campaign fetch error:', error.message);
+      return res.status(404).json({ 
+        error: `Campaign #${campaignId} not found on blockchain. Please verify the campaign ID.`,
+        success: false 
+      });
+    }
     
     if (!campaign.active) {
       return res.status(400).json({ error: 'Campaign not active' });
