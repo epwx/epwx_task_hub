@@ -73,11 +73,15 @@ router.post('/submit', async (req, res) => {
       return res.status(400).json({ error: 'Campaign not active' });
     }
     
+    console.log('[Task Submit] Checking if user already completed this campaign...');
     // Check if user already completed this campaign on blockchain
     const hasCompleted = await taskManagerWithSigner.hasCompleted(campaignId, userAddress);
     if (hasCompleted) {
       return res.status(400).json({ error: 'You already completed this campaign' });
     }
+    
+    console.log('[Task Submit] Starting Twitter verification...');
+    console.log('[Task Submit] User access token exists:', !!user.twitterAccessToken);
     
     // Verify task via Twitter API
     const verification = await twitterVerification.verifyTask(
@@ -86,6 +90,8 @@ router.post('/submit', async (req, res) => {
       campaign.targetUrl,
       user.twitterAccessToken // Pass user's access token
     );
+    
+    console.log('[Task Submit] Verification result:', verification);
     
     if (!verification.verified) {
       return res.status(400).json({ 
