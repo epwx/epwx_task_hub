@@ -10,10 +10,10 @@ const { ethers } = require('ethers');
  * POST /api/tasks/submit
  * Submit a task completion with automatic Twitter verification
  */
-router.post('/submit', authenticateToken, async (req, res) => {
+router.post('/submit', async (req, res) => {
   try {
-    const { campaignId, twitterUsername } = req.body;
-    const userAddress = req.user.walletAddress;
+    const { campaignId, twitterUsername, walletAddress } = req.body;
+    const userAddress = walletAddress;
     
     if (!campaignId || !twitterUsername) {
       return res.status(400).json({ error: 'Missing required fields' });
@@ -93,7 +93,7 @@ router.post('/submit', authenticateToken, async (req, res) => {
     // Save to database for records
     await TaskSubmission.create({
       campaignId,
-      userId: req.user.userId,
+      userId: user.id,
       proofUrl: `@${user.twitterUsername}`,
       status: 'approved',
       rewardAmount: ethers.formatUnits(campaign.rewardPerTask, 9),
