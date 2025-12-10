@@ -64,22 +64,26 @@ class TwitterVerificationService {
 
       const userId = await this.getUserId(username);
 
-      // Use user's access token if provided, otherwise use bearer token
+      // Use user's access token to check their liked tweets
       const authHeader = userAccessToken 
         ? `Bearer ${userAccessToken}`
         : `Bearer ${this.bearerToken}`;
 
-      // Check if user liked the tweet
+      // Get user's liked tweets instead of tweet's liking users
       const response = await axios.get(
-        `${this.baseURL}/tweets/${tweetId}/liking_users`,
+        `${this.baseURL}/users/${userId}/liked_tweets`,
         {
           headers: {
             'Authorization': authHeader
+          },
+          params: {
+            max_results: 100, // Check last 100 liked tweets
+            'tweet.fields': 'id'
           }
         }
       );
 
-      const liked = response.data.data?.some(user => user.id === userId);
+      const liked = response.data.data?.some(tweet => tweet.id === tweetId);
       
       return {
         verified: liked,
