@@ -154,19 +154,8 @@ function CampaignCard({ campaignId }: { campaignId: number }) {
 
   const [advertiser, taskType, targetUrl, rewardPerTask, maxCompletions, completedCount, escrowedAmount, deadline, active] = campaign;
   
-  // Debug logging
-  console.log(`Campaign ${campaignId}:`, {
-    advertiser,
-    taskType,
-    active,
-    deadline: new Date(Number(deadline) * 1000).toISOString(),
-    isExpired: Number(deadline) * 1000 < Date.now(),
-    now: new Date().toISOString()
-  });
-  
   // Validate data
   if (!advertiser || advertiser === '0x0000000000000000000000000000000000000000') {
-    console.log(`Campaign ${campaignId} filtered: Invalid advertiser`);
     return null;
   }
 
@@ -175,12 +164,10 @@ function CampaignCard({ campaignId }: { campaignId: number }) {
   const isExpired = Number(deadline) * 1000 < Date.now();
 
   if (!active) {
-    console.log(`Campaign ${campaignId} filtered: Not active`);
     return null;
   }
   
   if (isExpired) {
-    console.log(`Campaign ${campaignId} filtered: Expired`);
     return null;
   }
 
