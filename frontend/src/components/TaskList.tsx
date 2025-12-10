@@ -75,7 +75,10 @@ function TaskListContent() {
   });
 
   const count = campaignCount ? Number(campaignCount) : 0;
-  const campaignIds = count > 0 ? Array.from({ length: Math.min(count, 10) }, (_, i) => i) : [];
+  // Show the most recent campaigns (reverse order, latest first)
+  const campaignIds = count > 0 
+    ? Array.from({ length: Math.min(count, 10) }, (_, i) => count - 1 - i) 
+    : [];
 
   if (isLoading) {
     return <LoadingSkeleton />;
