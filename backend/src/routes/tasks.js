@@ -83,7 +83,8 @@ router.post('/submit', async (req, res) => {
     const verification = await twitterVerification.verifyTask(
       campaign.taskType,
       user.twitterUsername, // Use verified username from DB
-      campaign.targetUrl
+      campaign.targetUrl,
+      user.twitterAccessToken // Pass user's access token
     );
     
     if (!verification.verified) {

@@ -55,7 +55,7 @@ class TwitterVerificationService {
   }
 
   // Verify if user liked a tweet
-  async verifyLike(username, tweetUrl) {
+  async verifyLike(username, tweetUrl, userAccessToken = null) {
     try {
       const tweetId = this.extractTweetId(tweetUrl);
       if (!tweetId) {
@@ -64,12 +64,17 @@ class TwitterVerificationService {
 
       const userId = await this.getUserId(username);
 
+      // Use user's access token if provided, otherwise use bearer token
+      const authHeader = userAccessToken 
+        ? `Bearer ${userAccessToken}`
+        : `Bearer ${this.bearerToken}`;
+
       // Check if user liked the tweet
       const response = await axios.get(
         `${this.baseURL}/tweets/${tweetId}/liking_users`,
         {
           headers: {
-            'Authorization': `Bearer ${this.bearerToken}`
+            'Authorization': authHeader
           }
         }
       );
@@ -203,8 +208,8 @@ class TwitterVerificationService {
   }
 
   // Main verification method
-  async verifyTask(taskType, username, targetUrl) {
-    if (!this.bearerToken) {
+  async verifyTask(taskType, username, targetUrl, userAccessToken = null) {
+    if (!this.bearerToken && !userAccessToken) {
       return {
         verified: false,
         message: 'Twitter API not configured. Please contact support.'
@@ -215,17 +220,17 @@ class TwitterVerificationService {
 
     switch (taskType.toLowerCase()) {
       case 'like':
-        return await this.verifyLike(cleanUsername, targetUrl);
+        return await this.verifyLike(cleanUsername, targetUrl, userAccessToken);
       
       case 'follow':
-        return await this.verifyFollow(cleanUsername, targetUrl);
+        return await this.verifyFollow(cleanUsername, targetUrl, userAccessToken);
       
       case 'retweet':
       case 'share':
-        return await this.verifyRetweet(cleanUsername, targetUrl);
+        return await this.verifyRetweet(cleanUsername, targetUrl, userAccessToken);
       
       case 'comment':
-        return await this.verifyComment(cleanUsername, targetUrl);
+        return await this.verifyComment(cleanUsername, targetUrl, userAccessToken);
       
       default:
         return {
