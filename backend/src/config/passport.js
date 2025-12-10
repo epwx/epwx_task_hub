@@ -1,5 +1,10 @@
-// Debug: Print callback URL at runtime
-console.log('TWITTER_CALLBACK_URL at runtime:', process.env.TWITTER_CALLBACK_URL);
+// Debug: Print Twitter OAuth config at runtime
+console.log('======= TWITTER OAUTH 2.0 CONFIG =======');
+console.log('TWITTER_CLIENT_ID:', process.env.TWITTER_CLIENT_ID ? 'SET (length: ' + process.env.TWITTER_CLIENT_ID.length + ')' : 'NOT SET');
+console.log('TWITTER_CLIENT_SECRET:', process.env.TWITTER_CLIENT_SECRET ? 'SET (length: ' + process.env.TWITTER_CLIENT_SECRET.length + ')' : 'NOT SET');
+console.log('TWITTER_CALLBACK_URL:', process.env.TWITTER_CALLBACK_URL || 'NOT SET (will use default)');
+console.log('========================================');
+
 const passport = require('passport');
 const OAuth2Strategy = require('passport-oauth2').Strategy;
 const { User } = require('../models');
