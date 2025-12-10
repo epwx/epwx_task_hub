@@ -55,14 +55,15 @@ class TwitterVerificationService {
   }
 
   // Verify if user liked a tweet
-  async verifyLike(username, tweetUrl, userAccessToken = null) {
+  async verifyLike(username, tweetUrl, userAccessToken = null, userId = null) {
     try {
       const tweetId = this.extractTweetId(tweetUrl);
       if (!tweetId) {
         return { verified: false, message: 'Invalid tweet URL' };
       }
 
-      const userId = await this.getUserId(username);
+      // Use provided userId or fetch it
+      const userIdToUse = userId || await this.getUserId(username);
 
       // Use user's access token to check their liked tweets
       const authHeader = userAccessToken 
@@ -71,7 +72,7 @@ class TwitterVerificationService {
 
       // Get user's liked tweets instead of tweet's liking users
       const response = await axios.get(
-        `${this.baseURL}/users/${userId}/liked_tweets`,
+        `${this.baseURL}/users/${userIdToUse}/liked_tweets`,
         {
           headers: {
             'Authorization': authHeader
@@ -212,7 +213,7 @@ class TwitterVerificationService {
   }
 
   // Main verification method
-  async verifyTask(taskType, username, targetUrl, userAccessToken = null) {
+  async verifyTask(taskType, username, targetUrl, userAccessToken = null, userId = null) {
     if (!this.bearerToken && !userAccessToken) {
       return {
         verified: false,
@@ -224,7 +225,7 @@ class TwitterVerificationService {
 
     switch (taskType.toLowerCase()) {
       case 'like':
-        return await this.verifyLike(cleanUsername, targetUrl, userAccessToken);
+        return await this.verifyLike(cleanUsername, targetUrl, userAccessToken, userId);
       
       case 'follow':
         return await this.verifyFollow(cleanUsername, targetUrl, userAccessToken);

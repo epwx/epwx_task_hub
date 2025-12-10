@@ -82,13 +82,15 @@ router.post('/submit', async (req, res) => {
     
     console.log('[Task Submit] Starting Twitter verification...');
     console.log('[Task Submit] User access token exists:', !!user.twitterAccessToken);
+    console.log('[Task Submit] User Twitter ID:', user.twitterId);
     
     // Verify task via Twitter API
     const verification = await twitterVerification.verifyTask(
       campaign.taskType,
       user.twitterUsername, // Use verified username from DB
       campaign.targetUrl,
-      user.twitterAccessToken // Pass user's access token
+      user.twitterAccessToken, // Pass user's access token
+      user.twitterId // Pass user's Twitter ID to avoid rate limits
     );
     
     console.log('[Task Submit] Verification result:', verification);
