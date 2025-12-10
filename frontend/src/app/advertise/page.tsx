@@ -185,7 +185,7 @@ export default function AdvertisePage() {
               <input
                 type="text"
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                 placeholder="e.g., Follow us on Twitter"
                 value={formData.title}
                 onChange={(e) => setFormData({...formData, title: e.target.value})}
@@ -200,7 +200,7 @@ export default function AdvertisePage() {
               <textarea
                 required
                 rows={4}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                 placeholder="Describe what users need to do..."
                 value={formData.description}
                 onChange={(e) => setFormData({...formData, description: e.target.value})}
@@ -214,7 +214,7 @@ export default function AdvertisePage() {
               </label>
               <select
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                 value={formData.taskType}
                 onChange={(e) => setFormData({...formData, taskType: e.target.value})}
               >
@@ -233,7 +233,7 @@ export default function AdvertisePage() {
               <input
                 type="url"
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                 placeholder="https://twitter.com/username/status/123..."
                 value={formData.targetUrl}
                 onChange={(e) => setFormData({...formData, targetUrl: e.target.value})}
@@ -250,7 +250,7 @@ export default function AdvertisePage() {
                   type="number"
                   required
                   min="1"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                   placeholder="1000000"
                   value={formData.rewardPerTask}
                   onChange={(e) => setFormData({...formData, rewardPerTask: e.target.value})}
@@ -266,7 +266,7 @@ export default function AdvertisePage() {
                   type="number"
                   required
                   min="1"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                   placeholder="100"
                   value={formData.maxCompletions}
                   onChange={(e) => setFormData({...formData, maxCompletions: e.target.value})}
@@ -285,7 +285,7 @@ export default function AdvertisePage() {
                 required
                 min="1"
                 max="90"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                 value={formData.durationInDays}
                 onChange={(e) => setFormData({...formData, durationInDays: e.target.value})}
               />
