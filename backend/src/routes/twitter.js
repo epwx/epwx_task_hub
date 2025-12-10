@@ -49,7 +49,7 @@ router.get('/connect/start', (req, res) => {
     response_type: 'code',
     client_id: process.env.TWITTER_CLIENT_ID,
     redirect_uri: process.env.TWITTER_CALLBACK_URL || 'http://localhost:4000/api/twitter/callback',
-    scope: 'tweet.read users.read offline.access',
+    scope: 'tweet.read users.read like.read follows.read offline.access',
     state: state,
     code_challenge: codeChallenge,
     code_challenge_method: 'S256'
