@@ -12,6 +12,8 @@ const TASK_MANAGER_ABI = [
   'function submitCompletion(uint256 campaignId, address user) external returns (uint256)',
   'function verifyCompletion(uint256 completionId, bool approved) external',
   'function batchVerifyCompletions(uint256[] completionIds, bool[] approvals) external',
+  'function campaigns(uint256) external view returns (address advertiser, string taskType, string targetUrl, uint256 rewardPerTask, uint256 maxCompletions, uint256 completedCount, uint256 escrowedAmount, uint256 deadline, bool active)',
+  'function hasCompleted(uint256 campaignId, address user) external view returns (bool)',
   'function getCampaign(uint256 campaignId) external view returns (address, string, string, uint256, uint256, uint256, uint256, bool)',
   'function pendingRewards(address user) external view returns (uint256)',
   'function claimRewards() external',

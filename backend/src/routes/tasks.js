@@ -111,7 +111,22 @@ router.post('/submit', async (req, res) => {
     });
   } catch (error) {
     console.error('Submit task error:', error);
-    res.status(500).json({ error: 'Failed to submit task' });
+    console.error('Error stack:', error.stack);
+    
+    // Return more specific error messages
+    let errorMessage = 'Failed to submit task';
+    if (error.message) {
+      errorMessage = error.message;
+    }
+    if (error.response?.data) {
+      errorMessage = error.response.data.error || error.response.data.message || errorMessage;
+    }
+    
+    res.status(500).json({ 
+      error: errorMessage,
+      success: false,
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
