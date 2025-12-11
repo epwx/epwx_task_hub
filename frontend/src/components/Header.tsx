@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { ConnectKitButton } from 'connectkit';
 import { useAccount } from 'wagmi';
 import { useState } from 'react';
@@ -15,18 +16,14 @@ export function Header() {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg blur-md opacity-50 group-hover:opacity-75 transition-opacity"></div>
-              <div className="relative bg-gradient-to-r from-blue-600 to-purple-600 text-white px-3 py-2 rounded-lg font-black text-xl shadow-lg">
-                EP
-              </div>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-xl font-black bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                EPWX Tasks
-              </span>
-              <span className="text-xs text-gray-500 font-medium -mt-1">Powered by Base</span>
-            </div>
+            <Image 
+              src="/logo.webp" 
+              alt="EPWX Tasks" 
+              width={150} 
+              height={40}
+              className="h-10 w-auto transition-transform group-hover:scale-105"
+              priority
+            />
           </Link>
 
           {/* Desktop Navigation */}
