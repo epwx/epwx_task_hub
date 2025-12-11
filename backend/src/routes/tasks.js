@@ -120,12 +120,17 @@ router.post('/submit', async (req, res) => {
     
     // Save to database for records
     await TaskSubmission.create({
-      campaignId,
+      completionId: completionId ? Number(completionId) : null,
       userId: user.id,
       proofUrl: `@${user.twitterUsername}`,
       status: 'approved',
       rewardAmount: ethers.formatUnits(campaign.rewardPerTask, 9),
-      transactionHash: receipt.hash
+      transactionHash: receipt.hash,
+      metadata: {
+        campaignId: Number(campaignId), // Store blockchain campaign ID in metadata
+        taskType: campaign.taskType,
+        targetUrl: campaign.targetUrl
+      }
     });
     
     res.json({

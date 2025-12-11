@@ -13,7 +13,7 @@ const TaskSubmission = sequelize.define('TaskSubmission', {
   },
   campaignId: {
     type: DataTypes.UUID,
-    allowNull: false,
+    allowNull: true, // Made nullable - using blockchain campaign IDs in metadata instead
     references: {
       model: 'campaigns',
       key: 'id'
