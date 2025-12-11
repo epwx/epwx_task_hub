@@ -4,6 +4,8 @@ class TwitterVerificationService {
   constructor() {
     this.bearerToken = process.env.TWITTER_BEARER_TOKEN;
     this.baseURL = 'https://api.twitter.com/2';
+    this.likeCache = new Map(); // Cache verification results for 5 minutes
+    this.CACHE_TTL = 5 * 60 * 1000; // 5 minutes
   }
 
   // Extract tweet ID from various Twitter URL formats
@@ -70,6 +72,17 @@ class TwitterVerificationService {
       const userIdToUse = userId || await this.getUserId(username);
       console.log('[verifyLike] User ID:', userIdToUse);
 
+      // Check cache first
+      const cacheKey = `${userIdToUse}:${tweetId}`;
+      const cached = this.likeCache.get(cacheKey);
+      if (cached && (Date.now() - cached.timestamp < this.CACHE_TTL)) {
+        console.log('[verifyLike] Using cached result:', cached.verified);
+        return {
+          verified: cached.verified,
+          message: cached.verified ? 'Like verified successfully (cached)' : 'Like not found (cached).'
+        };
+      }
+
       // Use user's access token to check their liked tweets
       const authHeader = userAccessToken 
         ? `Bearer ${userAccessToken}`
@@ -105,12 +118,29 @@ class TwitterVerificationService {
       
       console.log('[verifyLike] Like found:', liked);
 
+      // Cache the result
+      this.likeCache.set(cacheKey, {
+        verified: liked,
+        timestamp: Date.now()
+      });
+
       return {
         verified: liked,
         message: liked ? 'Like verified successfully' : 'Like not found. Please like the tweet and try again.'
       };
     } catch (error) {
       console.error('Like verification error:', error.response?.data);
+      
+      // Handle rate limiting specifically
+      if (error.response?.status === 429) {
+        const retryAfter = error.response.headers['x-rate-limit-reset'];
+        console.error('[verifyLike] Rate limit hit. Reset at:', retryAfter);
+        return {
+          verified: false,
+          message: 'Twitter API rate limit reached. Please wait a moment and try again.'
+        };
+      }
+      
       return {
         verified: false,
         message: 'Verification failed. Please ensure you liked the tweet.'
