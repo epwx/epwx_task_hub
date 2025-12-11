@@ -59,16 +59,23 @@ class TwitterVerificationService {
     try {
       const tweetId = this.extractTweetId(tweetUrl);
       if (!tweetId) {
+        console.error('[verifyLike] Could not extract tweet ID from URL:', tweetUrl);
         return { verified: false, message: 'Invalid tweet URL' };
       }
 
+      console.log('[verifyLike] Extracted tweet ID:', tweetId);
+      console.log('[verifyLike] Tweet URL:', tweetUrl);
+
       // Use provided userId or fetch it
       const userIdToUse = userId || await this.getUserId(username);
+      console.log('[verifyLike] User ID:', userIdToUse);
 
       // Use user's access token to check their liked tweets
       const authHeader = userAccessToken 
         ? `Bearer ${userAccessToken}`
         : `Bearer ${this.bearerToken}`;
+
+      console.log('[verifyLike] Using user access token:', !!userAccessToken);
 
       // Get user's liked tweets instead of tweet's liking users
       const response = await axios.get(
@@ -84,8 +91,20 @@ class TwitterVerificationService {
         }
       );
 
+      console.log('[verifyLike] Liked tweets count:', response.data.data?.length || 0);
+      console.log('[verifyLike] Looking for tweet ID:', tweetId);
+      
+      // Log first few tweet IDs for debugging
+      if (response.data.data) {
+        console.log('[verifyLike] First 5 liked tweet IDs:', 
+          response.data.data.slice(0, 5).map(t => t.id)
+        );
+      }
+
       const liked = response.data.data?.some(tweet => tweet.id === tweetId);
       
+      console.log('[verifyLike] Like found:', liked);
+
       return {
         verified: liked,
         message: liked ? 'Like verified successfully' : 'Like not found. Please like the tweet and try again.'
