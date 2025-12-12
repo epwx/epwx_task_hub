@@ -2,6 +2,7 @@
 
 import { Header } from "@/components/Header";
 import { TwitterConnect } from "@/components/TwitterConnect";
+import { CompletedTasks } from "@/components/CompletedTasks";
 import { useAccount } from "wagmi";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -96,12 +97,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Recent Activity */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-2xl font-semibold mb-4">Recent Activity</h2>
-          <div className="text-center py-12 text-gray-500">
-            <p>No activity yet. Start completing tasks to earn EPWX!</p>
-          </div>
-        </div>
+        <CompletedTasks />
       </main>
     </div>
   );

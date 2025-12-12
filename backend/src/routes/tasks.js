@@ -227,4 +227,43 @@ router.get('/pending', authenticateToken, async (req, res) => {
   }
 });
 
+/**
+ * GET /api/tasks/completed/:walletAddress
+ * Get completed tasks for a wallet address
+ */
+router.get('/completed/:walletAddress', async (req, res) => {
+  try {
+    const { walletAddress } = req.params;
+    
+    // Find user by wallet address
+    const user = await User.findOne({ where: { walletAddress } });
+    
+    if (!user) {
+      return res.json({
+        success: true,
+        data: []
+      });
+    }
+    
+    // Get approved task submissions for this user
+    const submissions = await TaskSubmission.findAll({
+      where: { 
+        userId: user.id,
+        status: 'approved'
+      },
+      attributes: ['id', 'completionId', 'rewardAmount', 'transactionHash', 'createdAt', 'metadata'],
+      order: [['createdAt', 'DESC']],
+      limit: 20
+    });
+    
+    res.json({
+      success: true,
+      data: submissions
+    });
+  } catch (error) {
+    console.error('Error fetching completed tasks:', error);
+    res.status(500).json({ error: 'Failed to fetch completed tasks' });
+  }
+});
+
 module.exports = router;

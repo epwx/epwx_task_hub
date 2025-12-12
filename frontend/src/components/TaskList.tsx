@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useReadContract } from 'wagmi';
+import { useReadContract, useAccount } from 'wagmi';
 import { formatUnits } from 'viem';
 import { TaskSubmissionModal } from './TaskSubmissionModal';
 
@@ -29,6 +29,16 @@ const TASK_MANAGER_ABI = [
       {"name": "deadline", "type": "uint256"},
       {"name": "active", "type": "bool"}
     ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {"name": "campaignId", "type": "uint256"},
+      {"name": "user", "type": "address"}
+    ],
+    "name": "hasCompleted",
+    "outputs": [{"name": "", "type": "bool"}],
     "stateMutability": "view",
     "type": "function"
   }
@@ -132,11 +142,21 @@ function TaskListContent() {
 
 function CampaignCard({ campaignId }: { campaignId: number }) {
   const [showModal, setShowModal] = useState(false);
+  const { address } = useAccount();
+  
   const { data: campaign, isLoading } = useReadContract({
     address: TASK_MANAGER_ADDRESS,
     abi: TASK_MANAGER_ABI,
     functionName: 'campaigns',
     args: [BigInt(campaignId)],
+  });
+  
+  // Check if user has completed this campaign
+  const { data: hasCompleted } = useReadContract({
+    address: TASK_MANAGER_ADDRESS,
+    abi: TASK_MANAGER_ABI,
+    functionName: 'hasCompleted',
+    args: address ? [BigInt(campaignId), address] : undefined,
   });
 
   if (isLoading) {
@@ -168,6 +188,11 @@ function CampaignCard({ campaignId }: { campaignId: number }) {
   }
   
   if (isExpired) {
+    return null;
+  }
+  
+  // Hide if user already completed this campaign
+  if (hasCompleted) {
     return null;
   }
 
