@@ -8,6 +8,23 @@ class TwitterVerificationService {
     this.CACHE_TTL = 5 * 60 * 1000; // 5 minutes
   }
 
+  // Clear cache for a specific user and tweet
+  clearCache(userId, tweetId) {
+    const cacheKey = `${userId}:${tweetId}`;
+    this.likeCache.delete(cacheKey);
+    console.log('[Cache] Cleared cache for:', cacheKey);
+  }
+
+  // Clear all cache for a user
+  clearUserCache(userId) {
+    for (const [key] of this.likeCache.entries()) {
+      if (key.startsWith(`${userId}:`)) {
+        this.likeCache.delete(key);
+      }
+    }
+    console.log('[Cache] Cleared all cache for user:', userId);
+  }
+
   // Extract tweet ID from various Twitter URL formats
   extractTweetId(url) {
     const patterns = [
@@ -118,7 +135,7 @@ class TwitterVerificationService {
       
       console.log('[verifyLike] Like found:', liked);
 
-      // Cache the result
+      // Cache the result (only cache successful checks)
       this.likeCache.set(cacheKey, {
         verified: liked,
         timestamp: Date.now()
@@ -131,9 +148,10 @@ class TwitterVerificationService {
     } catch (error) {
       console.error('Like verification error:', error.response?.data);
       
-      // Handle unauthorized - token expired
+      // Handle unauthorized - token expired - DON'T CACHE THIS
       if (error.response?.status === 401) {
         console.error('[verifyLike] Token expired (401)');
+        this.likeCache.delete(cacheKey); // Clear any cached result
         return {
           verified: false,
           needsTokenRefresh: true,

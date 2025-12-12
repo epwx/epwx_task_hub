@@ -106,7 +106,10 @@ router.post('/submit', async (req, res) => {
           twitterRefreshToken: refreshToken
         });
         
-        console.log('[Task Submit] Token refreshed successfully, retrying verification...');
+        console.log('[Task Submit] Token refreshed successfully, clearing cache and retrying verification...');
+        
+        // Clear cache for this user to force fresh verification
+        twitterVerification.clearUserCache(user.twitterId);
         
         // Retry verification with new token
         verification = await twitterVerification.verifyTask(
