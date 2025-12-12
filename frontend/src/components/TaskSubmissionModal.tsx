@@ -101,13 +101,20 @@ export function TaskSubmissionModal({
     } catch (error: any) {
       console.error('Submission error:', error);
       
-      if (error.response?.status === 401) {
-        toast.error('Authentication required. Please sign in.');
+      // Check for requiresTwitterAuth flag from backend
+      if (error.response?.data?.requiresTwitterAuth) {
+        toast.error(error.response.data.error || 'Please reconnect your X/Twitter account');
+        // Refresh Twitter status to show reconnect UI
+        setIsTwitterConnected(false);
+        setCheckingTwitter(false);
+      } else if (error.response?.status === 401) {
+        toast.error('Your X/Twitter connection has expired. Please reconnect your account.');
+        setIsTwitterConnected(false);
       } else if (error.response?.status === 400) {
         const message = error.response.data.message || error.response.data.error;
         toast.error(message);
       } else {
-        toast.error('Failed to verify task. Please try again.');
+        toast.error(error.response?.data?.error || 'Failed to verify task. Please try again.');
       }
     } finally {
       setLoading(false);
