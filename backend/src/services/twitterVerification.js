@@ -131,6 +131,16 @@ class TwitterVerificationService {
     } catch (error) {
       console.error('Like verification error:', error.response?.data);
       
+      // Handle unauthorized - token expired
+      if (error.response?.status === 401) {
+        console.error('[verifyLike] Token expired (401)');
+        return {
+          verified: false,
+          needsTokenRefresh: true,
+          message: 'Twitter authentication expired. Please reconnect your account.'
+        };
+      }
+      
       // Handle rate limiting specifically
       if (error.response?.status === 429) {
         const retryAfter = error.response.headers['x-rate-limit-reset'];

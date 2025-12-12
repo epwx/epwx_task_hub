@@ -4,6 +4,7 @@ const { TaskSubmission, Campaign, User } = require('../models');
 const { authenticateToken } = require('./auth');
 const { taskManagerWithSigner } = require('../services/blockchain');
 const twitterVerification = require('../services/twitterVerification');
+const { refreshTwitterToken } = require('../services/twitterTokenRefresh');
 const { ethers } = require('ethers');
 
 /**
@@ -84,14 +85,46 @@ router.post('/submit', async (req, res) => {
     console.log('[Task Submit] User access token exists:', !!user.twitterAccessToken);
     console.log('[Task Submit] User Twitter ID:', user.twitterId);
     
-    // Verify task via Twitter API
-    const verification = await twitterVerification.verifyTask(
+    // Verify task via Twitter API (with automatic token refresh)
+    let verification = await twitterVerification.verifyTask(
       campaign.taskType,
-      user.twitterUsername, // Use verified username from DB
+      user.twitterUsername,
       campaign.targetUrl,
-      user.twitterAccessToken, // Pass user's access token
-      user.twitterId // Pass user's Twitter ID to avoid rate limits
+      user.twitterAccessToken,
+      user.twitterId
     );
+    
+    // If verification failed due to unauthorized token, try refreshing
+    if (!verification.verified && verification.needsTokenRefresh && user.twitterRefreshToken) {
+      console.log('[Task Submit] Access token expired, attempting refresh...');
+      try {
+        const { accessToken, refreshToken } = await refreshTwitterToken(user.twitterRefreshToken);
+        
+        // Update user's tokens
+        await user.update({
+          twitterAccessToken: accessToken,
+          twitterRefreshToken: refreshToken
+        });
+        
+        console.log('[Task Submit] Token refreshed successfully, retrying verification...');
+        
+        // Retry verification with new token
+        verification = await twitterVerification.verifyTask(
+          campaign.taskType,
+          user.twitterUsername,
+          campaign.targetUrl,
+          accessToken,
+          user.twitterId
+        );
+      } catch (refreshError) {
+        console.error('[Task Submit] Token refresh failed:', refreshError);
+        return res.status(401).json({ 
+          error: 'Your X/Twitter connection has expired. Please reconnect your account.',
+          success: false,
+          requiresTwitterAuth: true
+        });
+      }
+    }
     
     console.log('[Task Submit] Verification result:', verification);
     
