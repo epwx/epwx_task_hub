@@ -75,6 +75,7 @@ class TwitterVerificationService {
 
   // Verify if user liked a tweet
   async verifyLike(username, tweetUrl, userAccessToken = null, userId = null) {
+    let cacheKey;
     try {
       const tweetId = this.extractTweetId(tweetUrl);
       if (!tweetId) {
@@ -90,7 +91,7 @@ class TwitterVerificationService {
       console.log('[verifyLike] User ID:', userIdToUse);
 
       // Check cache first
-      const cacheKey = `${userIdToUse}:${tweetId}`;
+      cacheKey = `${userIdToUse}:${tweetId}`;
       const cached = this.likeCache.get(cacheKey);
       if (cached && (Date.now() - cached.timestamp < this.CACHE_TTL)) {
         console.log('[verifyLike] Using cached result:', cached.verified);
@@ -147,18 +148,16 @@ class TwitterVerificationService {
       };
     } catch (error) {
       console.error('Like verification error:', error.response?.data);
-      
       // Handle unauthorized - token expired - DON'T CACHE THIS
       if (error.response?.status === 401) {
         console.error('[verifyLike] Token expired (401)');
-        this.likeCache.delete(cacheKey); // Clear any cached result
+        if (cacheKey) this.likeCache.delete(cacheKey); // Clear any cached result
         return {
           verified: false,
           needsTokenRefresh: true,
           message: 'Twitter authentication expired. Please reconnect your account.'
         };
       }
-      
       // Handle rate limiting specifically
       if (error.response?.status === 429) {
         const retryAfter = error.response.headers['x-rate-limit-reset'];
@@ -168,7 +167,6 @@ class TwitterVerificationService {
           message: 'Twitter API rate limit reached. Please wait a moment and try again.'
         };
       }
-      
       return {
         verified: false,
         message: 'Verification failed. Please ensure you liked the tweet.'
