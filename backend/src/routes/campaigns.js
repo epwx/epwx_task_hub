@@ -1,7 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const { Campaign, User } = require('../models');
+
 const { authenticateToken } = require('./auth');
+const { createCampaignOnChain } = require('../services/campaignOnChain');
 
 /**
  * GET /api/campaigns
@@ -87,7 +89,7 @@ router.post('/', authenticateToken, async (req, res) => {
     const totalBudget = BigInt(rewardPerTask) * BigInt(maxCompletions);
     const deadline = new Date(Date.now() + durationInDays * 24 * 60 * 60 * 1000);
     
-    // Create campaign in database
+    // 1. Create campaign in DB with pending status
     const campaign = await Campaign.create({
       campaignId: 0, // Will be updated after blockchain transaction
       advertiserId: req.user.userId,
@@ -101,12 +103,30 @@ router.post('/', authenticateToken, async (req, res) => {
       deadline,
       status: 'pending'
     });
-    
-    res.json({
-      success: true,
-      data: campaign,
-      message: 'Campaign created. Please complete the blockchain transaction.'
-    });
+
+    // 2. Create campaign on blockchain
+    try {
+      const onChain = await createCampaignOnChain(
+        taskType,
+        targetUrl,
+        rewardPerTask.toString(),
+        maxCompletions,
+        durationInDays
+      );
+      // 3. Update DB with blockchain campaignId and tx hash
+      campaign.campaignId = onChain.campaignId;
+      campaign.transactionHash = onChain.transactionHash;
+      campaign.status = 'active';
+      await campaign.save();
+      res.json({
+        success: true,
+        data: campaign,
+        message: 'Campaign created successfully on blockchain.'
+      });
+    } catch (err) {
+      // If blockchain tx fails, keep DB record as pending
+      res.status(500).json({ error: 'Blockchain transaction failed', details: err.message });
+    }
   } catch (error) {
     console.error('Create campaign error:', error);
     res.status(500).json({ error: 'Failed to create campaign' });
