@@ -7,7 +7,8 @@ export default function TasksPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
       <Header />
-      <main className="container mx-auto px-4 py-8 min-h-screen overflow-y-auto">
+      
+      <main className="container mx-auto px-4 py-8">
         {/* Page Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">
