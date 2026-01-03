@@ -10,8 +10,8 @@ const provider = new ethers.JsonRpcProvider(process.env.BASE_RPC_URL);
 async function getTotalSupply() {
   const contract = new ethers.Contract(EPWX_TOKEN, ERC20_ABI, provider);
   const totalSupply = await contract.totalSupply();
-  // Adjust decimals if needed (commonly 18)
-  return ethers.formatUnits(totalSupply, 18);
+  // Adjust decimals to 9 as per BaseScan
+  return ethers.formatUnits(totalSupply, 9);
 }
 
 module.exports = { getTotalSupply };
