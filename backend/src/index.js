@@ -59,6 +59,12 @@ app.use('/api/users', require('./routes/users'));
 app.use('/api/price', require('./routes/price'));
 app.use('/api/twitter', require('./routes/twitter'));
 app.use('/api', require('./routes/supply'));
+try {
+  app.use('/api', require('./routes/circulating'));
+  console.log('Registered /api/circulating route');
+} catch (err) {
+  console.error('Error loading /api/circulating:', err);
+}
 
 // Health check
 app.get('/health', (req, res) => {
