@@ -66,6 +66,7 @@ try {
   console.error('Error loading /api/circulating:', err);
 }
 
+app.use('/api', require('./routes/burned'));
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
