@@ -67,6 +67,7 @@ try {
 }
 
 app.use('/api', require('./routes/burned'));
+app.use('/api/docs', require('./routes/swagger'));
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

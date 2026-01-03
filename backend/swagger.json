@@ -1,0 +1,76 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "EPWX Public Supply API",
+    "version": "1.0.0",
+    "description": "Public endpoints for real-time, on-chain EPWX token supply data. All values are formatted with 9 decimals. Base URL: https://api.epowex.com/api"
+  },
+  "servers": [
+    { "url": "https://api.epowex.com/api" }
+  ],
+  "paths": {
+    "/supply": {
+      "get": {
+        "summary": "Get total supply",
+        "description": "Returns the total supply of EPWX.",
+        "responses": {
+          "200": {
+            "description": "Total supply response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "totalSupply": { "type": "string", "example": "500000000000000.0" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/circulating": {
+      "get": {
+        "summary": "Get circulating supply",
+        "description": "Returns the circulating supply (total supply minus burned and treasury-locked tokens).",
+        "responses": {
+          "200": {
+            "description": "Circulating supply response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "circulatingSupply": { "type": "string", "example": "47735101557879.49916245" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/burned": {
+      "get": {
+        "summary": "Get burned supply",
+        "description": "Returns the total amount of EPWX sent to the burn (dead) address.",
+        "responses": {
+          "200": {
+            "description": "Burned supply response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "burnedSupply": { "type": "string", "example": "452219794766432.065945108" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
