@@ -58,6 +58,7 @@ app.use('/api/tasks', require('./routes/tasks'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/price', require('./routes/price'));
 app.use('/api/twitter', require('./routes/twitter'));
+app.use('/api', require('./routes/supply'));
 
 // Health check
 app.get('/health', (req, res) => {
