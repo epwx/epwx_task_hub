@@ -1,7 +1,8 @@
-const express = require('express');
+
+import express from 'express';
+import { getEPWXPurchaseTransactions } from '../services/epwxCashback.js';
+import { CashbackClaim } from '../models/index.js';
 const router = express.Router();
-const { getEPWXPurchaseTransactions } = require('../services/epwxCashback');
-const { CashbackClaim } = require('../models');
 
 // GET /api/epwx/purchases?wallet=0x...&hours=3
 router.get('/purchases', async (req, res) => {
@@ -65,4 +66,4 @@ router.post('/claims/mark-paid', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;
