@@ -5,7 +5,7 @@ WORKDIR /app
 COPY package.json ./
 COPY package-lock.json ./
 
-RUN npm ci --only=production
+RUN npm install --omit=dev
 
 COPY . .
 
