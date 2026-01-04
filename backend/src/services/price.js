@@ -1,6 +1,6 @@
-const axios = require('axios');
-const { ethers } = require('ethers');
-const { pairContract } = require('./blockchain');
+import axios from 'axios';
+import { ethers } from 'ethers';
+import { pairContract } from './blockchain.js';
 
 const WETH_ADDRESS = '0x4200000000000000000000000000000000000006';
 const EPWX_TOKEN = process.env.EPWX_TOKEN_ADDRESS;
@@ -8,7 +8,7 @@ const EPWX_TOKEN = process.env.EPWX_TOKEN_ADDRESS;
 /**
  * Get ETH price in USD from CoinGecko
  */
-async function getETHPriceUSD() {
+export async function getETHPriceUSD() {
   try {
     const response = await axios.get(
       'https://api.coingecko.com/api/v3/simple/price',
@@ -29,7 +29,7 @@ async function getETHPriceUSD() {
 /**
  * Get EPWX price from PancakeSwap pair
  */
-async function getEPWXPrice() {
+export async function getEPWXPrice() {
   try {
     // Get reserves from pair
     const [reserve0, reserve1] = await pairContract.getReserves();
@@ -75,7 +75,7 @@ async function getEPWXPrice() {
 /**
  * Convert USD to EPWX amount
  */
-async function convertUSDToEPWX(usdAmount) {
+export async function convertUSDToEPWX(usdAmount) {
   const priceData = await getEPWXPrice();
   return Math.floor(usdAmount / priceData.priceUSD);
 }
@@ -83,14 +83,9 @@ async function convertUSDToEPWX(usdAmount) {
 /**
  * Convert EPWX to USD amount
  */
-async function convertEPWXToUSD(epwxAmount) {
+export async function convertEPWXToUSD(epwxAmount) {
   const priceData = await getEPWXPrice();
   return epwxAmount * priceData.priceUSD;
 }
 
-module.exports = {
-  getETHPriceUSD,
-  getEPWXPrice,
-  convertUSDToEPWX,
-  convertEPWXToUSD
-};
+
