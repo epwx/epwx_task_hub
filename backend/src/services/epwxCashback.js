@@ -38,13 +38,20 @@ async function getEPWXPurchaseTransactions(walletAddress, sinceTimestamp) {
   const fromBlock = Math.max(currentBlock - blocksAgo, 0);
   console.log('[EPWX Cashback] Querying blocks', fromBlock, 'to', currentBlock);
 
-  // Filter for swaps where 'to' is the user (buy)
-  const filter = pair.filters.Swap(null, null, null, null, null, walletAddress);
-  const events = await pair.queryFilter(filter, fromBlock, currentBlock);
-  console.log('[EPWX Cashback] Swap events found:', events.length);
+  // Get all Swap events for the pair in the block range (no filter on 'to')
+  const allSwapEvents = await pair.queryFilter(pair.filters.Swap(), fromBlock, currentBlock);
+  console.log('[EPWX Cashback] All Swap events found in range:', allSwapEvents.length);
+  allSwapEvents.forEach((event, idx) => {
+    const { transactionHash, args, blockNumber } = event;
+    console.log(`[EPWX Cashback] Swap #${idx + 1}: txHash=${transactionHash}, sender=${args.sender}, to=${args.to}, amount0In=${args.amount0In}, amount1In=${args.amount1In}, amount0Out=${args.amount0Out}, amount1Out=${args.amount1Out}, block=${blockNumber}`);
+  });
+
+  // Now filter for swaps where 'to' is the user (buy)
+  const userEvents = allSwapEvents.filter(event => event.args.to.toLowerCase() === walletAddress.toLowerCase());
+  console.log('[EPWX Cashback] User Swap events found:', userEvents.length);
 
   // Map and filter for 'buy' (user receives EPWX)
-  const txs = await Promise.all(events.map(async (event) => {
+  const txs = await Promise.all(userEvents.map(async (event) => {
     const { transactionHash, args, blockNumber } = event;
     const block = await provider.getBlock(blockNumber);
     const timestamp = block.timestamp;
