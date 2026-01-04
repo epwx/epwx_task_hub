@@ -38,6 +38,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
+
+# Sequelize CLI config (do not commit sensitive DB info)
+backend/config/config.json
 pnpm-debug.log*
 
 # Hardhat
