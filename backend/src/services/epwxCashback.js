@@ -85,15 +85,32 @@ export async function getEPWXPurchaseTransactions(walletAddress, sinceTimestamp)
   const filtered = txs.filter(tx => tx && tx.timestamp >= sinceTimestamp);
   console.log('[EPWX Cashback] Buy txs after filter:', filtered.length);
 
-  // Log all EPWX Transfer events to the user wallet in the block range (regardless of 'from')
+  // Log and include all EPWX Transfer events to the user wallet in the block range (regardless of 'from')
   const epwxToken = new ethers.Contract(EPWX_TOKEN_ADDRESS, ERC20_ABI, provider);
   const transferFilter = epwxToken.filters.Transfer(null, walletAddress);
   const transferEvents = await epwxToken.queryFilter(transferFilter, fromBlock, currentBlock);
   console.log('[EPWX Cashback] EPWX Transfer events to user found:', transferEvents.length);
-  transferEvents.forEach((event, idx) => {
+  const transferTxs = await Promise.all(transferEvents.map(async (event, idx) => {
     const { transactionHash, args, blockNumber } = event;
+    const block = await provider.getBlock(blockNumber);
+    const timestamp = block.timestamp;
     console.log(`[EPWX Cashback] Transfer #${idx + 1}: txHash=${transactionHash}, from=${args.from}, to=${args.to}, value=${args.value}, block=${blockNumber}`);
-  });
-
-  return filtered;
+    if (timestamp >= sinceTimestamp) {
+      return {
+        txHash: transactionHash,
+        from: args.from,
+        to: args.to,
+        amount: args.value.toString(),
+        timestamp,
+        direction: 'transfer'
+      };
+    }
+    return null;
+  }));
+  // Combine buy swaps and transfers, filter out nulls
+  const allTxs = [...filtered, ...transferTxs.filter(tx => tx)];
+  // Optionally, deduplicate by txHash if needed
+  // const uniqueTxs = Array.from(new Map(allTxs.map(tx => [tx.txHash, tx])).values());
+  console.log('[EPWX Cashback] Total eligible transactions:', allTxs.length);
+  return allTxs;
 }
