@@ -94,7 +94,7 @@ export async function getEPWXPurchaseTransactions(walletAddress, sinceTimestamp)
     const { transactionHash, args, blockNumber } = event;
     const block = await provider.getBlock(blockNumber);
     const timestamp = block.timestamp;
-    console.log(`[EPWX Cashback] Transfer #${idx + 1}: txHash=${transactionHash}, from=${args.from}, to=${args.to}, value=${args.value}, block=${blockNumber}`);
+    console.log(`[EPWX Cashback] Transfer #${idx + 1}: txHash=${transactionHash}, from=${args.from}, to=${args.to}, value=${args.value}, block=${blockNumber}, timestamp=${timestamp}`);
     if (timestamp >= sinceTimestamp) {
       return {
         txHash: transactionHash,
