@@ -1,12 +1,10 @@
-// Load environment variables FIRST before any other imports
-require('dotenv').config();
-
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
-const session = require('express-session');
-const passport = require('./config/passport');
+import 'dotenv/config';
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import session from 'express-session';
+import passport from './config/passport.js';
 
 const app = express();
 
@@ -68,14 +66,34 @@ try {
 
 app.use('/api', require('./routes/burned'));
 app.use('/api/docs', require('./routes/swagger'));
-app.use('/api/epwx', require('./routes/epwx'));
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
-// Error handler
+import authRouter from './routes/auth.js';
+import campaignsRouter from './routes/campaigns.js';
+import tasksRouter from './routes/tasks.js';
+import usersRouter from './routes/users.js';
+import priceRouter from './routes/price.js';
+import twitterRouter from './routes/twitter.js';
+import supplyRouter from './routes/supply.js';
+import circulatingRouter from './routes/circulating.js';
+import burnedRouter from './routes/burned.js';
+import swaggerRouter from './routes/swagger.js';
+import epwxRouter from './routes/epwx.js';
 app.use((err, req, res, next) => {
+app.use('/api/auth', authRouter);
+app.use('/api/campaigns', campaignsRouter);
+app.use('/api/tasks', tasksRouter);
+app.use('/api/users', usersRouter);
+app.use('/api/price', priceRouter);
+app.use('/api/twitter', twitterRouter);
+app.use('/api', supplyRouter);
+try {
+  app.use('/api', circulatingRouter);
+  console.log('Registered /api/circulating route');
+} catch (err) {
+  console.error('Error loading /api/circulating:', err);
+}
+app.use('/api', burnedRouter);
+app.use('/api/docs', swaggerRouter);
+app.use('/api/epwx', epwxRouter);
   console.error(err.stack);
   res.status(err.status || 500).json({
     error: {
@@ -92,4 +110,4 @@ app.listen(PORT, () => {
   console.log(`Environment: ${process.env.NODE_ENV}`);
 });
 
-module.exports = app;
+export default app;
