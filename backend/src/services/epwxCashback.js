@@ -35,12 +35,10 @@ export async function getEPWXPurchaseTransactions(walletAddress, sinceTimestamp)
 
   // Get Swap events since the given timestamp
   const currentBlock = await provider.getBlockNumber();
-  // Estimate block number for sinceTimestamp (approximate)
-  const latestBlock = await provider.getBlock(currentBlock);
-  const avgBlockTime = 12; // seconds, adjust for your network
-  const blocksAgo = Math.floor((latestBlock.timestamp - sinceTimestamp) / avgBlockTime);
-  const fromBlock = Math.max(currentBlock - blocksAgo, 0);
-  console.log('[EPWX Cashback] Querying blocks', fromBlock, 'to', currentBlock);
+  // Always query the last 10,000 blocks to ensure coverage
+  const BLOCK_LOOKBACK = 10000;
+  const fromBlock = Math.max(currentBlock - BLOCK_LOOKBACK, 0);
+  console.log('[EPWX Cashback] Querying blocks', fromBlock, 'to', currentBlock, `(lookback: ${BLOCK_LOOKBACK})`);
 
   // Get all Swap events for the pair in the block range (no filter on 'to')
   const allSwapEvents = await pair.queryFilter(pair.filters.Swap(), fromBlock, currentBlock);
