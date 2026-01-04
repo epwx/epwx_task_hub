@@ -1,7 +1,7 @@
 console.log('Loaded circulating route');
-const express = require('express');
+import express from 'express';
+import { getCirculatingSupply } from '../services/circulating.js';
 const router = express.Router();
-const { getCirculatingSupply } = require('../services/circulating');
 
 // GET /api/circulating - Returns the circulating supply of EPWX
 router.get('/circulating', async (req, res) => {
@@ -13,4 +13,4 @@ router.get('/circulating', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

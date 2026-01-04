@@ -1,6 +1,6 @@
-const express = require('express');
+import express from 'express';
+import { getTotalSupply } from '../services/supply.js';
 const router = express.Router();
-const { getTotalSupply } = require('../services/supply');
 
 // GET /api/supply - Returns the total supply of EPWX
 router.get('/supply', async (req, res) => {
@@ -12,4 +12,4 @@ router.get('/supply', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

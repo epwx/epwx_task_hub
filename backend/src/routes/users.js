@@ -1,7 +1,7 @@
-const express = require('express');
+import express from 'express';
+import { User, TaskSubmission, Campaign } from '../models/index.js';
+import { authenticateToken } from './auth.js';
 const router = express.Router();
-const { User, TaskSubmission, Campaign } = require('../models');
-const { authenticateToken } = require('./auth');
 
 /**
  * GET /api/users/stats
@@ -66,4 +66,4 @@ router.get('/leaderboard', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

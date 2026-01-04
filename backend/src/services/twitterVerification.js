@@ -1,4 +1,4 @@
-const axios = require('axios');
+import axios from 'axios';
 
 class TwitterVerificationService {
   constructor() {
@@ -321,4 +321,5 @@ class TwitterVerificationService {
   }
 }
 
-module.exports = new TwitterVerificationService();
+const twitterVerification = new TwitterVerificationService();
+export default twitterVerification;

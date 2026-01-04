@@ -1,6 +1,6 @@
-const express = require('express');
+import express from 'express';
+import { getBurnedSupply } from '../services/burned.js';
 const router = express.Router();
-const { getBurnedSupply } = require('../services/burned');
 
 // GET /api/burned - Returns the total burned supply of EPWX
 router.get('/burned', async (req, res) => {
@@ -12,4 +12,4 @@ router.get('/burned', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

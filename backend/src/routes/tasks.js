@@ -1,11 +1,11 @@
-const express = require('express');
+import express from 'express';
+import { TaskSubmission, Campaign, User } from '../models/index.js';
+import { authenticateToken } from './auth.js';
+import { taskManagerWithSigner } from '../services/blockchain.js';
+import twitterVerification from '../services/twitterVerification.js';
+import { refreshTwitterToken } from '../services/twitterTokenRefresh.js';
+import { ethers } from 'ethers';
 const router = express.Router();
-const { TaskSubmission, Campaign, User } = require('../models');
-const { authenticateToken } = require('./auth');
-const { taskManagerWithSigner } = require('../services/blockchain');
-const twitterVerification = require('../services/twitterVerification');
-const { refreshTwitterToken } = require('../services/twitterTokenRefresh');
-const { ethers } = require('ethers');
 
 /**
  * POST /api/tasks/submit
@@ -302,4 +302,4 @@ router.get('/completed/:walletAddress', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

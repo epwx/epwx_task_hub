@@ -1,6 +1,6 @@
-const { taskManagerWithSigner } = require('./blockchain');
+import { taskManagerWithSigner } from './blockchain.js';
 
-async function createCampaignOnChain(taskType, targetUrl, rewardPerTask, maxCompletions, durationInDays) {
+export async function createCampaignOnChain(taskType, targetUrl, rewardPerTask, maxCompletions, durationInDays) {
   // rewardPerTask should be a string or BigInt in smallest unit (e.g., wei)
   const tx = await taskManagerWithSigner.createCampaign(
     taskType,
@@ -18,7 +18,3 @@ async function createCampaignOnChain(taskType, targetUrl, rewardPerTask, maxComp
     transactionHash: receipt.transactionHash
   };
 }
-
-module.exports = {
-  createCampaignOnChain
-};

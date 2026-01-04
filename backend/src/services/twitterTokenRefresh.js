@@ -1,11 +1,11 @@
-const axios = require('axios');
+import axios from 'axios';
 
 /**
  * Refresh Twitter OAuth 2.0 access token using refresh token
  * @param {string} refreshToken - The refresh token
  * @returns {Promise<{accessToken: string, refreshToken: string}>}
  */
-async function refreshTwitterToken(refreshToken) {
+export async function refreshTwitterToken(refreshToken) {
   try {
     const response = await axios.post(
       'https://api.twitter.com/2/oauth2/token',
@@ -32,4 +32,4 @@ async function refreshTwitterToken(refreshToken) {
   }
 }
 
-module.exports = { refreshTwitterToken };
+

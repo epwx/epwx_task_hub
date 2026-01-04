@@ -1,5 +1,5 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+import { DataTypes } from 'sequelize';
+import sequelize from '../config/database.js';
 
 const CashbackClaim = sequelize.define('CashbackClaim', {
   id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
@@ -14,4 +14,4 @@ const CashbackClaim = sequelize.define('CashbackClaim', {
   timestamps: false,
 });
 
-module.exports = CashbackClaim;
+export default CashbackClaim;

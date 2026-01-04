@@ -1,5 +1,5 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+import { DataTypes } from 'sequelize';
+import sequelize from '../config/database.js';
 
 const Campaign = sequelize.define('Campaign', {
   id: {
@@ -77,4 +77,4 @@ const Campaign = sequelize.define('Campaign', {
   ]
 });
 
-module.exports = Campaign;
+export default Campaign;

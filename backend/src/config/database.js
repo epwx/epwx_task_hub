@@ -1,4 +1,4 @@
-const { Sequelize } = require('sequelize');
+import { Sequelize } from 'sequelize';
 
 // Use explicit config to avoid Sequelize URL parsing issues
 const sequelize = new Sequelize({
@@ -17,4 +17,4 @@ const sequelize = new Sequelize({
   }
 });
 
-module.exports = sequelize;
+export default sequelize;

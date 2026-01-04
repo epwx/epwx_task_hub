@@ -1,7 +1,7 @@
-const express = require('express');
+import express from 'express';
+import jwt from 'jsonwebtoken';
+import { User } from '../models/index.js';
 const router = express.Router();
-const jwt = require('jsonwebtoken');
-const { User } = require('../models');
 
 /**
  * POST /api/auth/connect
@@ -101,5 +101,5 @@ function authenticateToken(req, res, next) {
   });
 }
 
-module.exports = router;
-module.exports.authenticateToken = authenticateToken;
+export { authenticateToken };
+export default router;

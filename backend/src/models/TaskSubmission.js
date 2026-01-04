@@ -1,5 +1,5 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+import { DataTypes } from 'sequelize';
+import sequelize from '../config/database.js';
 
 const TaskSubmission = sequelize.define('TaskSubmission', {
   id: {
@@ -73,4 +73,4 @@ const TaskSubmission = sequelize.define('TaskSubmission', {
   ]
 });
 
-module.exports = TaskSubmission;
+export default TaskSubmission;

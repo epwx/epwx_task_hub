@@ -1,4 +1,4 @@
-const { ethers } = require('ethers');
+import { ethers } from 'ethers';
 
 const provider = new ethers.JsonRpcProvider(process.env.BASE_RPC_URL);
 
@@ -46,7 +46,7 @@ if (process.env.VERIFIER_PRIVATE_KEY && taskManagerContract) {
   taskManagerWithSigner = taskManagerContract.connect(verifierWallet);
 }
 
-module.exports = {
+export {
   provider,
   taskManagerContract,
   taskManagerWithSigner,

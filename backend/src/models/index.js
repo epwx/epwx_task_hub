@@ -1,7 +1,7 @@
-const User = require('./User');
-const Campaign = require('./Campaign');
-const TaskSubmission = require('./TaskSubmission');
-const CashbackClaim = require('./CashbackClaim');
+import User from './User.js';
+import Campaign from './Campaign.js';
+import TaskSubmission from './TaskSubmission.js';
+import CashbackClaim from './CashbackClaim.js';
 
 // Define associations
 Campaign.belongsTo(User, { foreignKey: 'advertiserId', as: 'advertiser' });
@@ -12,9 +12,4 @@ TaskSubmission.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 Campaign.hasMany(TaskSubmission, { foreignKey: 'campaignId', as: 'submissions' });
 User.hasMany(TaskSubmission, { foreignKey: 'userId', as: 'submissions' });
 
-module.exports = {
-  User,
-  Campaign,
-  TaskSubmission,
-  CashbackClaim
-};
+export { User, Campaign, TaskSubmission, CashbackClaim };

@@ -1,8 +1,8 @@
-const express = require('express');
+import express from 'express';
+import { User } from '../models/index.js';
+import axios from 'axios';
+import crypto from 'crypto';
 const router = express.Router();
-const { User } = require('../models');
-const axios = require('axios');
-const crypto = require('crypto');
 
 // Store for PKCE verifiers (in production, use Redis)
 const pkceStore = new Map();
@@ -220,4 +220,4 @@ router.post('/disconnect', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

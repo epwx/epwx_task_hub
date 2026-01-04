@@ -1,6 +1,6 @@
-const express = require('express');
+import express from 'express';
+import { getEPWXPrice } from '../services/price.js';
 const router = express.Router();
-const { getEPWXPrice } = require('../services/price');
 
 /**
  * GET /api/price/epwx
@@ -21,4 +21,4 @@ router.get('/epwx', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

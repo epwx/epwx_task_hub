@@ -1,9 +1,8 @@
-const express = require('express');
+import express from 'express';
+import { Campaign, User } from '../models/index.js';
+import { authenticateToken } from './auth.js';
+import { createCampaignOnChain } from '../services/campaignOnChain.js';
 const router = express.Router();
-const { Campaign, User } = require('../models');
-
-const { authenticateToken } = require('./auth');
-const { createCampaignOnChain } = require('../services/campaignOnChain');
 
 /**
  * GET /api/campaigns
@@ -161,4 +160,4 @@ router.get('/user/:walletAddress', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;
