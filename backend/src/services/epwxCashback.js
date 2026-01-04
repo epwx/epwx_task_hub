@@ -1,3 +1,16 @@
+// Minimal ERC20 ABI for Transfer event
+const ERC20_ABI = [
+  "event Transfer(address indexed from, address indexed to, uint256 value)"
+];
+  // Log all EPWX Transfer events to the user wallet in the block range (regardless of 'from')
+  const epwxToken = new ethers.Contract(EPWX_TOKEN_ADDRESS, ERC20_ABI, provider);
+  const transferFilter = epwxToken.filters.Transfer(null, walletAddress);
+  const transferEvents = await epwxToken.queryFilter(transferFilter, fromBlock, currentBlock);
+  console.log('[EPWX Cashback] EPWX Transfer events to user found:', transferEvents.length);
+  transferEvents.forEach((event, idx) => {
+    const { transactionHash, args, blockNumber } = event;
+    console.log(`[EPWX Cashback] Transfer #${idx + 1}: txHash=${transactionHash}, from=${args.from}, to=${args.to}, value=${args.value}, block=${blockNumber}`);
+  });
 const { ethers } = require('ethers');
 const { provider, EPWX_TOKEN_ADDRESS } = require('./blockchain');
 
