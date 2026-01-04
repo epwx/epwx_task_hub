@@ -49,23 +49,7 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
-// Routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/campaigns', require('./routes/campaigns'));
-app.use('/api/tasks', require('./routes/tasks'));
-app.use('/api/users', require('./routes/users'));
-app.use('/api/price', require('./routes/price'));
-app.use('/api/twitter', require('./routes/twitter'));
-app.use('/api', require('./routes/supply'));
-try {
-  app.use('/api', require('./routes/circulating'));
-  console.log('Registered /api/circulating route');
-} catch (err) {
-  console.error('Error loading /api/circulating:', err);
-}
-
-app.use('/api', require('./routes/burned'));
-app.use('/api/docs', require('./routes/swagger'));
+// Routes (ESM imports only)
 import authRouter from './routes/auth.js';
 import campaignsRouter from './routes/campaigns.js';
 import tasksRouter from './routes/tasks.js';
@@ -77,6 +61,17 @@ import circulatingRouter from './routes/circulating.js';
 import burnedRouter from './routes/burned.js';
 import swaggerRouter from './routes/swagger.js';
 import epwxRouter from './routes/epwx.js';
+app.use('/api/auth', authRouter);
+app.use('/api/campaigns', campaignsRouter);
+app.use('/api/tasks', tasksRouter);
+app.use('/api/users', usersRouter);
+app.use('/api/price', priceRouter);
+app.use('/api/twitter', twitterRouter);
+app.use('/api', supplyRouter);
+app.use('/api', circulatingRouter);
+app.use('/api', burnedRouter);
+app.use('/api/docs', swaggerRouter);
+app.use('/api/epwx', epwxRouter);
 app.use((err, req, res, next) => {
 app.use('/api/auth', authRouter);
 app.use('/api/campaigns', campaignsRouter);
