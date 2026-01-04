@@ -10,9 +10,16 @@ const UNISWAP_V2_PAIR_ABI = [
   "function token1() view returns (address)"
 ];
 
+
 async function getEPWXPurchaseTransactions(walletAddress, sinceTimestamp) {
   if (!ethers.utils.isAddress(walletAddress)) return [];
   const pair = new ethers.Contract(EPWX_WETH_PAIR, UNISWAP_V2_PAIR_ABI, provider);
+
+  // Debug: Log addresses
+  console.log('[EPWX Cashback] Pair address:', EPWX_WETH_PAIR);
+  console.log('[EPWX Cashback] Token address:', EPWX_TOKEN_ADDRESS);
+  console.log('[EPWX Cashback] Wallet address:', walletAddress);
+  console.log('[EPWX Cashback] Since timestamp:', sinceTimestamp);
 
   // Get token0/token1 to determine which is EPWX
   const [token0, token1] = await Promise.all([
@@ -20,6 +27,7 @@ async function getEPWXPurchaseTransactions(walletAddress, sinceTimestamp) {
     pair.token1()
   ]);
   const isToken0 = token0.toLowerCase() === EPWX_TOKEN_ADDRESS.toLowerCase();
+  console.log('[EPWX Cashback] token0:', token0, 'token1:', token1, 'isToken0:', isToken0);
 
   // Get Swap events since the given timestamp
   const currentBlock = await provider.getBlockNumber();
@@ -28,10 +36,12 @@ async function getEPWXPurchaseTransactions(walletAddress, sinceTimestamp) {
   const avgBlockTime = 12; // seconds, adjust for your network
   const blocksAgo = Math.floor((latestBlock.timestamp - sinceTimestamp) / avgBlockTime);
   const fromBlock = Math.max(currentBlock - blocksAgo, 0);
+  console.log('[EPWX Cashback] Querying blocks', fromBlock, 'to', currentBlock);
 
   // Filter for swaps where 'to' is the user (buy)
   const filter = pair.filters.Swap(null, null, null, null, null, walletAddress);
   const events = await pair.queryFilter(filter, fromBlock, currentBlock);
+  console.log('[EPWX Cashback] Swap events found:', events.length);
 
   // Map and filter for 'buy' (user receives EPWX)
   const txs = await Promise.all(events.map(async (event) => {
@@ -61,7 +71,9 @@ async function getEPWXPurchaseTransactions(walletAddress, sinceTimestamp) {
     return null;
   }));
   // Filter out nulls and only include those after sinceTimestamp
-  return txs.filter(tx => tx && tx.timestamp >= sinceTimestamp);
+  const filtered = txs.filter(tx => tx && tx.timestamp >= sinceTimestamp);
+  console.log('[EPWX Cashback] Buy txs after filter:', filtered.length);
+  return filtered;
 }
 
 module.exports = {
