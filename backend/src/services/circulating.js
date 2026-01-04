@@ -1,4 +1,4 @@
-const { ethers } = require('ethers');
+import { ethers } from 'ethers';
 const ERC20_ABI = [
   "function totalSupply() view returns (uint256)",
   "function balanceOf(address) view returns (uint256)"
@@ -14,7 +14,7 @@ const DEAD_ADDRESS = process.env.DEAD_ADDRESS || '0x0000000000000000000000000000
 // Support multiple treasury addresses, comma-separated in .env
 const TREASURY_LOCKED_ADDRESSES = (process.env.TREASURY_LOCKED_ADDRESS || '').split(',').map(addr => addr.trim()).filter(Boolean);
 
-async function getCirculatingSupply() {
+export async function getCirculatingSupply() {
   const contract = new ethers.Contract(EPWX_TOKEN, ERC20_ABI, provider);
   const [totalSupply, burned, ...treasuryLockedBalances] = await Promise.all([
     contract.totalSupply(),
@@ -30,5 +30,3 @@ async function getCirculatingSupply() {
   );
   return circulating;
 }
-
-module.exports = { getCirculatingSupply };
