@@ -97,5 +97,3 @@ if (process.env.TWITTER_CLIENT_ID && process.env.TWITTER_CLIENT_SECRET) {
   console.warn('⚠️  Twitter OAuth not configured - missing TWITTER_CLIENT_ID or TWITTER_CLIENT_SECRET');
 }
 export default passport;
-
-module.exports = passport;
