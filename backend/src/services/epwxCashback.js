@@ -12,7 +12,7 @@ const UNISWAP_V2_PAIR_ABI = [
 
 
 async function getEPWXPurchaseTransactions(walletAddress, sinceTimestamp) {
-  if (!ethers.utils.isAddress(walletAddress)) return [];
+  if (!ethers.isAddress(walletAddress)) return [];
   const pair = new ethers.Contract(EPWX_WETH_PAIR, UNISWAP_V2_PAIR_ABI, provider);
 
   // Debug: Log addresses
