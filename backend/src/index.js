@@ -68,6 +68,7 @@ try {
 
 app.use('/api', require('./routes/burned'));
 app.use('/api/docs', require('./routes/swagger'));
+app.use('/api/epwx', require('./routes/epwx'));
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

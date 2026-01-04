@@ -5,6 +5,7 @@ import { TwitterConnect } from "@/components/TwitterConnect";
 import { CompletedTasks } from "@/components/CompletedTasks";
 import { useAccount } from "wagmi";
 import { useRouter } from "next/navigation";
+import { EPWXCashbackClaim } from "@/components/EPWXCashbackClaim";
 
 export default function DashboardPage() {
   const { address, isConnected } = useAccount();
@@ -51,6 +52,9 @@ export default function DashboardPage() {
             </button>
           </div>
         </div>
+
+        {/* EPWX Cashback Claim */}
+        <EPWXCashbackClaim />
 
         {/* Recent Activity */}
         <CompletedTasks />

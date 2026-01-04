@@ -1,6 +1,7 @@
 const User = require('./User');
 const Campaign = require('./Campaign');
 const TaskSubmission = require('./TaskSubmission');
+const CashbackClaim = require('./CashbackClaim');
 
 // Define associations
 Campaign.belongsTo(User, { foreignKey: 'advertiserId', as: 'advertiser' });
@@ -14,5 +15,6 @@ User.hasMany(TaskSubmission, { foreignKey: 'userId', as: 'submissions' });
 module.exports = {
   User,
   Campaign,
-  TaskSubmission
+  TaskSubmission,
+  CashbackClaim
 };

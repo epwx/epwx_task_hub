@@ -2,9 +2,9 @@ const { ethers } = require('ethers');
 
 const provider = new ethers.JsonRpcProvider(process.env.BASE_RPC_URL);
 
-const EPWX_TOKEN = process.env.EPWX_TOKEN_ADDRESS;
-const TASK_MANAGER = process.env.TASK_MANAGER_CONTRACT;
-const EPWX_WETH_PAIR = process.env.EPWX_WETH_PAIR;
+const EPWX_TOKEN = process.env.EPWX_TOKEN_ADDRESS || '0x000000000000000000000000000000000000dEaD';
+const TASK_MANAGER = process.env.TASK_MANAGER_CONTRACT || '0x000000000000000000000000000000000000dEaD';
+const EPWX_WETH_PAIR = process.env.EPWX_WETH_PAIR || '0x000000000000000000000000000000000000dEaD';
 
 // ABIs
 const TASK_MANAGER_ABI = [
@@ -34,14 +34,17 @@ const PAIR_ABI = [
   'function token1() external view returns (address)'
 ];
 
-// Contract instances
-const taskManagerContract = new ethers.Contract(TASK_MANAGER, TASK_MANAGER_ABI, provider);
-const epwxTokenContract = new ethers.Contract(EPWX_TOKEN, ERC20_ABI, provider);
-const pairContract = new ethers.Contract(EPWX_WETH_PAIR, PAIR_ABI, provider);
+// Contract instances (mock addresses if env vars missing)
+const taskManagerContract = TASK_MANAGER ? new ethers.Contract(TASK_MANAGER, TASK_MANAGER_ABI, provider) : null;
+const epwxTokenContract = EPWX_TOKEN ? new ethers.Contract(EPWX_TOKEN, ERC20_ABI, provider) : null;
+const pairContract = EPWX_WETH_PAIR ? new ethers.Contract(EPWX_WETH_PAIR, PAIR_ABI, provider) : null;
 
 // Verifier wallet (for submitting and verifying tasks)
-const verifierWallet = new ethers.Wallet(process.env.VERIFIER_PRIVATE_KEY, provider);
-const taskManagerWithSigner = taskManagerContract.connect(verifierWallet);
+let taskManagerWithSigner = null;
+if (process.env.VERIFIER_PRIVATE_KEY && taskManagerContract) {
+  const verifierWallet = new ethers.Wallet(process.env.VERIFIER_PRIVATE_KEY, provider);
+  taskManagerWithSigner = taskManagerContract.connect(verifierWallet);
+}
 
 module.exports = {
   provider,
