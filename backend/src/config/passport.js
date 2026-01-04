@@ -1,7 +1,7 @@
-const passport = require('passport');
-const OAuth2Strategy = require('passport-oauth2').Strategy;
-const { User } = require('../models');
-const axios = require('axios');
+import passport from 'passport';
+import { Strategy as OAuth2Strategy } from 'passport-oauth2';
+import { User } from '../models/index.js';
+import axios from 'axios';
 
 passport.serializeUser((user, done) => {
   done(null, user.id);
@@ -96,5 +96,6 @@ if (process.env.TWITTER_CLIENT_ID && process.env.TWITTER_CLIENT_SECRET) {
 } else {
   console.warn('⚠️  Twitter OAuth not configured - missing TWITTER_CLIENT_ID or TWITTER_CLIENT_SECRET');
 }
+export default passport;
 
 module.exports = passport;
