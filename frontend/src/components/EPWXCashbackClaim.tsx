@@ -53,41 +53,5 @@ export function EPWXCashbackClaim() {
       {error && <div className="text-red-600 mt-4 text-center">{error}</div>}
     </div>
   );
-      ) : transactions.length === 0 ? (
-        <div>No eligible EPWX swap transactions in the last 3 hours.</div>
-      ) : (
-        <table className="min-w-full text-left">
-          <thead>
-            <tr>
-              <th className="py-2 px-4">Tx Hash</th>
-              <th className="py-2 px-4">Amount</th>
-              <th className="py-2 px-4">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {transactions.map((tx: any) => (
-              <tr key={tx.txHash}>
-                <td className="py-2 px-4">{tx.txHash}</td>
-                <td className="py-2 px-4">{tx.amount}</td>
-                <td className="py-2 px-4">
-                  {claimed[tx.txHash] ? (
-                    <span className="text-green-600">Claimed</span>
-                  ) : (
-                    <button
-                      className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
-                      disabled={claiming === tx.txHash}
-                      onClick={() => handleClaim(tx)}
-                    >
-                      {claiming === tx.txHash ? 'Claiming...' : 'Claim 3% Cashback'}
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-      {error && <div className="text-red-600 mt-2">{error}</div>}
-    </div>
-  );
+// ...existing code...
 }
