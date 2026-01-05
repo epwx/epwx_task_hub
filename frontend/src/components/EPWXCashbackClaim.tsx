@@ -12,7 +12,9 @@ export function EPWXCashbackClaim() {
   useEffect(() => {
     if (!address) return;
     setLoading(true);
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/tasks/swaps/${address}`)
+    // Use a hardcoded base URL for swap transactions only
+    const swapsApiBase = 'https://tasks.epowex.com';
+    fetch(`${swapsApiBase}/api/tasks/swaps/${address}`)
       .then(res => res.json())
       .then(data => {
         setTransactions(data.data || []);
