@@ -2,6 +2,26 @@ import React, { useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
 
 export function EPWXCashbackClaim() {
+    const handleClaim = async (tx: any) => {
+      setClaiming(tx.txHash);
+      setError(null);
+      try {
+        const res = await fetch('/api/epwx/claim', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ wallet: address, txHash: tx.txHash, amount: tx.amount })
+        });
+        const data = await res.json();
+        if (data.success) {
+          setClaimed(prev => ({ ...prev, [tx.txHash]: true }));
+        } else {
+          setError(data.error || 'Claim failed');
+        }
+      } catch (e) {
+        setError('Claim failed');
+      }
+      setClaiming(null);
+    };
   const { address } = useAccount();
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
