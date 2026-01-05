@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 const ADMIN_WALLET = "0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735";
 
 export default function AdminPage() {
-  const [claims, setClaims] = useState([]);
+  const [claims, setClaims] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [marking, setMarking] = useState<number | null>(null);
