@@ -1,4 +1,5 @@
 import express from 'express';
+import { getEPWXPurchaseTransactions } from '../services/epwxCashback.js';
 import { TaskSubmission, Campaign, User } from '../models/index.js';
 import { authenticateToken } from './auth.js';
 import { taskManagerWithSigner } from '../services/blockchain.js';
@@ -303,3 +304,24 @@ router.get('/completed/:walletAddress', async (req, res) => {
 });
 
 export default router;
+/**
+ * GET /api/tasks/swaps
+ * Get swap transactions from the last 3 hours as available tasks
+ */
+router.get('/swaps/:walletAddress', async (req, res) => {
+  try {
+    const { walletAddress } = req.params;
+    if (!walletAddress) {
+      return res.status(400).json({ error: 'Missing wallet address' });
+    }
+    // Calculate timestamp for 3 hours ago
+    const now = Math.floor(Date.now() / 1000);
+    const threeHoursAgo = now - 3 * 60 * 60;
+    // Fetch swap transactions
+    const swaps = await getEPWXPurchaseTransactions(walletAddress, threeHoursAgo);
+    res.json({ success: true, data: swaps });
+  } catch (error) {
+    console.error('Error fetching swap transactions:', error);
+    res.status(500).json({ error: 'Failed to fetch swap transactions' });
+  }
+});
