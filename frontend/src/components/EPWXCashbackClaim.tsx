@@ -12,10 +12,10 @@ export function EPWXCashbackClaim() {
   useEffect(() => {
     if (!address) return;
     setLoading(true);
-    fetch(`/api/epwx/purchases?wallet=${address}&hours=3`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/tasks/swaps/${address}`)
       .then(res => res.json())
       .then(data => {
-        setTransactions(data.transactions || []);
+        setTransactions(data.data || []);
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -50,7 +50,7 @@ export function EPWXCashbackClaim() {
       {loading ? (
         <div>Loading eligible transactions...</div>
       ) : transactions.length === 0 ? (
-        <div>No eligible EPWX purchase transactions in the last 3 hours.</div>
+        <div>No eligible EPWX swap transactions in the last 3 hours.</div>
       ) : (
         <table className="min-w-full text-left">
           <thead>
