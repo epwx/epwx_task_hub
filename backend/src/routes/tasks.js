@@ -95,43 +95,7 @@ router.post('/submit', async (req, res) => {
  * GET /api/tasks/user
  * Get user's task submissions
  */
-router.get('/user', authenticateToken, async (req, res) => {
-  try {
-    const submissions = await TaskSubmission.findAll({
-      where: { userId: req.user.userId },
-          // ...existing code...
-    const submissions = await TaskSubmission.findAll({
-      where: { status: 'pending' },
-      include: [
-        {
-          model: Campaign,
-          as: 'campaign',
-          attributes: ['title', 'taskType', 'targetUrl']
-        },
-        {
-          model: User,
-          as: 'user',
-          attributes: ['walletAddress']
-        }
-      ],
-      order: [['createdAt', 'ASC']],
-      limit: 100
-    });
-    
-    res.json({
-      success: true,
-      data: submissions
-    });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch pending tasks' });
-  }
-});
-
-/**
- * GET /api/tasks/completed/:walletAddress
- * Get completed tasks for a wallet address
- */
-router.get('/completed/:walletAddress', async (req, res) => {
+router.post('/submit', async (req, res) => {
   try {
     const { campaignId, walletAddress } = req.body;
     const userAddress = walletAddress;
@@ -163,6 +127,41 @@ router.get('/completed/:walletAddress', async (req, res) => {
 
     // Save to database for records
     await TaskSubmission.create({
+      completionId: completionId ? Number(completionId) : null,
+      userId: userAddress, // Adjust if you have a separate userId
+      status: 'approved',
+      rewardAmount: ethers.formatUnits(receipt.value || 0, 9),
+      transactionHash: receipt.hash,
+      metadata: {
+        campaignId: Number(campaignId)
+      }
+    });
+
+    res.json({
+      success: true,
+      data: {
+        completionId,
+        txHash: receipt.hash,
+        reward: ethers.formatUnits(receipt.value || 0, 9)
+      },
+      message: `Task verified! ${ethers.formatUnits(receipt.value || 0, 9)} EPWX sent to your wallet!`
+    });
+  } catch (error) {
+    console.error('Submit task error:', error);
+    let errorMessage = 'Failed to submit task';
+    if (error.message) {
+      errorMessage = error.message;
+    }
+    if (error.response?.data) {
+      errorMessage = error.response.data.error || error.response.data.message || errorMessage;
+    }
+    res.status(500).json({ 
+      error: errorMessage,
+      success: false,
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
       completionId: completionId ? Number(completionId) : null,
       userId: userAddress, // Assuming userAddress is userId, adjust if needed
       status: 'approved',
