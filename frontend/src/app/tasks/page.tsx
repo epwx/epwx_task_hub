@@ -15,7 +15,7 @@ export default function TasksPage() {
             Available Campaigns
           </h1>
           <p className="text-gray-600 text-lg">
-            Complete social tasks and earn EPWX tokens on Base network
+            Complete campaigns and earn EPWX tokens on Base network
           </p>
         </div>
 

@@ -1,7 +1,6 @@
 'use client';
 
 import { Header } from "@/components/Header";
-import { TwitterConnect } from "@/components/TwitterConnect";
 import { CompletedTasks } from "@/components/CompletedTasks";
 import { useAccount } from "wagmi";
 import { useRouter } from "next/navigation";
@@ -36,8 +35,7 @@ export default function DashboardPage() {
 
         {/* Twitter Connection */}
         <div className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">X/Twitter Account</h2>
-          <TwitterConnect />
+          <h2 className="text-2xl font-semibold mb-4">X Account</h2>
         </div>
 
         {/* Action Buttons */}

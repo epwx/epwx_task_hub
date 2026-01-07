@@ -31,10 +31,6 @@ const TaskSubmission = sequelize.define('TaskSubmission', {
     type: DataTypes.STRING,
     comment: 'URL of the completed action (tweet, repost, etc.)'
   },
-  proofScreenshot: {
-    type: DataTypes.STRING,
-    comment: 'URL to screenshot proof'
-  },
   status: {
     type: DataTypes.ENUM('pending', 'verifying', 'approved', 'rejected'),
     defaultValue: 'pending'

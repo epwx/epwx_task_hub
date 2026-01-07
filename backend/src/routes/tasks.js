@@ -44,25 +44,16 @@ router.post('/submit', async (req, res) => {
     
     if (normalizedSubmitted !== normalizedVerified) {
       return res.status(403).json({ 
-        error: `You can only submit tasks using your verified X account: @${user.twitterUsername}`,
-        success: false,
-        verifiedUsername: user.twitterUsername
       });
     }
     // ===== End Twitter ownership check =====
     
     console.log('[Task Submit] Fetching campaign from blockchain, ID:', campaignId);
-    console.log('[Task Submit] Contract address:', process.env.TASK_MANAGER_CONTRACT);
-    console.log('[Task Submit] RPC URL:', process.env.BASE_RPC_URL);
-    
     // Fetch campaign from blockchain
     let campaign;
     try {
       campaign = await taskManagerWithSigner.campaigns(campaignId);
       console.log('[Task Submit] Campaign data:', campaign);
-      console.log('[Task Submit] Campaign advertiser:', campaign.advertiser);
-      console.log('[Task Submit] Campaign active:', campaign.active);
-    } catch (error) {
       console.error('[Task Submit] Campaign fetch error:', error.message);
       console.error('[Task Submit] Full error:', error);
       return res.status(404).json({ 

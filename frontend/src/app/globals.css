@@ -253,7 +253,6 @@ video {
 }
 
 /* Specific constraints for embedded social media content */
-.twitter-tweet,
 .instagram-media,
 .fb-post,
 [data-twitter-embed],
@@ -263,7 +262,6 @@ video {
 }
 
 /* Open Graph / Social Media Preview Images */
-meta[property="og:image"],
 link[rel="image_src"] {
   max-width: 100% !important;
   max-height: 400px !important;

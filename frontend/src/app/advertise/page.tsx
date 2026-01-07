@@ -56,7 +56,7 @@ export default function AdvertisePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { writeContract: approveToken } = useWriteContract();
-  const { writeContract: createCampaign } = useWriteContract();
+                placeholder="e.g., Enter your campaign title"
 
   const { data: allowance } = useReadContract({
     address: EPWX_TOKEN_ADDRESS,
@@ -73,10 +73,10 @@ export default function AdvertisePage() {
 
     try {
       const rewardPerTask = parseUnits(formData.rewardPerTask, 9); // EPWX has 9 decimals
-      const maxCompletions = BigInt(formData.maxCompletions);
-      const totalAmount = rewardPerTask * maxCompletions;
-
-      // Check if approval is needed
+                <option value="like">Like</option>
+                <option value="retweet">Retweet</option>
+                <option value="comment">Comment</option>
+                <option value="follow">Follow</option>
       if (!allowance || allowance < totalAmount) {
         alert('Step 1/2: Approve EPWX spending...');
         
@@ -89,7 +89,7 @@ export default function AdvertisePage() {
           onSuccess: () => {
             alert('Approval successful! Now creating campaign...');
             setTimeout(() => createCampaignOnChain(), 2000);
-          },
+                placeholder="https://example.com/your-url"
           onError: (error) => {
             alert('Approval failed: ' + error.message);
             setIsSubmitting(false);

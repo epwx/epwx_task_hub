@@ -23,10 +23,10 @@ export default function Home() {
             </div>
             <h1 className="text-5xl md:text-7xl font-extrabold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">
               Earn EPWX Tokens
-              <span className="block mt-2">Complete Social Tasks</span>
+              <span className="block mt-2">Complete Campaigns</span>
             </h1>
             <p className="text-xl md:text-2xl text-gray-600 mb-10 max-w-3xl mx-auto leading-relaxed">
-              Join the EPWX ecosystem on Base network. Complete social media tasks and get rewarded with EPWX tokens instantly.
+              Join the EPWX ecosystem on Base network. Complete campaigns and get rewarded with EPWX tokens instantly.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link
@@ -67,8 +67,8 @@ export default function Home() {
               <div className="bg-gradient-to-br from-purple-500 to-purple-600 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                 <span className="text-3xl font-bold text-white">2</span>
               </div>
-              <h3 className="text-2xl font-bold mb-3 text-gray-900">Complete Tasks</h3>
-              <p className="text-gray-600 leading-relaxed">Follow, like, repost, or comment on social media platforms</p>
+              <h3 className="text-2xl font-bold mb-3 text-gray-900">Complete Campaigns</h3>
+              <p className="text-gray-600 leading-relaxed">Participate in campaigns and earn rewards</p>
             </div>
             <div className="group text-center p-8 bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
               <div className="bg-gradient-to-br from-green-500 to-green-600 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
@@ -101,7 +101,7 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <div className="text-center mb-8">
             <h3 className="text-2xl font-bold mb-2">EPWX Task Platform</h3>
-            <p className="text-gray-400">Earn tokens by completing social tasks on Base Network</p>
+            <p className="text-gray-400">Earn tokens by completing campaigns on Base Network</p>
           </div>
           <div className="flex flex-col md:flex-row justify-center items-center gap-6 mb-6">
             <a href="https://epowex.com" target="_blank" rel="noopener noreferrer" className="hover:text-blue-400 transition-colors">Main Site</a>

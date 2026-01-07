@@ -7,8 +7,8 @@ import { Toaster } from "react-hot-toast";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "EPWX Tasks - Earn EPWX by Completing Social Media Tasks",
-  description: "Complete simple social media tasks and earn EPWX tokens",
+  title: "EPWX Tasks - Earn EPWX by Completing Campaigns",
+  description: "Complete campaigns and earn EPWX tokens",
   icons: {
     icon: '/favicon.ico',
   },
