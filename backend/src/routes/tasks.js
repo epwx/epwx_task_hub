@@ -99,35 +99,7 @@ router.get('/user', authenticateToken, async (req, res) => {
   try {
     const submissions = await TaskSubmission.findAll({
       where: { userId: req.user.userId },
-      include: [{
-        model: Campaign,
-        as: 'campaign',
-        attributes: ['title', 'taskType', 'rewardPerTask']
-      }],
-      order: [['createdAt', 'DESC']]
-    });
-    
-    res.json({
-      success: true,
-      data: submissions
-    });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch submissions' });
-  }
-});
-
-/**
- * GET /api/tasks/pending
- * Get pending submissions for verification (admin only)
- */
-router.get('/pending', authenticateToken, async (req, res) => {
-  try {
-    // Check if user is admin (you can add proper role checking)
-    const user = await User.findByPk(req.user.userId);
-    if (user.role !== 'admin') {
-      return res.status(403).json({ error: 'Admin access required' });
-    }
-    
+          // ...existing code...
     const submissions = await TaskSubmission.findAll({
       where: { status: 'pending' },
       include: [
