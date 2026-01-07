@@ -55,7 +55,7 @@ import campaignsRouter from './routes/campaigns.js';
 import tasksRouter from './routes/tasks.js';
 import usersRouter from './routes/users.js';
 import priceRouter from './routes/price.js';
-import twitterRouter from './routes/twitter.js';
+// ...existing code...
 import supplyRouter from './routes/supply.js';
 import circulatingRouter from './routes/circulating.js';
 import burnedRouter from './routes/burned.js';
@@ -66,7 +66,7 @@ app.use('/api/campaigns', campaignsRouter);
 app.use('/api/tasks', tasksRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/price', priceRouter);
-app.use('/api/twitter', twitterRouter);
+// ...existing code...
 app.use('/api', supplyRouter);
 app.use('/api', circulatingRouter);
 app.use('/api', burnedRouter);
@@ -78,7 +78,7 @@ app.use('/api/campaigns', campaignsRouter);
 app.use('/api/tasks', tasksRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/price', priceRouter);
-app.use('/api/twitter', twitterRouter);
+// ...existing code...
 app.use('/api', supplyRouter);
 try {
   app.use('/api', circulatingRouter);
