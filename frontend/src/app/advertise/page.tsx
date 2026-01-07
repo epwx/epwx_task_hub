@@ -86,7 +86,7 @@ export default function AdvertisePage() {
           onSuccess: () => {
             alert('Approval successful! Now creating campaign...');
             setTimeout(() => createCampaignOnChain(), 2000);
-                placeholder="https://example.com/your-url"
+          },
           onError: (error) => {
             alert('Approval failed: ' + error.message);
             setIsSubmitting(false);
