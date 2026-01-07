@@ -81,36 +81,6 @@ router.post('/submit', async (req, res) => {
     await TaskSubmission.create({
       completionId: completionId ? Number(completionId) : null,
       userId: user.id,
-      proofUrl: `@${user.twitterUsername}`,
-      status: 'approved',
-      rewardAmount: ethers.formatUnits(campaign.rewardPerTask, 9),
-      transactionHash: receipt.hash,
-      metadata: {
-        campaignId: Number(campaignId), // Store blockchain campaign ID in metadata
-        taskType: campaign.taskType,
-        targetUrl: campaign.targetUrl
-      }
-    });
-    
-    res.json({
-      success: true,
-      data: {
-        completionId,
-        txHash: receipt.hash,
-        reward: ethers.formatUnits(campaign.rewardPerTask, 9)
-      },
-      message: `Task verified! ${ethers.formatUnits(campaign.rewardPerTask, 9)} EPWX sent to your wallet!`
-    });
-  } catch (error) {
-    console.error('Submit task error:', error);
-    console.error('Error stack:', error.stack);
-    
-    // Return more specific error messages
-    let errorMessage = 'Failed to submit task';
-    if (error.message) {
-      errorMessage = error.message;
-    }
-    if (error.response?.data) {
       errorMessage = error.response.data.error || error.response.data.message || errorMessage;
     }
     
