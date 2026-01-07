@@ -56,7 +56,6 @@ export default function AdvertisePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { writeContract: approveToken } = useWriteContract();
-                placeholder="e.g., Enter your campaign title"
 
   const { data: allowance } = useReadContract({
     address: EPWX_TOKEN_ADDRESS,
