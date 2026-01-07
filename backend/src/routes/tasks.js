@@ -133,58 +133,68 @@ router.get('/user', authenticateToken, async (req, res) => {
  */
 router.get('/completed/:walletAddress', async (req, res) => {
   try {
-    const { walletAddress } = req.params;
-    
-    // Find user by wallet address
-    const user = await User.findOne({ where: { walletAddress } });
-    
-    if (!user) {
-      return res.json({
-        success: true,
-        data: []
-      });
+    const { campaignId, walletAddress } = req.body;
+    const userAddress = walletAddress;
+
+    console.log('[Task Submit] Request:', { campaignId, walletAddress });
+
+    if (!campaignId) {
+      return res.status(400).json({ error: 'Missing campaignId' });
     }
-    
-    // Get approved task submissions for this user
-    const submissions = await TaskSubmission.findAll({
-      where: { 
-        userId: user.id,
-        status: 'approved'
-      },
-      attributes: ['id', 'completionId', 'rewardAmount', 'transactionHash', 'createdAt', 'metadata'],
-      order: [['createdAt', 'DESC']],
-      limit: 20
+    if (!userAddress) {
+      return res.status(400).json({ error: 'Wallet address not found' });
+    }
+
+    // Submit completion to blockchain
+    const tx = await taskManagerWithSigner.submitCompletion(campaignId, userAddress);
+    const receipt = await tx.wait();
+
+    // Get the completion ID from the event
+    const completionEvent = receipt.logs.find(
+      log => log.fragment?.name === 'CompletionSubmitted'
+    );
+    const completionId = completionEvent?.args?.completionId;
+
+    // Auto-approve the completion
+    if (completionId !== undefined) {
+      const approveTx = await taskManagerWithSigner.verifyCompletion(completionId, true);
+      await approveTx.wait();
+    }
+
+    // Save to database for records
+    await TaskSubmission.create({
+      completionId: completionId ? Number(completionId) : null,
+      userId: userAddress, // Assuming userAddress is userId, adjust if needed
+      status: 'approved',
+      rewardAmount: ethers.formatUnits(receipt.value || 0, 9),
+      transactionHash: receipt.hash,
+      metadata: {
+        campaignId: Number(campaignId),
+        // Add other metadata fields as needed
+      }
     });
-    
+
     res.json({
       success: true,
-      data: submissions
+      data: {
+        completionId,
+        txHash: receipt.hash,
+        reward: ethers.formatUnits(receipt.value || 0, 9)
+      },
+      message: `Task verified! ${ethers.formatUnits(receipt.value || 0, 9)} EPWX sent to your wallet!`
     });
   } catch (error) {
-    console.error('Error fetching completed tasks:', error);
-    res.status(500).json({ error: 'Failed to fetch completed tasks' });
-  }
-});
-
-export default router;
-/**
- * GET /api/tasks/swaps
- * Get swap transactions from the last 3 hours as available tasks
- */
-router.get('/swaps/:walletAddress', async (req, res) => {
-  try {
-    const { walletAddress } = req.params;
-    if (!walletAddress) {
-      return res.status(400).json({ error: 'Missing wallet address' });
+    console.error('Submit task error:', error);
+    let errorMessage = 'Failed to submit task';
+    if (error.message) {
+      errorMessage = error.message;
     }
-    // Calculate timestamp for 3 hours ago
-    const now = Math.floor(Date.now() / 1000);
-    const threeHoursAgo = now - 3 * 60 * 60;
-    // Fetch swap transactions
-    const swaps = await getEPWXPurchaseTransactions(walletAddress, threeHoursAgo);
-    res.json({ success: true, data: swaps });
-  } catch (error) {
-    console.error('Error fetching swap transactions:', error);
-    res.status(500).json({ error: 'Failed to fetch swap transactions' });
+    if (error.response?.data) {
+      errorMessage = error.response.data.error || error.response.data.message || errorMessage;
+    }
+    res.status(500).json({ 
+      error: errorMessage,
+      success: false,
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
-});
