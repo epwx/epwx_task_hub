@@ -72,7 +72,8 @@ export default function AdvertisePage() {
 
     try {
       const rewardPerTask = parseUnits(formData.rewardPerTask, 9); // EPWX has 9 decimals
-      // ...existing code...
+      const maxCompletions = BigInt(formData.maxCompletions);
+      const totalAmount = rewardPerTask * maxCompletions;
       if (!allowance || allowance < totalAmount) {
         alert('Step 1/2: Approve EPWX spending...');
         
