@@ -27,22 +27,7 @@ router.post('/submit', async (req, res) => {
       return res.status(400).json({ error: 'Wallet address not found' });
     }
     
-    // ===== NEW: Verify Twitter ownership =====
-    const user = await User.findOne({ where: { walletAddress: userAddress } });
-    
-    if (!user || !user.twitterUsername) {
-      return res.status(403).json({ 
-        error: 'Please connect your X/Twitter account first',
-        success: false,
-      console.log('[Task Submit] Access token expired, attempting refresh...');
-      try {
-        const { accessToken, refreshToken } = await refreshTwitterToken(user.twitterRefreshToken);
-        
-        // Update user's tokens
-        await user.update({
-          twitterAccessToken: accessToken,
-          twitterRefreshToken: refreshToken
-        });
+    // ...existing code...
         
         console.log('[Task Submit] Token refreshed successfully, clearing cache and retrying verification...');
         
