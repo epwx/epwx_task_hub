@@ -1,5 +1,5 @@
 import passport from 'passport';
-import { Strategy as OAuth2Strategy } from 'passport-oauth2';
+// Removed passport-oauth2 import
 import { User } from '../models/index.js';
 import axios from 'axios';
 
@@ -16,12 +16,5 @@ passport.deserializeUser(async (id, done) => {
   }
 });
 
-// Twitter OAuth 2.0 Strategy
-if (process.env.TWITTER_CLIENT_ID && process.env.TWITTER_CLIENT_SECRET) {
-
-
-
-
-  // Removed Twitter strategy and logic
-}
+// Removed Twitter OAuth 2.0 Strategy and logic
 export default passport;
