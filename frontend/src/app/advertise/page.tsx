@@ -73,10 +73,7 @@ export default function AdvertisePage() {
 
     try {
       const rewardPerTask = parseUnits(formData.rewardPerTask, 9); // EPWX has 9 decimals
-                <option value="like">Like</option>
-                <option value="retweet">Retweet</option>
-                <option value="comment">Comment</option>
-                <option value="follow">Follow</option>
+      // ...existing code...
       if (!allowance || allowance < totalAmount) {
         alert('Step 1/2: Approve EPWX spending...');
         
