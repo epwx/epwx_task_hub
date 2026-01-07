@@ -71,7 +71,6 @@ router.get('/me', authenticateToken, async (req, res) => {
       data: {
         id: user.id,
         walletAddress: user.walletAddress,
-        twitterUsername: user.twitterUsername,
         role: user.role,
         totalEarned: user.totalEarned,
         tasksCompleted: user.tasksCompleted,
