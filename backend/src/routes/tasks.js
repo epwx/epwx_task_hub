@@ -3,8 +3,7 @@ import { getEPWXPurchaseTransactions } from '../services/epwxCashback.js';
 import { TaskSubmission, Campaign, User } from '../models/index.js';
 import { authenticateToken } from './auth.js';
 import { taskManagerWithSigner } from '../services/blockchain.js';
-import twitterVerification from '../services/twitterVerification.js';
-import { refreshTwitterToken } from '../services/twitterTokenRefresh.js';
+// Removed Twitter-related imports
 import { ethers } from 'ethers';
 const router = express.Router();
 
