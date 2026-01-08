@@ -75,8 +75,7 @@ export default function AdvertisePage() {
 
 
 
-'use client';
-// This page is intentionally left blank to return 404 for /advertise
+
 
 
 
