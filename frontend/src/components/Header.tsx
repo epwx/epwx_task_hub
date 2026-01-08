@@ -44,13 +44,6 @@ export function Header() {
                   Dashboard
                   <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
                 </Link>
-                <Link 
-                  href="/advertise" 
-                  className="relative text-gray-700 hover:text-blue-600 font-medium transition-colors group"
-                >
-                  Create Campaign
-                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
-                </Link>
               </>
             )}
             <a 
