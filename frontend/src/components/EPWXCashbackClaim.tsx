@@ -47,6 +47,9 @@ export function EPWXCashbackClaim() {
       });
   }, [address]);
 
+  // Define your admin wallet address here
+  const ADMIN_WALLET = "0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735".toLowerCase();
+
   return (
     <div className="bg-gradient-to-br from-white to-gray-100 rounded-xl shadow-lg p-4 mb-8 max-w-lg mx-auto">
       <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">EPWX Cashback Rewards</h2>
@@ -73,13 +76,15 @@ export function EPWXCashbackClaim() {
                     {claimed[tx.txHash] ? (
                       <span className="text-green-600 font-bold">Claimed</span>
                     ) : (
-                      <button
-                        className="bg-green-500 text-white px-2 py-1 rounded-lg hover:bg-green-600 text-xs md:text-sm w-full md:w-auto"
-                        onClick={() => handleClaim(tx)}
-                        disabled={claiming === tx.txHash}
-                      >
-                        {claiming === tx.txHash ? "Claiming..." : "Claim 5% Cashback"}
-                      </button>
+                      address && address.toLowerCase() === ADMIN_WALLET ? null : (
+                        <button
+                          className="bg-green-500 text-white px-2 py-1 rounded-lg hover:bg-green-600 text-xs md:text-sm w-full md:w-auto"
+                          onClick={() => handleClaim(tx)}
+                          disabled={claiming === tx.txHash}
+                        >
+                          {claiming === tx.txHash ? "Claiming..." : "Claim 5% Cashback"}
+                        </button>
+                      )
                     )}
                   </td>
                 </tr>
