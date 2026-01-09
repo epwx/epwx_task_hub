@@ -67,8 +67,8 @@ export function EPWXCashbackClaim() {
             <tbody>
               {transactions.map((tx: any) => (
                 <tr key={tx.txHash} className="border-b last:border-none">
-                  <td className="py-2 px-2 text-xs break-all max-w-[120px] md:max-w-xs">{tx.txHash}</td>
-                  <td className="py-2 px-2 text-xs">{tx.amount}</td>
+                  <td className="py-2 px-2 text-xs break-all max-w-[120px] md:max-w-xs text-gray-900 bg-white">{tx.txHash}</td>
+                  <td className="py-2 px-2 text-xs text-gray-900 bg-white">{tx.amount}</td>
                   <td className="py-2 px-2">
                     {claimed[tx.txHash] ? (
                       <span className="text-green-600 font-bold">Claimed</span>
