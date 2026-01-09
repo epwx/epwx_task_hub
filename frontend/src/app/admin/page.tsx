@@ -21,25 +21,30 @@ export default function AdminPage() {
       .catch(() => setLoading(false));
   }, []);
 
-  const markPaid = async (claimId: number) => {
-    setMarking(claimId);
+  // Simulate on-chain distribution and mark as paid
+  const distributeCashback = async (claim: any) => {
+    setMarking(claim.id);
     setError(null);
     try {
+      // TODO: Integrate with on-chain send logic here
+      // For now, just simulate success after a short delay
+      await new Promise(res => setTimeout(res, 1500));
+      // After sending tokens, mark as paid in backend
       const res = await fetch("/api/epwx/claims/mark-paid", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ admin: ADMIN_WALLET, claimId }),
+        body: JSON.stringify({ admin: ADMIN_WALLET, claimId: claim.id }),
       });
       const data = await res.json();
       if (data.success) {
         setClaims((prev) =>
-          prev.map((c: any) => (c.id === claimId ? { ...c, status: "paid" } : c))
+          prev.map((c: any) => (c.id === claim.id ? { ...c, status: "paid" } : c))
         );
       } else {
         setError(data.error || "Failed to mark as paid");
       }
     } catch (e) {
-      setError("Failed to mark as paid");
+      setError("Failed to distribute cashback");
     }
     setMarking(null);
   };
@@ -72,11 +77,11 @@ export default function AdminPage() {
                 <td className="py-2 px-4">
                   {claim.status === "pending" ? (
                     <button
-                      className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
                       disabled={marking === claim.id}
-                      onClick={() => markPaid(claim.id)}
+                      onClick={() => distributeCashback(claim)}
                     >
-                      {marking === claim.id ? "Marking..." : "Mark as Paid"}
+                      {marking === claim.id ? "Distributing..." : `Distribute ${claim.cashbackAmount} EPWX`}
                     </button>
                   ) : (
                     <span className="text-green-600">Paid</span>

@@ -29,6 +29,25 @@ export function EPWXCashbackClaim() {
   const [claimed, setClaimed] = useState<{ [txHash: string]: boolean }>({});
   const [error, setError] = useState<string | null>(null);
 
+  // Fetch claimed transactions for this wallet
+  useEffect(() => {
+    if (!address) {
+      setClaimed({});
+      return;
+    }
+    fetch(`/api/epwx/claims?wallet=${address}`)
+      .then(res => res.json())
+      .then(data => {
+        // data.claims is an array of claimed txHashes
+        const claimedMap: { [txHash: string]: boolean } = {};
+        (data.claims || []).forEach((claim: any) => {
+          claimedMap[claim.txHash] = true;
+        });
+        setClaimed(claimedMap);
+      })
+      .catch(() => setClaimed({}));
+  }, [address]);
+
   useEffect(() => {
     if (!address) {
       setTransactions([]);
