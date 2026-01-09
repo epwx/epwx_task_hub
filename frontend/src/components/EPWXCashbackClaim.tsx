@@ -29,6 +29,24 @@ export function EPWXCashbackClaim() {
   const [claimed, setClaimed] = useState<{ [txHash: string]: boolean }>({});
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (!address) {
+      setTransactions([]);
+      return;
+    }
+    setLoading(true);
+    fetch(`https://api.epowex.com/api/epwx/purchases?wallet=${address}&hours=3`)
+      .then(res => res.json())
+      .then(data => {
+        setTransactions(data.transactions || []);
+        setLoading(false);
+      })
+      .catch(() => {
+        setTransactions([]);
+        setLoading(false);
+      });
+  }, [address]);
+
   return (
     <div className="bg-gradient-to-br from-white to-gray-100 rounded-xl shadow-lg p-4 mb-8 max-w-lg mx-auto">
       <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">EPWX Cashback Rewards</h2>
