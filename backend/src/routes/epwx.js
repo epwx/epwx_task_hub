@@ -36,17 +36,31 @@ router.post('/claim', async (req, res) => {
 
 // GET /api/epwx/claims?admin=0x...
 router.get('/claims', async (req, res) => {
-  const { admin } = req.query;
-  // Only allow admin wallet to access
-  if (admin !== '0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735') {
-    return res.status(403).json({ error: 'Unauthorized' });
+  const { admin, wallet } = req.query;
+  if (admin) {
+    // Only allow admin wallet to access all claims
+    if (admin !== '0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735') {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+    try {
+      const claims = await CashbackClaim.findAll({ order: [['claimedAt', 'DESC']] });
+      res.json({ claims });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+    return;
   }
-  try {
-    const claims = await CashbackClaim.findAll({ order: [['claimedAt', 'DESC']] });
-    res.json({ claims });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  if (wallet) {
+    // Allow any user to fetch their own claims
+    try {
+      const claims = await CashbackClaim.findAll({ where: { wallet }, order: [['claimedAt', 'DESC']] });
+      res.json({ claims });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+    return;
   }
+  return res.status(400).json({ error: 'Missing admin or wallet parameter' });
 });
 
 // POST /api/epwx/claims/mark-paid
