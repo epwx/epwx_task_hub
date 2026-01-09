@@ -68,11 +68,13 @@ export async function getEPWXPurchaseTransactions(walletAddress, sinceTimestamp)
       direction = 'buy';
     }
     if (direction === 'buy') {
+      // Format amount to 9 decimals
+      const formattedAmount = ethers.formatUnits(amount, 9);
       return {
         txHash: transactionHash,
         from: args.sender,
         to: args.to,
-        amount,
+        amount: formattedAmount,
         timestamp,
         direction
       };
@@ -94,11 +96,13 @@ export async function getEPWXPurchaseTransactions(walletAddress, sinceTimestamp)
     const timestamp = block.timestamp;
     console.log(`[EPWX Cashback] Transfer #${idx + 1}: txHash=${transactionHash}, from=${args.from}, to=${args.to}, value=${args.value}, block=${blockNumber}, timestamp=${timestamp}`);
     if (timestamp >= sinceTimestamp) {
+      // Format amount to 9 decimals
+      const formattedAmount = ethers.formatUnits(args.value, 9);
       return {
         txHash: transactionHash,
         from: args.from,
         to: args.to,
-        amount: args.value.toString(),
+        amount: formattedAmount,
         timestamp,
         direction: 'transfer'
       };
