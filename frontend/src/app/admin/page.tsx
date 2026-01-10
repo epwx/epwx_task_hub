@@ -46,7 +46,7 @@ export default function AdminPage() {
       const amount = ethers.parseUnits(claim.cashbackAmount.toString(), 18).toString();
       // Use wagmi's writeContractAsync to send the transaction
       await writeContractAsync({
-        address: EPWX_TOKEN_ADDRESS,
+        address: EPWX_TOKEN_ADDRESS as `0x${string}`,
         abi: EPWX_TOKEN_ABI,
         functionName: "transfer",
         args: [claim.wallet, amount],
