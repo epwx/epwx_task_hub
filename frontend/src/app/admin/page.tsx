@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAccount, useWalletClient } from "wagmi";
+import { ethers } from "ethers";
 
 const ADMIN_WALLET = "0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735";
 
@@ -9,6 +11,14 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [marking, setMarking] = useState<number | null>(null);
+  const { address } = useAccount();
+  const { data: walletClient } = useWalletClient();
+
+  // TODO: Replace with your actual EPWX token contract address and ABI
+  const EPWX_TOKEN_ADDRESS = process.env.NEXT_PUBLIC_EPWX_TOKEN_ADDRESS || "0xYourTokenAddressHere";
+  const EPWX_TOKEN_ABI = [
+    "function transfer(address to, uint256 amount) public returns (bool)"
+  ];
 
   useEffect(() => {
     setLoading(true);
@@ -21,14 +31,24 @@ export default function AdminPage() {
       .catch(() => setLoading(false));
   }, []);
 
-  // Simulate on-chain distribution and mark as paid
+  // Send EPWX tokens from admin wallet and mark as paid after confirmation
   const distributeCashback = async (claim: any) => {
     setMarking(claim.id);
     setError(null);
     try {
-      // TODO: Integrate with on-chain send logic here
-      // For now, just simulate success after a short delay
-      await new Promise(res => setTimeout(res, 1500));
+      if (!walletClient || !address || address.toLowerCase() !== ADMIN_WALLET.toLowerCase()) {
+        setError("Admin wallet not connected");
+        setMarking(null);
+        return;
+      }
+      // Prompt for manual confirmation and send transaction
+      const provider = new ethers.BrowserProvider(walletClient); // wagmi v1+ uses EIP-1193 provider
+      const signer = await provider.getSigner();
+      const contract = new ethers.Contract(EPWX_TOKEN_ADDRESS, EPWX_TOKEN_ABI, signer);
+      // Convert cashbackAmount to correct decimals (assume 18 decimals, adjust if needed)
+      const amount = ethers.parseUnits(claim.cashbackAmount.toString(), 18);
+      const tx = await contract.transfer(claim.wallet, amount);
+      await tx.wait(); // Wait for confirmation
       // After sending tokens, mark as paid in backend
       const res = await fetch("/api/epwx/claims/mark-paid", {
         method: "POST",
@@ -43,8 +63,8 @@ export default function AdminPage() {
       } else {
         setError(data.error || "Failed to mark as paid");
       }
-    } catch (e) {
-      setError("Failed to distribute cashback");
+    } catch (e: any) {
+      setError(e?.message || "Failed to distribute cashback");
     }
     setMarking(null);
   };
