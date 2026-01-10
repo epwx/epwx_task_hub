@@ -32,7 +32,6 @@ export function Providers({ children }: { children: ReactNode }) {
             // Disable WalletConnect modal to prevent connection errors
             hideNoWalletCTA: true,
             hideQuestionMarkCTA: true,
-            persistConnection: true,
           }}
         >
           {children}
