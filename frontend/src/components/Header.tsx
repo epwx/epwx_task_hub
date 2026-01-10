@@ -5,10 +5,12 @@ import Image from 'next/image';
 import { ConnectKitButton } from 'connectkit';
 import { useAccount } from 'wagmi';
 import { useState } from 'react';
+import { usePathname } from 'next/navigation';
 
 export function Header() {
   const { address, isConnected } = useAccount();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
 
   return (
     <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl shadow-lg border-b border-gray-100">
@@ -28,13 +30,6 @@ export function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">
-            <Link 
-              href="/tasks" 
-              className="relative text-gray-700 hover:text-blue-600 font-medium transition-colors group"
-            >
-              Browse Tasks
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
-            </Link>
             {isConnected && (
               <>
                 <Link 
@@ -97,13 +92,6 @@ export function Header() {
         {mobileMenuOpen && (
           <div className="md:hidden mt-4 py-4 border-t border-gray-200 animate-fadeIn">
             <nav className="flex flex-col gap-4">
-              <Link 
-                href="/tasks" 
-                className="text-gray-700 hover:text-blue-600 font-medium transition-colors py-2"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Browse Tasks
-              </Link>
               {isConnected && (
                 <>
                   <Link 
@@ -112,13 +100,6 @@ export function Header() {
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Dashboard
-                  </Link>
-                  <Link 
-                    href="/advertise" 
-                    className="text-gray-700 hover:text-blue-600 font-medium transition-colors py-2"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Create Campaign
                   </Link>
                 </>
               )}
@@ -148,7 +129,8 @@ export function Header() {
                 </a>
               ) : null}
               <div className="pt-2">
-                <ConnectKitButton />
+                {/* Force ConnectKitButton to re-render on route change to fix wallet state sync */}
+                <ConnectKitButton key={pathname} />
               </div>
             </nav>
           </div>
