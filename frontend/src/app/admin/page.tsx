@@ -15,8 +15,8 @@ export default function AdminPage() {
   const { data: walletClient } = useWalletClient();
   const { writeContractAsync } = useWriteContract();
 
-  // TODO: Replace with your actual EPWX token contract address and ABI
-  const EPWX_TOKEN_ADDRESS = process.env.NEXT_PUBLIC_EPWX_TOKEN_ADDRESS || "0xYourTokenAddressHere";
+  // Use the existing NEXT_PUBLIC_EPWX_TOKEN env property for contract address
+  const EPWX_TOKEN_ADDRESS = process.env.NEXT_PUBLIC_EPWX_TOKEN || "0xYourTokenAddressHere";
   const EPWX_TOKEN_ABI = [
     "function transfer(address to, uint256 amount) public returns (bool)"
   ];
