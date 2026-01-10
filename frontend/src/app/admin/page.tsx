@@ -50,47 +50,49 @@ export default function AdminPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <h1 className="text-3xl font-bold mb-6">Admin: Cashback Claims</h1>
+    <div className="min-h-screen bg-gray-100 p-2 sm:p-8">
+      <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-gray-900">Admin: Cashback Claims</h1>
       {loading ? (
         <div>Loading claims...</div>
       ) : (
-        <table className="min-w-full bg-white rounded shadow">
-          <thead>
-            <tr>
-              <th className="py-2 px-4">Wallet</th>
-              <th className="py-2 px-4">Tx Hash</th>
-              <th className="py-2 px-4">Amount</th>
-              <th className="py-2 px-4">Cashback</th>
-              <th className="py-2 px-4">Status</th>
-              <th className="py-2 px-4">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {claims.map((claim: any) => (
-              <tr key={claim.id}>
-                <td className="py-2 px-4">{claim.wallet}</td>
-                <td className="py-2 px-4">{claim.txHash}</td>
-                <td className="py-2 px-4">{claim.amount}</td>
-                <td className="py-2 px-4">{claim.cashbackAmount}</td>
-                <td className="py-2 px-4">{claim.status}</td>
-                <td className="py-2 px-4">
-                  {claim.status === "pending" ? (
-                    <button
-                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-                      disabled={marking === claim.id}
-                      onClick={() => distributeCashback(claim)}
-                    >
-                      {marking === claim.id ? "Distributing..." : `Distribute ${claim.cashbackAmount} EPWX`}
-                    </button>
-                  ) : (
-                    <span className="text-green-600">Paid</span>
-                  )}
-                </td>
+        <div className="overflow-x-auto">
+          <table className="min-w-full bg-white rounded shadow text-xs sm:text-sm">
+            <thead className="bg-gray-200">
+              <tr>
+                <th className="py-2 px-2 sm:px-4 text-gray-700">Wallet</th>
+                <th className="py-2 px-2 sm:px-4 text-gray-700">Tx Hash</th>
+                <th className="py-2 px-2 sm:px-4 text-gray-700">Amount</th>
+                <th className="py-2 px-2 sm:px-4 text-gray-700">Cashback</th>
+                <th className="py-2 px-2 sm:px-4 text-gray-700">Status</th>
+                <th className="py-2 px-2 sm:px-4 text-gray-700">Action</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {claims.map((claim: any) => (
+                <tr key={claim.id} className="border-b last:border-none">
+                  <td className="py-2 px-2 sm:px-4 break-all bg-white text-gray-900">{claim.wallet}</td>
+                  <td className="py-2 px-2 sm:px-4 break-all bg-white text-gray-900">{claim.txHash}</td>
+                  <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{claim.amount}</td>
+                  <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{claim.cashbackAmount}</td>
+                  <td className="py-2 px-2 sm:px-4 bg-white text-gray-900 capitalize">{claim.status}</td>
+                  <td className="py-2 px-2 sm:px-4 bg-white">
+                    {claim.status === "pending" ? (
+                      <button
+                        className="px-2 sm:px-4 py-1 sm:py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 text-xs sm:text-sm"
+                        disabled={marking === claim.id}
+                        onClick={() => distributeCashback(claim)}
+                      >
+                        {marking === claim.id ? "Distributing..." : `Distribute ${claim.cashbackAmount} EPWX`}
+                      </button>
+                    ) : (
+                      <span className="text-green-600 font-semibold">Paid</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
       {error && <div className="text-red-600 mt-2">{error}</div>}
     </div>
