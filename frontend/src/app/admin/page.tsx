@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAccount, useWalletClient } from "wagmi";
+import { useAccount, useWalletClient, useWriteContract } from "wagmi";
 import { ethers } from "ethers";
 
 const ADMIN_WALLET = "0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735";
@@ -13,6 +13,7 @@ export default function AdminPage() {
   const [marking, setMarking] = useState<number | null>(null);
   const { address } = useAccount();
   const { data: walletClient } = useWalletClient();
+  const { writeContractAsync } = useWriteContract();
 
   // TODO: Replace with your actual EPWX token contract address and ABI
   const EPWX_TOKEN_ADDRESS = process.env.NEXT_PUBLIC_EPWX_TOKEN_ADDRESS || "0xYourTokenAddressHere";
@@ -36,19 +37,20 @@ export default function AdminPage() {
     setMarking(claim.id);
     setError(null);
     try {
-      if (!walletClient || !address || address.toLowerCase() !== ADMIN_WALLET.toLowerCase()) {
+      if (!address || address.toLowerCase() !== ADMIN_WALLET.toLowerCase()) {
         setError("Admin wallet not connected");
         setMarking(null);
         return;
       }
-      // Prompt for manual confirmation and send transaction
-      const provider = new ethers.BrowserProvider(walletClient); // wagmi v1+ uses EIP-1193 provider
-      const signer = await provider.getSigner();
-      const contract = new ethers.Contract(EPWX_TOKEN_ADDRESS, EPWX_TOKEN_ABI, signer);
       // Convert cashbackAmount to correct decimals (assume 18 decimals, adjust if needed)
-      const amount = ethers.parseUnits(claim.cashbackAmount.toString(), 18);
-      const tx = await contract.transfer(claim.wallet, amount);
-      await tx.wait(); // Wait for confirmation
+      const amount = ethers.parseUnits(claim.cashbackAmount.toString(), 18).toString();
+      // Use wagmi's writeContractAsync to send the transaction
+      await writeContractAsync({
+        address: EPWX_TOKEN_ADDRESS,
+        abi: EPWX_TOKEN_ABI,
+        functionName: "transfer",
+        args: [claim.wallet, amount],
+      });
       // After sending tokens, mark as paid in backend
       const res = await fetch("/api/epwx/claims/mark-paid", {
         method: "POST",
