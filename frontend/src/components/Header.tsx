@@ -129,6 +129,11 @@ export function Header() {
                 </a>
               ) : null}
               <div className="pt-2">
+                {/* Debug info: show wallet address and connection status */}
+                <div className="text-xs text-gray-500 mb-2">
+                  <div>Wallet: {address ? address : 'Not connected'}</div>
+                  <div>Status: {isConnected ? 'Connected' : 'Not connected'}</div>
+                </div>
                 {/* Force ConnectKitButton to re-render on route change to fix wallet state sync */}
                 <ConnectKitButton key={pathname} />
               </div>
