@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Header } from "@/components/Header";
 import { EPWXStats } from "@/components/EPWXStats";
+import { EPWXCashbackClaim } from "@/components/EPWXCashbackClaim";
 
 export default function Home() {
   return (
@@ -36,7 +37,10 @@ export default function Home() {
           <EPWXStats />
         </section>
 
-        {/* How It Works section removed */}
+        {/* Cashback Rewards Section */}
+        <section className="py-12">
+          <EPWXCashbackClaim />
+        </section>
 
         {/* Featured Campaigns section removed */}
       </main>
