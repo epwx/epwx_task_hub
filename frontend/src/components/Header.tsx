@@ -30,17 +30,7 @@ export function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">
-            {isConnected && (
-              <>
-                <Link 
-                  href="/dashboard" 
-                  className="relative text-gray-700 hover:text-blue-600 font-medium transition-colors group"
-                >
-                  Dashboard
-                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
-                </Link>
-              </>
-            )}
+            {/* Dashboard link removed */}
             <a 
               href="https://epowex.com" 
               target="_blank" 
@@ -48,6 +38,15 @@ export function Header() {
               className="relative text-gray-700 hover:text-blue-600 font-medium transition-colors group"
             >
               Main Site
+              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
+            </a>
+            <a
+              href="https://t.me/ePowerX_On_Base"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="relative text-gray-700 hover:text-blue-600 font-medium transition-colors group"
+            >
+              Contact Us
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
             </a>
           </nav>
@@ -92,17 +91,7 @@ export function Header() {
         {mobileMenuOpen && (
           <div className="md:hidden mt-4 py-4 border-t border-gray-200 animate-fadeIn">
             <nav className="flex flex-col gap-4">
-              {isConnected && (
-                <>
-                  <Link 
-                    href="/dashboard" 
-                    className="text-gray-700 hover:text-blue-600 font-medium transition-colors py-2"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Dashboard
-                  </Link>
-                </>
-              )}
+              {/* Dashboard link removed from mobile menu */}
               <a 
                 href="https://epowex.com" 
                 target="_blank" 
@@ -110,6 +99,14 @@ export function Header() {
                 className="text-gray-700 hover:text-blue-600 font-medium transition-colors py-2"
               >
                 Main Site
+              </a>
+              <a
+                href="https://t.me/ePowerX_On_Base"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-700 hover:text-blue-600 font-medium transition-colors py-2"
+              >
+                Contact Us
               </a>
               <a
                 href={`https://pancakeswap.finance/swap?chain=base&outputCurrency=${process.env.NEXT_PUBLIC_EPWX_TOKEN}`}
