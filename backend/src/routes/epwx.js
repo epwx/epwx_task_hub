@@ -1,3 +1,11 @@
+
+import express from 'express';
+import { DailyClaim } from '../models/index.js';
+import { ethers } from 'ethers';
+import { getEPWXPurchaseTransactions } from '../services/epwxCashback.js';
+import { CashbackClaim } from '../models/index.js';
+const router = express.Router();
+
 // GET /api/epwx/daily-claims?admin=0x...
 router.get('/daily-claims', async (req, res) => {
   const { admin } = req.query;
@@ -28,9 +36,6 @@ router.post('/daily-claims/mark-paid', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-import { DailyClaim } from '../models/index.js';
-// POST /api/epwx/daily-claim
-import { ethers } from 'ethers';
 
 router.post('/daily-claim', async (req, res) => {
   const { wallet, signature } = req.body;
