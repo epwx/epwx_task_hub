@@ -38,18 +38,7 @@ export default function DashboardPage() {
           <h2 className="text-2xl font-semibold mb-4">X Account</h2>
         </div>
 
-        {/* Action Buttons */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <h2 className="text-2xl font-semibold mb-4">Quick Actions</h2>
-          <div className="flex flex-wrap gap-4">
-            <button
-              onClick={() => router.push('/tasks')}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-            >
-              Browse Available Tasks
-            </button>
-          </div>
-        </div>
+        {/* Action Buttons removed */}
 
         {/* EPWX Cashback Claim */}
         <EPWXCashbackClaim />

@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Header } from "@/components/Header";
-import { TaskList } from "@/components/TaskList";
 import { EPWXStats } from "@/components/EPWXStats";
 
 export default function Home() {
@@ -28,15 +27,7 @@ export default function Home() {
             <p className="text-xl md:text-2xl text-gray-600 mb-10 max-w-3xl mx-auto leading-relaxed">
               Join the EPWX ecosystem on Base network. Complete campaigns and get rewarded with EPWX tokens instantly.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link
-                href="/tasks"
-                className="group relative bg-gradient-to-r from-blue-600 to-blue-700 text-white px-10 py-4 rounded-xl text-lg font-bold hover:shadow-2xl hover:scale-105 transition-all duration-300"
-              >
-                <span className="relative z-10">Browse Tasks</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-700 to-purple-600 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              </Link>
-            </div>
+            {/* Removed Browse Tasks button */}
           </div>
         </section>
 
@@ -45,49 +36,9 @@ export default function Home() {
           <EPWXStats />
         </section>
 
-        {/* How It Works */}
-        <section className="py-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-center mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">How It Works</h2>
-          <p className="text-center text-gray-600 mb-12 text-lg">Get started in three simple steps</p>
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <div className="group text-center p-8 bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
-              <div className="bg-gradient-to-br from-blue-500 to-blue-600 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                <span className="text-3xl font-bold text-white">1</span>
-              </div>
-              <h3 className="text-2xl font-bold mb-3 text-gray-900">Connect Wallet</h3>
-              <p className="text-gray-600 leading-relaxed">Connect your MetaMask wallet to the Base network and start earning</p>
-            </div>
-            <div className="group text-center p-8 bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
-              <div className="bg-gradient-to-br from-purple-500 to-purple-600 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                <span className="text-3xl font-bold text-white">2</span>
-              </div>
-              <h3 className="text-2xl font-bold mb-3 text-gray-900">Complete Campaigns</h3>
-              <p className="text-gray-600 leading-relaxed">Participate in campaigns and earn rewards</p>
-            </div>
-            <div className="group text-center p-8 bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
-              <div className="bg-gradient-to-br from-green-500 to-green-600 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                <span className="text-3xl font-bold text-white">3</span>
-              </div>
-              <h3 className="text-2xl font-bold mb-3 text-gray-900">Earn EPWX</h3>
-              <p className="text-gray-600 leading-relaxed">Get rewarded instantly with EPWX tokens to your wallet</p>
-            </div>
-          </div>
-        </section>
+        {/* How It Works section removed */}
 
-        {/* Featured Tasks */}
-        <section className="py-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-center mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">Featured Campaigns</h2>
-          <p className="text-center text-gray-600 mb-12 text-lg">Start earning EPWX tokens today</p>
-          <TaskList />
-          <div className="text-center mt-12">
-            <Link
-              href="/tasks"
-              className="inline-block bg-gradient-to-r from-blue-600 to-purple-600 text-white px-10 py-4 rounded-xl font-bold text-lg hover:shadow-2xl hover:scale-105 transition-all duration-300"
-            >
-              View All Campaigns →
-            </Link>
-          </div>
-        </section>
+        {/* Featured Campaigns section removed */}
       </main>
 
       {/* Footer */}
