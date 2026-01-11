@@ -6,6 +6,7 @@ import { EPWXCashbackClaim } from "@/components/EPWXCashbackClaim";
 import { useAccount, useSignMessage } from "wagmi";
 import { useState } from "react";
 
+export default function Home() {
   const { address } = useAccount();
   const [claiming, setClaiming] = useState(false);
   const [claimStatus, setClaimStatus] = useState<string | null>(null);
