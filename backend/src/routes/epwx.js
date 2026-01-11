@@ -84,10 +84,7 @@ router.post('/daily-claim', async (req, res) => {
   res.json({ success: true, message: 'Daily claim successful!' });
 });
 
-import express from 'express';
-import { getEPWXPurchaseTransactions } from '../services/epwxCashback.js';
-import { CashbackClaim } from '../models/index.js';
-const router = express.Router();
+
 
 // GET /api/epwx/purchases?wallet=0x...&hours=3
 router.get('/purchases', async (req, res) => {
