@@ -69,13 +69,17 @@ export function EPWXCashbackClaim() {
   // Define your admin wallet address here
   const ADMIN_WALLET = "0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735".toLowerCase();
 
+  // Separate unclaimed and claimed transactions
+  const unclaimedTxs = transactions.filter((tx: any) => !claimed[tx.txHash]);
+  const claimedTxs = transactions.filter((tx: any) => claimed[tx.txHash]);
+
   return (
     <div className="bg-gradient-to-br from-white to-gray-100 rounded-xl shadow-lg p-4 mb-8 max-w-lg mx-auto">
       <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">EPWX Cashback Rewards</h2>
       {loading ? (
         <div className="text-center py-8 text-gray-500">Loading eligible transactions...</div>
-      ) : transactions.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">No eligible EPWX swap transactions in the last 3 hours.</div>
+      ) : unclaimedTxs.length === 0 ? (
+        <div className="text-center py-8 text-gray-500">No unclaimed EPWX swap transactions in the last 3 hours.</div>
       ) : (
         <div className="overflow-x-auto">
           <table className="min-w-full text-left border rounded-lg">
@@ -87,23 +91,19 @@ export function EPWXCashbackClaim() {
               </tr>
             </thead>
             <tbody>
-              {transactions.map((tx: any) => (
+              {unclaimedTxs.map((tx: any) => (
                 <tr key={tx.txHash} className="border-b last:border-none">
                   <td className="py-2 px-2 text-xs break-all max-w-[120px] md:max-w-xs text-gray-900 bg-white">{tx.txHash}</td>
                   <td className="py-2 px-2 text-xs text-gray-900 bg-white">{tx.amount}</td>
                   <td className="py-2 px-2">
-                    {claimed[tx.txHash] ? (
-                      <span className="text-green-600 font-bold">Claimed</span>
-                    ) : (
-                      address && address.toLowerCase() === ADMIN_WALLET ? null : (
-                        <button
-                          className="bg-green-500 text-white px-2 py-1 rounded-lg hover:bg-green-600 text-xs md:text-sm w-full md:w-auto"
-                          onClick={() => handleClaim(tx)}
-                          disabled={claiming === tx.txHash}
-                        >
-                          {claiming === tx.txHash ? "Claiming..." : "Claim 5% Cashback"}
-                        </button>
-                      )
+                    {address && address.toLowerCase() === ADMIN_WALLET ? null : (
+                      <button
+                        className="bg-green-500 text-white px-2 py-1 rounded-lg hover:bg-green-600 text-xs md:text-sm w-full md:w-auto"
+                        onClick={() => handleClaim(tx)}
+                        disabled={claiming === tx.txHash}
+                      >
+                        {claiming === tx.txHash ? "Claiming..." : "Claim 5% Cashback"}
+                      </button>
                     )}
                   </td>
                 </tr>
@@ -112,6 +112,32 @@ export function EPWXCashbackClaim() {
           </table>
         </div>
       )}
+
+      {/* Claimed transactions section */}
+      {claimedTxs.length > 0 && (
+        <div className="mt-8">
+          <h3 className="text-lg font-semibold mb-2 text-center text-gray-700">Claimed Transactions</h3>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-left border rounded-lg">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="py-2 px-2 text-xs font-semibold text-gray-600">Tx Hash</th>
+                  <th className="py-2 px-2 text-xs font-semibold text-gray-600">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {claimedTxs.map((tx: any) => (
+                  <tr key={tx.txHash} className="border-b last:border-none">
+                    <td className="py-2 px-2 text-xs break-all max-w-[120px] md:max-w-xs text-gray-900 bg-white">{tx.txHash}</td>
+                    <td className="py-2 px-2 text-xs text-gray-900 bg-white">{tx.amount}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {error && <div className="text-red-600 mt-4 text-center">{error}</div>}
     </div>
   );
