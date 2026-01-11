@@ -1,3 +1,83 @@
+// GET /api/epwx/daily-claims?admin=0x...
+router.get('/daily-claims', async (req, res) => {
+  const { admin } = req.query;
+  if (admin !== '0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735') {
+    return res.status(403).json({ error: 'Unauthorized' });
+  }
+  try {
+    const claims = await DailyClaim.findAll({ order: [['claimedAt', 'DESC']] });
+    res.json({ claims });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/epwx/daily-claims/mark-paid
+router.post('/daily-claims/mark-paid', async (req, res) => {
+  const { admin, claimId } = req.body;
+  if (admin !== '0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735') {
+    return res.status(403).json({ error: 'Unauthorized' });
+  }
+  try {
+    const claim = await DailyClaim.findByPk(claimId);
+    if (!claim) return res.status(404).json({ error: 'Claim not found' });
+    claim.status = 'paid';
+    await claim.save();
+    res.json({ success: true, claim });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+import { DailyClaim } from '../models/index.js';
+// POST /api/epwx/daily-claim
+import { ethers } from 'ethers';
+
+router.post('/daily-claim', async (req, res) => {
+  const { wallet, signature } = req.body;
+  if (!wallet || !signature) return res.status(400).json({ error: 'wallet and signature are required' });
+  const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.connection.remoteAddress;
+  const now = new Date();
+  const since = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+  // 1. Verify signature
+  const message = `EPWX Daily Claim for ${wallet} on ${now.toISOString().slice(0, 10)}`;
+  let recovered;
+  try {
+    recovered = ethers.verifyMessage(message, signature);
+  } catch (e) {
+    return res.status(400).json({ error: 'Invalid signature' });
+  }
+  if (recovered.toLowerCase() !== wallet.toLowerCase()) {
+    return res.status(401).json({ error: 'Signature does not match wallet' });
+  }
+
+  // Check if wallet claimed in last 24h
+  const walletClaim = await DailyClaim.findOne({
+    where: {
+      wallet: wallet.toLowerCase(),
+      claimedAt: { $gte: since }
+    }
+  });
+  if (walletClaim) {
+    return res.status(429).json({ error: 'Wallet already claimed in the last 24 hours.' });
+  }
+
+  // Check if IP claimed in last 24h
+  const ipClaim = await DailyClaim.findOne({
+    where: {
+      ip,
+      claimedAt: { $gte: since }
+    }
+  });
+  if (ipClaim) {
+    return res.status(429).json({ error: 'IP address already claimed in the last 24 hours.' });
+  }
+
+  // TODO: Send EPWX to wallet here (call contract or queue for admin)
+  // For now, just record the claim
+  await DailyClaim.create({ wallet: wallet.toLowerCase(), ip, claimedAt: now });
+  res.json({ success: true, message: 'Daily claim successful!' });
+});
 
 import express from 'express';
 import { getEPWXPurchaseTransactions } from '../services/epwxCashback.js';

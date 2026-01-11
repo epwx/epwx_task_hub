@@ -3,12 +3,41 @@ import Link from "next/link";
 import { Header } from "@/components/Header";
 import { EPWXStats } from "@/components/EPWXStats";
 import { EPWXCashbackClaim } from "@/components/EPWXCashbackClaim";
+import { useAccount, useSignMessage } from "wagmi";
+import { useState } from "react";
 
-export default function Home() {
+  const { address } = useAccount();
+  const [claiming, setClaiming] = useState(false);
+  const [claimStatus, setClaimStatus] = useState<string | null>(null);
+  const { signMessageAsync } = useSignMessage();
+
+  const handleDailyClaim = async () => {
+    setClaiming(true);
+    setClaimStatus(null);
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      const message = `EPWX Daily Claim for ${address} on ${today}`;
+      const signature = await signMessageAsync({ message });
+      const res = await fetch("/api/epwx/daily-claim", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ wallet: address, signature }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setClaimStatus("Successfully claimed 100,000 EPWX! Your reward will be sent soon.");
+      } else {
+        setClaimStatus(data.error || "Claim failed");
+      }
+    } catch (e) {
+      setClaimStatus("Claim failed");
+    }
+    setClaiming(false);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <Header />
-      
       <main className="container mx-auto px-4">
         {/* Hero Section */}
         <section className="py-20 text-center relative">
@@ -17,7 +46,6 @@ export default function Home() {
             <div className="absolute top-20 left-10 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
             <div className="absolute top-40 right-10 w-72 h-72 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse delay-1000"></div>
           </div>
-          
           <div className="relative z-10">
             <div className="inline-block mb-4 px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold">
               🚀 Powered by Base Network
@@ -29,7 +57,21 @@ export default function Home() {
             <p className="text-xl md:text-2xl text-gray-600 mb-10 max-w-3xl mx-auto leading-relaxed">
               Join the EPWX ecosystem on Base network. Complete campaigns and get rewarded with EPWX tokens instantly.
             </p>
-            {/* Removed Browse Tasks button */}
+            {/* Daily Claim Button */}
+            {address && (
+              <div className="mb-6 flex flex-col items-center justify-center">
+                <button
+                  className="bg-green-600 text-white px-6 py-3 rounded-lg font-bold text-lg shadow hover:bg-green-700 transition-all disabled:opacity-60"
+                  onClick={handleDailyClaim}
+                  disabled={claiming}
+                >
+                  {claiming ? "Claiming..." : "Claim Daily 100,000 EPWX"}
+                </button>
+                {claimStatus && (
+                  <div className={`mt-2 text-center ${claimStatus.startsWith("Successfully") ? "text-green-700" : "text-red-600"}`}>{claimStatus}</div>
+                )}
+              </div>
+            )}
           </div>
         </section>
 
