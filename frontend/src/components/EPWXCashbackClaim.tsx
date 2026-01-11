@@ -70,6 +70,7 @@ export function EPWXCashbackClaim() {
   const ADMIN_WALLET = "0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735".toLowerCase();
 
   // Separate unclaimed and claimed transactions
+  // Only show claim button for transactions not already claimed by the user
   const unclaimedTxs = transactions.filter((tx: any) => !claimed[tx.txHash]);
   const claimedTxs = transactions.filter((tx: any) => claimed[tx.txHash]);
 
@@ -97,13 +98,17 @@ export function EPWXCashbackClaim() {
                   <td className="py-2 px-2 text-xs text-gray-900 bg-white">{tx.amount}</td>
                   <td className="py-2 px-2">
                     {address && address.toLowerCase() === ADMIN_WALLET ? null : (
-                      <button
-                        className="bg-green-500 text-white px-2 py-1 rounded-lg hover:bg-green-600 text-xs md:text-sm w-full md:w-auto"
-                        onClick={() => handleClaim(tx)}
-                        disabled={claiming === tx.txHash}
-                      >
-                        {claiming === tx.txHash ? "Claiming..." : "Claim 5% Cashback"}
-                      </button>
+                      !claimed[tx.txHash] ? (
+                        <button
+                          className="bg-green-500 text-white px-2 py-1 rounded-lg hover:bg-green-600 text-xs md:text-sm w-full md:w-auto"
+                          onClick={() => handleClaim(tx)}
+                          disabled={claiming === tx.txHash}
+                        >
+                          {claiming === tx.txHash ? "Claiming..." : "Claim 5% Cashback"}
+                        </button>
+                      ) : (
+                        <span className="text-green-600 font-bold">Claimed</span>
+                      )
                     )}
                   </td>
                 </tr>
