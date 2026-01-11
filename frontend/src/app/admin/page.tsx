@@ -19,7 +19,18 @@ export default function AdminPage() {
   // Use the existing NEXT_PUBLIC_EPWX_TOKEN env property for contract address
   const EPWX_TOKEN_ADDRESS = process.env.NEXT_PUBLIC_EPWX_TOKEN || "0xYourTokenAddressHere";
   const EPWX_TOKEN_ABI = [
-    "function transfer(address to, uint256 amount) public returns (bool)"
+    {
+      "inputs": [
+        { "internalType": "address", "name": "to", "type": "address" },
+        { "internalType": "uint256", "name": "amount", "type": "uint256" }
+      ],
+      "name": "transfer",
+      "outputs": [
+        { "internalType": "bool", "name": "", "type": "bool" }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
   ];
 
   useEffect(() => {
