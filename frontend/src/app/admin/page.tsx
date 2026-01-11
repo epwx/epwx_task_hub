@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAccount, useWalletClient, useWriteContract } from "wagmi";
+import { ConnectKitButton } from "connectkit";
 import { ethers } from "ethers";
 
 const ADMIN_WALLET = "0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735";
@@ -71,10 +72,17 @@ export default function AdminPage() {
     setMarking(null);
   };
 
+  // Show wallet connect prompt if not connected or not admin wallet
+  const notAdmin = !address || address.toLowerCase() !== ADMIN_WALLET.toLowerCase();
   return (
     <div className="min-h-screen bg-gray-100 p-2 sm:p-8">
       <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-gray-900">Admin: Cashback Claims</h1>
-      {loading ? (
+      {notAdmin ? (
+        <div className="flex flex-col items-center justify-center py-16">
+          <div className="mb-4 text-lg text-gray-700 font-semibold">Please connect the admin wallet to access this page.</div>
+          <ConnectKitButton />
+        </div>
+      ) : loading ? (
         <div>Loading claims...</div>
       ) : (
         <div className="overflow-x-auto">
