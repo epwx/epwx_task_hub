@@ -25,6 +25,16 @@ router.post('/claim', async (req, res) => {
     // Check if already claimed
     const existing = await CashbackClaim.findOne({ where: { wallet, txHash } });
     if (existing) return res.status(400).json({ error: 'Already claimed' });
+
+    // Validate that the txHash belongs to the wallet (user must be the recipient)
+    // Fetch the last 3 hours of purchase transactions for this wallet
+    const sinceTimestamp = Math.floor(Date.now() / 1000) - (3 * 3600);
+    const userTxs = await getEPWXPurchaseTransactions(wallet, sinceTimestamp);
+    const validTx = userTxs.find(tx => tx.txHash === txHash && tx.amount === amount);
+    if (!validTx) {
+      return res.status(403).json({ error: 'Transaction not eligible for claim or does not belong to wallet.' });
+    }
+
     // Calculate 3% cashback
     const cashbackAmount = (parseFloat(amount) * 0.03).toString();
     const claim = await CashbackClaim.create({ wallet, txHash, amount, cashbackAmount, status: 'pending' });
