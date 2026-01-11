@@ -54,8 +54,8 @@ export default function AdminPage() {
         setMarking(null);
         return;
       }
-      // Convert cashbackAmount to correct decimals (assume 18 decimals, adjust if needed)
-      const amount = ethers.parseUnits(claim.cashbackAmount.toString(), 18).toString();
+      // Convert cashbackAmount to correct decimals (EPWX uses 9 decimals)
+      const amount = ethers.parseUnits(claim.cashbackAmount.toString(), 9).toString();
       // Debug output
       console.log('EPWX transfer recipient:', claim.wallet);
       console.log('EPWX transfer amount (raw):', claim.cashbackAmount);
