@@ -21,4 +21,7 @@ export default function DashboardPage() {
           </p>
         </div>
       // Dashboard page removed. Cashback rewards moved to home page.
+      export default function DashboardPage() {
+        return null;
+      }
     );
