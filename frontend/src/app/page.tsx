@@ -16,8 +16,8 @@ export default function Home() {
     setClaiming(true);
     setClaimStatus(null);
     try {
-      const today = new Date().toISOString().slice(0, 10);
-      const message = `EPWX Daily Claim for ${address} on ${today}`;
+      const todayUtc = new Date(Date.now()).toISOString().slice(0, 10);
+      const message = `EPWX Daily Claim for ${address} on ${todayUtc}`;
       const signature = await signMessageAsync({ message });
       const res = await fetch("/api/epwx/daily-claim", {
         method: "POST",
