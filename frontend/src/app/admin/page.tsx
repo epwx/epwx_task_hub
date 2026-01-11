@@ -56,6 +56,10 @@ export default function AdminPage() {
       }
       // Convert cashbackAmount to correct decimals (assume 18 decimals, adjust if needed)
       const amount = ethers.parseUnits(claim.cashbackAmount.toString(), 18).toString();
+      // Debug output
+      console.log('EPWX transfer recipient:', claim.wallet);
+      console.log('EPWX transfer amount (raw):', claim.cashbackAmount);
+      console.log('EPWX transfer amount (wei):', amount);
       // Use wagmi's writeContractAsync to send the transaction
       await writeContractAsync({
         address: EPWX_TOKEN_ADDRESS as `0x${string}`,
