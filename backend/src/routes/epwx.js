@@ -42,10 +42,12 @@ router.post('/daily-claim', async (req, res) => {
   if (!wallet || !signature) return res.status(400).json({ error: 'wallet and signature are required' });
   const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.connection.remoteAddress;
   const now = new Date();
+  const utcDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const todayUtc = utcDate.toISOString().slice(0, 10);
   const since = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
   // 1. Verify signature
-  const message = `EPWX Daily Claim for ${wallet} on ${now.toISOString().slice(0, 10)}`;
+  const message = `EPWX Daily Claim for ${wallet} on ${todayUtc}`;
   let recovered;
   try {
     recovered = ethers.verifyMessage(message, signature);
