@@ -104,7 +104,7 @@ export function EPWXCashbackClaim() {
                           onClick={() => handleClaim(tx)}
                           disabled={claiming === tx.txHash}
                         >
-                          {claiming === tx.txHash ? "Claiming..." : "Claim 5% Cashback"}
+                          {claiming === tx.txHash ? "Claiming..." : "Claim 3% Cashback"}
                         </button>
                       ) : (
                         <span className="text-green-600 font-bold">Claimed</span>

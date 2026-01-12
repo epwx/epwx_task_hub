@@ -133,7 +133,7 @@ router.post('/claim', async (req, res) => {
     }
 
     // Calculate 3% cashback
-    const cashbackAmount = (parseFloat(amount) * 0.03).toString();
+    const cashbackAmount = (parseFloat(amount) * 0.03).toString(); // 3% cashback
     const claim = await CashbackClaim.create({ wallet, txHash, amount, cashbackAmount, status: 'pending' });
     res.json({ success: true, claim });
   } catch (err) {
