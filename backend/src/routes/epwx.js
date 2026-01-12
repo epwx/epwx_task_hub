@@ -67,7 +67,13 @@ router.post('/daily-claim', async (req, res) => {
     }
   });
   if (walletClaim) {
-    return res.status(429).json({ error: 'Wallet already claimed in the last 24 hours.' });
+    const lastClaim = new Date(walletClaim.claimedAt);
+    const nextClaim = new Date(lastClaim.getTime() + 24 * 60 * 60 * 1000);
+    const nowTime = new Date();
+    const msLeft = nextClaim - nowTime;
+    const hours = Math.floor(msLeft / (1000 * 60 * 60));
+    const minutes = Math.floor((msLeft % (1000 * 60 * 60)) / (1000 * 60));
+    return res.status(429).json({ error: `Wallet already claimed. Try again in ${hours}h ${minutes}m.` });
   }
 
   // Check if IP claimed in last 24h
@@ -78,7 +84,13 @@ router.post('/daily-claim', async (req, res) => {
     }
   });
   if (ipClaim) {
-    return res.status(429).json({ error: 'IP address already claimed in the last 24 hours.' });
+    const lastClaim = new Date(ipClaim.claimedAt);
+    const nextClaim = new Date(lastClaim.getTime() + 24 * 60 * 60 * 1000);
+    const nowTime = new Date();
+    const msLeft = nextClaim - nowTime;
+    const hours = Math.floor(msLeft / (1000 * 60 * 60));
+    const minutes = Math.floor((msLeft % (1000 * 60 * 60)) / (1000 * 60));
+    return res.status(429).json({ error: `IP address already claimed. Try again in ${hours}h ${minutes}m.` });
   }
 
   // TODO: Send EPWX to wallet here (call contract or queue for admin)
