@@ -2,8 +2,16 @@
 import { ethers } from 'ethers';
 import { provider, EPWX_TOKEN_ADDRESS } from './blockchain.js';
 
+// Add PancakeSwap support
+const PANCAKE_PAIR_ADDRESS = process.env.PANCAKE_EPWX_WETH_PAIR || process.env.EPWX_WETH_PAIR;
+const ADMIN_ADDRESSES = [
+  (process.env.ADMIN_WALLET || '').toLowerCase(),
+  (process.env.SYSTEM_WALLET || '').toLowerCase()
+];
+
 // Use prod env property names
 const EPWX_WETH_PAIR = process.env.EPWX_WETH_PAIR || '0xYourPairAddressHere';
+const PANCAKE_EPWX_WETH_PAIR = PANCAKE_PAIR_ADDRESS;
 const UNISWAP_V2_PAIR_ABI = [
   // Only the needed event and function signatures
   "event Swap(address indexed sender, uint amount0In, uint amount1In, uint amount0Out, uint amount1Out, address indexed to)",
@@ -17,73 +25,63 @@ const ERC20_ABI = [
 
 export async function getEPWXPurchaseTransactions(walletAddress, sinceTimestamp) {
   if (!ethers.isAddress(walletAddress)) return [];
-  const pair = new ethers.Contract(EPWX_WETH_PAIR, UNISWAP_V2_PAIR_ABI, provider);
-
-  // Debug: Log addresses
-  console.log('[EPWX Cashback] Pair address:', EPWX_WETH_PAIR);
-  console.log('[EPWX Cashback] Token address:', EPWX_TOKEN_ADDRESS);
-  console.log('[EPWX Cashback] Wallet address:', walletAddress);
-  console.log('[EPWX Cashback] Since timestamp:', sinceTimestamp);
-
-  // Get token0/token1 to determine which is EPWX
-  const [token0, token1] = await Promise.all([
-    pair.token0(),
-    pair.token1()
-  ]);
-  const isToken0 = token0.toLowerCase() === EPWX_TOKEN_ADDRESS.toLowerCase();
-  console.log('[EPWX Cashback] token0:', token0, 'token1:', token1, 'isToken0:', isToken0);
-
-  // Get Swap events since the given timestamp
-  const currentBlock = await provider.getBlockNumber();
-  // Always query the last 10,000 blocks to ensure coverage
+  const pools = [
+    { name: 'Uniswap', address: EPWX_WETH_PAIR },
+    { name: 'PancakeSwap', address: PANCAKE_EPWX_WETH_PAIR }
+  ];
   const BLOCK_LOOKBACK = 10000;
+  const currentBlock = await provider.getBlockNumber();
   const fromBlock = Math.max(currentBlock - BLOCK_LOOKBACK, 0);
-  console.log('[EPWX Cashback] Querying blocks', fromBlock, 'to', currentBlock, `(lookback: ${BLOCK_LOOKBACK})`);
 
-  // Get all Swap events for the pair in the block range (no filter on 'to')
-  const allSwapEvents = await pair.queryFilter(pair.filters.Swap(), fromBlock, currentBlock);
-  console.log('[EPWX Cashback] All Swap events found in range:', allSwapEvents.length);
-  allSwapEvents.forEach((event, idx) => {
-    const { transactionHash, args, blockNumber } = event;
-    console.log(`[EPWX Cashback] Swap #${idx + 1}: txHash=${transactionHash}, sender=${args.sender}, to=${args.to}, amount0In=${args.amount0In}, amount1In=${args.amount1In}, amount0Out=${args.amount0Out}, amount1Out=${args.amount1Out}, block=${blockNumber}`);
-  });
-
-  // Now filter for swaps where 'to' is the user (buy)
-  const userEvents = allSwapEvents.filter(event => event.args.to.toLowerCase() === walletAddress.toLowerCase());
-  console.log('[EPWX Cashback] User Swap events found:', userEvents.length);
-
-  // Map and filter for 'buy' (user receives EPWX)
-  const txs = await Promise.all(userEvents.map(async (event) => {
-    const { transactionHash, args, blockNumber } = event;
-    const block = await provider.getBlock(blockNumber);
-    const timestamp = block.timestamp;
-    // Determine direction: user bought EPWX if they received EPWX (amount0Out or amount1Out)
-    let amount = null;
-    let direction = null;
-    if (isToken0 && args.amount0Out.gt(0)) {
-      amount = args.amount0Out.toString();
-      direction = 'buy';
-    } else if (!isToken0 && args.amount1Out.gt(0)) {
-      amount = args.amount1Out.toString();
-      direction = 'buy';
+  // Collect all swap events from both pools
+  let allSwapEvents = [];
+  for (const pool of pools) {
+    if (!pool.address) continue;
+    const pair = new ethers.Contract(pool.address, UNISWAP_V2_PAIR_ABI, provider);
+    try {
+      const swapEvents = await pair.queryFilter(pair.filters.Swap(), fromBlock, currentBlock);
+      allSwapEvents = allSwapEvents.concat(swapEvents.map(e => ({ ...e, pool: pool.name, pairAddress: pool.address })));
+    } catch (e) {
+      console.error(`[EPWX Cashback] Error fetching swaps for ${pool.name}:`, e);
     }
-    if (direction === 'buy') {
-      // Format amount to 9 decimals
-      const formattedAmount = ethers.formatUnits(amount, 9);
-      return {
-        txHash: transactionHash,
-        from: args.sender,
-        to: args.to,
-        amount: formattedAmount,
-        timestamp,
-        direction
-      };
-    }
-    return null;
-  }));
-  // Filter out nulls and only include those after sinceTimestamp
-  const filtered = txs.filter(tx => tx && tx.timestamp >= sinceTimestamp);
-  console.log('[EPWX Cashback] Buy txs after filter:', filtered.length);
-  // Only return swap 'buy' transactions for cashback eligibility
-  return filtered;
+  }
+
+  // Collect all EPWX transfer events to the user
+  const epwxToken = new ethers.Contract(EPWX_TOKEN_ADDRESS, ERC20_ABI, provider);
+  let transferEvents = [];
+  try {
+    transferEvents = await epwxToken.queryFilter(
+      epwxToken.filters.Transfer(null, walletAddress),
+      fromBlock,
+      currentBlock
+    );
+  } catch (e) {
+    console.error('[EPWX Cashback] Error fetching transfers:', e);
+  }
+
+  // For each transfer, check if it is part of a swap transaction (same txHash as a swap event)
+  const eligible = [];
+  for (const transfer of transferEvents) {
+    const txHash = transfer.transactionHash;
+    // Find a swap event in the same txHash from any pool
+    const swap = allSwapEvents.find(e => e.transactionHash === txHash);
+    if (!swap) continue;
+    // Exclude if transfer is from admin/system
+    if (ADMIN_ADDRESSES.includes(transfer.args.from.toLowerCase())) continue;
+    // Get block timestamp
+    const block = await provider.getBlock(transfer.blockNumber);
+    if (block.timestamp < sinceTimestamp) continue;
+    // Format amount
+    const formattedAmount = ethers.formatUnits(transfer.args.value, 9);
+    eligible.push({
+      txHash,
+      from: transfer.args.from,
+      to: transfer.args.to,
+      amount: formattedAmount,
+      timestamp: block.timestamp,
+      pool: swap.pool,
+      direction: 'buy'
+    });
+  }
+  return eligible;
 }
