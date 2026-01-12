@@ -10,6 +10,13 @@ const ADMIN_WALLET = "0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735";
 export default function AdminPage() {
   const [claims, setClaims] = useState<any[]>([]);
   const [dailyClaims, setDailyClaims] = useState<any[]>([]);
+  // Pagination and filter state
+  const [claimsPage, setClaimsPage] = useState(1);
+  const [dailyClaimsPage, setDailyClaimsPage] = useState(1);
+  const [claimsFilter, setClaimsFilter] = useState({ wallet: '', status: '' });
+  const [dailyClaimsFilter, setDailyClaimsFilter] = useState({ wallet: '', status: '' });
+  const CLAIMS_PAGE_SIZE = 10;
+  const DAILY_CLAIMS_PAGE_SIZE = 10;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [marking, setMarking] = useState<number | null>(null);
@@ -155,28 +162,75 @@ export default function AdminPage() {
               </tr>
             </thead>
             <tbody>
-              {claims.map((claim: any) => (
-                <tr key={claim.id} className="border-b last:border-none">
-                  <td className="py-2 px-2 sm:px-4 break-all bg-white text-gray-900">{claim.wallet}</td>
-                  <td className="py-2 px-2 sm:px-4 break-all bg-white text-gray-900">{claim.txHash}</td>
-                  <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{claim.amount}</td>
-                  <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{claim.cashbackAmount}</td>
-                  <td className="py-2 px-2 sm:px-4 bg-white text-gray-900 capitalize">{claim.status}</td>
-                  <td className="py-2 px-2 sm:px-4 bg-white">
-                    {claim.status === "pending" ? (
-                      <button
-                        className="px-2 sm:px-4 py-1 sm:py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 text-xs sm:text-sm"
-                        disabled={marking === claim.id}
-                        onClick={() => distributeCashback(claim)}
-                      >
-                        {marking === claim.id ? "Distributing..." : `Distribute ${claim.cashbackAmount} EPWX`}
-                      </button>
-                    ) : (
-                      <span className="text-green-600 font-semibold">Paid</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
+              {/* Filter controls for cashback claims */}
+              <tr>
+                <td colSpan={6} className="py-2 px-2 bg-gray-50">
+                  <input
+                    type="text"
+                    placeholder="Filter by wallet"
+                    className="border rounded px-2 py-1 mr-2"
+                    value={claimsFilter.wallet}
+                    onChange={e => setClaimsFilter(f => ({ ...f, wallet: e.target.value }))}
+                  />
+                  <select
+                    className="border rounded px-2 py-1"
+                    value={claimsFilter.status}
+                    onChange={e => setClaimsFilter(f => ({ ...f, status: e.target.value }))}
+                  >
+                    <option value="">All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="paid">Paid</option>
+                  </select>
+                </td>
+              </tr>
+              {/* Paginated and filtered cashback claims */}
+              {claims
+                .filter((claim: any) =>
+                  (!claimsFilter.wallet || claim.wallet.toLowerCase().includes(claimsFilter.wallet.toLowerCase())) &&
+                  (!claimsFilter.status || claim.status === claimsFilter.status)
+                )
+                .slice((claimsPage - 1) * CLAIMS_PAGE_SIZE, claimsPage * CLAIMS_PAGE_SIZE)
+                .map((claim: any) => (
+                  <tr key={claim.id} className="border-b last:border-none">
+                    <td className="py-2 px-2 sm:px-4 break-all bg-white text-gray-900">{claim.wallet}</td>
+                    <td className="py-2 px-2 sm:px-4 break-all bg-white text-gray-900">{claim.txHash}</td>
+                    <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{claim.amount}</td>
+                    <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{claim.cashbackAmount}</td>
+                    <td className="py-2 px-2 sm:px-4 bg-white text-gray-900 capitalize">{claim.status}</td>
+                    <td className="py-2 px-2 sm:px-4 bg-white">
+                      {claim.status === "pending" ? (
+                        <button
+                          className="px-2 sm:px-4 py-1 sm:py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 text-xs sm:text-sm"
+                          disabled={marking === claim.id}
+                          onClick={() => distributeCashback(claim)}
+                        >
+                          {marking === claim.id ? "Distributing..." : `Distribute ${claim.cashbackAmount} EPWX`}
+                        </button>
+                      ) : (
+                        <span className="text-green-600 font-semibold">Paid</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              {/* Pagination controls for cashback claims */}
+              <tr>
+                <td colSpan={6} className="py-2 px-2 bg-gray-50 text-center">
+                  <button
+                    className="px-2 py-1 mr-2 border rounded"
+                    disabled={claimsPage === 1}
+                    onClick={() => setClaimsPage(p => Math.max(1, p - 1))}
+                  >Prev</button>
+                  <span>Page {claimsPage}</span>
+                  <button
+                    className="px-2 py-1 ml-2 border rounded"
+                    disabled={claimsPage * CLAIMS_PAGE_SIZE >= claims.filter((claim: any) =>
+                      (!claimsFilter.wallet || claim.wallet.toLowerCase().includes(claimsFilter.wallet.toLowerCase())) &&
+                      (!claimsFilter.status || claim.status === claimsFilter.status)
+                    ).length}
+                    onClick={() => setClaimsPage(p => p + 1)}
+                  >Next</button>
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -196,27 +250,74 @@ export default function AdminPage() {
               </tr>
             </thead>
             <tbody>
-              {dailyClaims.map((claim: any) => (
-                <tr key={claim.id} className="border-b last:border-none">
-                  <td className="py-2 px-2 sm:px-4 break-all bg-white text-gray-900">{claim.wallet}</td>
-                  <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{claim.ip}</td>
-                  <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{new Date(claim.claimedAt).toLocaleString()}</td>
-                  <td className="py-2 px-2 sm:px-4 bg-white text-gray-900 capitalize">{claim.status}</td>
-                  <td className="py-2 px-2 sm:px-4 bg-white">
-                    {claim.status === "pending" ? (
-                      <button
-                        className="px-2 sm:px-4 py-1 sm:py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 text-xs sm:text-sm"
-                        disabled={marking === claim.id}
-                        onClick={() => distributeDailyClaim(claim)}
-                      >
-                        {marking === claim.id ? "Distributing..." : `Distribute Daily EPWX`}
-                      </button>
-                    ) : (
-                      <span className="text-green-600 font-semibold">Paid</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
+              {/* Filter controls for daily claims */}
+              <tr>
+                <td colSpan={5} className="py-2 px-2 bg-gray-50">
+                  <input
+                    type="text"
+                    placeholder="Filter by wallet"
+                    className="border rounded px-2 py-1 mr-2"
+                    value={dailyClaimsFilter.wallet}
+                    onChange={e => setDailyClaimsFilter(f => ({ ...f, wallet: e.target.value }))}
+                  />
+                  <select
+                    className="border rounded px-2 py-1"
+                    value={dailyClaimsFilter.status}
+                    onChange={e => setDailyClaimsFilter(f => ({ ...f, status: e.target.value }))}
+                  >
+                    <option value="">All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="paid">Paid</option>
+                  </select>
+                </td>
+              </tr>
+              {/* Paginated and filtered daily claims */}
+              {dailyClaims
+                .filter((claim: any) =>
+                  (!dailyClaimsFilter.wallet || claim.wallet.toLowerCase().includes(dailyClaimsFilter.wallet.toLowerCase())) &&
+                  (!dailyClaimsFilter.status || claim.status === dailyClaimsFilter.status)
+                )
+                .slice((dailyClaimsPage - 1) * DAILY_CLAIMS_PAGE_SIZE, dailyClaimsPage * DAILY_CLAIMS_PAGE_SIZE)
+                .map((claim: any) => (
+                  <tr key={claim.id} className="border-b last:border-none">
+                    <td className="py-2 px-2 sm:px-4 break-all bg-white text-gray-900">{claim.wallet}</td>
+                    <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{claim.ip}</td>
+                    <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{new Date(claim.claimedAt).toLocaleString()}</td>
+                    <td className="py-2 px-2 sm:px-4 bg-white text-gray-900 capitalize">{claim.status}</td>
+                    <td className="py-2 px-2 sm:px-4 bg-white">
+                      {claim.status === "pending" ? (
+                        <button
+                          className="px-2 sm:px-4 py-1 sm:py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 text-xs sm:text-sm"
+                          disabled={marking === claim.id}
+                          onClick={() => distributeDailyClaim(claim)}
+                        >
+                          {marking === claim.id ? "Distributing..." : `Distribute Daily EPWX`}
+                        </button>
+                      ) : (
+                        <span className="text-green-600 font-semibold">Paid</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              {/* Pagination controls for daily claims */}
+              <tr>
+                <td colSpan={5} className="py-2 px-2 bg-gray-50 text-center">
+                  <button
+                    className="px-2 py-1 mr-2 border rounded"
+                    disabled={dailyClaimsPage === 1}
+                    onClick={() => setDailyClaimsPage(p => Math.max(1, p - 1))}
+                  >Prev</button>
+                  <span>Page {dailyClaimsPage}</span>
+                  <button
+                    className="px-2 py-1 ml-2 border rounded"
+                    disabled={dailyClaimsPage * DAILY_CLAIMS_PAGE_SIZE >= dailyClaims.filter((claim: any) =>
+                      (!dailyClaimsFilter.wallet || claim.wallet.toLowerCase().includes(dailyClaimsFilter.wallet.toLowerCase())) &&
+                      (!dailyClaimsFilter.status || claim.status === dailyClaimsFilter.status)
+                    ).length}
+                    onClick={() => setDailyClaimsPage(p => p + 1)}
+                  >Next</button>
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
