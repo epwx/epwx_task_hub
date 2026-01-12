@@ -57,8 +57,8 @@ export default function AdminPage() {
         setMarking(null);
         return;
       }
-      // Set daily reward amount (e.g., 10 EPWX)
-      const dailyAmount = ethers.parseUnits("10", 9).toString();
+      // Set daily reward amount (100,000 EPWX)
+      const dailyAmount = ethers.parseUnits("100000", 9).toString();
       await writeContractAsync({
         address: EPWX_TOKEN_ADDRESS as `0x${string}`,
         abi: EPWX_TOKEN_ABI,
