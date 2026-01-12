@@ -1,6 +1,7 @@
 
 import express from 'express';
 import { DailyClaim } from '../models/index.js';
+import { Op } from 'sequelize';
 import { ethers } from 'ethers';
 import { getEPWXPurchaseTransactions } from '../services/epwxCashback.js';
 import { CashbackClaim } from '../models/index.js';
@@ -62,7 +63,7 @@ router.post('/daily-claim', async (req, res) => {
   const walletClaim = await DailyClaim.findOne({
     where: {
       wallet: wallet.toLowerCase(),
-      claimedAt: { $gte: since }
+      claimedAt: { [Op.gte]: since }
     }
   });
   if (walletClaim) {
@@ -73,7 +74,7 @@ router.post('/daily-claim', async (req, res) => {
   const ipClaim = await DailyClaim.findOne({
     where: {
       ip,
-      claimedAt: { $gte: since }
+      claimedAt: { [Op.gte]: since }
     }
   });
   if (ipClaim) {
