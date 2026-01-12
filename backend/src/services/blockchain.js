@@ -4,6 +4,7 @@ const provider = new ethers.JsonRpcProvider(process.env.BASE_RPC_URL);
 
 const EPWX_TOKEN_ADDRESS = process.env.EPWX_TOKEN_ADDRESS || '0x000000000000000000000000000000000000dEaD';
 const TASK_MANAGER = process.env.TASK_MANAGER_CONTRACT || '0x000000000000000000000000000000000000dEaD';
+const PANCAKE_EPWX_WETH_PAIR = process.env.PANCAKE_EPWX_WETH_PAIR || '0x9793d47dd47024ac4e1f17988d2e92da53a94541';
 const EPWX_WETH_PAIR = process.env.EPWX_WETH_PAIR || '0x000000000000000000000000000000000000dEaD';
 
 // ABIs
@@ -37,7 +38,8 @@ const PAIR_ABI = [
 // Contract instances (mock addresses if env vars missing)
 const taskManagerContract = TASK_MANAGER ? new ethers.Contract(TASK_MANAGER, TASK_MANAGER_ABI, provider) : null;
 const epwxTokenContract = EPWX_TOKEN_ADDRESS ? new ethers.Contract(EPWX_TOKEN_ADDRESS, ERC20_ABI, provider) : null;
-const pairContract = EPWX_WETH_PAIR ? new ethers.Contract(EPWX_WETH_PAIR, PAIR_ABI, provider) : null;
+// Always use PancakeSwap pair for price display
+const pairContract = PANCAKE_EPWX_WETH_PAIR ? new ethers.Contract(PANCAKE_EPWX_WETH_PAIR, PAIR_ABI, provider) : null;
 
 // Verifier wallet (for submitting and verifying tasks)
 let taskManagerWithSigner = null;
@@ -54,5 +56,6 @@ export {
   pairContract,
   EPWX_TOKEN_ADDRESS,
   EPWX_WETH_PAIR,
+  PANCAKE_EPWX_WETH_PAIR,
   TASK_MANAGER
 };
