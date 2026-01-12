@@ -173,7 +173,7 @@ export default function AdminPage() {
                     onChange={e => setClaimsFilter(f => ({ ...f, wallet: e.target.value }))}
                   />
                   <select
-                    className="border rounded px-2 py-1"
+                    className="border rounded px-2 py-1 bg-white text-gray-900"
                     value={claimsFilter.status}
                     onChange={e => setClaimsFilter(f => ({ ...f, status: e.target.value }))}
                   >
@@ -261,7 +261,7 @@ export default function AdminPage() {
                     onChange={e => setDailyClaimsFilter(f => ({ ...f, wallet: e.target.value }))}
                   />
                   <select
-                    className="border rounded px-2 py-1"
+                    className="border rounded px-2 py-1 bg-white text-gray-900"
                     value={dailyClaimsFilter.status}
                     onChange={e => setDailyClaimsFilter(f => ({ ...f, status: e.target.value }))}
                   >
