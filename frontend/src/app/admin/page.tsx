@@ -168,7 +168,7 @@ export default function AdminPage() {
                   <input
                     type="text"
                     placeholder="Filter by wallet"
-                    className="border rounded px-2 py-1 mr-2"
+                    className="border rounded px-2 py-1 mr-2 bg-gray-100 text-gray-900"
                     value={claimsFilter.wallet}
                     onChange={e => setClaimsFilter(f => ({ ...f, wallet: e.target.value }))}
                   />
@@ -216,13 +216,13 @@ export default function AdminPage() {
               <tr>
                 <td colSpan={6} className="py-2 px-2 bg-gray-50 text-center">
                   <button
-                    className="px-2 py-1 mr-2 border rounded"
+                    className="px-2 py-1 mr-2 border rounded bg-blue-100 text-blue-900 font-bold hover:bg-blue-200"
                     disabled={claimsPage === 1}
                     onClick={() => setClaimsPage(p => Math.max(1, p - 1))}
                   >Prev</button>
                   <span>Page {claimsPage}</span>
                   <button
-                    className="px-2 py-1 ml-2 border rounded"
+                    className="px-2 py-1 ml-2 border rounded bg-blue-100 text-blue-900 font-bold hover:bg-blue-200"
                     disabled={claimsPage * CLAIMS_PAGE_SIZE >= claims.filter((claim: any) =>
                       (!claimsFilter.wallet || claim.wallet.toLowerCase().includes(claimsFilter.wallet.toLowerCase())) &&
                       (!claimsFilter.status || claim.status === claimsFilter.status)
@@ -256,7 +256,7 @@ export default function AdminPage() {
                   <input
                     type="text"
                     placeholder="Filter by wallet"
-                    className="border rounded px-2 py-1 mr-2"
+                    className="border rounded px-2 py-1 mr-2 bg-gray-100 text-gray-900"
                     value={dailyClaimsFilter.wallet}
                     onChange={e => setDailyClaimsFilter(f => ({ ...f, wallet: e.target.value }))}
                   />
@@ -303,13 +303,13 @@ export default function AdminPage() {
               <tr>
                 <td colSpan={5} className="py-2 px-2 bg-gray-50 text-center">
                   <button
-                    className="px-2 py-1 mr-2 border rounded"
+                    className="px-2 py-1 mr-2 border rounded bg-blue-100 text-blue-900 font-bold hover:bg-blue-200"
                     disabled={dailyClaimsPage === 1}
                     onClick={() => setDailyClaimsPage(p => Math.max(1, p - 1))}
                   >Prev</button>
                   <span>Page {dailyClaimsPage}</span>
                   <button
-                    className="px-2 py-1 ml-2 border rounded"
+                    className="px-2 py-1 ml-2 border rounded bg-blue-100 text-blue-900 font-bold hover:bg-blue-200"
                     disabled={dailyClaimsPage * DAILY_CLAIMS_PAGE_SIZE >= dailyClaims.filter((claim: any) =>
                       (!dailyClaimsFilter.wallet || claim.wallet.toLowerCase().includes(dailyClaimsFilter.wallet.toLowerCase())) &&
                       (!dailyClaimsFilter.status || claim.status === dailyClaimsFilter.status)
