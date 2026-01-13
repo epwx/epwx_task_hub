@@ -13,10 +13,10 @@ export default function AdminPage() {
   // Pagination and filter state
   const [claimsPage, setClaimsPage] = useState(1);
   const [dailyClaimsPage, setDailyClaimsPage] = useState(1);
-  const [claimsFilter, setClaimsFilter] = useState({ wallet: '', status: '' });
-  const [dailyClaimsFilter, setDailyClaimsFilter] = useState({ wallet: '', status: '' });
-  const CLAIMS_PAGE_SIZE = 10;
-  const DAILY_CLAIMS_PAGE_SIZE = 10;
+  const [claimsFilter, setClaimsFilter] = useState({ wallet: '', status: 'pending' });
+  const [dailyClaimsFilter, setDailyClaimsFilter] = useState({ wallet: '', status: 'pending' });
+  const CLAIMS_PAGE_SIZE = 5;
+  const DAILY_CLAIMS_PAGE_SIZE = 5;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [marking, setMarking] = useState<number | null>(null);
