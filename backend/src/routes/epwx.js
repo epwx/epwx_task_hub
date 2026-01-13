@@ -40,6 +40,7 @@ router.post('/daily-claims/mark-paid', async (req, res) => {
 
 router.post('/daily-claim', async (req, res) => {
   const { wallet, signature } = req.body;
+  console.log('DAILY CLAIM DEBUG:', { wallet, signature });
   if (!wallet || !signature) return res.status(400).json({ error: 'wallet and signature are required' });
   const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.connection.remoteAddress;
   const now = new Date();
@@ -49,6 +50,7 @@ router.post('/daily-claim', async (req, res) => {
 
   // 1. Verify signature
   const message = `EPWX Daily Claim for ${wallet} on ${todayUtc}`;
+  console.log('DAILY CLAIM DEBUG: message to sign:', message);
   let recovered;
   try {
     recovered = ethers.verifyMessage(message, signature);
