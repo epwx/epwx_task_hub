@@ -1,3 +1,5 @@
+import dotenv from 'dotenv';
+dotenv.config();
 // Simple Node.js Telegram bot for group membership verification
 import TelegramBot from 'node-telegram-bot-api';
 import axios from 'axios';
