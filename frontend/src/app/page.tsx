@@ -58,6 +58,16 @@ export default function Home() {
             <p className="text-xl md:text-2xl text-gray-600 mb-10 max-w-3xl mx-auto leading-relaxed">
               Join the EPWX ecosystem on Base network. Complete campaigns and get rewarded with EPWX tokens instantly.
             </p>
+            <div className="mb-8 flex flex-col items-center justify-center">
+              <a
+                href="https://t.me/ePowerX_On_Base"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-lg shadow transition-all text-lg"
+              >
+                Join Telegram Group
+              </a>
+            </div>
             {/* Daily Claim Button */}
             {address && (
               <div className="mb-6 flex flex-col items-center justify-center">
