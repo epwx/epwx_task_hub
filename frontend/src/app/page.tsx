@@ -94,10 +94,20 @@ export default function Home() {
                 href="https://t.me/ePowerX_On_Base"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-block bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-lg shadow transition-all text-lg"
+                className="inline-block bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-lg shadow transition-all text-lg mb-4"
               >
                 Join Telegram Group
               </a>
+              {address && (
+                <a
+                  href={`https://t.me/epwx_bot?start=${address}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-lg shadow transition-all text-lg"
+                >
+                  Verify Telegram Membership
+                </a>
+              )}
             </div>
             {/* Daily Claim Button */}
             {address && (
