@@ -5,6 +5,7 @@ import TelegramBot from 'node-telegram-bot-api';
 import axios from 'axios';
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '<YOUR_BOT_TOKEN_HERE>';
+console.log('BOT_TOKEN:', BOT_TOKEN); // Debug: print the bot token
 const GROUP_ID = process.env.TELEGRAM_GROUP_ID || '-1001970739822'; // Replace with your group ID
 const bot = new TelegramBot(BOT_TOKEN, { polling: true });
 
