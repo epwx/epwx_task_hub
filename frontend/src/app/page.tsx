@@ -4,13 +4,20 @@ import { Header } from "@/components/Header";
 import { EPWXStats } from "@/components/EPWXStats";
 import { EPWXCashbackClaim } from "@/components/EPWXCashbackClaim";
 import { useAccount, useSignMessage } from "wagmi";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function Home() {
-  const { address } = useAccount();
+  const { address, isConnected } = useAccount();
   const [claiming, setClaiming] = useState(false);
   const [claimStatus, setClaimStatus] = useState<string | null>(null);
+  const [showTelegramModal, setShowTelegramModal] = useState(false);
   const { signMessageAsync } = useSignMessage();
+
+  useEffect(() => {
+    if (isConnected) {
+      setShowTelegramModal(true);
+    }
+  }, [isConnected]);
 
   const handleDailyClaim = async () => {
     setClaiming(true);
@@ -38,6 +45,30 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      {/* Telegram Modal */}
+      {showTelegramModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-lg shadow-lg p-8 max-w-sm w-full text-center">
+            <h2 className="text-2xl font-bold mb-4">Join our Telegram Group!</h2>
+            <p className="mb-6">Get updates, support, and community rewards by joining our Telegram group.</p>
+            <a
+              href="https://t.me/ePowerX_On_Base"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg mb-4"
+            >
+              Join Telegram Group
+            </a>
+            <br />
+            <button
+              className="text-gray-600 hover:text-gray-900 mt-2 underline"
+              onClick={() => setShowTelegramModal(false)}
+            >
+              Maybe Later
+            </button>
+          </div>
+        </div>
+      )}
       <Header />
       <main className="container mx-auto px-4">
         {/* Hero Section */}
