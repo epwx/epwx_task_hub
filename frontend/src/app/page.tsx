@@ -5,9 +5,16 @@ import { EPWXStats } from "@/components/EPWXStats";
 import { EPWXCashbackClaim } from "@/components/EPWXCashbackClaim";
 import { useState, useEffect } from "react";
 import { useAccount, useSignMessage } from "wagmi";
-    const { address } = useAccount();
+
+export default function Home() {
+  const { address, isConnected } = useAccount();
+  const { signMessageAsync } = useSignMessage();
+  const [claiming, setClaiming] = useState(false);
+  const [claimStatus, setClaimStatus] = useState<string | null>(null);
+  const [showTelegramModal, setShowTelegramModal] = useState(false);
   const [isTelegramVerified, setIsTelegramVerified] = useState<boolean>(false);
   const [checkingVerification, setCheckingVerification] = useState(false);
+
   // Check Telegram verification status when address changes
   useEffect(() => {
     const checkVerification = async () => {
@@ -27,13 +34,6 @@ import { useAccount, useSignMessage } from "wagmi";
     };
     checkVerification();
   }, [address]);
-
-export default function Home() {
-  const { address, isConnected } = useAccount();
-  const [claiming, setClaiming] = useState(false);
-  const [claimStatus, setClaimStatus] = useState<string | null>(null);
-  const [showTelegramModal, setShowTelegramModal] = useState(false);
-  const { signMessageAsync } = useSignMessage();
 
   useEffect(() => {
     if (isConnected) {
