@@ -1,6 +1,4 @@
-"use strict";
-
-module.exports = {
+export default {
   up: async (queryInterface, Sequelize) => {
     await queryInterface.createTable("cashback_claims", {
       id: { type: Sequelize.INTEGER, autoIncrement: true, primaryKey: true },
