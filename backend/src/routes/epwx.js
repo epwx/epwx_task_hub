@@ -1,5 +1,13 @@
+
+import express from 'express';
+import { User, DailyClaim, CashbackClaim } from '../models/index.js';
+import { Op } from 'sequelize';
+import { ethers } from 'ethers';
+import { getEPWXPurchaseTransactions } from '../services/epwxCashback.js';
+
+const router = express.Router();
+
 // GET /api/epwx/telegram-verified?wallet=0x...
-import { User } from '../models/index.js';
 router.get('/telegram-verified', async (req, res) => {
   const { wallet } = req.query;
   if (!wallet) return res.status(400).json({ error: 'wallet is required' });
@@ -10,14 +18,6 @@ router.get('/telegram-verified', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
-import express from 'express';
-import { DailyClaim } from '../models/index.js';
-import { Op } from 'sequelize';
-import { ethers } from 'ethers';
-import { getEPWXPurchaseTransactions } from '../services/epwxCashback.js';
-import { CashbackClaim } from '../models/index.js';
-const router = express.Router();
 
 // GET /api/epwx/daily-claims?admin=0x...
 router.get('/daily-claims', async (req, res) => {
