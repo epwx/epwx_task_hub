@@ -3,7 +3,6 @@ import Link from "next/link";
 import { Header } from "@/components/Header";
 import { EPWXStats } from "@/components/EPWXStats";
 import { EPWXCashbackClaim } from "@/components/EPWXCashbackClaim";
-import { useAccount, useSignMessage } from "wagmi";
 import { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
     const { address } = useAccount();
