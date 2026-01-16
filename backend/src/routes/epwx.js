@@ -13,6 +13,7 @@ router.get('/telegram-verified', async (req, res) => {
   if (!wallet) return res.status(400).json({ error: 'wallet is required' });
   try {
     const user = await User.findOne({ where: { walletAddress: wallet.toLowerCase() } });
+    console.log('Queried wallet:', wallet.toLowerCase(), 'User found:', user);
     res.json({ verified: !!(user && user.telegramVerified) });
   } catch (err) {
     res.status(500).json({ error: err.message });
