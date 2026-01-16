@@ -49,6 +49,11 @@ const User = sequelize.define('User', {
   },
   lastLogin: {
     type: DataTypes.DATE
+  },
+  telegramVerified: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+    allowNull: false
   }
 }, {
   tableName: 'users',

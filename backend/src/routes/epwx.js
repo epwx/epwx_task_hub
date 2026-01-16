@@ -1,3 +1,15 @@
+// GET /api/epwx/telegram-verified?wallet=0x...
+import { User } from '../models/index.js';
+router.get('/telegram-verified', async (req, res) => {
+  const { wallet } = req.query;
+  if (!wallet) return res.status(400).json({ error: 'wallet is required' });
+  try {
+    const user = await User.findOne({ where: { walletAddress: wallet.toLowerCase() } });
+    res.json({ verified: !!(user && user.telegramVerified) });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 import express from 'express';
 import { DailyClaim } from '../models/index.js';
