@@ -38,7 +38,7 @@ bot.onText(/\/verify/, async (msg) => {
       bot.sendMessage(msg.chat.id, `✅ Verified! You are a member of the EPWX group. Your wallet: ${wallet}`);
       // TODO: Notify your backend/dApp of successful verification (e.g., via API call)
     } else {
-      bot.sendMessage(msg.chat.id, '❌ You are not a member of the EPWX group. Please join and try again.');
+      bot.sendMessage(msg.chat.id, '❌ You are not a member of the EPWX group. Please join at https://t.me/ePowerX_On_Base and try again.');
     }
   } catch (err) {
     console.log(`[BOT] Error verifying membership for user ${userId}:`, err?.response?.data || err);
