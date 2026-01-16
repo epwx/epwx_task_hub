@@ -12,7 +12,7 @@ const pkceStore = new Map();
  * Start X/Twitter OAuth 2.0 flow manually
  */
 router.get('/connect/start', (req, res) => {
-  const { walletAddress } = req.query;
+  const walletAddress = req.query.walletAddress?.toLowerCase();
 
   if (!walletAddress) {
     return res.status(400).send('Wallet address required');
@@ -88,7 +88,8 @@ router.get('/callback', async (req, res) => {
       return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard?error=invalid_state`);
     }
     
-    const { codeVerifier, walletAddress } = storedData;
+    const { codeVerifier } = storedData;
+    const walletAddress = storedData.walletAddress?.toLowerCase();
     pkceStore.delete(state); // Clean up
     
     console.log('[Twitter OAuth Callback] Exchanging code for token...');
@@ -159,7 +160,7 @@ router.get('/callback', async (req, res) => {
  */
 router.get('/status/:walletAddress', async (req, res) => {
   try {
-    const { walletAddress } = req.params;
+    const walletAddress = req.params.walletAddress?.toLowerCase();
     console.log('[Twitter status] Checking status for walletAddress:', walletAddress);
     const user = await User.findOne({ 
       where: { walletAddress },
@@ -190,7 +191,7 @@ router.get('/status/:walletAddress', async (req, res) => {
  */
 router.post('/disconnect', async (req, res) => {
   try {
-    const { walletAddress } = req.body;
+    const walletAddress = req.body.walletAddress?.toLowerCase();
     
     if (!walletAddress) {
       return res.status(400).json({ error: 'Wallet address required' });
