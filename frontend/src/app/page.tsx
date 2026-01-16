@@ -5,6 +5,27 @@ import { EPWXStats } from "@/components/EPWXStats";
 import { EPWXCashbackClaim } from "@/components/EPWXCashbackClaim";
 import { useAccount, useSignMessage } from "wagmi";
 import { useState, useEffect } from "react";
+  const [isTelegramVerified, setIsTelegramVerified] = useState<boolean>(false);
+  const [checkingVerification, setCheckingVerification] = useState(false);
+  // Check Telegram verification status when address changes
+  useEffect(() => {
+    const checkVerification = async () => {
+      if (!address) {
+        setIsTelegramVerified(false);
+        return;
+      }
+      setCheckingVerification(true);
+      try {
+        const res = await fetch(`https://api.epowex.com/api/epwx/telegram-verified?wallet=${address}`);
+        const data = await res.json();
+        setIsTelegramVerified(!!data.verified);
+      } catch (e) {
+        setIsTelegramVerified(false);
+      }
+      setCheckingVerification(false);
+    };
+    checkVerification();
+  }, [address]);
 
 export default function Home() {
   const { address, isConnected } = useAccount();
@@ -112,18 +133,26 @@ export default function Home() {
                 </>
               )}
             </div>
-            {/* Daily Claim Button */}
+            {/* Daily Claim Button - Only show if Telegram verified */}
             {address && (
               <div className="mb-6 flex flex-col items-center justify-center">
-                <button
-                  className="bg-green-600 text-white px-6 py-3 rounded-lg font-bold text-lg shadow hover:bg-green-700 transition-all disabled:opacity-60"
-                  onClick={handleDailyClaim}
-                  disabled={claiming}
-                >
-                  {claiming ? "Claiming..." : "Claim Daily 100,000 EPWX"}
-                </button>
-                {claimStatus && (
-                  <div className={`mt-2 text-center ${claimStatus.startsWith("Successfully") ? "text-green-700" : "text-red-600"}`}>{claimStatus}</div>
+                {checkingVerification ? (
+                  <div className="text-gray-500 mb-2">Checking Telegram verification...</div>
+                ) : isTelegramVerified ? (
+                  <>
+                    <button
+                      className="bg-green-600 text-white px-6 py-3 rounded-lg font-bold text-lg shadow hover:bg-green-700 transition-all disabled:opacity-60"
+                      onClick={handleDailyClaim}
+                      disabled={claiming}
+                    >
+                      {claiming ? "Claiming..." : "Claim Daily 100,000 EPWX"}
+                    </button>
+                    {claimStatus && (
+                      <div className={`mt-2 text-center ${claimStatus.startsWith("Successfully") ? "text-green-700" : "text-red-600"}`}>{claimStatus}</div>
+                    )}
+                  </>
+                ) : (
+                  <div className="text-red-600 font-semibold">You must verify your Telegram group membership to claim daily rewards.</div>
                 )}
               </div>
             )}
