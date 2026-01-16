@@ -99,14 +99,17 @@ export default function Home() {
                 Join Telegram Group
               </a>
               {address && (
-                <a
-                  href={`https://t.me/epwx_bot?start=${address}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-block bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-lg shadow transition-all text-lg"
-                >
-                  Verify Telegram Membership
-                </a>
+                <>
+                  <div className="mb-2 text-sm text-gray-700">Connected wallet: {address}</div>
+                  <a
+                    href={`https://t.me/epwx_bot?start=${address}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-lg shadow transition-all text-lg"
+                  >
+                    Verify Telegram Membership
+                  </a>
+                </>
               )}
             </div>
             {/* Daily Claim Button */}
