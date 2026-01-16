@@ -24,8 +24,9 @@ export default {
         defaultValue: 'pending',
       },
     });
-    await queryInterface.addIndex("daily_claims", ["wallet"]);
-    await queryInterface.addIndex("daily_claims", ["ip"]);
+    // Indexes already exist, skip to avoid duplicate error
+    // await queryInterface.addIndex("daily_claims", ["wallet"]);
+    // await queryInterface.addIndex("daily_claims", ["ip"]);
   },
   down: async (queryInterface, Sequelize) => {
     await queryInterface.dropTable("daily_claims");
