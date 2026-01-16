@@ -5,6 +5,8 @@ import { EPWXStats } from "@/components/EPWXStats";
 import { EPWXCashbackClaim } from "@/components/EPWXCashbackClaim";
 import { useAccount, useSignMessage } from "wagmi";
 import { useState, useEffect } from "react";
+import { useAccount } from "wagmi";
+    const { address } = useAccount();
   const [isTelegramVerified, setIsTelegramVerified] = useState<boolean>(false);
   const [checkingVerification, setCheckingVerification] = useState(false);
   // Check Telegram verification status when address changes
