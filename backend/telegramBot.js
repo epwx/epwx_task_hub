@@ -15,6 +15,7 @@ const walletRequests = {};
 bot.onText(/\/start (.+)/, async (msg, match) => {
   const wallet = match[1];
   const userId = msg.from.id;
+  console.log(`[BOT] Received /start with wallet: ${wallet} from user: ${userId}`);
   walletRequests[userId] = wallet;
   bot.sendMessage(msg.chat.id, `Hi! To verify your Telegram membership, please reply with /verify.`);
 });
@@ -22,7 +23,9 @@ bot.onText(/\/start (.+)/, async (msg, match) => {
 bot.onText(/\/verify/, async (msg) => {
   const userId = msg.from.id;
   const wallet = walletRequests[userId];
+  console.log(`[BOT] Received /verify from user: ${userId}, wallet: ${wallet}`);
   if (!wallet) {
+    console.log(`[BOT] No wallet found for user: ${userId}`);
     bot.sendMessage(msg.chat.id, 'No wallet address found. Please use the verification link from the dApp.');
     return;
   }
@@ -30,6 +33,7 @@ bot.onText(/\/verify/, async (msg) => {
   try {
     const res = await axios.get(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${GROUP_ID}&user_id=${userId}`);
     const status = res.data.result.status;
+    console.log(`[BOT] Group membership status for user ${userId}: ${status}`);
     if (['member', 'administrator', 'creator'].includes(status)) {
       bot.sendMessage(msg.chat.id, `✅ Verified! You are a member of the EPWX group. Your wallet: ${wallet}`);
       // TODO: Notify your backend/dApp of successful verification (e.g., via API call)
@@ -37,6 +41,7 @@ bot.onText(/\/verify/, async (msg) => {
       bot.sendMessage(msg.chat.id, '❌ You are not a member of the EPWX group. Please join and try again.');
     }
   } catch (err) {
+    console.log(`[BOT] Error verifying membership for user ${userId}:`, err?.response?.data || err);
     bot.sendMessage(msg.chat.id, 'Error verifying membership. Please try again later.');
   }
 });
