@@ -12,12 +12,15 @@ router.post('/telegram-verify', async (req, res) => {
   const { wallet } = req.body;
   if (!wallet) return res.status(400).json({ error: 'wallet is required' });
   try {
-    const [updated] = await User.update(
-      { telegramVerified: true },
-      { where: { walletAddress: wallet.toLowerCase() } }
-    );
-    if (updated === 0) {
-      return res.status(404).json({ error: 'User not found' });
+    let user = await User.findOne({ where: { walletAddress: wallet.toLowerCase() } });
+    if (!user) {
+      // Create user if not found
+      user = await User.create({ walletAddress: wallet.toLowerCase(), telegramVerified: true });
+      console.log(`[TELEGRAM VERIFY] Created new user for wallet: ${wallet.toLowerCase()}`);
+    } else if (!user.telegramVerified) {
+      user.telegramVerified = true;
+      await user.save();
+      console.log(`[TELEGRAM VERIFY] Updated telegramVerified for wallet: ${wallet.toLowerCase()}`);
     }
     res.json({ success: true });
   } catch (err) {
