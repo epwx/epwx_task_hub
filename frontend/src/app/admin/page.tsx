@@ -284,9 +284,9 @@ export default function AdminPage() {
                     // Eligibility: pending and within 3 hours
                     const now = new Date();
                     const createdAt = new Date(claim.createdAt);
-                    const within3Hours = claim.status === 'pending' && (now.getTime() - createdAt.getTime()) <= 3 * 60 * 60 * 1000;
-                    const eligible = within3Hours;
+                    const eligible = claim.status === 'pending' && (now.getTime() - createdAt.getTime()) <= 3 * 60 * 60 * 1000;
                     const claimed = claim.status === 'claimed';
+                    // Button enabled only if eligible (user has claimed special)
                     return (
                       <tr key={idx} className="border-b last:border-none">
                         <td className="py-2 px-2 sm:px-4 break-all bg-white text-gray-900">{claim.wallet}</td>
