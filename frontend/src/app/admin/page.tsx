@@ -198,96 +198,112 @@ export default function AdminPage() {
   const notAdmin = !address || address.toLowerCase() !== ADMIN_WALLET.toLowerCase();
   return (
     <div className="min-h-screen bg-gray-100 p-2 sm:p-8">
+      {/* Show ConnectKitButton globally if not connected */}
+      {!address && (
+        <div className="flex flex-col items-center justify-center py-8">
+          <div className="mb-2 text-lg text-gray-700 font-semibold">Please connect your wallet to access admin features.</div>
+          <ConnectKitButton />
+        </div>
+      )}
       {/* Special Claim Section */}
       <div className="mb-12">
         <h2 className="text-xl font-bold mb-4 text-gray-900">Admin: Special EPWX Claims</h2>
-        <div className="flex gap-2 mb-4">
-          <input
-            type="text"
-            placeholder="Wallet address"
-            className="border rounded px-2 py-1 bg-gray-100 text-gray-900"
-            value={specialWallet}
-            onChange={e => setSpecialWallet(e.target.value)}
-          />
-          <button
-            className="px-4 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-            disabled={specialLoading || !specialWallet}
-            onClick={handleAddSpecialWallet}
-          >{specialLoading ? "Adding..." : "Add Wallet"}</button>
-        </div>
-        {/* Special Claims Filter Controls */}
-        <div className="mb-2 flex gap-2 items-center">
-          <input
-            type="text"
-            placeholder="Filter by wallet"
-            className="border rounded px-2 py-1 bg-gray-100 text-gray-900"
-            value={specialClaimsFilter.wallet}
-            onChange={e => setSpecialClaimsFilter(f => ({ ...f, wallet: e.target.value }))}
-          />
-          <select
-            className="border rounded px-2 py-1 bg-white text-gray-900"
-            value={specialClaimsFilter.status}
-            onChange={e => setSpecialClaimsFilter(f => ({ ...f, status: e.target.value }))}
-          >
-            <option value="">All Status</option>
-            <option value="claimed">Claimed</option>
-            <option value="pending">Pending</option>
-          </select>
-        </div>
-        {specialError && <div className="text-red-600 mb-2">{specialError}</div>}
-        <table className="min-w-full bg-white rounded shadow text-xs sm:text-sm">
-          <thead className="bg-gray-200">
-            <tr>
-              <th className="py-2 px-2 sm:px-4 text-gray-700">Wallet</th>
-              <th className="py-2 px-2 sm:px-4 text-gray-700">Eligible</th>
-              <th className="py-2 px-2 sm:px-4 text-gray-700">Claimed</th>
-              <th className="py-2 px-2 sm:px-4 text-gray-700">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {specialClaims
-              .filter((claim: any) =>
-                (!specialClaimsFilter.wallet || claim.wallet.toLowerCase().includes(specialClaimsFilter.wallet.toLowerCase())) &&
-                (!specialClaimsFilter.status || (specialClaimsFilter.status === 'claimed' ? claim.claimed : !claim.claimed))
-              )
-              .slice((specialClaimsPage - 1) * SPECIAL_CLAIMS_PAGE_SIZE, specialClaimsPage * SPECIAL_CLAIMS_PAGE_SIZE)
-              .map((claim: any, idx: number) => (
-                <tr key={idx} className="border-b last:border-none">
-                  <td className="py-2 px-2 sm:px-4 break-all bg-white text-gray-900">{claim.wallet}</td>
-                  <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{claim.eligible ? "Yes" : "No"}</td>
-                  <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{claim.claimed ? "Yes" : "No"}</td>
-                  <td className="py-2 px-2 sm:px-4 bg-white">
-                    {!claim.claimed && claim.eligible ? (
-                      <button
-                        className="px-2 sm:px-4 py-1 sm:py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 text-xs sm:text-sm"
-                        disabled={specialLoading}
-                        onClick={() => handleDistributeSpecialClaim(claim.wallet)}
-                      >{specialLoading ? "Processing..." : "Distribute 1M EPWX"}</button>
-                    ) : (
-                      <span className="text-green-600 font-semibold">{claim.claimed ? "Claimed" : "N/A"}</span>
-                    )}
-                  </td>
+        {!address ? (
+          <div className="mb-4 flex flex-col items-center">
+            <div className="mb-2 text-gray-700">Please connect your wallet to manage special claims.</div>
+            <ConnectKitButton />
+          </div>
+        ) : (
+          <>
+            <div className="flex gap-2 mb-4">
+              <input
+                type="text"
+                placeholder="Wallet address"
+                className="border rounded px-2 py-1 bg-gray-100 text-gray-900"
+                value={specialWallet}
+                onChange={e => setSpecialWallet(e.target.value)}
+              />
+              <button
+                className="px-4 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                disabled={specialLoading || !specialWallet}
+                onClick={handleAddSpecialWallet}
+              >{specialLoading ? "Adding..." : "Add Wallet"}</button>
+            </div>
+            {/* Special Claims Filter Controls */}
+            <div className="mb-2 flex gap-2 items-center">
+              <input
+                type="text"
+                placeholder="Filter by wallet"
+                className="border rounded px-2 py-1 bg-gray-100 text-gray-900"
+                value={specialClaimsFilter.wallet}
+                onChange={e => setSpecialClaimsFilter(f => ({ ...f, wallet: e.target.value }))}
+              />
+              <select
+                className="border rounded px-2 py-1 bg-white text-gray-900"
+                value={specialClaimsFilter.status}
+                onChange={e => setSpecialClaimsFilter(f => ({ ...f, status: e.target.value }))}
+              >
+                <option value="">All Status</option>
+                <option value="claimed">Claimed</option>
+                <option value="pending">Pending</option>
+              </select>
+            </div>
+            {specialError && <div className="text-red-600 mb-2">{specialError}</div>}
+            <table className="min-w-full bg-white rounded shadow text-xs sm:text-sm">
+              <thead className="bg-gray-200">
+                <tr>
+                  <th className="py-2 px-2 sm:px-4 text-gray-700">Wallet</th>
+                  <th className="py-2 px-2 sm:px-4 text-gray-700">Eligible</th>
+                  <th className="py-2 px-2 sm:px-4 text-gray-700">Claimed</th>
+                  <th className="py-2 px-2 sm:px-4 text-gray-700">Action</th>
                 </tr>
-              ))}
-          </tbody>
-        </table>
-        {/* Pagination controls for special claims */}
-        <div className="py-2 px-2 bg-gray-50 text-center">
-          <button
-            className="px-2 py-1 mr-2 border rounded bg-blue-100 text-blue-900 font-bold hover:bg-blue-200"
-            disabled={specialClaimsPage === 1}
-            onClick={() => setSpecialClaimsPage(p => Math.max(1, p - 1))}
-          >Prev</button>
-          <span>Page {specialClaimsPage}</span>
-          <button
-            className="px-2 py-1 ml-2 border rounded bg-blue-100 text-blue-900 font-bold hover:bg-blue-200"
-            disabled={specialClaimsPage * SPECIAL_CLAIMS_PAGE_SIZE >= specialClaims.filter((claim: any) =>
-              (!specialClaimsFilter.wallet || claim.wallet.toLowerCase().includes(specialClaimsFilter.wallet.toLowerCase())) &&
-              (!specialClaimsFilter.status || (specialClaimsFilter.status === 'claimed' ? claim.claimed : !claim.claimed))
-            ).length}
-            onClick={() => setSpecialClaimsPage(p => p + 1)}
-          >Next</button>
-        </div>
+              </thead>
+              <tbody>
+                {specialClaims
+                  .filter((claim: any) =>
+                    (!specialClaimsFilter.wallet || claim.wallet.toLowerCase().includes(specialClaimsFilter.wallet.toLowerCase())) &&
+                    (!specialClaimsFilter.status || (specialClaimsFilter.status === 'claimed' ? claim.claimed : !claim.claimed))
+                  )
+                  .slice((specialClaimsPage - 1) * SPECIAL_CLAIMS_PAGE_SIZE, specialClaimsPage * SPECIAL_CLAIMS_PAGE_SIZE)
+                  .map((claim: any, idx: number) => (
+                    <tr key={idx} className="border-b last:border-none">
+                      <td className="py-2 px-2 sm:px-4 break-all bg-white text-gray-900">{claim.wallet}</td>
+                      <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{claim.eligible ? "Yes" : "No"}</td>
+                      <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{claim.claimed ? "Yes" : "No"}</td>
+                      <td className="py-2 px-2 sm:px-4 bg-white">
+                        {!claim.claimed && claim.eligible ? (
+                          <button
+                            className="px-2 sm:px-4 py-1 sm:py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 text-xs sm:text-sm"
+                            disabled={specialLoading}
+                            onClick={() => handleDistributeSpecialClaim(claim.wallet)}
+                          >{specialLoading ? "Processing..." : "Distribute 1M EPWX"}</button>
+                        ) : (
+                          <span className="text-green-600 font-semibold">{claim.claimed ? "Claimed" : "N/A"}</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+            {/* Pagination controls for special claims */}
+            <div className="py-2 px-2 bg-gray-50 text-center">
+              <button
+                className="px-2 py-1 mr-2 border rounded bg-blue-100 text-blue-900 font-bold hover:bg-blue-200"
+                disabled={specialClaimsPage === 1}
+                onClick={() => setSpecialClaimsPage(p => Math.max(1, p - 1))}
+              >Prev</button>
+              <span>Page {specialClaimsPage}</span>
+              <button
+                className="px-2 py-1 ml-2 border rounded bg-blue-100 text-blue-900 font-bold hover:bg-blue-200"
+                disabled={specialClaimsPage * SPECIAL_CLAIMS_PAGE_SIZE >= specialClaims.filter((claim: any) =>
+                  (!specialClaimsFilter.wallet || claim.wallet.toLowerCase().includes(specialClaimsFilter.wallet.toLowerCase())) &&
+                  (!specialClaimsFilter.status || (specialClaimsFilter.status === 'claimed' ? claim.claimed : !claim.claimed))
+                ).length}
+                onClick={() => setSpecialClaimsPage(p => p + 1)}
+              >Next</button>
+            </div>
+          </>
+        )}
       </div>
       <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-gray-900">Admin: Cashback Claims</h1>
       {notAdmin ? (
