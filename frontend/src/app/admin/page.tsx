@@ -10,6 +10,11 @@ const ADMIN_WALLET = "0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735";
 export default function AdminPage() {
   const [claims, setClaims] = useState<any[]>([]);
   const [dailyClaims, setDailyClaims] = useState<any[]>([]);
+  // Special Claims State
+  const [specialClaims, setSpecialClaims] = useState<any[]>([]);
+  const [specialWallet, setSpecialWallet] = useState("");
+  const [specialLoading, setSpecialLoading] = useState(false);
+  const [specialError, setSpecialError] = useState<string | null>(null);
   // Pagination and filter state
   const [claimsPage, setClaimsPage] = useState(1);
   const [dailyClaimsPage, setDailyClaimsPage] = useState(1);
@@ -46,14 +51,60 @@ export default function AdminPage() {
     Promise.all([
       fetch(`/api/epwx/claims?admin=${ADMIN_WALLET}`).then((res) => res.json()),
       fetch(`/api/epwx/daily-claims?admin=${ADMIN_WALLET}`).then((res) => res.json()),
+      fetch(`/api/epwx/special-claim/list?admin=${ADMIN_WALLET}`).then((res) => res.json()),
     ])
-      .then(([claimsData, dailyClaimsData]) => {
+      .then(([claimsData, dailyClaimsData, specialClaimsData]) => {
         setClaims(claimsData.claims || []);
         setDailyClaims(dailyClaimsData.claims || []);
+        setSpecialClaims(specialClaimsData.claims || []);
         setLoading(false);
       })
       .catch(() => setLoading(false));
   }, []);
+    // Add wallet to special claim list
+    const handleAddSpecialWallet = async () => {
+      setSpecialLoading(true);
+      setSpecialError(null);
+      try {
+        const res = await fetch("/api/epwx/special-claim/add", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ wallet: specialWallet }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          setSpecialClaims((prev) => [...prev, { wallet: specialWallet, eligible: true, claimed: false }]);
+          setSpecialWallet("");
+        } else {
+          setSpecialError(data.error || "Failed to add wallet");
+        }
+      } catch (e: any) {
+        setSpecialError(e?.message || "Failed to add wallet");
+      }
+      setSpecialLoading(false);
+    };
+
+    // Distribute special claim
+    const handleDistributeSpecialClaim = async (wallet: string) => {
+      setSpecialLoading(true);
+      setSpecialError(null);
+      try {
+        const res = await fetch("/api/epwx/special-claim/claim", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ wallet }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          setSpecialClaims((prev) => prev.map((c) => c.wallet === wallet ? { ...c, claimed: true } : c));
+        } else {
+          setSpecialError(data.error || "Failed to distribute claim");
+        }
+      } catch (e: any) {
+        setSpecialError(e?.message || "Failed to distribute claim");
+      }
+      setSpecialLoading(false);
+    };
   // Send EPWX tokens for daily claim and mark as paid
   const distributeDailyClaim = async (claim: any) => {
     setMarking(claim.id);
@@ -140,6 +191,55 @@ export default function AdminPage() {
   const notAdmin = !address || address.toLowerCase() !== ADMIN_WALLET.toLowerCase();
   return (
     <div className="min-h-screen bg-gray-100 p-2 sm:p-8">
+      {/* Special Claim Section */}
+      <div className="mb-12">
+        <h2 className="text-xl font-bold mb-4 text-gray-900">Admin: Special EPWX Claims</h2>
+        <div className="flex gap-2 mb-4">
+          <input
+            type="text"
+            placeholder="Wallet address"
+            className="border rounded px-2 py-1 bg-gray-100 text-gray-900"
+            value={specialWallet}
+            onChange={e => setSpecialWallet(e.target.value)}
+          />
+          <button
+            className="px-4 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+            disabled={specialLoading || !specialWallet}
+            onClick={handleAddSpecialWallet}
+          >{specialLoading ? "Adding..." : "Add Wallet"}</button>
+        </div>
+        {specialError && <div className="text-red-600 mb-2">{specialError}</div>}
+        <table className="min-w-full bg-white rounded shadow text-xs sm:text-sm">
+          <thead className="bg-gray-200">
+            <tr>
+              <th className="py-2 px-2 sm:px-4 text-gray-700">Wallet</th>
+              <th className="py-2 px-2 sm:px-4 text-gray-700">Eligible</th>
+              <th className="py-2 px-2 sm:px-4 text-gray-700">Claimed</th>
+              <th className="py-2 px-2 sm:px-4 text-gray-700">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {specialClaims.map((claim: any, idx: number) => (
+              <tr key={idx} className="border-b last:border-none">
+                <td className="py-2 px-2 sm:px-4 break-all bg-white text-gray-900">{claim.wallet}</td>
+                <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{claim.eligible ? "Yes" : "No"}</td>
+                <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{claim.claimed ? "Yes" : "No"}</td>
+                <td className="py-2 px-2 sm:px-4 bg-white">
+                  {!claim.claimed && claim.eligible ? (
+                    <button
+                      className="px-2 sm:px-4 py-1 sm:py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 text-xs sm:text-sm"
+                      disabled={specialLoading}
+                      onClick={() => handleDistributeSpecialClaim(claim.wallet)}
+                    >{specialLoading ? "Processing..." : "Distribute 1M EPWX"}</button>
+                  ) : (
+                    <span className="text-green-600 font-semibold">{claim.claimed ? "Claimed" : "N/A"}</span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-gray-900">Admin: Cashback Claims</h1>
       {notAdmin ? (
         <div className="flex flex-col items-center justify-center py-16">
