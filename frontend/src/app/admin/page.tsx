@@ -69,7 +69,10 @@ export default function AdminPage() {
         const res = await fetch("/api/epwx/special-claim/add", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ wallet: specialWallet }),
+          body: JSON.stringify({
+            wallet: specialWallet,
+            admin: address // send connected wallet as admin
+          }),
         });
         const data = await res.json();
         if (data.success) {
