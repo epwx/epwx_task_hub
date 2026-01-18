@@ -7,6 +7,24 @@ import { getEPWXPurchaseTransactions } from '../services/epwxCashback.js';
 
 const router = express.Router();
 
+// POST /api/epwx/telegram-verify
+router.post('/telegram-verify', async (req, res) => {
+  const { wallet } = req.body;
+  if (!wallet) return res.status(400).json({ error: 'wallet is required' });
+  try {
+    const [updated] = await User.update(
+      { telegramVerified: true },
+      { where: { walletAddress: wallet.toLowerCase() } }
+    );
+    if (updated === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // GET /api/epwx/telegram-verified?wallet=0x...
 router.get('/telegram-verified', async (req, res) => {
   const { wallet } = req.query;

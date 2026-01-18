@@ -36,7 +36,16 @@ bot.onText(/\/verify/, async (msg) => {
     console.log(`[BOT] Group membership status for user ${userId}: ${status}`);
     if (['member', 'administrator', 'creator'].includes(status)) {
       bot.sendMessage(msg.chat.id, `✅ Verified! You are a member of the EPWX group. Your wallet: ${wallet}`);
-      // TODO: Notify your backend/dApp of successful verification (e.g., via API call)
+      // Notify backend to set telegramVerified for this wallet
+      try {
+        await axios.post(
+          process.env.EPWX_BACKEND_URL || 'http://localhost:3001/api/epwx/telegram-verify',
+          { wallet }
+        );
+        console.log(`[BOT] Notified backend to set telegramVerified for wallet: ${wallet}`);
+      } catch (notifyErr) {
+        console.error('[BOT] Failed to notify backend for telegram verification:', notifyErr?.response?.data || notifyErr);
+      }
     } else {
       bot.sendMessage(msg.chat.id, '❌ You are not a member of the EPWX group. Please join at https://t.me/ePowerX_On_Base and try again.');
     }
