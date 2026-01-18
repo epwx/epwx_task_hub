@@ -262,27 +262,35 @@ export default function AdminPage() {
                 {specialClaims
                   .filter((claim: any) =>
                     (!specialClaimsFilter.wallet || claim.wallet.toLowerCase().includes(specialClaimsFilter.wallet.toLowerCase())) &&
-                    (!specialClaimsFilter.status || (specialClaimsFilter.status === 'claimed' ? claim.claimed : !claim.claimed))
+                    (!specialClaimsFilter.status || (specialClaimsFilter.status === 'claimed' ? claim.status === 'claimed' : claim.status !== 'claimed'))
                   )
                   .slice((specialClaimsPage - 1) * SPECIAL_CLAIMS_PAGE_SIZE, specialClaimsPage * SPECIAL_CLAIMS_PAGE_SIZE)
-                  .map((claim: any, idx: number) => (
-                    <tr key={idx} className="border-b last:border-none">
-                      <td className="py-2 px-2 sm:px-4 break-all bg-white text-gray-900">{claim.wallet}</td>
-                      <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{claim.eligible ? "Yes" : "No"}</td>
-                      <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{claim.claimed ? "Yes" : "No"}</td>
-                      <td className="py-2 px-2 sm:px-4 bg-white">
-                        {!claim.claimed && claim.eligible ? (
-                          <button
-                            className="px-2 sm:px-4 py-1 sm:py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 text-xs sm:text-sm"
-                            disabled={specialLoading}
-                            onClick={() => handleDistributeSpecialClaim(claim.wallet)}
-                          >{specialLoading ? "Processing..." : "Distribute 1M EPWX"}</button>
-                        ) : (
-                          <span className="text-green-600 font-semibold">{claim.claimed ? "Claimed" : "N/A"}</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
+                  .map((claim: any, idx: number) => {
+                    // Eligibility: pending and within 3 hours
+                    const now = new Date();
+                    const createdAt = new Date(claim.createdAt);
+                    const within3Hours = claim.status === 'pending' && (now.getTime() - createdAt.getTime()) <= 3 * 60 * 60 * 1000;
+                    const eligible = within3Hours;
+                    const claimed = claim.status === 'claimed';
+                    return (
+                      <tr key={idx} className="border-b last:border-none">
+                        <td className="py-2 px-2 sm:px-4 break-all bg-white text-gray-900">{claim.wallet}</td>
+                        <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{eligible ? "Yes" : "No"}</td>
+                        <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{claimed ? "Yes" : "No"}</td>
+                        <td className="py-2 px-2 sm:px-4 bg-white">
+                          {!claimed && eligible ? (
+                            <button
+                              className="px-2 sm:px-4 py-1 sm:py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 text-xs sm:text-sm"
+                              disabled={specialLoading}
+                              onClick={() => handleDistributeSpecialClaim(claim.wallet)}
+                            >{specialLoading ? "Processing..." : "Distribute 1M EPWX"}</button>
+                          ) : (
+                            <span className="text-green-600 font-semibold">{claimed ? "Claimed" : "N/A"}</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
               </tbody>
             </table>
             {/* Pagination controls for special claims */}
