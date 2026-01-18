@@ -1,4 +1,11 @@
-import { SpecialClaim } from '../models/index.js';
+import express from 'express';
+import { User, DailyClaim, CashbackClaim, SpecialClaim } from '../models/index.js';
+import { Op } from 'sequelize';
+import { ethers } from 'ethers';
+import { getEPWXPurchaseTransactions } from '../services/epwxCashback.js';
+
+const router = express.Router();
+
 // POST /api/epwx/special-claim/add (admin only)
 router.post('/special-claim/add', async (req, res) => {
   const { admin, wallet } = req.body;
