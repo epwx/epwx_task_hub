@@ -63,6 +63,13 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      {/* Show ConnectKitButton globally if not connected */}
+      {!address && (
+        <div className="flex flex-col items-center justify-center py-8">
+          <div className="mb-2 text-lg text-gray-700 font-semibold">Please connect your wallet to access all features.</div>
+          <ConnectKitButton />
+        </div>
+      )}
       {/* Telegram Modal removed */}
       <Header />
       <main className="container mx-auto px-4">
