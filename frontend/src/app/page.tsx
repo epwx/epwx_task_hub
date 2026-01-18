@@ -8,6 +8,51 @@ import { useAccount, useSignMessage } from "wagmi";
 import { ConnectKitButton } from "connectkit";
 
 export default function Home() {
+    // Special Claim State
+    const [specialEligible, setSpecialEligible] = useState(false);
+    const [specialClaiming, setSpecialClaiming] = useState(false);
+    const [specialClaimStatus, setSpecialClaimStatus] = useState<string | null>(null);
+
+    // Check special claim eligibility
+    useEffect(() => {
+      const checkSpecialClaim = async () => {
+        if (!address) {
+          setSpecialEligible(false);
+          return;
+        }
+        try {
+          const res = await fetch(`/api/epwx/special-claim/status?wallet=${address}`);
+          const data = await res.json();
+          setSpecialEligible(!!data.eligible);
+        } catch (e) {
+          setSpecialEligible(false);
+        }
+      };
+      checkSpecialClaim();
+    }, [address]);
+
+    // Handle special claim
+    const handleSpecialClaim = async () => {
+      setSpecialClaiming(true);
+      setSpecialClaimStatus(null);
+      try {
+        const res = await fetch("/api/epwx/special-claim/claim", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ wallet: address }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          setSpecialClaimStatus("Successfully claimed 1,000,000 EPWX! Your reward will be sent soon.");
+          setSpecialEligible(false);
+        } else {
+          setSpecialClaimStatus(data.error || "Special claim failed");
+        }
+      } catch (e) {
+        setSpecialClaimStatus("Special claim failed");
+      }
+      setSpecialClaiming(false);
+    };
   const { address, isConnected } = useAccount();
   const { signMessageAsync } = useSignMessage();
   const [claiming, setClaiming] = useState(false);
@@ -74,6 +119,21 @@ export default function Home() {
       {/* Telegram Modal removed */}
       <Header />
       <main className="container mx-auto px-4">
+                {/* Special Claim Section */}
+                {address && specialEligible && (
+                  <div className="mb-6 flex flex-col items-center justify-center">
+                    <button
+                      className="bg-purple-600 text-white px-6 py-3 rounded-lg font-bold text-lg shadow hover:bg-purple-700 transition-all disabled:opacity-60"
+                      onClick={handleSpecialClaim}
+                      disabled={specialClaiming}
+                    >
+                      {specialClaiming ? "Claiming..." : "Claim Special 1,000,000 EPWX"}
+                    </button>
+                    {specialClaimStatus && (
+                      <div className={`mt-2 text-center ${specialClaimStatus.startsWith("Successfully") ? "text-green-700" : "text-red-600"}`}>{specialClaimStatus}</div>
+                    )}
+                  </div>
+                )}
         {/* Hero Section */}
         <section className="py-20 text-center relative">
           {/* Decorative background elements */}
