@@ -11,7 +11,7 @@ export default function Home() {
   const { signMessageAsync } = useSignMessage();
   const [claiming, setClaiming] = useState(false);
   const [claimStatus, setClaimStatus] = useState<string | null>(null);
-  const [showTelegramModal, setShowTelegramModal] = useState(false);
+  // Removed Telegram modal state
   const [isTelegramVerified, setIsTelegramVerified] = useState<boolean>(false);
   const [checkingVerification, setCheckingVerification] = useState(false);
 
@@ -35,11 +35,7 @@ export default function Home() {
     checkVerification();
   }, [address]);
 
-  useEffect(() => {
-    if (isConnected) {
-      setShowTelegramModal(true);
-    }
-  }, [isConnected]);
+  // Removed Telegram modal effect
 
   const handleDailyClaim = async () => {
     setClaiming(true);
@@ -67,30 +63,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* Telegram Modal */}
-      {showTelegramModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white rounded-lg shadow-lg p-8 max-w-sm w-full text-center">
-            <h2 className="text-2xl font-bold mb-4">Join our Telegram Group!</h2>
-            <p className="mb-6">Get updates, support, and community rewards by joining our Telegram group.</p>
-            <a
-              href="https://t.me/ePowerX_On_Base"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg mb-4"
-            >
-              Join Telegram Group
-            </a>
-            <br />
-            <button
-              className="text-gray-600 hover:text-gray-900 mt-2 underline"
-              onClick={() => setShowTelegramModal(false)}
-            >
-              Maybe Later
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Telegram Modal removed */}
       <Header />
       <main className="container mx-auto px-4">
         {/* Hero Section */}
@@ -112,14 +85,7 @@ export default function Home() {
               Join the EPWX ecosystem on Base network. Complete campaigns and get rewarded with EPWX tokens instantly.
             </p>
             <div className="mb-8 flex flex-col items-center justify-center">
-              <a
-                href="https://t.me/ePowerX_On_Base"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-lg shadow transition-all text-lg mb-4"
-              >
-                Join Telegram Group
-              </a>
+              {/* Join Telegram Group button removed */}
               {address && (
                 <>
                   <div className="mb-2 text-sm text-gray-700">Connected wallet: {address}</div>
