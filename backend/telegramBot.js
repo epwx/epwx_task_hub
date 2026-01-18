@@ -17,7 +17,7 @@ bot.onText(/\/start (.+)/, async (msg, match) => {
   const userId = msg.from.id;
   console.log(`[BOT] Received /start with wallet: ${wallet} from user: ${userId}`);
   walletRequests[userId] = wallet;
-  bot.sendMessage(msg.chat.id, `Hi! To verify your Telegram membership, please reply with /verify.`);
+  bot.sendMessage(msg.chat.id, `Hi! To verify your Telegram membership, please join our group at https://t.me/ePowerX_On_Base and then reply with /verify.`);
 });
 
 bot.onText(/\/verify/, async (msg) => {
