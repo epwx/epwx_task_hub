@@ -1,3 +1,12 @@
+
+import express from 'express';
+import { User, DailyClaim, CashbackClaim, SpecialClaim } from '../models/index.js';
+import { Op } from 'sequelize';
+import { ethers } from 'ethers';
+import { getEPWXPurchaseTransactions } from '../services/epwxCashback.js';
+
+const router = express.Router();
+
 // GET /api/epwx/special-claim/list (admin only)
 router.get('/special-claim/list', async (req, res) => {
   const { admin } = req.query;
@@ -11,13 +20,6 @@ router.get('/special-claim/list', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-import express from 'express';
-import { User, DailyClaim, CashbackClaim, SpecialClaim } from '../models/index.js';
-import { Op } from 'sequelize';
-import { ethers } from 'ethers';
-import { getEPWXPurchaseTransactions } from '../services/epwxCashback.js';
-
-const router = express.Router();
 
 // POST /api/epwx/special-claim/add (admin only)
 router.post('/special-claim/add', async (req, res) => {
