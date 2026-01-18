@@ -1,3 +1,16 @@
+// GET /api/epwx/special-claim/list (admin only)
+router.get('/special-claim/list', async (req, res) => {
+  const { admin } = req.query;
+  if (admin !== '0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735') {
+    return res.status(403).json({ error: 'Unauthorized' });
+  }
+  try {
+    const claims = await SpecialClaim.findAll({ order: [['createdAt', 'DESC']] });
+    res.json({ claims });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 import express from 'express';
 import { User, DailyClaim, CashbackClaim, SpecialClaim } from '../models/index.js';
 import { Op } from 'sequelize';
