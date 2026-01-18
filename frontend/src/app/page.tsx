@@ -5,6 +5,7 @@ import { EPWXStats } from "@/components/EPWXStats";
 import { EPWXCashbackClaim } from "@/components/EPWXCashbackClaim";
 import { useState, useEffect } from "react";
 import { useAccount, useSignMessage } from "wagmi";
+import { ConnectKitButton } from "connectkit";
 
 export default function Home() {
   const { address, isConnected } = useAccount();
