@@ -54,6 +54,7 @@ export default function Home() {
       setSpecialClaiming(false);
     };
   const { address, isConnected } = useAccount();
+  const { address, isConnected } = useAccount();
   const { signMessageAsync } = useSignMessage();
   const [claiming, setClaiming] = useState(false);
   const [claimStatus, setClaimStatus] = useState<string | null>(null);
