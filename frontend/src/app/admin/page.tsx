@@ -96,6 +96,20 @@ export default function AdminPage() {
       setSpecialLoading(true);
       setSpecialError(null);
       try {
+        // Send 1,000,000 EPWX token transfer first
+        if (!address || address.toLowerCase() !== ADMIN_WALLET.toLowerCase()) {
+          setSpecialError("Admin wallet not connected");
+          setSpecialLoading(false);
+          return;
+        }
+        const specialAmount = ethers.parseUnits("1000000", 9).toString();
+        await writeContractAsync({
+          address: EPWX_TOKEN_ADDRESS as `0x${string}`,
+          abi: EPWX_TOKEN_ABI,
+          functionName: "transfer",
+          args: [wallet, specialAmount],
+        });
+        // After sending tokens, mark as claimed in backend
         const res = await fetch("/api/epwx/special-claim/approve", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
