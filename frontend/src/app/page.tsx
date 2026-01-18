@@ -8,6 +8,7 @@ import { useAccount, useSignMessage } from "wagmi";
 import { ConnectKitButton } from "connectkit";
 
 export default function Home() {
+    const { address, isConnected } = useAccount();
     // Special Claim State
     const [specialEligible, setSpecialEligible] = useState(false);
     const [specialClaiming, setSpecialClaiming] = useState(false);
@@ -53,7 +54,7 @@ export default function Home() {
       }
       setSpecialClaiming(false);
     };
-  const { address, isConnected } = useAccount();
+  // ...existing code...
   const { signMessageAsync } = useSignMessage();
   const [claiming, setClaiming] = useState(false);
   const [claimStatus, setClaimStatus] = useState<string | null>(null);
