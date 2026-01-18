@@ -123,14 +123,20 @@ export default function Home() {
               {address && (
                 <>
                   <div className="mb-2 text-sm text-gray-700">Connected wallet: {address}</div>
-                  <a
-                    href={`https://t.me/epwx_bot?start=${address}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-block bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-lg shadow transition-all text-lg"
-                  >
-                    Verify Telegram Membership
-                  </a>
+                  {isTelegramVerified ? (
+                    <div className="inline-block bg-green-100 text-green-700 font-bold py-3 px-8 rounded-lg shadow transition-all text-lg mb-2">
+                      ✅ Telegram membership verified
+                    </div>
+                  ) : (
+                    <a
+                      href={`https://t.me/epwx_bot?start=${address}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-lg shadow transition-all text-lg"
+                    >
+                      Verify Telegram Membership
+                    </a>
+                  )}
                 </>
               )}
             </div>
