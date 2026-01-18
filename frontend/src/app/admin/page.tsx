@@ -80,7 +80,8 @@ export default function AdminPage() {
         });
         const data = await res.json();
         if (data.success) {
-          setSpecialClaims((prev) => [...prev, { wallet: specialWallet, eligible: true, claimed: false }]);
+          // Add new wallet to the top and sort by createdAt descending
+          setSpecialClaims((prev) => [{ wallet: specialWallet, status: "pending", createdAt: new Date().toISOString() }, ...prev].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
           setSpecialWallet("");
         } else {
           setSpecialError(data.error || "Failed to add wallet");

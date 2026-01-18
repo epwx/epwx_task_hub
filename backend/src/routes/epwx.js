@@ -29,8 +29,25 @@ router.post('/special-claim/add', async (req, res) => {
   }
   if (!wallet) return res.status(400).json({ error: 'wallet is required' });
   try {
-    await SpecialClaim.create({ wallet: wallet.toLowerCase() });
-    res.json({ success: true });
+    const now = new Date();
+    const threeHoursAgo = new Date(now.getTime() - 3 * 60 * 60 * 1000);
+    // Check for existing pending claim within 3 hours
+    const existing = await SpecialClaim.findOne({
+      where: {
+        wallet: wallet.toLowerCase(),
+        status: 'pending',
+        createdAt: { [Op.gte]: threeHoursAgo }
+      }
+    });
+    if (existing) {
+      // Update createdAt to now
+      existing.createdAt = now;
+      await existing.save();
+      return res.json({ success: true, updated: true });
+    } else {
+      await SpecialClaim.create({ wallet: wallet.toLowerCase(), createdAt: now });
+      return res.json({ success: true, created: true });
+    }
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

@@ -5,6 +5,7 @@ import { EPWXStats } from "@/components/EPWXStats";
 import { EPWXCashbackClaim } from "@/components/EPWXCashbackClaim";
 import { useState, useEffect } from "react";
 import { useAccount, useSignMessage } from "wagmi";
+import toast from "react-hot-toast";
 import { ConnectKitButton } from "connectkit";
 
 export default function Home() {
@@ -46,11 +47,14 @@ export default function Home() {
         if (data.success) {
           setSpecialClaimStatus("Special claim submitted. Pending admin approval.");
           setSpecialEligible(false);
+          toast.success("Special claim submitted! Pending admin approval.");
         } else {
           setSpecialClaimStatus(data.error || "Special claim failed");
+          toast.error(data.error || "Special claim failed");
         }
       } catch (e) {
         setSpecialClaimStatus("Special claim failed");
+        toast.error("Special claim failed");
       }
       setSpecialClaiming(false);
     };
