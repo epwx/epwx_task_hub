@@ -77,13 +77,6 @@ router.get('/special-claim/status', async (req, res) => {
   }
 });
 
-import express from 'express';
-import { User, DailyClaim, CashbackClaim } from '../models/index.js';
-import { Op } from 'sequelize';
-import { ethers } from 'ethers';
-import { getEPWXPurchaseTransactions } from '../services/epwxCashback.js';
-
-const router = express.Router();
 
 // POST /api/epwx/telegram-verify
 router.post('/telegram-verify', async (req, res) => {
