@@ -91,24 +91,24 @@ export default function AdminPage() {
       setSpecialLoading(false);
     };
 
-    // Distribute special claim
+    // Approve/distribute special claim (admin only)
     const handleDistributeSpecialClaim = async (wallet: string) => {
       setSpecialLoading(true);
       setSpecialError(null);
       try {
-        const res = await fetch("/api/epwx/special-claim/claim", {
+        const res = await fetch("/api/epwx/special-claim/approve", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ wallet }),
+          body: JSON.stringify({ wallet, admin: address }),
         });
         const data = await res.json();
         if (data.success) {
-          setSpecialClaims((prev) => prev.map((c) => c.wallet === wallet ? { ...c, claimed: true } : c));
+          setSpecialClaims((prev) => prev.map((c) => c.wallet === wallet ? { ...c, status: "claimed" } : c));
         } else {
-          setSpecialError(data.error || "Failed to distribute claim");
+          setSpecialError(data.error || "Failed to approve/distribute claim");
         }
       } catch (e: any) {
-        setSpecialError(e?.message || "Failed to distribute claim");
+        setSpecialError(e?.message || "Failed to approve/distribute claim");
       }
       setSpecialLoading(false);
     };

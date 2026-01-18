@@ -44,7 +44,7 @@ export default function Home() {
         });
         const data = await res.json();
         if (data.success) {
-          setSpecialClaimStatus("Successfully claimed 1,000,000 EPWX! Your reward will be sent soon.");
+          setSpecialClaimStatus("Special claim submitted. Pending admin approval.");
           setSpecialEligible(false);
         } else {
           setSpecialClaimStatus(data.error || "Special claim failed");

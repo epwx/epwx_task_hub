@@ -60,12 +60,40 @@ router.post('/special-claim/claim', async (req, res) => {
     if (!user || !user.telegramVerified) {
       return res.status(403).json({ error: 'Telegram not verified' });
     }
-    // Mark as claimed
+    // Do NOT mark as claimed here. Leave as pending for admin approval.
+    res.json({ success: true, message: 'Special claim submitted. Pending admin approval.' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/epwx/special-claim/approve (admin only)
+router.post('/special-claim/approve', async (req, res) => {
+  const { admin, wallet } = req.body;
+  if (admin !== '0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735') {
+    return res.status(403).json({ error: 'Unauthorized' });
+  }
+  if (!wallet) return res.status(400).json({ error: 'wallet is required' });
+  try {
+    // Find latest pending claim within 3 hours
+    const now = new Date();
+    const threeHoursAgo = new Date(now.getTime() - 3 * 60 * 60 * 1000);
+    const claim = await SpecialClaim.findOne({
+      where: {
+        wallet: wallet.toLowerCase(),
+        status: 'pending',
+        createdAt: { [Op.gte]: threeHoursAgo }
+      },
+      order: [['createdAt', 'DESC']]
+    });
+    if (!claim) {
+      return res.status(404).json({ error: 'No valid pending claim found' });
+    }
     claim.status = 'claimed';
     claim.claimedAt = now;
     await claim.save();
-    // TODO: Send 1 million EPWX to wallet (queue for admin or contract call)
-    res.json({ success: true, message: '1 million EPWX claim successful!' });
+    // TODO: Send 1 million EPWX to wallet (manual or contract call)
+    res.json({ success: true, message: 'Special claim approved and marked as claimed.' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
