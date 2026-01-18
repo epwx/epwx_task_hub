@@ -1,3 +1,74 @@
+import { SpecialClaim } from '../models/index.js';
+// POST /api/epwx/special-claim/add (admin only)
+router.post('/special-claim/add', async (req, res) => {
+  const { admin, wallet } = req.body;
+  if (admin !== '0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735') {
+    return res.status(403).json({ error: 'Unauthorized' });
+  }
+  if (!wallet) return res.status(400).json({ error: 'wallet is required' });
+  try {
+    await SpecialClaim.create({ wallet: wallet.toLowerCase() });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/epwx/special-claim/claim
+router.post('/special-claim/claim', async (req, res) => {
+  const { wallet } = req.body;
+  if (!wallet) return res.status(400).json({ error: 'wallet is required' });
+  try {
+    // Find latest pending claim within 3 hours
+    const now = new Date();
+    const threeHoursAgo = new Date(now.getTime() - 3 * 60 * 60 * 1000);
+    const claim = await SpecialClaim.findOne({
+      where: {
+        wallet: wallet.toLowerCase(),
+        status: 'pending',
+        createdAt: { [Op.gte]: threeHoursAgo }
+      },
+      order: [['createdAt', 'DESC']]
+    });
+    if (!claim) {
+      return res.status(404).json({ error: 'No valid claim found (expired or already claimed)' });
+    }
+    // Check Telegram verification
+    const user = await User.findOne({ where: { walletAddress: wallet.toLowerCase() } });
+    if (!user || !user.telegramVerified) {
+      return res.status(403).json({ error: 'Telegram not verified' });
+    }
+    // Mark as claimed
+    claim.status = 'claimed';
+    claim.claimedAt = now;
+    await claim.save();
+    // TODO: Send 1 million EPWX to wallet (queue for admin or contract call)
+    res.json({ success: true, message: '1 million EPWX claim successful!' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// (Optional) GET /api/epwx/special-claim/status?wallet=...
+router.get('/special-claim/status', async (req, res) => {
+  const { wallet } = req.query;
+  if (!wallet) return res.status(400).json({ error: 'wallet is required' });
+  try {
+    const now = new Date();
+    const threeHoursAgo = new Date(now.getTime() - 3 * 60 * 60 * 1000);
+    const claim = await SpecialClaim.findOne({
+      where: {
+        wallet: wallet.toLowerCase(),
+        status: 'pending',
+        createdAt: { [Op.gte]: threeHoursAgo }
+      },
+      order: [['createdAt', 'DESC']]
+    });
+    res.json({ eligible: !!claim });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 import express from 'express';
 import { User, DailyClaim, CashbackClaim } from '../models/index.js';
