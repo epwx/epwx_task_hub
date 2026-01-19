@@ -118,34 +118,37 @@ export default function Home() {
         <main className="container mx-auto px-4 flex-1">
           {/* Wallet Connection & Verification Section */}
           <section className="my-8">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4 p-6 bg-white rounded-xl shadow mb-6">
-              <div>
-                <h2 className="text-xl font-bold mb-2">Wallet & Telegram Verification</h2>
-                {!address ? (
-                  <div className="flex flex-col items-start">
-                    <span className="mb-2 text-gray-700">Please connect your wallet to access all features.</span>
-                    <ConnectKitButton />
+            <div className="flex flex-col items-center justify-center gap-4 p-6 bg-white rounded-xl shadow mb-6 w-full max-w-lg mx-auto">
+              <h2 className="text-xl font-bold mb-2 text-center w-full">Wallet & Telegram Verification</h2>
+              {!address ? (
+                <div className="flex flex-col items-center w-full">
+                  <span className="mb-2 text-gray-700 text-center">Please connect your wallet to access all features.</span>
+                  <ConnectKitButton />
+                </div>
+              ) : (
+                <div className="flex flex-col items-center w-full">
+                  <div className="mb-2 w-full flex flex-col items-center">
+                    <span className="text-gray-700 font-medium text-center break-all w-full">
+                      Connected wallet:
+                      <span className="block text-xs text-gray-500 font-mono bg-gray-100 rounded px-2 py-1 mt-1 w-full overflow-x-auto" style={{wordBreak: 'break-all'}}>{address}</span>
+                    </span>
                   </div>
-                ) : (
-                  <div className="flex flex-col items-start">
-                    <span className="mb-2 text-gray-700">Connected wallet: {address}</span>
-                    {checkingVerification ? (
-                      <span className="text-gray-500">Checking Telegram verification...</span>
-                    ) : isTelegramVerified ? (
-                      <span className="bg-green-100 text-green-700 font-bold py-2 px-4 rounded-lg mb-2">✅ Telegram membership verified</span>
-                    ) : (
-                      <a
-                        href={`https://t.me/epwx_bot?start=${address}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg mb-2"
-                      >
-                        Verify Telegram Membership
-                      </a>
-                    )}
-                  </div>
-                )}
-              </div>
+                  {checkingVerification ? (
+                    <span className="text-gray-500">Checking Telegram verification...</span>
+                  ) : isTelegramVerified ? (
+                    <span className="bg-green-100 text-green-700 font-bold py-2 px-4 rounded-lg mb-2 w-full text-center block">✅ Telegram membership verified</span>
+                  ) : (
+                    <a
+                      href={`https://t.me/epwx_bot?start=${address}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg mb-2 w-full text-center"
+                    >
+                      Verify Telegram Membership
+                    </a>
+                  )}
+                </div>
+              )}
             </div>
           </section>
 
@@ -241,6 +244,8 @@ export default function Home() {
               <a href="/terms" className="hover:text-blue-400 transition-colors">Terms of Service</a>
               <span className="hidden md:block text-gray-600">•</span>
               <a href="/privacy" className="hover:text-blue-400 transition-colors">Privacy Policy</a>
+              <span className="hidden md:block text-gray-600">•</span>
+              <a href="/user-guide" className="hover:text-blue-400 transition-colors">User Guide</a>
               <span className="hidden md:block text-gray-600">•</span>
               <a href="https://twitter.com/epowex" target="_blank" rel="noopener noreferrer" className="hover:text-blue-400 transition-colors">Twitter</a>
             </div>
