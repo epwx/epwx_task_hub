@@ -287,9 +287,11 @@ export default function AdminPage() {
                     const eligible = claim.userClaimed === true && claim.status === 'pending' && (now.getTime() - createdAt.getTime()) <= 3 * 60 * 60 * 1000;
                     const claimed = claim.status === 'claimed';
                     // Button enabled only if eligible (user has claimed special)
+                    // Format createdAt in EST
+                    const estDate = new Date(claim.createdAt).toLocaleString('en-US', { timeZone: 'America/New_York' });
                     return (
                       <tr key={idx} className="border-b last:border-none">
-                        <td className="py-2 px-2 sm:px-4 break-all bg-white text-gray-900">{claim.wallet}</td>
+                        <td className="py-2 px-2 sm:px-4 break-all bg-white text-gray-900">{claim.wallet}<br /><span className="text-xs text-gray-500">{estDate} EST</span></td>
                         <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{eligible ? "Yes" : "No"}</td>
                         <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{claimed ? "Yes" : "No"}</td>
                         <td className="py-2 px-2 sm:px-4 bg-white">
