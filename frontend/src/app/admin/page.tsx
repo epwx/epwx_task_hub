@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Header } from "@/components/Header";
 import { useAccount, useWalletClient, useWriteContract } from "wagmi";
 import { ConnectKitButton } from "connectkit";
 import { ethers } from "ethers";
@@ -212,7 +213,9 @@ export default function AdminPage() {
   // Show wallet connect prompt if not connected or not admin wallet
   const notAdmin = !address || address.toLowerCase() !== ADMIN_WALLET.toLowerCase();
   return (
-    <div className="min-h-screen bg-gray-100 p-2 sm:p-8">
+    <>
+      <Header />
+      <div className="min-h-screen bg-gray-100 p-2 sm:p-8">
       {/* Show ConnectKitButton globally if not connected */}
       {!address && (
         <div className="flex flex-col items-center justify-center py-8">
@@ -513,6 +516,7 @@ export default function AdminPage() {
         </div>
       </div>
       {error && <div className="text-red-600 mt-2">{error}</div>}
-    </div>
+      </div>
+    </>
   );
 }
