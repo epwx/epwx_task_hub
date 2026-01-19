@@ -10,7 +10,7 @@ const ADMIN_WALLET = "0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735";
 export default function AdminPage() {
     // Special Claims Pagination/Filter
     const [specialClaimsPage, setSpecialClaimsPage] = useState(1);
-      const [specialClaimsFilter, setSpecialClaimsFilter] = useState({ wallet: '', status: 'claimed' });
+      const [specialClaimsFilter, setSpecialClaimsFilter] = useState({ wallet: '', status: 'pending' });
     const SPECIAL_CLAIMS_PAGE_SIZE = 5;
   const [claims, setClaims] = useState<any[]>([]);
   const [dailyClaims, setDailyClaims] = useState<any[]>([]);
