@@ -1,3 +1,12 @@
+  // Telegram Referral Copy
+  const [copied, setCopied] = useState(false);
+  const referralLink = address ? `https://t.me/epwx_bot?start=ref_${address}` : '';
+  const handleCopyReferral = () => {
+    if (!referralLink) return;
+    navigator.clipboard.writeText(referralLink);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 "use client";
 import Link from "next/link";
 import { Header } from "@/components/Header";
@@ -213,6 +222,29 @@ export default function Home() {
               </section>
             )}
           </div>
+
+
+          {/* Telegram Referral Section */}
+          {address && (
+            <section className="py-12">
+              <div className="bg-white rounded-xl shadow p-8 flex flex-col items-center">
+                <h2 className="text-2xl font-bold mb-4 text-blue-700">Telegram Referral</h2>
+                <p className="mb-4 text-gray-700 text-center">Share your referral link below. When someone joins the Telegram group using your link, you’ll earn rewards!</p>
+                <div className="flex flex-col sm:flex-row items-center gap-2 w-full max-w-xl">
+                  <input
+                    type="text"
+                    value={referralLink}
+                    readOnly
+                    className="w-full px-3 py-2 border rounded bg-gray-100 text-gray-700 font-mono text-xs"
+                  />
+                  <button
+                    onClick={handleCopyReferral}
+                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-bold"
+                  >{copied ? "Copied!" : "Copy Link"}</button>
+                </div>
+              </div>
+            </section>
+          )}
 
           {/* Stats Section */}
           <section className="py-12">
