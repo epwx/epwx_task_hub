@@ -77,7 +77,9 @@ router.post('/special-claim/claim', async (req, res) => {
     if (!user || !user.telegramVerified) {
       return res.status(403).json({ error: 'Telegram not verified' });
     }
-    // Do NOT mark as claimed here. Leave as pending for admin approval.
+    // Mark as userClaimed (for admin UI eligibility)
+    claim.userClaimed = true;
+    await claim.save();
     res.json({ success: true, message: 'Special claim submitted. Pending admin approval.' });
   } catch (err) {
     res.status(500).json({ error: err.message });

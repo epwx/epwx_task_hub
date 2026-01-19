@@ -284,7 +284,7 @@ export default function AdminPage() {
                     // Eligibility: pending and within 3 hours
                     const now = new Date();
                     const createdAt = new Date(claim.createdAt);
-                    const eligible = claim.status === 'pending' && (now.getTime() - createdAt.getTime()) <= 3 * 60 * 60 * 1000;
+                    const eligible = claim.userClaimed === true && claim.status === 'pending' && (now.getTime() - createdAt.getTime()) <= 3 * 60 * 60 * 1000;
                     const claimed = claim.status === 'claimed';
                     // Button enabled only if eligible (user has claimed special)
                     return (

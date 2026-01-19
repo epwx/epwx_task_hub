@@ -7,6 +7,7 @@ const SpecialClaim = sequelize.define('SpecialClaim', {
   createdAt: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
   claimedAt: { type: DataTypes.DATE, allowNull: true },
   status: { type: DataTypes.ENUM('pending', 'claimed', 'expired'), defaultValue: 'pending' },
+  userClaimed: { type: DataTypes.BOOLEAN, defaultValue: false },
 }, {
   tableName: 'special_claims',
   timestamps: false,
