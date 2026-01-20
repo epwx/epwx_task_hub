@@ -13,24 +13,30 @@ Welcome to the EPWX Task Platform! This guide will help you understand the main 
 - Once verified, you’ll see a green badge: “✅ Telegram membership verified.”
 
 ## 3. Special Claim
-- If you are eligible, you will see a **Special Claim** card.
+- If you are eligible, you will see a **Special Claim** card on the homepage.
 - Click **Claim Special 1,000,000 EPWX** to submit your claim.
 - You will receive a status message. If successful, your claim will be processed and is subject to admin approval.
+- You can check your claim status in the admin panel if you have access.
 
 ## 4. Daily Claim
-- After verifying your Telegram membership, you can claim a daily reward.
-- Click **Claim Daily 100,000 EPWX** in the Daily Claim card.
+- After verifying your Telegram membership, you can claim a daily reward from the homepage.
+- Click **Claim Daily Reward** in the Daily Claim section.
 - You will receive a status message about your claim.
-- You can claim once per day.
+- You can claim once per day, and the reward is 100,000 EPWX.
 
-## 5. Platform Stats
+## 5. Referrals
+- Share your referral link from the homepage to invite new users.
+- Successful referrals will be tracked and displayed in your referral stats.
+- Referral rewards are distributed after verification.
+
+## 6. Platform Stats
 - The **Platform Stats** section shows real-time statistics about the EPWX ecosystem, such as total tokens distributed and active campaigns.
 
-## 6. Cashback Rewards
+## 7. Cashback Rewards
 - The **Cashback Rewards** section allows you to claim cashback for eligible activities.
 - Follow the on-screen instructions to claim your rewards.
 
-## 7. Footer Links
+## 8. Footer Links
 - Access the main site, Terms of Service, Privacy Policy, and Twitter from the footer.
 
 ## Tips
