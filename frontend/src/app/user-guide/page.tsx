@@ -28,18 +28,27 @@ export default function UserGuide() {
           <li>
             <strong>Special Claim:</strong>
             <ul className="list-disc pl-6">
-              <li>If you are eligible, you will see a <b>Special Claim</b> card.</li>
+              <li>If you are eligible, you will see a <b>Special Claim</b> card on the homepage.</li>
               <li>Click <b>Claim Special 1,000,000 EPWX</b> to submit your claim.</li>
               <li>You will receive a status message. If successful, your claim will be processed and is subject to admin approval.</li>
+              <li>You can check your claim status in the admin panel if you have access.</li>
             </ul>
           </li>
           <li>
             <strong>Daily Claim:</strong>
             <ul className="list-disc pl-6">
-              <li>After verifying your Telegram membership, you can claim a daily reward.</li>
-              <li>Click <b>Claim Daily 100,000 EPWX</b> in the Daily Claim card.</li>
+              <li>After verifying your Telegram membership, you can claim a daily reward from the homepage.</li>
+              <li>Click <b>Claim Daily Reward</b> in the Daily Claim section.</li>
               <li>You will receive a status message about your claim.</li>
-              <li>You can claim once per day.</li>
+              <li>You can claim once per day, and the reward is 100,000 EPWX.</li>
+            </ul>
+          </li>
+          <li>
+            <strong>Referrals:</strong>
+            <ul className="list-disc pl-6">
+              <li>Share your referral link from the homepage to invite new users.</li>
+              <li>Successful referrals will be tracked and displayed in your referral stats.</li>
+              <li>Referral rewards are distributed after verification.</li>
             </ul>
           </li>
           <li>
