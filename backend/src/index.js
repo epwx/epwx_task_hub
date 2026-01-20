@@ -61,34 +61,20 @@ import circulatingRouter from './routes/circulating.js';
 import burnedRouter from './routes/burned.js';
 import swaggerRouter from './routes/swagger.js';
 import epwxRouter from './routes/epwx.js';
+
 app.use('/api/auth', authRouter);
 app.use('/api/campaigns', campaignsRouter);
 app.use('/api/tasks', tasksRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/price', priceRouter);
-// ...existing code...
 app.use('/api', supplyRouter);
 app.use('/api', circulatingRouter);
 app.use('/api', burnedRouter);
 app.use('/api/docs', swaggerRouter);
 app.use('/api/epwx', epwxRouter);
+
+// Error handler
 app.use((err, req, res, next) => {
-app.use('/api/auth', authRouter);
-app.use('/api/campaigns', campaignsRouter);
-app.use('/api/tasks', tasksRouter);
-app.use('/api/users', usersRouter);
-app.use('/api/price', priceRouter);
-// ...existing code...
-app.use('/api', supplyRouter);
-try {
-  app.use('/api', circulatingRouter);
-  console.log('Registered /api/circulating route');
-} catch (err) {
-  console.error('Error loading /api/circulating:', err);
-}
-app.use('/api', burnedRouter);
-app.use('/api/docs', swaggerRouter);
-app.use('/api/epwx', epwxRouter);
   console.error(err.stack);
   res.status(err.status || 500).json({
     error: {
