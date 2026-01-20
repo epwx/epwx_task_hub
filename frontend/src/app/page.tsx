@@ -18,6 +18,18 @@ import toast from "react-hot-toast";
 import { ConnectKitButton } from "connectkit";
 
 export default function Home() {
+        // Referral stats
+        const [referralCount, setReferralCount] = useState<number | null>(null);
+        useEffect(() => {
+          if (!address) {
+            setReferralCount(null);
+            return;
+          }
+          fetch(`/api/epwx/telegram-referral-stats?wallet=${address}`)
+            .then(res => res.json())
+            .then(data => setReferralCount(typeof data.count === 'number' ? data.count : 0))
+            .catch(() => setReferralCount(null));
+        }, [address]);
     const { address, isConnected } = useAccount();
     // Special Claim State
     const [specialEligible, setSpecialEligible] = useState(false);
@@ -230,7 +242,7 @@ export default function Home() {
               <div className="bg-white rounded-xl shadow p-8 flex flex-col items-center">
                 <h2 className="text-2xl font-bold mb-4 text-blue-700">Telegram Referral</h2>
                 <p className="mb-4 text-gray-700 text-center">Share your referral link below. When someone joins the Telegram group using your link, you’ll earn rewards!</p>
-                <div className="flex flex-col sm:flex-row items-center gap-2 w-full max-w-xl">
+                <div className="flex flex-col sm:flex-row items-center gap-2 w-full max-w-xl mb-4">
                   <input
                     type="text"
                     value={referralLink}
@@ -241,6 +253,9 @@ export default function Home() {
                     onClick={handleCopyReferral}
                     className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-bold"
                   >{copied ? "Copied!" : "Copy Link"}</button>
+                </div>
+                <div className="text-lg text-gray-700 text-center">
+                  {referralCount === null ? 'Loading your referral stats...' : `Successful Referrals: ${referralCount}`}
                 </div>
               </div>
             </section>

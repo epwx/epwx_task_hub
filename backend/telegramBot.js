@@ -13,8 +13,28 @@ const bot = new TelegramBot(BOT_TOKEN, { polling: true });
 const walletRequests = {};
 
 bot.onText(/\/start (.+)/, async (msg, match) => {
-  const wallet = match[1];
+  const param = match[1];
   const userId = msg.from.id;
+  // Referral: /start ref_{wallet}
+  if (param.startsWith('ref_')) {
+    const referrerWallet = param.replace('ref_', '');
+    console.log(`[BOT] Referral: user ${userId} joined with referrer wallet: ${referrerWallet}`);
+    // Notify backend of referral
+    try {
+      const backendUrl = process.env.API_URL
+        ? `${process.env.API_URL}/api/epwx/telegram-referral`
+        : 'http://localhost:4000/api/epwx/telegram-referral';
+      await axios.post(backendUrl, { referrerWallet, telegramUserId: userId });
+      console.log(`[BOT] Notified backend of referral: ${referrerWallet} -> ${userId}`);
+    } catch (err) {
+      console.error('[BOT] Failed to notify backend for referral:', err?.response?.data || err);
+    }
+    bot.sendMessage(msg.chat.id, `Welcome! You joined with a referral. To verify your Telegram membership, please join our group at https://t.me/ePowerX_On_Base and then reply with /verify.`);
+    // Optionally, you can notify the referrer here if you want
+    return;
+  }
+  // Default: treat as wallet verification
+  const wallet = param;
   console.log(`[BOT] Received /start with wallet: ${wallet} from user: ${userId}`);
   walletRequests[userId] = wallet;
   bot.sendMessage(msg.chat.id, `Hi! To verify your Telegram membership, please join our group at https://t.me/ePowerX_On_Base and then reply with /verify.`);
