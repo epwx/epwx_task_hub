@@ -1,12 +1,3 @@
-  // Telegram Referral Copy
-  const [copied, setCopied] = useState(false);
-  const referralLink = address ? `https://t.me/epwx_bot?start=ref_${address}` : '';
-  const handleCopyReferral = () => {
-    if (!referralLink) return;
-    navigator.clipboard.writeText(referralLink);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
 "use client";
 import Link from "next/link";
 import { Header } from "@/components/Header";
@@ -16,6 +7,8 @@ import { useState, useEffect } from "react";
 import { useAccount, useSignMessage } from "wagmi";
 import toast from "react-hot-toast";
 import { ConnectKitButton } from "connectkit";
+// Telegram Referral Copy
+// ...existing code...
 
 export default function Home() {
         // Referral stats
