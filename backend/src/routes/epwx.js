@@ -1,3 +1,12 @@
+
+import express from 'express';
+import { User, DailyClaim, CashbackClaim, SpecialClaim, TelegramReferral } from '../models/index.js';
+import { Op } from 'sequelize';
+import { ethers } from 'ethers';
+import { getEPWXPurchaseTransactions } from '../services/epwxCashback.js';
+
+const router = express.Router();
+
 // GET /api/epwx/telegram-referral-rewards?admin=...&status=pending|paid
 router.get('/telegram-referral-rewards', async (req, res) => {
   const { admin, status } = req.query;
@@ -36,6 +45,7 @@ router.post('/telegram-referral-reward/mark-paid', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 // GET /api/epwx/telegram-referral-stats?wallet=...
 router.get('/telegram-referral-stats', async (req, res) => {
   const { wallet } = req.query;
@@ -47,7 +57,6 @@ router.get('/telegram-referral-stats', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-import { TelegramReferral } from '../models/index.js';
 
 // POST /api/epwx/telegram-referral
 router.post('/telegram-referral', async (req, res) => {
@@ -67,14 +76,6 @@ router.post('/telegram-referral', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
-import express from 'express';
-import { User, DailyClaim, CashbackClaim, SpecialClaim } from '../models/index.js';
-import { Op } from 'sequelize';
-import { ethers } from 'ethers';
-import { getEPWXPurchaseTransactions } from '../services/epwxCashback.js';
-
-const router = express.Router();
 
 // GET /api/epwx/special-claim/list (admin only)
 router.get('/special-claim/list', async (req, res) => {
