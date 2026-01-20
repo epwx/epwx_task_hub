@@ -200,6 +200,33 @@ export default function HomeTest() {
             <EPWXCashbackClaim />
           </div>
         </section>
+
+        {/* Daily Claim Section */}
+        <section className="py-12">
+          <div className="bg-white rounded-xl shadow p-8 flex flex-col items-center">
+            <h2 className="text-2xl font-bold mb-4 text-green-700">Daily Claim</h2>
+            {address ? (
+              isTelegramVerified ? (
+                <>
+                  <button
+                    onClick={handleDailyClaim}
+                    disabled={claiming}
+                    className={`px-6 py-3 rounded-lg font-bold text-white bg-green-600 hover:bg-green-700 transition-colors mb-4 ${claiming ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    {claiming ? 'Claiming...' : 'Claim Daily Reward'}
+                  </button>
+                  {claimStatus && (
+                    <div className="text-center text-lg font-semibold text-green-700 mb-2">{claimStatus}</div>
+                  )}
+                </>
+              ) : (
+                <div className="text-center text-red-600 font-semibold mb-2">Please verify your Telegram membership to claim daily rewards.</div>
+              )
+            ) : (
+              <div className="text-center text-gray-600 font-semibold mb-2">Connect your wallet to claim daily rewards.</div>
+            )}
+          </div>
+        </section>
       </main>
 
       {/* Footer */}
