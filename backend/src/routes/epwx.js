@@ -7,6 +7,14 @@ import { getEPWXPurchaseTransactions } from '../services/epwxCashback.js';
 
 const router = express.Router();
 
+import express from 'express';
+import { User, DailyClaim, CashbackClaim, SpecialClaim, TelegramReferral } from '../models/index.js';
+import { Op } from 'sequelize';
+import { ethers } from 'ethers';
+import { getEPWXPurchaseTransactions } from '../services/epwxCashback.js';
+
+const router = express.Router();
+
 // GET /api/epwx/telegram-referral-rewards?admin=...&status=pending|paid
 router.get('/telegram-referral-rewards', async (req, res) => {
   const { admin, status } = req.query;
