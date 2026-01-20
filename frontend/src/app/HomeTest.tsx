@@ -178,6 +178,21 @@ export default function HomeTest() {
                 onClick={handleCopyReferral}
                 className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-bold"
               >{copied ? "Copied!" : "Copy Link"}</button>
+              <button
+                onClick={() => {
+                  if (navigator.share && referralLink) {
+                    navigator.share({
+                      title: 'Join EPWX on Telegram!',
+                      text: 'Join me on EPWX and earn rewards. Use my referral link:',
+                      url: referralLink,
+                    });
+                  } else {
+                    handleCopyReferral();
+                    toast('Referral link copied! Share it anywhere.');
+                  }
+                }}
+                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-bold"
+              >Share Link</button>
             </div>
             <div className="text-lg text-gray-700 text-center">
               {referralCount === null ? 'Loading your referral stats...' : `Successful Referrals: ${referralCount}`}
