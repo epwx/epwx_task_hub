@@ -11,19 +11,19 @@ import { ConnectKitButton } from "connectkit";
 // ...existing code...
 
 export default function Home() {
-        // Referral stats
-        const [referralCount, setReferralCount] = useState<number | null>(null);
-        useEffect(() => {
-          if (!address) {
-            setReferralCount(null);
-            return;
-          }
-          fetch(`/api/epwx/telegram-referral-stats?wallet=${address}`)
-            .then(res => res.json())
-            .then(data => setReferralCount(typeof data.count === 'number' ? data.count : 0))
-            .catch(() => setReferralCount(null));
-        }, [address]);
     const { address, isConnected } = useAccount();
+    // Referral stats
+    const [referralCount, setReferralCount] = useState<number | null>(null);
+    useEffect(() => {
+      if (!address) {
+        setReferralCount(null);
+        return;
+      }
+      fetch(`/api/epwx/telegram-referral-stats?wallet=${address}`)
+        .then(res => res.json())
+        .then(data => setReferralCount(typeof data.count === 'number' ? data.count : 0))
+        .catch(() => setReferralCount(null));
+    }, [address]);
     // Special Claim State
     const [specialEligible, setSpecialEligible] = useState(false);
     const [specialClaiming, setSpecialClaiming] = useState(false);
