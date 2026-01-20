@@ -1,12 +1,3 @@
-
-import express from 'express';
-import { User, DailyClaim, CashbackClaim, SpecialClaim, TelegramReferral } from '../models/index.js';
-import { Op } from 'sequelize';
-import { ethers } from 'ethers';
-import { getEPWXPurchaseTransactions } from '../services/epwxCashback.js';
-
-const router = express.Router();
-
 import express from 'express';
 import { User, DailyClaim, CashbackClaim, SpecialClaim, TelegramReferral } from '../models/index.js';
 import { Op } from 'sequelize';
