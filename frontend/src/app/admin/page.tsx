@@ -9,6 +9,40 @@ import { ethers } from "ethers";
 const ADMIN_WALLET = "0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735";
 
 export default function AdminPage() {
+      // Telegram Referral Rewards
+      const [referralRewards, setReferralRewards] = useState<any[]>([]);
+      const [referralLoading, setReferralLoading] = useState(false);
+      const [referralError, setReferralError] = useState<string | null>(null);
+      const fetchReferralRewards = async () => {
+        setReferralLoading(true);
+        setReferralError(null);
+        try {
+          const res = await fetch(`/api/epwx/telegram-referral-rewards?admin=${ADMIN_WALLET}&status=pending`);
+          const data = await res.json();
+          setReferralRewards(data.rewards || []);
+        } catch (e: any) {
+          setReferralError(e?.message || 'Failed to fetch referral rewards');
+        }
+        setReferralLoading(false);
+      };
+      useEffect(() => { fetchReferralRewards(); }, []);
+      const markReferralPaid = async (referralId: string, referrer: boolean, referred: boolean) => {
+        setReferralLoading(true);
+        setReferralError(null);
+        try {
+          const res = await fetch('/api/epwx/telegram-referral-reward/mark-paid', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ admin: address, referralId, referrer, referred })
+          });
+          const data = await res.json();
+          if (data.success) fetchReferralRewards();
+          else setReferralError(data.error || 'Failed to mark as paid');
+        } catch (e: any) {
+          setReferralError(e?.message || 'Failed to mark as paid');
+        }
+        setReferralLoading(false);
+      };
     // Special Claims Pagination/Filter
     const [specialClaimsPage, setSpecialClaimsPage] = useState(1);
       const [specialClaimsFilter, setSpecialClaimsFilter] = useState({ wallet: '', status: 'pending' });
@@ -333,7 +367,54 @@ export default function AdminPage() {
           </>
         )}
       </div>
-      <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-gray-900">Admin: Cashback Claims</h1>
+      {/* Telegram Referral Rewards Section */}
+      <div className="mb-12">
+        <h2 className="text-xl font-bold mb-4 text-gray-900">Admin: Telegram Referral Rewards</h2>
+        {referralError && <div className="text-red-600 mb-2">{referralError}</div>}
+        {referralLoading ? (
+          <div>Loading referral rewards...</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full bg-white rounded shadow text-xs sm:text-sm">
+              <thead className="bg-gray-200">
+                <tr>
+                  <th className="py-2 px-2 sm:px-4 text-gray-700">Referrer Wallet</th>
+                  <th className="py-2 px-2 sm:px-4 text-gray-700">Telegram User ID</th>
+                  <th className="py-2 px-2 sm:px-4 text-gray-700">Joined At</th>
+                  <th className="py-2 px-2 sm:px-4 text-gray-700">Referrer Paid</th>
+                  <th className="py-2 px-2 sm:px-4 text-gray-700">Referred Paid</th>
+                  <th className="py-2 px-2 sm:px-4 text-gray-700">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {referralRewards.map((ref: any) => (
+                  <tr key={ref.id} className="border-b last:border-none">
+                    <td className="py-2 px-2 sm:px-4 break-all bg-white text-gray-900">{ref.referrerWallet}</td>
+                    <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{ref.telegramUserId}</td>
+                    <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{new Date(ref.joinedAt).toLocaleString()}</td>
+                    <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{ref.referrerRewarded ? 'Yes' : 'No'}</td>
+                    <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{ref.referredRewarded ? 'Yes' : 'No'}</td>
+                    <td className="py-2 px-2 sm:px-4 bg-white">
+                      {!ref.referrerRewarded && (
+                        <button
+                          className="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 text-xs mr-2"
+                          onClick={() => markReferralPaid(ref.id, true, false)}
+                        >Mark Referrer Paid</button>
+                      )}
+                      {!ref.referredRewarded && (
+                        <button
+                          className="px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 text-xs"
+                          onClick={() => markReferralPaid(ref.id, false, true)}
+                        >Mark Referred Paid</button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
       {notAdmin ? (
         <div className="flex flex-col items-center justify-center py-16">
           <div className="mb-4 text-lg text-gray-700 font-semibold">Please connect the admin wallet to access this page.</div>

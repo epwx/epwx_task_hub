@@ -1,3 +1,72 @@
+// GET /api/epwx/telegram-referral-rewards?admin=...&status=pending|paid
+router.get('/telegram-referral-rewards', async (req, res) => {
+  const { admin, status } = req.query;
+  if (admin !== '0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735') {
+    return res.status(403).json({ error: 'Unauthorized' });
+  }
+  try {
+    let where = {};
+    if (status === 'pending') {
+      where = { [Op.or]: [{ referrerRewarded: false }, { referredRewarded: false }] };
+    } else if (status === 'paid') {
+      where = { referrerRewarded: true, referredRewarded: true };
+    }
+    const rewards = await TelegramReferral.findAll({ where, order: [['joinedAt', 'DESC']] });
+    res.json({ rewards });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/epwx/telegram-referral-reward/mark-paid
+router.post('/telegram-referral-reward/mark-paid', async (req, res) => {
+  const { admin, referralId, referrer, referred } = req.body;
+  if (admin !== '0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735') {
+    return res.status(403).json({ error: 'Unauthorized' });
+  }
+  if (!referralId) return res.status(400).json({ error: 'referralId is required' });
+  try {
+    const referral = await TelegramReferral.findByPk(referralId);
+    if (!referral) return res.status(404).json({ error: 'Referral not found' });
+    if (referrer) referral.referrerRewarded = true;
+    if (referred) referral.referredRewarded = true;
+    await referral.save();
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+// GET /api/epwx/telegram-referral-stats?wallet=...
+router.get('/telegram-referral-stats', async (req, res) => {
+  const { wallet } = req.query;
+  if (!wallet) return res.status(400).json({ error: 'wallet is required' });
+  try {
+    const count = await TelegramReferral.count({ where: { referrerWallet: wallet.toLowerCase() } });
+    res.json({ count });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+import { TelegramReferral } from '../models/index.js';
+
+// POST /api/epwx/telegram-referral
+router.post('/telegram-referral', async (req, res) => {
+  const { referrerWallet, telegramUserId } = req.body;
+  if (!referrerWallet || !telegramUserId) {
+    return res.status(400).json({ error: 'referrerWallet and telegramUserId are required' });
+  }
+  try {
+    // Prevent duplicate referrals for the same Telegram user
+    const existing = await TelegramReferral.findOne({ where: { telegramUserId } });
+    if (existing) {
+      return res.json({ success: false, message: 'Referral already recorded for this user' });
+    }
+    await TelegramReferral.create({ referrerWallet: referrerWallet.toLowerCase(), telegramUserId });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 import express from 'express';
 import { User, DailyClaim, CashbackClaim, SpecialClaim } from '../models/index.js';
