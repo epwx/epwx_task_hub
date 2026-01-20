@@ -12,6 +12,8 @@ import { ConnectKitButton } from "connectkit";
 
 export default function Home() {
     const { address, isConnected } = useAccount();
+    // Telegram referral link
+    const referralLink = address ? `https://t.me/epwx_bot?start=${address}` : '';
     // Referral stats
     const [referralCount, setReferralCount] = useState<number | null>(null);
     useEffect(() => {
