@@ -8,16 +8,6 @@ const router = express.Router();
 // POST /api/swap/eth-to-epwx
 router.post('/eth-to-epwx', async (req, res) => {
   const { userAddress, ethAmount } = req.body;
-
-  import express from 'express';
-  import swapService from '../services/swap.js';
-  import { SwapClaim } from '../models/index.js';
-
-  const router = express.Router();
-
-  // POST /api/swap/eth-to-epwx
-  router.post('/eth-to-epwx', async (req, res) => {
-    const { userAddress, ethAmount } = req.body;
     if (!userAddress || !ethAmount) {
       return res.status(400).json({ success: false, error: 'Missing userAddress or ethAmount' });
     }
