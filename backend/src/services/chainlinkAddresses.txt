@@ -1,0 +1,4 @@
+Chainlink ETH/USD Price Feed on Base Mainnet:
+0xD4a33860578De61DBAbDc8BFdb98FD742fA7028e
+
+Source: https://docs.chain.link/data-feeds/price-feeds/addresses?network=base-mainnet

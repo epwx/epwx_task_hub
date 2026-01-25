@@ -1,27 +1,29 @@
-import axios from 'axios';
+
 import { ethers } from 'ethers';
 import { pairContract } from './blockchain.js';
 
 const WETH_ADDRESS = '0x4200000000000000000000000000000000000006';
 const EPWX_TOKEN = process.env.EPWX_TOKEN_ADDRESS;
 
+
+// Chainlink ETH/USD Price Feed on Base Mainnet
+const CHAINLINK_ETH_USD_FEED = '0xD4a33860578De61DBAbDc8BFdb98FD742fA7028e';
+const chainlinkAbi = [
+  "function latestRoundData() view returns (uint80, int256, uint256, uint256, uint80)"
+];
+
 /**
- * Get ETH price in USD from CoinGecko
+ * Get ETH price in USD from Chainlink on-chain oracle
  */
 export async function getETHPriceUSD() {
   try {
-    const response = await axios.get(
-      'https://api.coingecko.com/api/v3/simple/price',
-      {
-        params: {
-          ids: 'ethereum',
-          vs_currencies: 'usd'
-        }
-      }
-    );
-    return response.data.ethereum.usd;
+    const provider = new ethers.JsonRpcProvider(process.env.BASE_RPC_URL);
+    const priceFeed = new ethers.Contract(CHAINLINK_ETH_USD_FEED, chainlinkAbi, provider);
+    const [, answer] = await priceFeed.latestRoundData();
+    // Chainlink returns price with 8 decimals
+    return Number(answer) / 1e8;
   } catch (error) {
-    console.error('Error fetching ETH price:', error);
+    console.error('Error fetching ETH price from Chainlink:', error);
     throw error;
   }
 }
