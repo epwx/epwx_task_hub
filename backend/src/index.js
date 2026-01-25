@@ -61,7 +61,7 @@ import circulatingRouter from './routes/circulating.js';
 import burnedRouter from './routes/burned.js';
 import swaggerRouter from './routes/swagger.js';
 
-const swapRouter = require('./routes/swap.js');
+import swapRouter from './routes/swap.js';
 import epwxRouter from './routes/epwx.js';
 
 app.use('/api/auth', authRouter);
