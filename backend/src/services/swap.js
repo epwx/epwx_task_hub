@@ -1,6 +1,6 @@
 // Service to handle ETH->EPWX swap via PancakeSwap
 // This is a stub. You must implement actual web3 logic for production.
-const ethers = require('ethers');
+import { ethers } from 'ethers';
 
 // TODO: Set up provider, wallet, PancakeSwap router address, and ABI
 const PANCAKESWAP_ROUTER_ADDRESS = process.env.PANCAKESWAP_ROUTER_ADDRESS;
@@ -17,6 +17,6 @@ async function swapEthToEpwx(userAddress, ethAmount) {
   };
 }
 
-module.exports = {
+export default {
   swapEthToEpwx,
 };

@@ -1,6 +1,9 @@
-const express = require('express');
+
+import express from 'express';
+import swapService from '../services/swap.js';
+import { SwapClaim } from '../models/index.js';
+
 const router = express.Router();
-const swapService = require('../services/swap');
 
 // POST /api/swap/eth-to-epwx
 router.post('/eth-to-epwx', async (req, res) => {
@@ -16,9 +19,7 @@ router.post('/eth-to-epwx', async (req, res) => {
   }
 });
 
-
 // POST /api/swap/claim
-const { SwapClaim } = require('../models');
 router.post('/claim', async (req, res) => {
   const { userAddress, epwxAmount } = req.body;
   if (!userAddress || !epwxAmount) {
