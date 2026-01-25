@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Header } from "@/components/Header";
 import { EPWXStats } from "@/components/EPWXStats";
 import { EPWXCashbackClaim } from "@/components/EPWXCashbackClaim";
+import SwapAndClaim from "../components/SwapAndClaim";
 import { useState, useEffect } from "react";
 import { useAccount, useSignMessage } from "wagmi";
 import toast from "react-hot-toast";
@@ -198,6 +199,12 @@ export default function HomeTest() {
               {referralCount === null ? 'Loading your referral stats...' : `Successful Referrals: ${referralCount}`}
             </div>
           </div>
+        </section>
+
+
+        {/* ETH to EPWX Swap Section */}
+        <section className="py-12">
+          <SwapAndClaim swapAmountEth={0.1} slotsLeft={3} epwxPerEth={10000} />
         </section>
 
         {/* Stats Section */}

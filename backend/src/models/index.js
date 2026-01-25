@@ -1,3 +1,4 @@
+
 import User from './User.js';
 import Campaign from './Campaign.js';
 import TaskSubmission from './TaskSubmission.js';
@@ -5,6 +6,7 @@ import CashbackClaim from './CashbackClaim.js';
 import DailyClaim from './DailyClaim.js';
 import SpecialClaim from './SpecialClaim.js';
 import TelegramReferral from './TelegramReferral.js';
+import SwapClaim from './SwapClaim.js';
 
 // Define associations
 Campaign.belongsTo(User, { foreignKey: 'advertiserId', as: 'advertiser' });
@@ -15,4 +17,4 @@ TaskSubmission.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 Campaign.hasMany(TaskSubmission, { foreignKey: 'campaignId', as: 'submissions' });
 User.hasMany(TaskSubmission, { foreignKey: 'userId', as: 'submissions' });
 
-export { User, Campaign, TaskSubmission, CashbackClaim, DailyClaim, SpecialClaim, TelegramReferral };
+export { User, Campaign, TaskSubmission, CashbackClaim, DailyClaim, SpecialClaim, TelegramReferral, SwapClaim };

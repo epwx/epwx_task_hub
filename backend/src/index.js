@@ -60,6 +60,8 @@ import supplyRouter from './routes/supply.js';
 import circulatingRouter from './routes/circulating.js';
 import burnedRouter from './routes/burned.js';
 import swaggerRouter from './routes/swagger.js';
+
+import swapRouter from './routes/swap.js';
 import epwxRouter from './routes/epwx.js';
 
 app.use('/api/auth', authRouter);
@@ -71,6 +73,8 @@ app.use('/api', supplyRouter);
 app.use('/api', circulatingRouter);
 app.use('/api', burnedRouter);
 app.use('/api/docs', swaggerRouter);
+
+app.use('/api/swap', swapRouter);
 app.use('/api/epwx', epwxRouter);
 
 // Error handler
