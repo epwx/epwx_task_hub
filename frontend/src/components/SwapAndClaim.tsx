@@ -8,7 +8,7 @@ interface SwapProps {
   epwxPerEth: number; // Conversion rate
 }
 
-const SwapAndClaim: React.FC<SwapProps> = ({ swapAmountEth, slotsLeft, epwxPerEth }) => {
+const SwapAndClaim: React.FC<SwapProps> = ({ swapAmountEth = 0.00001, slotsLeft, epwxPerEth }) => {
   const [swapped, setSwapped] = useState(false);
   const [claimable, setClaimable] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -66,9 +66,11 @@ const SwapAndClaim: React.FC<SwapProps> = ({ swapAmountEth, slotsLeft, epwxPerEt
 
   return (
     <div className="border rounded p-4 max-w-md mx-auto bg-white shadow">
-      <h2 className="text-xl font-bold mb-2">Swap ETH to EPWX</h2>
-      <p>Amount: <b>{swapAmountEth} ETH</b></p>
-      <p>Slots left: <b>{slotsLeft}</b></p>
+      <h2 className="text-2xl font-bold mb-2 text-blue-700">EPWX Swap & Claim Test</h2>
+      <p className="mb-4 text-gray-700">Swap a small amount of ETH (0.00001 ETH) for EPWX tokens. After swapping, you can claim 1% of your EPWX as a bonus. This is for testing/demo purposes only.</p>
+      <h3 className="text-lg font-semibold mb-2">Swap ETH to EPWX</h3>
+      <p className="text-gray-800 bg-white rounded px-1 inline-block">Amount: <b className="text-gray-900">{swapAmountEth} ETH</b></p>
+      <p className="text-gray-800 bg-white rounded px-1 inline-block">Slots left: <b className="text-gray-900">{slotsLeft}</b></p>
       <button
         className="mt-4 px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50"
         onClick={handleSwap}
