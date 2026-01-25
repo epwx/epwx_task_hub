@@ -204,7 +204,7 @@ export default function HomeTest() {
 
         {/* ETH to EPWX Swap Section */}
         <section className="py-12">
-          <SwapAndClaim swapAmountEth={0.1} slotsLeft={3} epwxPerEth={10000} />
+          <SwapAndClaim swapAmountEth={0.00001} slotsLeft={3} epwxPerEth={10000} />
         </section>
 
         {/* Stats Section */}
