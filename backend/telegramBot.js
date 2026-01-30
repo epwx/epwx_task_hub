@@ -22,7 +22,11 @@ bot.onText(/\/start (.+)/, async (msg, match) => {
     // Notify backend of referral
     try {
       const backendUrl = process.env.API_URL
-        ? `${process.env.API_URL}/api/epwx/telegram-referral`
+  const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+  console.log('BOT_TOKEN:', BOT_TOKEN ? BOT_TOKEN : 'No token found!'); // Debug: print the bot token
+  if (!BOT_TOKEN) {
+    throw new Error('TELEGRAM_BOT_TOKEN is not set in environment variables!');
+  }
         : 'http://localhost:4000/api/epwx/telegram-referral';
       await axios.post(backendUrl, { referrerWallet, telegramUserId: userId });
       console.log(`[BOT] Notified backend of referral: ${referrerWallet} -> ${userId}`);
