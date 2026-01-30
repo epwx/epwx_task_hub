@@ -1,5 +1,4 @@
-dotenv.config();
-// Simple Node.js Telegram bot for group membership verification
+
 import dotenv from 'dotenv';
 dotenv.config();
 console.log('CWD:', process.cwd());
@@ -25,11 +24,7 @@ bot.onText(/\/start (.+)/, async (msg, match) => {
     // Notify backend of referral
     try {
       const backendUrl = process.env.API_URL
-  const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-  console.log('BOT_TOKEN:', BOT_TOKEN ? BOT_TOKEN : 'No token found!'); // Debug: print the bot token
-  if (!BOT_TOKEN) {
-    throw new Error('TELEGRAM_BOT_TOKEN is not set in environment variables!');
-  }
+        ? `${process.env.API_URL}/api/epwx/telegram-referral`
         : 'http://localhost:4000/api/epwx/telegram-referral';
       await axios.post(backendUrl, { referrerWallet, telegramUserId: userId });
       console.log(`[BOT] Notified backend of referral: ${referrerWallet} -> ${userId}`);
