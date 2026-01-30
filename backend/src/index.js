@@ -1,3 +1,6 @@
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+const __dirname = dirname(fileURLToPath(import.meta.url));
 import dotenv from 'dotenv';
 dotenv.config({ path: __dirname + '/.env' });
 console.log('DEBUG: DATABASE_URL =', process.env.DATABASE_URL);
