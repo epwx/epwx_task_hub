@@ -1,10 +1,4 @@
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
-const __dirname = dirname(fileURLToPath(import.meta.url));
-import dotenv from 'dotenv';
-dotenv.config({ path: __dirname + '/.env' });
-console.log('DEBUG: DATABASE_URL =', process.env.DATABASE_URL);
-console.log('DEBUG: DATABASE_URL =', process.env.DATABASE_URL);
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -66,8 +60,6 @@ import supplyRouter from './routes/supply.js';
 import circulatingRouter from './routes/circulating.js';
 import burnedRouter from './routes/burned.js';
 import swaggerRouter from './routes/swagger.js';
-
-import swapRouter from './routes/swap.js';
 import epwxRouter from './routes/epwx.js';
 
 app.use('/api/auth', authRouter);
@@ -79,8 +71,6 @@ app.use('/api', supplyRouter);
 app.use('/api', circulatingRouter);
 app.use('/api', burnedRouter);
 app.use('/api/docs', swaggerRouter);
-
-app.use('/api/swap', swapRouter);
 app.use('/api/epwx', epwxRouter);
 
 // Error handler

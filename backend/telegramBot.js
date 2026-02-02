@@ -1,8 +1,6 @@
-
 import dotenv from 'dotenv';
 dotenv.config();
-console.log('CWD:', process.cwd());
-console.log('BOT_TOKEN:', process.env.TELEGRAM_BOT_TOKEN);
+// Simple Node.js Telegram bot for group membership verification
 import TelegramBot from 'node-telegram-bot-api';
 import axios from 'axios';
 
