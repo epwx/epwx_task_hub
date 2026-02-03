@@ -1,10 +1,7 @@
 export default {
   up: async (queryInterface, Sequelize) => {
     // twitterId already exists, skipping addColumn
-    await queryInterface.addColumn('users', 'role', {
-      type: Sequelize.ENUM('user', 'advertiser', 'admin'),
-      defaultValue: 'user'
-    });
+    // role already exists, skipping addColumn
     await queryInterface.addColumn('users', 'totalEarned', {
       type: Sequelize.DECIMAL(30, 0),
       defaultValue: 0
