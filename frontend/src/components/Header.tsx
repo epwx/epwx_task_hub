@@ -30,7 +30,6 @@ export function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">
-            {/* Dashboard link removed */}
             <a 
               href="https://epowex.com" 
               target="_blank" 
@@ -40,6 +39,14 @@ export function Header() {
               Main Site
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
             </a>
+            <Link href="/referral" className="relative text-gray-700 hover:text-blue-600 font-medium transition-colors group">
+              Referral
+              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
+            </Link>
+            <Link href="/platform-stats" className="relative text-gray-700 hover:text-blue-600 font-medium transition-colors group">
+              Platform Stats
+              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
+            </Link>
             <a
               href="https://t.me/ePowerX_On_Base"
               target="_blank"
@@ -91,7 +98,6 @@ export function Header() {
         {mobileMenuOpen && (
           <div className="md:hidden mt-4 py-4 border-t border-gray-200 animate-fadeIn">
             <nav className="flex flex-col gap-4">
-              {/* Dashboard link removed from mobile menu */}
               <a 
                 href="https://epowex.com" 
                 target="_blank" 
@@ -100,6 +106,8 @@ export function Header() {
               >
                 Main Site
               </a>
+              <Link href="/referral" className="text-gray-700 hover:text-blue-600 font-medium transition-colors py-2">Referral</Link>
+              <Link href="/platform-stats" className="text-gray-700 hover:text-blue-600 font-medium transition-colors py-2">Platform Stats</Link>
               <a
                 href="https://t.me/ePowerX_On_Base"
                 target="_blank"

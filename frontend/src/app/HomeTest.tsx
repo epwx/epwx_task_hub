@@ -164,50 +164,7 @@ export default function HomeTest() {
           </div>
         </section>
 
-        {/* Referral Section */}
-        <section className="my-8">
-          <div className="flex flex-col items-center">
-            <h2 className="text-xl font-bold mb-2 text-center w-full">Your Referral Link</h2>
-            <div className="flex flex-col sm:flex-row items-center gap-2 w-full max-w-xl mb-4">
-              <input
-                type="text"
-                value={referralLink}
-                readOnly
-                className="w-full px-3 py-2 border rounded bg-gray-100 text-gray-700 font-mono text-xs"
-              />
-              <button
-                onClick={handleCopyReferral}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-bold"
-              >{copied ? "Copied!" : "Copy Link"}</button>
-              <button
-                onClick={() => {
-                  if (navigator.share && referralLink) {
-                    navigator.share({
-                      title: 'Join EPWX on Telegram!',
-                      text: 'Join me on EPWX and earn rewards. Use my referral link:',
-                      url: referralLink,
-                    });
-                  } else {
-                    handleCopyReferral();
-                    toast('Referral link copied! Share it anywhere.');
-                  }
-                }}
-                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-bold"
-              >Share Link</button>
-            </div>
-            <div className="text-lg text-gray-700 text-center">
-              {referralCount === null ? 'Loading your referral stats...' : `Successful Referrals: ${referralCount}`}
-            </div>
-          </div>
-        </section>
 
-        {/* Stats Section */}
-        <section className="py-12">
-          <div className="bg-white rounded-xl shadow p-8">
-            <h2 className="text-2xl font-bold mb-4 text-blue-700">Platform Stats</h2>
-            <EPWXStats />
-          </div>
-        </section>
 
         {/* Cashback Rewards Section */}
         <section className="py-12">
