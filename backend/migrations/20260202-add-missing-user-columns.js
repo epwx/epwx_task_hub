@@ -29,11 +29,6 @@ export default {
       type: Sequelize.DATE,
       allowNull: true
     });
-    await queryInterface.addColumn('users', 'telegramVerified', {
-      type: Sequelize.BOOLEAN,
-      defaultValue: false,
-      allowNull: false
-    });
   },
 
   down: async (queryInterface, Sequelize) => {
