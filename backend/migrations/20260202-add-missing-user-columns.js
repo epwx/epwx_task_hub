@@ -2,10 +2,7 @@ export default {
   up: async (queryInterface, Sequelize) => {
     // twitterId already exists, skipping addColumn
     // role already exists, skipping addColumn
-    await queryInterface.addColumn('users', 'totalEarned', {
-      type: Sequelize.DECIMAL(30, 0),
-      defaultValue: 0
-    });
+    // totalEarned already exists, skipping addColumn
     await queryInterface.addColumn('users', 'tasksCompleted', {
       type: Sequelize.INTEGER,
       defaultValue: 0
