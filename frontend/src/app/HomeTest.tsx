@@ -166,15 +166,6 @@ export default function HomeTest() {
 
 
 
-        {/* Cashback Rewards Section */}
-        <section className="py-12">
-          <div className="flex flex-col items-center">
-            <h2 className="text-2xl font-bold mb-4 text-indigo-700 text-center">Cashback Rewards</h2>
-            <div className="bg-white rounded-xl shadow p-8 w-full max-w-xl">
-              <EPWXCashbackClaim />
-            </div>
-          </div>
-        </section>
 
         {/* Daily Claim Section */}
         <section className="py-12">
@@ -200,6 +191,16 @@ export default function HomeTest() {
             ) : (
               <div className="text-center text-gray-600 font-semibold mb-2">Connect your wallet to claim daily rewards.</div>
             )}
+          </div>
+        </section>
+
+        {/* Cashback Rewards Section */}
+        <section className="py-12">
+          <div className="flex flex-col items-center">
+            <h2 className="text-2xl font-bold mb-4 text-indigo-700 text-center">Cashback Rewards</h2>
+            <div className="bg-white rounded-xl shadow p-8 w-full max-w-xl">
+              <EPWXCashbackClaim />
+            </div>
           </div>
         </section>
       </main>
