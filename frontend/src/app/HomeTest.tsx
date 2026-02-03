@@ -168,9 +168,11 @@ export default function HomeTest() {
 
         {/* Cashback Rewards Section */}
         <section className="py-12">
-          <div className="bg-white rounded-xl shadow p-8">
-            <h2 className="text-2xl font-bold mb-4 text-indigo-700">Cashback Rewards</h2>
-            <EPWXCashbackClaim />
+          <div className="flex flex-col items-center">
+            <h2 className="text-2xl font-bold mb-4 text-indigo-700 text-center">Cashback Rewards</h2>
+            <div className="bg-white rounded-xl shadow p-8 w-full max-w-xl">
+              <EPWXCashbackClaim />
+            </div>
           </div>
         </section>
 
