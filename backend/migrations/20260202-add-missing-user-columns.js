@@ -4,10 +4,7 @@ export default {
     // role already exists, skipping addColumn
     // totalEarned already exists, skipping addColumn
     // tasksCompleted already exists, skipping addColumn
-    await queryInterface.addColumn('users', 'reputationScore', {
-      type: Sequelize.INTEGER,
-      defaultValue: 100
-    });
+    // reputationScore already exists, skipping addColumn
     await queryInterface.addColumn('users', 'isActive', {
       type: Sequelize.BOOLEAN,
       defaultValue: true
