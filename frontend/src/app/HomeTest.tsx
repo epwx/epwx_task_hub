@@ -83,6 +83,7 @@ export default function HomeTest() {
   const [isTelegramVerified, setIsTelegramVerified] = useState<boolean>(false);
   const [checkingVerification, setCheckingVerification] = useState(false);
   useEffect(() => {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
     const checkVerification = async () => {
       if (!address) {
         setIsTelegramVerified(false);
@@ -90,7 +91,7 @@ export default function HomeTest() {
       }
       setCheckingVerification(true);
       try {
-        const res = await fetch(`https://api.epowex.com/api/epwx/telegram-verified?wallet=${address}`);
+        const res = await fetch(`${API_URL}/api/epwx/telegram-verified?wallet=${address}`);
         const data = await res.json();
         setIsTelegramVerified(!!data.verified);
       } catch (e) {
