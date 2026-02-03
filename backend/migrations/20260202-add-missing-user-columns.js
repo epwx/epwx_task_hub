@@ -3,10 +3,7 @@ export default {
     // twitterId already exists, skipping addColumn
     // role already exists, skipping addColumn
     // totalEarned already exists, skipping addColumn
-    await queryInterface.addColumn('users', 'tasksCompleted', {
-      type: Sequelize.INTEGER,
-      defaultValue: 0
-    });
+    // tasksCompleted already exists, skipping addColumn
     await queryInterface.addColumn('users', 'reputationScore', {
       type: Sequelize.INTEGER,
       defaultValue: 100
