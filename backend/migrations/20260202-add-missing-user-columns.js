@@ -6,10 +6,7 @@ export default {
     // tasksCompleted already exists, skipping addColumn
     // reputationScore already exists, skipping addColumn
     // isActive already exists, skipping addColumn
-    await queryInterface.addColumn('users', 'lastLogin', {
-      type: Sequelize.DATE,
-      allowNull: true
-    });
+    // lastLogin already exists, skipping addColumn
   },
 
   down: async (queryInterface, Sequelize) => {
