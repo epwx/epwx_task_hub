@@ -5,10 +5,7 @@ export default {
     // totalEarned already exists, skipping addColumn
     // tasksCompleted already exists, skipping addColumn
     // reputationScore already exists, skipping addColumn
-    await queryInterface.addColumn('users', 'isActive', {
-      type: Sequelize.BOOLEAN,
-      defaultValue: true
-    });
+    // isActive already exists, skipping addColumn
     await queryInterface.addColumn('users', 'lastLogin', {
       type: Sequelize.DATE,
       allowNull: true
