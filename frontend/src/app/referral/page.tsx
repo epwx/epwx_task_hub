@@ -1,4 +1,5 @@
 "use client";
+import { Header } from "@/components/Header";
 import { useAccount } from "wagmi";
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
@@ -26,38 +27,41 @@ export default function ReferralPage() {
     }
   };
   return (
-    <div className="container mx-auto px-4 py-12">
-      <h1 className="text-2xl font-bold mb-6 text-center">Your Referral Link</h1>
-      <div className="flex flex-col sm:flex-row items-center gap-2 w-full max-w-xl mb-4 mx-auto">
-        <input
-          type="text"
-          value={referralLink}
-          readOnly
-          className="w-full px-3 py-2 border rounded bg-gray-100 text-gray-700 font-mono text-xs"
-        />
-        <button
-          onClick={handleCopyReferral}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-bold"
-        >{copied ? "Copied!" : "Copy Link"}</button>
-        <button
-          onClick={() => {
-            if (navigator.share && referralLink) {
-              navigator.share({
-                title: 'Join EPWX on Telegram!',
-                text: 'Join me on EPWX and earn rewards. Use my referral link:',
-                url: referralLink,
-              });
-            } else {
-              handleCopyReferral();
-              toast('Referral link copied! Share it anywhere.');
-            }
-          }}
-          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-bold"
-        >Share Link</button>
-      </div>
-      <div className="text-lg text-gray-700 text-center">
-        {referralCount === null ? 'Loading your referral stats...' : `Successful Referrals: ${referralCount}`}
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex flex-col">
+      <Header />
+      <main className="container mx-auto px-4 py-12 flex-1">
+        <h1 className="text-2xl font-bold mb-6 text-center">Your Referral Link</h1>
+        <div className="flex flex-col sm:flex-row items-center gap-2 w-full max-w-xl mb-4 mx-auto">
+          <input
+            type="text"
+            value={referralLink}
+            readOnly
+            className="w-full px-3 py-2 border rounded bg-gray-100 text-gray-700 font-mono text-xs"
+          />
+          <button
+            onClick={handleCopyReferral}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-bold"
+          >{copied ? "Copied!" : "Copy Link"}</button>
+          <button
+            onClick={() => {
+              if (navigator.share && referralLink) {
+                navigator.share({
+                  title: 'Join EPWX on Telegram!',
+                  text: 'Join me on EPWX and earn rewards. Use my referral link:',
+                  url: referralLink,
+                });
+              } else {
+                handleCopyReferral();
+                toast('Referral link copied! Share it anywhere.');
+              }
+            }}
+            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-bold"
+          >Share Link</button>
+        </div>
+        <div className="text-lg text-gray-700 text-center">
+          {referralCount === null ? 'Loading your referral stats...' : `Successful Referrals: ${referralCount}`}
+        </div>
+      </main>
     </div>
   );
 }
