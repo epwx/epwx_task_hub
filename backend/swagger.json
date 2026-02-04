@@ -3,10 +3,10 @@
   "info": {
     "title": "EPWX Public Supply API",
     "version": "1.0.0",
-    "description": "Public endpoints for real-time, on-chain EPWX token supply data. All values are formatted with 9 decimals. Base URL: https://api.epowex.com/api"
+    "description": "Public endpoints for real-time, on-chain EPWX token supply data. All values are formatted with 9 decimals. Base URL: https://test.epowex.com/api"
   },
   "servers": [
-    { "url": "https://api.epowex.com/api" }
+    { "url": "https://test.epowex.com/api" }
   ],
   "paths": {
     "/supply": {

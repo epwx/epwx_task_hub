@@ -2,7 +2,7 @@
 // Run: node backend/scripts/testTelegramReferral.js
 import axios from 'axios';
 
-const API_BASE = 'https://api.epowex.com/api/epwx'; // Production API URL
+const API_BASE = process.env.API_URL ? `${process.env.API_URL}/api/epwx` : 'https://test.epowex.com/api/epwx'; // Use env or test domain
 const referrerWallet = '0xABCDEF1234567890ABCDEF1234567890ABCDEF12';
 const referredWallet = '0xFEDCBA9876543210FEDCBA9876543210FEDCBA98';
 const telegramUserId = '999999999'; // Simulated Telegram user ID
