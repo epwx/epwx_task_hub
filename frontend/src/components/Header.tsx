@@ -1,4 +1,4 @@
-'use client';
+ut'use client';
 
 import Link from 'next/link';
 import Image from 'next/image';
@@ -8,19 +8,11 @@ import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 
-export function Header() {
+
+export default function Header({ darkMode, setDarkMode }) {
   const { address, isConnected } = useAccount();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
-  const [darkMode, setDarkMode] = useState(false);
-
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [darkMode]);
 
   return (
     <header className="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl shadow-lg border-b border-gray-100 dark:border-gray-800">
