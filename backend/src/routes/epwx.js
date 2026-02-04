@@ -216,8 +216,12 @@ router.post('/telegram-verify', async (req, res) => {
   try {
     let user = await User.findOne({ where: { walletAddress: wallet.toLowerCase() } });
     if (!user) {
-      // Create user if not found
-      user = await User.create({ walletAddress: wallet.toLowerCase(), telegramVerified: true });
+      // Create user if not found, provide a default username
+      user = await User.create({
+        walletAddress: wallet.toLowerCase(),
+        telegramVerified: true,
+        username: wallet.toLowerCase() // Use wallet address as default username
+      });
       console.log(`[TELEGRAM VERIFY] Created new user for wallet: ${wallet.toLowerCase()}`);
     } else if (!user.telegramVerified) {
       user.telegramVerified = true;
