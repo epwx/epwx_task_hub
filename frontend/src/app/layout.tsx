@@ -5,6 +5,25 @@ import { Providers } from "@/components/Providers";
 import { Toaster } from "react-hot-toast";
 import DarkModeLayout from "./DarkModeLayout";
 
+// Inline script to set dark mode class on html before hydration
+function setInitialDarkModeScript() {
+  return `
+    (function() {
+      try {
+        var dark = localStorage.getItem('theme') === 'dark';
+        if (
+          dark ||
+          (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)
+        ) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      } catch (e) {}
+    })();
+  `;
+}
+
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -22,6 +41,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: setInitialDarkModeScript() }} />
+      </head>
       <body className={inter.className}>
         <Providers>
           <DarkModeLayout>
