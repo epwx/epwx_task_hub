@@ -127,7 +127,7 @@ export default function HomeTest() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:bg-gray-950 flex flex-col">
 
       <main className="container mx-auto px-4 flex-1">
         {/* Wallet Connection & Verification Section */}
@@ -206,7 +206,7 @@ export default function HomeTest() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-12 mt-20">
+      <footer className="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-12 mt-20 dark:bg-gray-950">
         <div className="container mx-auto px-4">
           <div className="text-center mb-8">
             <h3 className="text-2xl font-bold mb-2">EPWX Task Platform</h3>

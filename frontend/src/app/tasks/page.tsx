@@ -69,7 +69,7 @@ export default function TasksPage() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-8 mt-16">
+      <footer className="bg-gray-900 text-white py-8 mt-16 dark:bg-gray-950">
         <div className="container mx-auto px-4 text-center">
           <p>&copy; 2025 EPWX Task Platform. All rights reserved.</p>
           <div className="mt-4 flex justify-center gap-6">
