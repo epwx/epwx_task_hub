@@ -58,11 +58,17 @@ bot.onText(/\/verify/, async (msg) => {
       bot.sendMessage(msg.chat.id, `✅ Verified! You are a member of the EPWX group. Your wallet: ${wallet}`);
       // Notify backend to set telegramVerified for this wallet
       try {
-        const backendUrl = process.env.API_URL
-          ? `${process.env.API_URL}/api/epwx/telegram-verify`
-          : 'http://localhost:4000/api/epwx/telegram-verify';
-        await axios.post(backendUrl, { wallet });
-        console.log(`[BOT] Notified backend to set telegramVerified for wallet: ${wallet}`);
+        // Ensure no double /api in the backend URL
+        let backendUrl;
+        if (process.env.API_URL) {
+          backendUrl = process.env.API_URL.endsWith('/api')
+            ? `${process.env.API_URL}/epwx/telegram-verify`
+            : `${process.env.API_URL}/api/epwx/telegram-verify`;
+        } else {
+          backendUrl = 'http://localhost:4000/api/epwx/telegram-verify';
+        }
+        await axios.post(backendUrl, { wallet: wallet.toLowerCase() });
+        console.log(`[BOT] Notified backend to set telegramVerified for wallet: ${wallet.toLowerCase()}`);
       } catch (notifyErr) {
         console.error('[BOT] Failed to notify backend for telegram verification:', notifyErr?.response?.data || notifyErr);
       }
