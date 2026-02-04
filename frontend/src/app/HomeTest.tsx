@@ -4,6 +4,7 @@ import Header from "@/components/Header";
 import { EPWXStats } from "@/components/EPWXStats";
 import { EPWXCashbackClaim } from "@/components/EPWXCashbackClaim";
 import { useState, useEffect } from "react";
+import DailyClaimsTable from "@/components/DailyClaimsTable";
 import { useAccount, useSignMessage } from "wagmi";
 import toast from "react-hot-toast";
 import { ConnectKitButton } from "connectkit";

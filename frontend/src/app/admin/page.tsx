@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Header from "@/components/Header";
+import DailyClaimsTable from "@/components/DailyClaimsTable";
 import { useAccount, useWalletClient, useWriteContract } from "wagmi";
 import { ConnectKitButton } from "connectkit";
 import { ethers } from "ethers";
@@ -513,87 +514,35 @@ export default function AdminPage() {
       <div className="mt-12">
         <h2 className="text-xl font-bold mb-4 text-gray-900">Admin: Daily EPWX Claims</h2>
         <div className="overflow-x-auto">
-          <table className="min-w-full bg-white rounded shadow text-xs sm:text-sm">
-            <thead className="bg-gray-200">
-              <tr>
-                <th className="py-2 px-2 sm:px-4 text-gray-700">Wallet</th>
-                <th className="py-2 px-2 sm:px-4 text-gray-700">IP</th>
-                <th className="py-2 px-2 sm:px-4 text-gray-700">Claimed At</th>
-                <th className="py-2 px-2 sm:px-4 text-gray-700">Status</th>
-                <th className="py-2 px-2 sm:px-4 text-gray-700">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {/* Filter controls for daily claims */}
-              <tr>
-                <td colSpan={5} className="py-2 px-2 bg-gray-50">
-                  <input
-                    type="text"
-                    placeholder="Filter by wallet"
-                    className="border rounded px-2 py-1 mr-2 bg-gray-100 text-gray-900"
-                    value={dailyClaimsFilter.wallet}
-                    onChange={e => setDailyClaimsFilter(f => ({ ...f, wallet: e.target.value }))}
-                  />
-                  <select
-                    className="border rounded px-2 py-1 bg-white text-gray-900"
-                    value={dailyClaimsFilter.status}
-                    onChange={e => setDailyClaimsFilter(f => ({ ...f, status: e.target.value }))}
-                  >
-                    <option value="">All Status</option>
-                    <option value="pending">Pending</option>
-                    <option value="paid">Paid</option>
-                  </select>
-                </td>
-              </tr>
-              {/* Paginated and filtered daily claims */}
-              {dailyClaims
-                .filter((claim: any) =>
-                  (!dailyClaimsFilter.wallet || claim.wallet.toLowerCase().includes(dailyClaimsFilter.wallet.toLowerCase())) &&
-                  (!dailyClaimsFilter.status || claim.status === dailyClaimsFilter.status)
-                )
-                .slice((dailyClaimsPage - 1) * DAILY_CLAIMS_PAGE_SIZE, dailyClaimsPage * DAILY_CLAIMS_PAGE_SIZE)
-                .map((claim: any) => (
-                  <tr key={claim.id} className="border-b last:border-none">
-                    <td className="py-2 px-2 sm:px-4 break-all bg-white text-gray-900">{claim.wallet}</td>
-                    <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{claim.ip}</td>
-                    <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{new Date(claim.claimedAt).toLocaleString()}</td>
-                    <td className="py-2 px-2 sm:px-4 bg-white text-gray-900 capitalize">{claim.status}</td>
-                    <td className="py-2 px-2 sm:px-4 bg-white">
-                      {claim.status === "pending" ? (
-                        <button
-                          className="px-2 sm:px-4 py-1 sm:py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 text-xs sm:text-sm"
-                          disabled={marking === claim.id}
-                          onClick={() => distributeDailyClaim(claim)}
-                        >
-                          {marking === claim.id ? "Distributing..." : `Distribute Daily EPWX`}
-                        </button>
-                      ) : (
-                        <span className="text-green-600 font-semibold">Paid</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              {/* Pagination controls for daily claims */}
-              <tr>
-                <td colSpan={5} className="py-2 px-2 bg-gray-50 text-center">
-                  <button
-                    className="px-2 py-1 mr-2 border rounded bg-blue-100 text-blue-900 font-bold hover:bg-blue-200"
-                    disabled={dailyClaimsPage === 1}
-                    onClick={() => setDailyClaimsPage(p => Math.max(1, p - 1))}
-                  >Prev</button>
-                  <span>Page {dailyClaimsPage}</span>
-                  <button
-                    className="px-2 py-1 ml-2 border rounded bg-blue-100 text-blue-900 font-bold hover:bg-blue-200"
-                    disabled={dailyClaimsPage * DAILY_CLAIMS_PAGE_SIZE >= dailyClaims.filter((claim: any) =>
-                      (!dailyClaimsFilter.wallet || claim.wallet.toLowerCase().includes(dailyClaimsFilter.wallet.toLowerCase())) &&
-                      (!dailyClaimsFilter.status || claim.status === dailyClaimsFilter.status)
-                    ).length}
-                    onClick={() => setDailyClaimsPage(p => p + 1)}
-                  >Next</button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          <DailyClaimsTable
+            claims={dailyClaims
+              .filter((claim: any) =>
+                (!dailyClaimsFilter.wallet || claim.wallet.toLowerCase().includes(dailyClaimsFilter.wallet.toLowerCase())) &&
+                (!dailyClaimsFilter.status || claim.status === dailyClaimsFilter.status)
+              )
+              .slice((dailyClaimsPage - 1) * DAILY_CLAIMS_PAGE_SIZE, dailyClaimsPage * DAILY_CLAIMS_PAGE_SIZE)
+            }
+            isAdmin={true}
+            onDistribute={distributeDailyClaim}
+            marking={marking}
+          />
+          {/* Pagination controls for daily claims */}
+          <div className="py-2 px-2 bg-gray-50 text-center">
+            <button
+              className="px-2 py-1 mr-2 border rounded bg-blue-100 text-blue-900 font-bold hover:bg-blue-200"
+              disabled={dailyClaimsPage === 1}
+              onClick={() => setDailyClaimsPage(p => Math.max(1, p - 1))}
+            >Prev</button>
+            <span>Page {dailyClaimsPage}</span>
+            <button
+              className="px-2 py-1 ml-2 border rounded bg-blue-100 text-blue-900 font-bold hover:bg-blue-200"
+              disabled={dailyClaimsPage * DAILY_CLAIMS_PAGE_SIZE >= dailyClaims.filter((claim: any) =>
+                (!dailyClaimsFilter.wallet || claim.wallet.toLowerCase().includes(dailyClaimsFilter.wallet.toLowerCase())) &&
+                (!dailyClaimsFilter.status || claim.status === dailyClaimsFilter.status)
+              ).length}
+              onClick={() => setDailyClaimsPage(p => p + 1)}
+            >Next</button>
+          </div>
         </div>
       </div>
       {error && <div className="text-red-600 mt-2">{error}</div>}
