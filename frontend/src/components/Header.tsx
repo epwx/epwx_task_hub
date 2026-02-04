@@ -116,17 +116,17 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
                 href="https://epowex.com" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="text-gray-700 hover:text-blue-600 font-medium transition-colors py-2"
+                className="text-gray-700 dark:text-gray-200 hover:text-blue-600 font-medium transition-colors py-2"
               >
                 Main Site
               </a>
-              <Link href="/referral" className="text-gray-700 hover:text-blue-600 font-medium transition-colors py-2">Referral</Link>
-              <Link href="/platform-stats" className="text-gray-700 hover:text-blue-600 font-medium transition-colors py-2">Platform Stats</Link>
+              <Link href="/referral" className="text-gray-700 dark:text-gray-200 hover:text-blue-600 font-medium transition-colors py-2">Referral</Link>
+              <Link href="/platform-stats" className="text-gray-700 dark:text-gray-200 hover:text-blue-600 font-medium transition-colors py-2">Platform Stats</Link>
               <a
                 href="https://t.me/ePowerX_On_Base"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-700 hover:text-blue-600 font-medium transition-colors py-2"
+                className="text-gray-700 dark:text-gray-200 hover:text-blue-600 font-medium transition-colors py-2"
               >
                 Contact Us
               </a>
@@ -147,6 +147,13 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
                   🛡️ Admin Dashboard
                 </a>
               ) : null}
+              <button
+                onClick={() => setDarkMode(!darkMode)}
+                className="mt-2 px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-bold shadow hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                aria-label="Toggle dark mode"
+              >
+                {darkMode ? '🌙 Dark' : '☀️ Light'}
+              </button>
               <div className="pt-2">
                 {/* Debug info: show wallet address and connection status */}
                 <div className="text-xs text-gray-500 mb-2">
