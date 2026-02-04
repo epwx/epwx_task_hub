@@ -6,14 +6,24 @@ import { ConnectKitButton } from 'connectkit';
 import { useAccount } from 'wagmi';
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
+import { useEffect } from 'react';
 
 export function Header() {
   const { address, isConnected } = useAccount();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
+  const [darkMode, setDarkMode] = useState(false);
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
 
   return (
-    <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl shadow-lg border-b border-gray-100">
+    <header className="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl shadow-lg border-b border-gray-100 dark:border-gray-800">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
@@ -74,6 +84,13 @@ export function Header() {
                 <ConnectKitButton />
               </div>
             </div>
+            <button
+              onClick={() => setDarkMode(!darkMode)}
+              className="px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-bold shadow hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              aria-label="Toggle dark mode"
+            >
+              {darkMode ? '🌙 Dark' : '☀️ Light'}
+            </button>
           </div>
 
           {/* Mobile Menu Button */}
