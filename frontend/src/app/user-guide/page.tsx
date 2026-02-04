@@ -1,11 +1,11 @@
 "use client";
 import React from "react";
-import { Header } from "@/components/Header";
+import Header from "@/components/Header";
 
 export default function UserGuide() {
   return (
     <>
-      <Header />
+
       <div className="max-w-2xl mx-auto py-12 px-4">
         <h1 className="text-3xl font-bold mb-6 text-center">EPWX Task Platform User Guide</h1>
         <ol className="list-decimal pl-6 space-y-6 text-lg">

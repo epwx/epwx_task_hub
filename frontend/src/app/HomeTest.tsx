@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { Header } from "@/components/Header";
+import Header from "@/components/Header";
 import { EPWXStats } from "@/components/EPWXStats";
 import { EPWXCashbackClaim } from "@/components/EPWXCashbackClaim";
 import { useState, useEffect } from "react";
@@ -128,7 +128,7 @@ export default function HomeTest() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex flex-col">
-      <Header />
+
       <main className="container mx-auto px-4 flex-1">
         {/* Wallet Connection & Verification Section */}
         <section className="my-8">

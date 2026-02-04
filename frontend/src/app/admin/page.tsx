@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Header } from "@/components/Header";
+import Header from "@/components/Header";
 import { useAccount, useWalletClient, useWriteContract } from "wagmi";
 import { ConnectKitButton } from "connectkit";
 import { ethers } from "ethers";
@@ -248,7 +248,7 @@ export default function AdminPage() {
   const notAdmin = !address || address.toLowerCase() !== ADMIN_WALLET.toLowerCase();
   return (
     <>
-      <Header />
+
       <div className="min-h-screen bg-gray-100 p-2 sm:p-8">
       {/* Show ConnectKitButton globally if not connected */}
       {!address && (

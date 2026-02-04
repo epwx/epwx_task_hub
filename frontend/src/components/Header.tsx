@@ -1,4 +1,4 @@
-ut'use client';
+'use client';
 
 import Link from 'next/link';
 import Image from 'next/image';
@@ -9,7 +9,12 @@ import { usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 
 
-export default function Header({ darkMode, setDarkMode }) {
+type HeaderProps = {
+  darkMode: boolean;
+  setDarkMode: React.Dispatch<React.SetStateAction<boolean>>;
+};
+
+export default function Header({ darkMode, setDarkMode }: HeaderProps) {
   const { address, isConnected } = useAccount();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();

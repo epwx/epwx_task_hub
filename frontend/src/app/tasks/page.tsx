@@ -1,12 +1,12 @@
 'use client';
 
-import { Header } from "@/components/Header";
+import Header from "@/components/Header";
 import { TaskList } from "@/components/TaskList";
 
 export default function TasksPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      <Header />
+
       
       <main className="container mx-auto px-4 py-8">
         {/* Page Header */}

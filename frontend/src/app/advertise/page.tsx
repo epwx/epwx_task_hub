@@ -1,6 +1,6 @@
 'use client';
 
-import { Header } from "@/components/Header";
+import Header from "@/components/Header";
 import { useAccount } from "wagmi";
 import { useState } from "react";
 import { useWriteContract, useReadContract } from "wagmi";
@@ -58,7 +58,7 @@ export default function AdvertisePage() {
     // TODO: Implement the rest of the component logic and UI
     return (
       <div>
-        <Header />
+
         <h1>Advertise Page</h1>
         {/* Add your form and other UI elements here */}
       </div>
