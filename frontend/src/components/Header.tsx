@@ -41,16 +41,16 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
               href="https://epowex.com" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="relative text-gray-700 hover:text-blue-600 font-medium transition-colors group"
+              className="relative text-gray-700 dark:text-gray-200 hover:text-blue-600 font-medium transition-colors group"
             >
               Main Site
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
             </a>
-            <Link href="/referral" className="relative text-gray-700 hover:text-blue-600 font-medium transition-colors group">
+            <Link href="/referral" className="relative text-gray-700 dark:text-gray-200 hover:text-blue-600 font-medium transition-colors group">
               Referral
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
             </Link>
-            <Link href="/platform-stats" className="relative text-gray-700 hover:text-blue-600 font-medium transition-colors group">
+            <Link href="/platform-stats" className="relative text-gray-700 dark:text-gray-200 hover:text-blue-600 font-medium transition-colors group">
               Platform Stats
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
             </Link>
@@ -58,7 +58,7 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
               href="https://t.me/ePowerX_On_Base"
               target="_blank"
               rel="noopener noreferrer"
-              className="relative text-gray-700 hover:text-blue-600 font-medium transition-colors group"
+              className="relative text-gray-700 dark:text-gray-200 hover:text-blue-600 font-medium transition-colors group"
             >
               Contact Us
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
