@@ -152,7 +152,10 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
                 </a>
               ) : null}
               <button
-                onClick={() => setDarkMode(!darkMode)}
+                onClick={() => {
+                  setDarkMode(!darkMode);
+                  setMobileMenuOpen(false);
+                }}
                 className="mt-2 px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-bold shadow hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 aria-label="Toggle dark mode"
               >
