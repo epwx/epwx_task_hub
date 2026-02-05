@@ -117,16 +117,18 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-gray-700 dark:text-gray-200 hover:text-blue-600 font-medium transition-colors py-2"
+                onClick={() => setMobileMenuOpen(false)}
               >
                 Main Site
               </a>
-              <Link href="/referral" className="text-gray-700 dark:text-gray-200 hover:text-blue-600 font-medium transition-colors py-2">Referral</Link>
-              <Link href="/platform-stats" className="text-gray-700 dark:text-gray-200 hover:text-blue-600 font-medium transition-colors py-2">Platform Stats</Link>
+              <Link href="/referral" className="text-gray-700 dark:text-gray-200 hover:text-blue-600 font-medium transition-colors py-2" onClick={() => setMobileMenuOpen(false)}>Referral</Link>
+              <Link href="/platform-stats" className="text-gray-700 dark:text-gray-200 hover:text-blue-600 font-medium transition-colors py-2" onClick={() => setMobileMenuOpen(false)}>Platform Stats</Link>
               <a
                 href="https://t.me/ePowerX_On_Base"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-700 dark:text-gray-200 hover:text-blue-600 font-medium transition-colors py-2"
+                onClick={() => setMobileMenuOpen(false)}
               >
                 Contact Us
               </a>
@@ -135,6 +137,7 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-5 py-2.5 text-sm font-bold bg-gradient-to-r from-blue-50 to-purple-50 text-blue-600 rounded-xl hover:from-blue-100 hover:to-purple-100 transition-all shadow-md text-center"
+                onClick={() => setMobileMenuOpen(false)}
               >
                 💰 Buy EPWX
               </a>
@@ -143,6 +146,7 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
                 <a
                   href="/admin"
                   className="px-5 py-2.5 text-sm font-bold bg-gradient-to-r from-green-50 to-green-100 text-green-700 rounded-xl hover:from-green-100 hover:to-green-200 transition-all shadow-md text-center block mt-2"
+                  onClick={() => setMobileMenuOpen(false)}
                 >
                   🛡️ Admin Dashboard
                 </a>
