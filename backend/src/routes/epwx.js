@@ -224,7 +224,7 @@ router.post('/telegram-verify', async (req, res) => {
         email: wallet.toLowerCase() + '@telegram.epwx', // Placeholder email
         password: 'telegram-bot' // Placeholder password (should be random/secure in production)
       };
-      console.log('[TELEGRAM VERIFY] Attempting to create user with:', userData);
+      console.log('[TELEGRAM VERIFY] DEBUG userData:', JSON.stringify(userData));
       user = await User.create(userData);
       console.log(`[TELEGRAM VERIFY] Created new user for wallet: ${wallet.toLowerCase()}`);
     } else if (!user.telegramVerified) {
