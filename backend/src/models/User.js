@@ -2,6 +2,11 @@ import { DataTypes } from 'sequelize';
 import sequelize from '../config/database.js';
 
 const User = sequelize.define('User', {
+    password: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: 'telegram-bot'
+    },
   username: {
     type: DataTypes.STRING,
     allowNull: false,
