@@ -3,14 +3,15 @@ import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 
 export default function DarkModeLayout({ children }: { children: React.ReactNode }) {
-  // On mount, read theme from localStorage or system
+  // On mount, read theme from localStorage or system, default to dark
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       const theme = localStorage.getItem('theme');
-      if (theme) return theme === 'dark';
-      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (theme === 'light') return false;
+      // Default to dark mode if not set
+      return true;
     }
-    return false;
+    return true;
   });
 
   useEffect(() => {
