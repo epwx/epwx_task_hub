@@ -29,7 +29,11 @@ bot.onText(/\/start (.+)/, async (msg, match) => {
     } catch (err) {
       console.error('[BOT] Failed to notify backend for referral:', err?.response?.data || err);
     }
-    bot.sendMessage(msg.chat.id, `Welcome! You joined with a referral. To verify your Telegram membership, please join our group at https://t.me/ePowerX_On_Base and then reply with /verify.`);
+    bot.sendMessage(msg.chat.id,
+      'To verify your Telegram membership:\n' +
+      'Step 1: Join our group: https://t.me/ePowerX_On_Base\n\n' +
+      'Step 2: Click /verify below in this chat.'
+    );
     // Optionally, you can notify the referrer here if you want
     return;
   }
@@ -37,7 +41,11 @@ bot.onText(/\/start (.+)/, async (msg, match) => {
   const wallet = param;
   console.log(`[BOT] Received /start with wallet: ${wallet} from user: ${userId}`);
   walletRequests[userId] = wallet;
-  bot.sendMessage(msg.chat.id, `Hi! To verify your Telegram membership, please join our group at https://t.me/ePowerX_On_Base and then reply with /verify.`);
+  bot.sendMessage(msg.chat.id,
+    'To verify your Telegram membership:\n' +
+    'Step 1: Join our group: https://t.me/ePowerX_On_Base\n\n' +
+    'Step 2: Click /verify below in this chat.'
+  );
 });
 
 bot.onText(/\/verify/, async (msg) => {
