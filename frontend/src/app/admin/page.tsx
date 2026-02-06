@@ -514,6 +514,25 @@ export default function AdminPage() {
       <div className="mt-12">
         <h2 className="text-xl font-bold mb-4 text-gray-900">Admin: Daily EPWX Claims</h2>
         <div className="overflow-x-auto">
+          {/* Daily Claims Filter Controls */}
+          <div className="mb-2 flex gap-2 items-center">
+            <input
+              type="text"
+              placeholder="Filter by wallet"
+              className="border rounded px-2 py-1 bg-gray-100 text-gray-900"
+              value={dailyClaimsFilter.wallet}
+              onChange={e => setDailyClaimsFilter(f => ({ ...f, wallet: e.target.value }))}
+            />
+            <select
+              className="border rounded px-2 py-1 bg-white text-gray-900"
+              value={dailyClaimsFilter.status}
+              onChange={e => setDailyClaimsFilter(f => ({ ...f, status: e.target.value }))}
+            >
+              <option value="">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="paid">Paid</option>
+            </select>
+          </div>
           <DailyClaimsTable
             claims={dailyClaims
               .filter((claim: any) =>
