@@ -27,6 +27,23 @@ function UserDailyClaims({ address }: { address: string }) {
   return <DailyClaimsTable claims={claims} isAdmin={false} />;
 }
 
+// Helper component to fetch and display user's last 5 paid daily claims (all wallets)
+function LastFivePaidDailyClaims() {
+  const [claims, setClaims] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    setLoading(true);
+    fetch(`/api/epwx/daily-claims?status=paid&limit=5`)
+      .then(res => res.json())
+      .then(data => setClaims(Array.isArray(data.claims) ? data.claims : []))
+      .catch(() => setClaims([]))
+      .finally(() => setLoading(false));
+  }, []);
+  if (loading) return <div className="text-center text-gray-500">Loading daily claims...</div>;
+  if (!claims.length) return <div className="text-center text-gray-600">No paid daily claims found.</div>;
+  return <DailyClaimsTable claims={claims} isAdmin={false} />;
+}
+
 export default function HomeTest() {
   const { address, isConnected } = useAccount();
   const referralLink = address ? `https://t.me/epwx_bot?start=${address}` : '';
@@ -230,6 +247,16 @@ export default function HomeTest() {
             </div>
           </section>
         )}
+
+        {/* Last 5 Paid Daily Claims Section */}
+        <section className="py-12">
+          <div className="flex flex-col items-center">
+            <h2 className="text-2xl font-bold mb-4 text-blue-700 text-center">Last 5 Paid Daily Claims (All Wallets)</h2>
+            <div className="bg-white rounded-xl shadow p-8 w-full max-w-xl">
+              <LastFivePaidDailyClaims />
+            </div>
+          </div>
+        </section>
       </main>
 
       {/* Footer */}
