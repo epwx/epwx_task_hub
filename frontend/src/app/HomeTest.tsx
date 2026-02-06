@@ -204,6 +204,35 @@ export default function HomeTest() {
             </div>
           </div>
         </section>
+
+        {/* User Daily Claims Table Section */}
+        {address && (
+          <section className="py-12">
+            <div className="flex flex-col items-center">
+              <h2 className="text-2xl font-bold mb-4 text-blue-700 text-center">Your Daily Claims</h2>
+              <div className="bg-white rounded-xl shadow p-8 w-full max-w-xl">
+                <UserDailyClaims address={address} />
+              </div>
+            </div>
+          </section>
+        )}
+      // Helper component to fetch and display user's daily claims
+      function UserDailyClaims({ address }: { address: string }) {
+        const [claims, setClaims] = useState<any[]>([]);
+        const [loading, setLoading] = useState(false);
+        useEffect(() => {
+          if (!address) return;
+          setLoading(true);
+          fetch(`/api/epwx/daily-claims?wallet=${address}`)
+            .then(res => res.json())
+            .then(data => setClaims(Array.isArray(data.claims) ? data.claims : []))
+            .catch(() => setClaims([]))
+            .finally(() => setLoading(false));
+        }, [address]);
+        if (loading) return <div className="text-center text-gray-500">Loading daily claims...</div>;
+        if (!claims.length) return <div className="text-center text-gray-600">No daily claims found.</div>;
+        return <DailyClaimsTable claims={claims} isAdmin={false} />;
+      }
       </main>
 
       {/* Footer */}
