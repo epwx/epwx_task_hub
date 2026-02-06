@@ -254,13 +254,30 @@ router.get('/telegram-verified', async (req, res) => {
 
 // GET /api/epwx/daily-claims?admin=0x...
 router.get('/daily-claims', async (req, res) => {
-  const { admin, wallet } = req.query;
+  const { admin, wallet, status, limit } = req.query;
   if (admin) {
     if (admin !== '0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735') {
       return res.status(403).json({ error: 'Unauthorized' });
     }
     try {
-      const claims = await DailyClaim.findAll({ order: [['claimedAt', 'DESC']] });
+      const where = {};
+      if (status) where.status = status;
+      const query = { order: [['claimedAt', 'DESC']], where };
+      if (limit) query.limit = parseInt(limit);
+      const claims = await DailyClaim.findAll(query);
+      return res.json({ claims });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+  // For public/latest paid claims (no wallet, no admin)
+  if (status === 'paid' && limit) {
+    try {
+      const claims = await DailyClaim.findAll({
+        where: { status: 'paid' },
+        order: [['claimedAt', 'DESC']],
+        limit: parseInt(limit)
+      });
       return res.json({ claims });
     } catch (err) {
       return res.status(500).json({ error: err.message });
@@ -268,16 +285,17 @@ router.get('/daily-claims', async (req, res) => {
   }
   if (wallet) {
     try {
-      const claims = await DailyClaim.findAll({
-        where: { wallet: wallet.toLowerCase() },
-        order: [['claimedAt', 'DESC']]
-      });
+      const where = { wallet: wallet.toLowerCase() };
+      if (status) where.status = status;
+      const query = { where, order: [['claimedAt', 'DESC']] };
+      if (limit) query.limit = parseInt(limit);
+      const claims = await DailyClaim.findAll(query);
       return res.json({ claims });
     } catch (err) {
       return res.status(500).json({ error: err.message });
     }
   }
-  return res.status(400).json({ error: 'Missing admin or wallet parameter' });
+  return res.status(400).json({ error: 'Missing admin, wallet, or required parameters' });
 });
 
 // POST /api/epwx/daily-claims/mark-paid
