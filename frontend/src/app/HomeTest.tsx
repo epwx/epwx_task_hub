@@ -216,6 +216,8 @@ export default function HomeTest() {
             </div>
           </section>
         )}
+      }
+
       // Helper component to fetch and display user's daily claims
       function UserDailyClaims({ address }: { address: string }) {
         const [claims, setClaims] = useState<any[]>([]);
