@@ -254,16 +254,30 @@ router.get('/telegram-verified', async (req, res) => {
 
 // GET /api/epwx/daily-claims?admin=0x...
 router.get('/daily-claims', async (req, res) => {
-  const { admin } = req.query;
-  if (admin !== '0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735') {
-    return res.status(403).json({ error: 'Unauthorized' });
+  const { admin, wallet } = req.query;
+  if (admin) {
+    if (admin !== '0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735') {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+    try {
+      const claims = await DailyClaim.findAll({ order: [['claimedAt', 'DESC']] });
+      return res.json({ claims });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
   }
-  try {
-    const claims = await DailyClaim.findAll({ order: [['claimedAt', 'DESC']] });
-    res.json({ claims });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  if (wallet) {
+    try {
+      const claims = await DailyClaim.findAll({
+        where: { wallet: wallet.toLowerCase() },
+        order: [['claimedAt', 'DESC']]
+      });
+      return res.json({ claims });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
   }
+  return res.status(400).json({ error: 'Missing admin or wallet parameter' });
 });
 
 // POST /api/epwx/daily-claims/mark-paid
