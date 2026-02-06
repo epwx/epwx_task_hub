@@ -16,7 +16,7 @@ function UserDailyClaims({ address }: { address: string }) {
   useEffect(() => {
     if (!address) return;
     setLoading(true);
-    fetch(`/api/epwx/daily-claims?wallet=${address}`)
+    fetch(`/api/epwx/daily-claims?wallet=${address}&status=pending`)
       .then(res => res.json())
       .then(data => setClaims(Array.isArray(data.claims) ? data.claims : []))
       .catch(() => setClaims([]))
