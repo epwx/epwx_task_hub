@@ -240,7 +240,7 @@ export default function HomeTest() {
         {address && (
           <section className="py-12">
             <div className="flex flex-col items-center">
-              <h2 className="text-2xl font-bold mb-4 text-blue-700 text-center">Your Daily Claims</h2>
+              <h2 className="text-2xl font-bold mb-4 text-blue-700 text-center">Your Daily Pending Claims</h2>
               <div className="bg-white rounded-xl shadow p-8 w-full max-w-xl">
                 <UserDailyClaims address={address} />
               </div>
