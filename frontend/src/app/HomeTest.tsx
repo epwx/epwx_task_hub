@@ -9,6 +9,24 @@ import { useAccount, useSignMessage } from "wagmi";
 import toast from "react-hot-toast";
 import { ConnectKitButton } from "connectkit";
 
+// Helper component to fetch and display user's daily claims
+function UserDailyClaims({ address }: { address: string }) {
+  const [claims, setClaims] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    if (!address) return;
+    setLoading(true);
+    fetch(`/api/epwx/daily-claims?wallet=${address}`)
+      .then(res => res.json())
+      .then(data => setClaims(Array.isArray(data.claims) ? data.claims : []))
+      .catch(() => setClaims([]))
+      .finally(() => setLoading(false));
+  }, [address]);
+  if (loading) return <div className="text-center text-gray-500">Loading daily claims...</div>;
+  if (!claims.length) return <div className="text-center text-gray-600">No daily claims found.</div>;
+  return <DailyClaimsTable claims={claims} isAdmin={false} />;
+}
+
 export default function HomeTest() {
   const { address, isConnected } = useAccount();
   const referralLink = address ? `https://t.me/epwx_bot?start=${address}` : '';
@@ -129,7 +147,6 @@ export default function HomeTest() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:bg-gray-950 dark:bg-none flex flex-col">
-
       <main className="container mx-auto px-4 flex-1">
         {/* Wallet Connection & Verification Section */}
         <section className="my-8">
@@ -164,9 +181,6 @@ export default function HomeTest() {
             )}
           </div>
         </section>
-
-
-
 
         {/* Daily Claim Section */}
         <section className="py-12">
@@ -216,25 +230,6 @@ export default function HomeTest() {
             </div>
           </section>
         )}
-      }
-
-      // Helper component to fetch and display user's daily claims
-      function UserDailyClaims({ address }: { address: string }) {
-        const [claims, setClaims] = useState<any[]>([]);
-        const [loading, setLoading] = useState(false);
-        useEffect(() => {
-          if (!address) return;
-          setLoading(true);
-          fetch(`/api/epwx/daily-claims?wallet=${address}`)
-            .then(res => res.json())
-            .then(data => setClaims(Array.isArray(data.claims) ? data.claims : []))
-            .catch(() => setClaims([]))
-            .finally(() => setLoading(false));
-        }, [address]);
-        if (loading) return <div className="text-center text-gray-500">Loading daily claims...</div>;
-        if (!claims.length) return <div className="text-center text-gray-600">No daily claims found.</div>;
-        return <DailyClaimsTable claims={claims} isAdmin={false} />;
-      }
       </main>
 
       {/* Footer */}
