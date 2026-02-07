@@ -201,7 +201,7 @@ export default function HomeTest() {
 
         {/* Daily Claim Section */}
         <section className="py-12">
-          <div className="bg-white rounded-xl shadow p-8 flex flex-col items-center">
+          <div className="bg-white rounded-xl shadow p-8 flex flex-col items-center w-full max-w-lg mx-auto">
             <h2 className="text-2xl font-bold mb-4 text-green-700">Daily Claim</h2>
             {address ? (
               isTelegramVerified ? (
