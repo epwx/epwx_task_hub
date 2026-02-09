@@ -23,7 +23,7 @@ export default function TermsPage() {
       <h2 className="text-xl font-semibold mt-8 mb-4">5. Changes to Terms</h2>
       <p className="mb-4">We may update these Terms of Service periodically. Continued use of the platform constitutes acceptance of the revised terms.</p>
       <h2 className="text-xl font-semibold mt-8 mb-4">6. Contact</h2>
-      <p>If you have questions about these Terms, please contact support@epwx.com.</p>
+      <p>If you have questions about these Terms, please contact info@epowex.com.</p>
     </div>
   );
 }

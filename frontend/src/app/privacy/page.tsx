@@ -22,7 +22,7 @@ export default function PrivacyPolicyPage() {
       <h2 className="text-xl font-semibold mt-8 mb-4">5. Changes to Policy</h2>
       <p className="mb-4">We may update this Privacy Policy periodically. Continued use of the platform constitutes acceptance of the revised policy.</p>
       <h2 className="text-xl font-semibold mt-8 mb-4">6. Contact</h2>
-      <p>If you have questions about this Privacy Policy, please contact support@epwx.com.</p>
+      <p>If you have questions about this Privacy Policy, please contact info@epowex.com.</p>
     </div>
   );
 }
