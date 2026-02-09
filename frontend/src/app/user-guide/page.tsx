@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 
 export default function UserGuide() {
   return (
@@ -76,11 +77,13 @@ export default function UserGuide() {
           <ul className="list-disc pl-6 mt-2">
             <li>Make sure your wallet is connected and Telegram is verified for full access.</li>
             <li>If you encounter issues, refresh the page or reconnect your wallet.</li>
-            <li>For support, join the official Telegram group or contact support via the main site.</li>
+          // Footer is already imported correctly
+          import Footer from "@/components/Footer";
           </ul>
         </div>
         <p className="mt-8 text-center text-indigo-700 font-semibold">Enjoy earning with EPWX Task Platform!</p>
       </div>
+      <Footer />
     </>
   );
 }
