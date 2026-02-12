@@ -86,7 +86,7 @@ export default function MerchantAdminPage() {
         handleSubmit(e);
       }} className="space-y-4 bg-white p-6 rounded shadow">
         <input name="name" value={form.name} onChange={handleChange} placeholder="Merchant Name" className="w-full border rounded px-3 py-2 text-gray-700" required />
-        <input name="wallet" value={form.wallet} onChange={handleChange} placeholder="Merchant Wallet Address" className="w-full border rounded px-3 py-2 text-gray-700" required />
+        <input name="wallet" value={form.wallet} onChange={handleChange} placeholder="Merchant Wallet Address (optional)" className="w-full border rounded px-3 py-2 text-gray-700" />
         <input name="address" value={form.address} onChange={handleChange} placeholder="Shop Address" className="w-full border rounded px-3 py-2 text-gray-700" required />
         <input name="latitude" value={form.latitude} onChange={handleChange} placeholder="Latitude" className="w-full border rounded px-3 py-2 text-gray-700" required type="text" />
         <input name="longitude" value={form.longitude} onChange={handleChange} placeholder="Longitude" className="w-full border rounded px-3 py-2 text-gray-700" required type="text" />
