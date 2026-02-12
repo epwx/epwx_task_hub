@@ -98,12 +98,12 @@ export default function MerchantAdminPage() {
       {loading ? <div>Loading...</div> : (
         <div className="space-y-4 mt-2">
           {merchants.map((m) => (
-            <div key={m.id} className="bg-white rounded shadow p-4 border flex flex-col text-sm">
-              <div className="font-bold text-lg mb-2">{m.name}</div>
-              <div><span className="font-semibold">Wallet:</span> <span className="break-all">{m.wallet}</span></div>
-              <div><span className="font-semibold">Address:</span> {m.address}</div>
-              <div><span className="font-semibold">Latitude:</span> {m.latitude}</div>
-              <div><span className="font-semibold">Longitude:</span> {m.longitude}</div>
+            <div key={m.id} className="bg-white rounded shadow p-4 border flex flex-col text-sm text-gray-800">
+              <div className="font-bold text-lg mb-2 text-gray-900">{m.name}</div>
+              <div><span className="font-semibold text-gray-700">Wallet:</span> <span className="break-all text-gray-800">{m.wallet}</span></div>
+              <div><span className="font-semibold text-gray-700">Address:</span> <span className="text-gray-800">{m.address}</span></div>
+              <div><span className="font-semibold text-gray-700">Latitude:</span> <span className="text-gray-800">{m.latitude}</span></div>
+              <div><span className="font-semibold text-gray-700">Longitude:</span> <span className="text-gray-800">{m.longitude}</span></div>
             </div>
           ))}
         </div>
