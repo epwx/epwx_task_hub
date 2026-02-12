@@ -50,17 +50,18 @@ const limiter = rateLimit({
 app.use('/api/', limiter);
 
 // Routes (ESM imports only)
+
 import authRouter from './routes/auth.js';
 import campaignsRouter from './routes/campaigns.js';
 import tasksRouter from './routes/tasks.js';
 import usersRouter from './routes/users.js';
 import priceRouter from './routes/price.js';
-// ...existing code...
 import supplyRouter from './routes/supply.js';
 import circulatingRouter from './routes/circulating.js';
 import burnedRouter from './routes/burned.js';
 import swaggerRouter from './routes/swagger.js';
 import epwxRouter from './routes/epwx.js';
+import merchantsRouter from './routes/merchants.js';
 
 app.use('/api/auth', authRouter);
 app.use('/api/campaigns', campaignsRouter);
@@ -72,6 +73,9 @@ app.use('/api', circulatingRouter);
 app.use('/api', burnedRouter);
 app.use('/api/docs', swaggerRouter);
 app.use('/api/epwx', epwxRouter);
+
+// Merchant onboarding routes (admin only)
+app.use('/api/merchants', merchantsRouter);
 
 // Error handler
 app.use((err, req, res, next) => {

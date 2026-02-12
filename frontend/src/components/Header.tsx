@@ -143,13 +143,22 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
               </a>
               {/* Show Admin Dashboard link if admin wallet is connected */}
               {address && address.toLowerCase() === "0xc3f5e57ed34fa3492616e9b20a0621a87fdd2735" ? (
-                <a
-                  href="/admin"
-                  className="px-5 py-2.5 text-sm font-bold bg-gradient-to-r from-green-50 to-green-100 text-green-700 rounded-xl hover:from-green-100 hover:to-green-200 transition-all shadow-md text-center block mt-2"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  🛡️ Admin Dashboard
-                </a>
+                <>
+                  <a
+                    href="/admin"
+                    className="px-5 py-2.5 text-sm font-bold bg-gradient-to-r from-green-50 to-green-100 text-green-700 rounded-xl hover:from-green-100 hover:to-green-200 transition-all shadow-md text-center block mt-2"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    🛡️ Admin Dashboard
+                  </a>
+                  <a
+                    href="/admin/merchants"
+                    className="px-5 py-2.5 text-sm font-bold bg-gradient-to-r from-yellow-50 to-yellow-100 text-yellow-700 rounded-xl hover:from-yellow-100 hover:to-yellow-200 transition-all shadow-md text-center block mt-2"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    🏪 Merchant Admin
+                  </a>
+                </>
               ) : null}
               <button
                 onClick={() => {
