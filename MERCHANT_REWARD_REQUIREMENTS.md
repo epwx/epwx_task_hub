@@ -1,15 +1,14 @@
 # EPWX Merchant Reward Requirements (2026)
 
 ## Overview
-This document outlines the requirements for the EPWX merchant reward system, including the corrected rule for customer claims based on wallet and IP address.
+This document outlines the requirements for the EPWX merchant reward system, including the corrected rule for customer claims based on wallet and IP address. It clarifies that the admin wallet is the only entity that distributes EPWX tokens, and tokens are sent directly to customers after claim approval—not to merchants.
 
 ## Requirements
 
 1. **Admin Wallet Onboarding:**
    - The admin wallet is used to onboard merchants, storing their longitude, latitude, and address details.
 
-
-3. **Customer Claim Flow (QR, Geofencing, Wallet Connect):**
+2. **Customer Claim Flow (QR, Geofencing, Wallet Connect):**
    1. Customer visits the merchant’s shop and makes a purchase.
    2. Merchant displays a unique QR code at the shop (static or dynamically generated).
    3. Customer scans the QR code using the EPWX dApp or web app on their mobile device.
@@ -19,9 +18,9 @@ This document outlines the requirements for the EPWX merchant reward system, inc
    7. The app checks if the customer is eligible to claim (has not claimed in the last 24 hours).
    8. If eligible, the customer submits a claim request (optionally entering the bill amount for reward calculation).
    9. The backend verifies all conditions (location, claim interval, etc.) and records the claim.
-   10. Admin (or automated process) reviews and distributes EPWX tokens to the customer’s wallet.
+   10. The admin (using the admin wallet) reviews and, if approved, manually sends EPWX tokens directly to the customer’s wallet address. No tokens are sent to the merchant’s wallet.
 
-2. **Customer Purchases & Reward Independence:**
+3. **Customer Purchases & Reward Independence:**
    - Customers purchase goods or services from merchants and pay the merchant directly, using any payment method. The payment process is entirely independent of the EPWX dApp.
    - After payment, EPWX (ePowerX On Base) tokens are distributed as free rewards to the merchant's customers, with no cost to the merchant or customer. These rewards are provided solely to promote EPWX and increase its popularity, and are not linked to the payment transaction in any way.
 
@@ -30,6 +29,7 @@ This document outlines the requirements for the EPWX merchant reward system, inc
 
 4. **Admin-Only Distribution:**
    - Only the admin wallet can distribute EPWX tokens manually via the dApp, similar to daily rewards.
+   - The admin wallet sends EPWX tokens directly to the customer’s wallet after claim approval. The merchant’s wallet is not used for reward distribution.
 
 5. **Customer Claim Rule (Corrected):**
    - A customer (identified by both wallet and IP address) can claim EPWX rewards only once every 24 hours, even if they make multiple purchases within that period.
