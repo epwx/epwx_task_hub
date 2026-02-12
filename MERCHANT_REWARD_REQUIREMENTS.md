@@ -4,6 +4,9 @@
 This document outlines the requirements for the EPWX merchant reward system, including the corrected rule for customer claims based on wallet and IP address. It clarifies that the admin wallet is the only entity that distributes EPWX tokens, and tokens are sent directly to customers after claim approval—not to merchants.
 
 ## Requirements
+9. **Merchant Dashboard (View Access):**
+   - Each merchant (using their registered wallet) can log in to view all customer claims made at their store and see the status of each reward (e.g., pending, approved, sent).
+   - Merchants cannot approve or distribute rewards; they have view-only access to their store’s claim and reward history.
 
 1. **Admin Wallet Onboarding:**
    - The admin wallet is used to onboard merchants, storing their longitude, latitude, and address details.
