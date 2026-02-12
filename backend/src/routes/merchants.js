@@ -15,11 +15,11 @@ function requireAdmin(req, res, next) {
 // POST /api/merchants/add - Add a new merchant (admin only)
 router.post('/add', requireAdmin, async (req, res) => {
   const { name, wallet, address, longitude, latitude } = req.body;
-  if (!name || !wallet || !address || longitude == null || latitude == null) {
+  if (!name || !address || longitude == null || latitude == null) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
   try {
-    const merchant = await Merchant.create({ name, wallet: wallet.toLowerCase(), address, longitude, latitude });
+    const merchant = await Merchant.create({ name, wallet: wallet ? wallet.toLowerCase() : null, address, longitude, latitude });
     res.json({ success: true, merchant });
   } catch (err) {
     res.status(500).json({ error: err.message });
