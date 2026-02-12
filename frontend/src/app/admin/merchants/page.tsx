@@ -96,28 +96,17 @@ export default function MerchantAdminPage() {
       </form>
       <h3 className="text-xl font-bold mt-8 mb-2">All Merchants</h3>
       {loading ? <div>Loading...</div> : (
-        <table className="w-full border mt-2 text-sm">
-          <thead>
-            <tr className="bg-gray-100 text-gray-700">
-              <th className="p-2">Name</th>
-              <th className="p-2">Wallet</th>
-              <th className="p-2">Address</th>
-              <th className="p-2">Longitude</th>
-              <th className="p-2">Latitude</th>
-            </tr>
-          </thead>
-          <tbody>
-            {merchants.map((m) => (
-              <tr key={m.id} className="border-t">
-                <td className="p-2">{m.name}</td>
-                <td className="p-2">{m.wallet}</td>
-                <td className="p-2">{m.address}</td>
-                <td className="p-2">{m.longitude}</td>
-                <td className="p-2">{m.latitude}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="space-y-4 mt-2">
+          {merchants.map((m) => (
+            <div key={m.id} className="bg-white rounded shadow p-4 border flex flex-col text-sm">
+              <div className="font-bold text-lg mb-2">{m.name}</div>
+              <div><span className="font-semibold">Wallet:</span> <span className="break-all">{m.wallet}</span></div>
+              <div><span className="font-semibold">Address:</span> {m.address}</div>
+              <div><span className="font-semibold">Latitude:</span> {m.latitude}</div>
+              <div><span className="font-semibold">Longitude:</span> {m.longitude}</div>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );
