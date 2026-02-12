@@ -87,7 +87,7 @@ export default function MerchantAdminPage() {
       {loading ? <div>Loading...</div> : (
         <table className="w-full border mt-2 text-sm">
           <thead>
-            <tr className="bg-gray-100">
+            <tr className="bg-gray-100 text-gray-700">
               <th className="p-2">Name</th>
               <th className="p-2">Wallet</th>
               <th className="p-2">Address</th>
