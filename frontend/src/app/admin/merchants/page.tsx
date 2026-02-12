@@ -73,12 +73,23 @@ export default function MerchantAdminPage() {
   return (
     <div className="max-w-2xl mx-auto py-8">
       <h2 className="text-2xl font-bold mb-4">Merchant Onboarding (Admin Only)</h2>
-      <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded shadow">
+      <form onSubmit={e => {
+        e.preventDefault();
+        // Validate latitude and longitude
+        const lat = parseFloat(form.latitude);
+        const lng = parseFloat(form.longitude);
+        if (isNaN(lat) || isNaN(lng)) {
+          setError("Latitude and Longitude must be valid numbers.");
+          return;
+        }
+        setError(null);
+        handleSubmit(e);
+      }} className="space-y-4 bg-white p-6 rounded shadow">
         <input name="name" value={form.name} onChange={handleChange} placeholder="Merchant Name" className="w-full border rounded px-3 py-2 text-gray-700" required />
         <input name="wallet" value={form.wallet} onChange={handleChange} placeholder="Merchant Wallet Address" className="w-full border rounded px-3 py-2 text-gray-700" required />
         <input name="address" value={form.address} onChange={handleChange} placeholder="Shop Address" className="w-full border rounded px-3 py-2 text-gray-700" required />
-        <input name="longitude" value={form.longitude} onChange={handleChange} placeholder="Longitude" className="w-full border rounded px-3 py-2 text-gray-700" required type="number" step="any" />
-        <input name="latitude" value={form.latitude} onChange={handleChange} placeholder="Latitude" className="w-full border rounded px-3 py-2 text-gray-700" required type="number" step="any" />
+        <input name="longitude" value={form.longitude} onChange={handleChange} placeholder="Longitude" className="w-full border rounded px-3 py-2 text-gray-700" required type="text" inputMode="decimal" />
+        <input name="latitude" value={form.latitude} onChange={handleChange} placeholder="Latitude" className="w-full border rounded px-3 py-2 text-gray-700" required type="text" inputMode="decimal" />
         <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded font-semibold" disabled={loading}>{loading ? "Adding..." : "Add Merchant"}</button>
         {error && <div className="text-red-600 mt-2">{error}</div>}
         {success && <div className="text-green-600 mt-2">{success}</div>}
