@@ -14,14 +14,15 @@ This document outlines the requirements for the EPWX merchant reward system, inc
 2. **Customer Claim Flow (QR, Geofencing, Wallet Connect):**
    1. Customer visits the merchant’s shop and makes a purchase.
    2. Merchant displays a unique QR code at the shop (static or dynamically generated).
-   3. Customer scans the QR code using the EPWX dApp or web app on their mobile device.
-   4. The app requests permission to access the customer’s location (geolocation API).
+   3. Customer scans the QR code using their phone camera, which opens the claim page in the browser with merchant info pre-filled.
+   4. The claim page requests permission to access the customer’s location (geolocation API).
    5. The app verifies the customer is within 50 meters of the shop’s registered coordinates (geofencing check).
-   6. Customer connects their crypto wallet (e.g., MetaMask, WalletConnect) to the dApp.
-   7. The app checks if the customer is eligible to claim (has not claimed in the last 24 hours).
-   8. If eligible, the customer submits a claim request (optionally entering the bill amount for reward calculation).
-   9. The backend verifies all conditions (location, claim interval, etc.) and records the claim.
-   10. The admin (using the admin wallet) reviews and, if approved, manually sends EPWX tokens directly to the customer’s wallet address. No tokens are sent to the merchant’s wallet.
+   6. Only if the customer is near the merchant location, the claim page shows the wallet connect and claim form. If not, a message is shown explaining the requirement.
+   7. Customer connects their crypto wallet (e.g., MetaMask, WalletConnect) to the dApp.
+   8. The app checks if the customer is eligible to claim (has not claimed in the last 24 hours).
+   9. If eligible, the customer submits a claim request (optionally entering the bill amount for reward calculation).
+   10. The backend verifies all conditions (location, claim interval, etc.) and records the claim.
+   11. The admin (using the admin wallet) reviews and, if approved, manually sends EPWX tokens directly to the customer’s wallet address. No tokens are sent to the merchant’s wallet.
 
 3. **Customer Purchases & Reward Independence:**
    - Customers purchase goods or services from merchants and pay the merchant directly, using any payment method. The payment process is entirely independent of the EPWX dApp.
