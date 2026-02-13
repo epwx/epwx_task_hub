@@ -52,7 +52,7 @@ export default function ClaimPage() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async e => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setClaimStatus(null);
@@ -64,14 +64,14 @@ export default function ClaimPage() {
           merchantId,
           bill: form.bill,
           customer: address,
-          lat: location.latitude,
-          lng: location.longitude,
+          lat: location?.latitude,
+          lng: location?.longitude,
         }),
       });
       const data = await res.json();
       if (data.success) setClaimStatus("Claim submitted successfully!");
       else setClaimStatus(data.error || "Failed to submit claim");
-    } catch (e) {
+    } catch (e: any) {
       setClaimStatus(e.message || "Failed to submit claim");
     }
     setLoading(false);
