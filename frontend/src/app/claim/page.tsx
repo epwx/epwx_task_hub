@@ -24,7 +24,7 @@ export default function ClaimPage() {
   const merchantLng = parseFloat(searchParams.get("lng") || "");
   const [location, setLocation] = useState<GeolocationCoordinates | null>(null);
   const [distance, setDistance] = useState<number | null>(null);
-  const [geoError, setGeoError] = useState(null);
+  const [geoError, setGeoError] = useState<string | null>(null);
   const { address } = useAccount();
   const [form, setForm] = useState({ bill: "" });
   const [claimStatus, setClaimStatus] = useState(null);
