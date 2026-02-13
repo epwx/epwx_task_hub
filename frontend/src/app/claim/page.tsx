@@ -1,3 +1,4 @@
+"use client";
 import { Suspense, useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 import { ConnectKitButton } from "connectkit";
