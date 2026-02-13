@@ -20,8 +20,8 @@ function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
 export default function ClaimPage() {
   const searchParams = useSearchParams();
   const merchantId = searchParams.get("merchant");
-  const merchantLat = parseFloat(searchParams.get("lat"));
-  const merchantLng = parseFloat(searchParams.get("lng"));
+  const merchantLat = parseFloat(searchParams.get("lat") || "");
+  const merchantLng = parseFloat(searchParams.get("lng") || "");
   const [location, setLocation] = useState(null);
   const [distance, setDistance] = useState(null);
   const [geoError, setGeoError] = useState(null);
