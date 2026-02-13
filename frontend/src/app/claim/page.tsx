@@ -19,9 +19,9 @@ function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
 
 function ClaimPage() {
   const searchParams = useSearchParams();
-  const merchantId = searchParams.get("merchant");
-  const merchantLat = parseFloat(searchParams.get("lat") || "");
-  const merchantLng = parseFloat(searchParams.get("lng") || "");
+  const merchantId = searchParams.get("merchant") || searchParams.get("merchantId");
+  const [merchantLat, setMerchantLat] = useState<number | null>(null);
+  const [merchantLng, setMerchantLng] = useState<number | null>(null);
   const [location, setLocation] = useState<GeolocationCoordinates | null>(null);
   const [distance, setDistance] = useState<number | null>(null);
   const [geoError, setGeoError] = useState<string | null>(null);
@@ -29,9 +29,37 @@ function ClaimPage() {
   const [form, setForm] = useState({ bill: "" });
   const [claimStatus, setClaimStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [merchantError, setMerchantError] = useState<string | null>(null);
+
+  // Fetch merchant coordinates if not present in URL
+  useEffect(() => {
+    const urlLat = searchParams.get("lat");
+    const urlLng = searchParams.get("lng");
+    if (urlLat && urlLng && !isNaN(parseFloat(urlLat)) && !isNaN(parseFloat(urlLng))) {
+      setMerchantLat(parseFloat(urlLat));
+      setMerchantLng(parseFloat(urlLng));
+    } else if (merchantId) {
+      fetch(`/api/merchants/${merchantId}`)
+        .then(res => {
+          if (!res.ok) throw new Error("Merchant not found");
+          return res.json();
+        })
+        .then(data => {
+          if (typeof data.latitude === "number" && typeof data.longitude === "number") {
+            setMerchantLat(data.latitude);
+            setMerchantLng(data.longitude);
+          } else {
+            setMerchantError("Merchant location not set");
+          }
+        })
+        .catch(() => setMerchantError("Invalid merchant QR code."));
+    } else {
+      setMerchantError("Invalid merchant QR code.");
+    }
+  }, [merchantId, searchParams]);
 
   useEffect(() => {
-    if (merchantLat && merchantLng) {
+    if (merchantLat !== null && merchantLng !== null) {
       navigator.geolocation.getCurrentPosition(
         pos => {
           setLocation(pos.coords);
@@ -77,22 +105,21 @@ function ClaimPage() {
     setLoading(false);
   };
 
-  if (!merchantId || isNaN(merchantLat) || isNaN(merchantLng)) {
-    return <div className="py-16 text-center text-red-600">Invalid merchant QR code.</div>;
+  if (merchantError) {
+    return <div className="py-16 text-center text-red-600">{merchantError}</div>;
   }
-
+  if (merchantLat === null || merchantLng === null) {
+    return <div className="py-16 text-center">Loading merchant info...</div>;
+  }
   if (geoError) {
     return <div className="py-16 text-center text-red-600">Location error: {geoError}</div>;
   }
-
   if (distance === null) {
     return <div className="py-16 text-center">Checking your location...</div>;
   }
-
   if (distance > 50) {
     return <div className="py-16 text-center text-yellow-700">You must be at the merchant location to claim rewards.</div>;
   }
-
   return (
     <div className="max-w-md mx-auto py-8">
       <h2 className="text-2xl font-bold mb-4">Claim EPWX Reward</h2>
