@@ -27,7 +27,7 @@ export default function ClaimPage() {
   const [geoError, setGeoError] = useState<string | null>(null);
   const { address } = useAccount();
   const [form, setForm] = useState({ bill: "" });
-  const [claimStatus, setClaimStatus] = useState(null);
+  const [claimStatus, setClaimStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
