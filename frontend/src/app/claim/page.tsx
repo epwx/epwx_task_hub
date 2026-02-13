@@ -4,7 +4,7 @@ import { useAccount } from "wagmi";
 import { ConnectKitButton } from "connectkit";
 import { useSearchParams } from "next/navigation";
 
-function getDistance(lat1, lon1, lat2, lon2) {
+function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
   // Haversine formula
   const R = 6371e3; // meters
   const toRad = x => (x * Math.PI) / 180;
