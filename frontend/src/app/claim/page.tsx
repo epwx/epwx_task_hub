@@ -22,7 +22,7 @@ export default function ClaimPage() {
   const merchantId = searchParams.get("merchant");
   const merchantLat = parseFloat(searchParams.get("lat") || "");
   const merchantLng = parseFloat(searchParams.get("lng") || "");
-  const [location, setLocation] = useState(null);
+  const [location, setLocation] = useState<GeolocationCoordinates | null>(null);
   const [distance, setDistance] = useState(null);
   const [geoError, setGeoError] = useState(null);
   const { address } = useAccount();
