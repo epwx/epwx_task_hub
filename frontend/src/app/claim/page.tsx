@@ -23,7 +23,7 @@ export default function ClaimPage() {
   const merchantLat = parseFloat(searchParams.get("lat") || "");
   const merchantLng = parseFloat(searchParams.get("lng") || "");
   const [location, setLocation] = useState<GeolocationCoordinates | null>(null);
-  const [distance, setDistance] = useState(null);
+  const [distance, setDistance] = useState<number | null>(null);
   const [geoError, setGeoError] = useState(null);
   const { address } = useAccount();
   const [form, setForm] = useState({ bill: "" });
