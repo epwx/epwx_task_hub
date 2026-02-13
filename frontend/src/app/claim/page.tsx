@@ -112,7 +112,15 @@ function ClaimPage() {
     return <div className="py-16 text-center">Loading merchant info...</div>;
   }
   if (geoError) {
-    return <div className="py-16 text-center text-red-600">Location error: {geoError}</div>;
+    return (
+      <div className="py-16 text-center text-red-600">
+        Location error: {geoError}
+        <br />
+        <span className="block mt-4 text-gray-700">
+          Please enable GPS/location services on your device and allow location access in your browser settings to claim your reward.
+        </span>
+      </div>
+    );
   }
   if (distance === null) {
     return <div className="py-16 text-center">Checking your location...</div>;
