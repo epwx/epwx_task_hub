@@ -37,3 +37,14 @@ router.get('/list', requireAdmin, async (req, res) => {
 });
 
 export default router;
+
+// GET /api/merchants/:id - Public endpoint to fetch merchant by ID
+router.get('/:id', async (req, res) => {
+  try {
+    const merchant = await Merchant.findByPk(req.params.id);
+    if (!merchant) return res.status(404).json({ error: 'Merchant not found' });
+    res.json(merchant);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
