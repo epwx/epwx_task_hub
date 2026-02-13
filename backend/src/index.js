@@ -61,7 +61,9 @@ import circulatingRouter from './routes/circulating.js';
 import burnedRouter from './routes/burned.js';
 import swaggerRouter from './routes/swagger.js';
 import epwxRouter from './routes/epwx.js';
+
 import merchantsRouter from './routes/merchants.js';
+import claimsRouter from './routes/claims.js';
 
 app.use('/api/auth', authRouter);
 app.use('/api/campaigns', campaignsRouter);
@@ -75,6 +77,9 @@ app.use('/api/docs', swaggerRouter);
 app.use('/api/epwx', epwxRouter);
 
 // Merchant onboarding routes (admin only)
+
+// Customer claim routes
+app.use('/api/claims', claimsRouter);
 app.use('/api/merchants', merchantsRouter);
 
 // Error handler
