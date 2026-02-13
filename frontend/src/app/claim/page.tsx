@@ -48,7 +48,7 @@ export default function ClaimPage() {
     }
   }, [merchantLat, merchantLng]);
 
-  const handleChange = e => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
