@@ -1,5 +1,4 @@
-"use client";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 import { ConnectKitButton } from "connectkit";
 import { useSearchParams } from "next/navigation";
@@ -17,7 +16,7 @@ function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
   return R * c;
 }
 
-export default function ClaimPage() {
+function ClaimPage() {
   const searchParams = useSearchParams();
   const merchantId = searchParams.get("merchant");
   const merchantLat = parseFloat(searchParams.get("lat") || "");
@@ -109,5 +108,13 @@ export default function ClaimPage() {
         </form>
       )}
     </div>
+  );
+}
+
+export default function ClaimPageWrapper() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ClaimPage />
+    </Suspense>
   );
 }
