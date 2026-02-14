@@ -1,12 +1,21 @@
 "use client";
 import { useEffect, useState } from "react";
+
+type Claim = {
+  id: number;
+  merchantId: number;
+  customer: string;
+  bill: string;
+  status: string;
+  // add other fields if needed
+};
 import { useAccount } from "wagmi";
 
 const ADMIN_WALLET = "0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735".toLowerCase();
 
 export default function AdminClaimsPage() {
   const { address } = useAccount();
-  const [claims, setClaims] = useState([]);
+  const [claims, setClaims] = useState<Claim[]>([]);
   const [statusFilter, setStatusFilter] = useState("pending");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -27,7 +36,7 @@ export default function AdminClaimsPage() {
       });
   }, [address, statusFilter]);
 
-  const updateStatus = async (id, status) => {
+  const updateStatus = async (id: number, status: string) => {
     setLoading(true);
     setError("");
     setSuccess("");
