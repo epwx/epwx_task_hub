@@ -19,16 +19,6 @@ const ADMIN_WALLETS = (process.env.NEXT_PUBLIC_ADMIN_WALLETS || "")
 
 export default function MerchantAdminPage() {
   const { address } = useAccount();
-
-  // Debug: Log merchants and claims to catch undefined/null
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      // eslint-disable-next-line no-console
-      console.log('DEBUG merchants:', merchants);
-      // eslint-disable-next-line no-console
-      console.log('DEBUG claims:', claims);
-    }
-  }, [merchants, claims]);
   const [form, setForm] = useState({ name: "", wallet: "", address: "", longitude: "", latitude: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -93,6 +83,15 @@ export default function MerchantAdminPage() {
   }
 
   // Track which merchant's claims are expanded and their claims
+    // Debug: Log merchants and claims to catch undefined/null
+    useEffect(() => {
+      if (typeof window !== 'undefined') {
+        // eslint-disable-next-line no-console
+        console.log('DEBUG merchants:', merchants);
+        // eslint-disable-next-line no-console
+        console.log('DEBUG claims:', claims);
+      }
+    }, [merchants, claims]);
   const [expanded, setExpanded] = useState<{ [merchantId: number]: boolean }>({});
   const [claims, setClaims] = useState<{ [merchantId: number]: Claim[] }>({});
   const [claimsLoading, setClaimsLoading] = useState<{ [merchantId: number]: boolean }>({});
