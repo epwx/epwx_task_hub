@@ -131,7 +131,7 @@ export default function MerchantAdminPage() {
       <h3 className="text-xl font-bold mt-8 mb-2">All Merchants</h3>
       {loading ? <div>Loading...</div> : (
         <div className="space-y-4 mt-2">
-          {merchants.map((m) => (
+          {Array.isArray(merchants) && merchants.map((m) => (
             <div key={m.id} className="bg-white rounded shadow p-4 border flex flex-col text-sm text-gray-800">
               <div className="font-bold text-lg mb-2 text-gray-900">{m.name}</div>
               <div><span className="font-semibold text-gray-700">Wallet:</span> <span className="break-all text-gray-800">{m.wallet}</span></div>
@@ -145,7 +145,7 @@ export default function MerchantAdminPage() {
                 <div className="mt-2 w-full">
                   {claimsLoading[m.id] ? <div>Loading claims...</div> :
                     claimsError[m.id] ? <div className="text-red-600">{claimsError[m.id]}</div> :
-                    (claims[m.id] && claims[m.id].length > 0 ? (
+                    (Array.isArray(claims[m.id]) && claims[m.id].length > 0 ? (
                       <table className="w-full border mt-2 text-xs">
                         <thead>
                           <tr className="bg-gray-100">

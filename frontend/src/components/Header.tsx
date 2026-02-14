@@ -47,32 +47,34 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">
-            <a 
-              href="https://epowex.com" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="relative text-gray-700 dark:text-gray-200 hover:text-blue-600 font-medium transition-colors group"
-            >
-              Main Site
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
-            </a>
-            <Link href="/referral" className="relative text-gray-700 dark:text-gray-200 hover:text-blue-600 font-medium transition-colors group">
-              Referral
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
-            </Link>
-            <Link href="/platform-stats" className="relative text-gray-700 dark:text-gray-200 hover:text-blue-600 font-medium transition-colors group">
-              Platform Stats
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
-            </Link>
+            <a href="/" className={pathname === "/" ? "font-bold text-blue-600" : ""}>Main Site</a>
+            <a href="/referral" className={pathname === "/referral" ? "font-bold text-blue-600" : ""}>Referral</a>
+            <a href="/platform-stats" className={pathname === "/platform-stats" ? "font-bold text-blue-600" : ""}>Platform Stats</a>
+            <a href="/contact" className={pathname === "/contact" ? "font-bold text-blue-600" : ""}>Contact Us</a>
             <a
-              href="https://t.me/ePowerX_On_Base"
+              href={`https://pancakeswap.finance/swap?chain=base&outputCurrency=${process.env.NEXT_PUBLIC_EPWX_TOKEN}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="relative text-gray-700 dark:text-gray-200 hover:text-blue-600 font-medium transition-colors group"
+              className="px-5 py-2.5 text-sm font-bold bg-gradient-to-r from-blue-50 to-purple-50 text-blue-600 rounded-xl hover:from-blue-100 hover:to-purple-100 transition-all shadow-md text-center"
             >
-              Contact Us
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
+              💰 Buy EPWX
             </a>
+            {isAdmin && (
+              <>
+                <a
+                  href="/admin"
+                  className="px-5 py-2.5 text-sm font-bold bg-gradient-to-r from-green-50 to-green-100 text-green-700 rounded-xl hover:from-green-100 hover:to-green-200 transition-all shadow-md text-center"
+                >
+                  🛡️ Admin Dashboard
+                </a>
+                <a
+                  href="/admin/merchants"
+                  className="px-5 py-2.5 text-sm font-bold bg-gradient-to-r from-yellow-50 to-yellow-100 text-yellow-700 rounded-xl hover:from-yellow-100 hover:to-yellow-200 transition-all shadow-md text-center"
+                >
+                  🏪 Merchant Admin
+                </a>
+              </>
+            )}
           </nav>
 
           {/* Action Buttons */}
