@@ -41,9 +41,9 @@ router.post('/eth-to-epwx', async (req, res) => {
   // GET /api/swap/claims?admin=wallet&status=pending|paid
   router.get('/claims', async (req, res) => {
     const { admin, status } = req.query;
-    // TODO: Replace with your admin wallet address
-    const ADMIN_WALLET = '0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735'.toLowerCase();
-    if (!admin || admin.toLowerCase() !== ADMIN_WALLET) {
+    // Use ADMIN_WALLETS env variable (comma-separated)
+    const ADMIN_WALLETS = (process.env.ADMIN_WALLETS || '').split(',').map(w => w.trim().toLowerCase()).filter(Boolean);
+    if (!admin || !ADMIN_WALLETS.includes(admin.toLowerCase())) {
       return res.status(403).json({ error: 'Unauthorized' });
     }
     const where = {};
@@ -59,8 +59,8 @@ router.post('/eth-to-epwx', async (req, res) => {
   // POST /api/swap/claims/mark-paid
   router.post('/claims/mark-paid', async (req, res) => {
     const { admin, claimId } = req.body;
-    const ADMIN_WALLET = '0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735'.toLowerCase();
-    if (!admin || admin.toLowerCase() !== ADMIN_WALLET) {
+    const ADMIN_WALLETS = (process.env.ADMIN_WALLETS || '').split(',').map(w => w.trim().toLowerCase()).filter(Boolean);
+    if (!admin || !ADMIN_WALLETS.includes(admin.toLowerCase())) {
       return res.status(403).json({ error: 'Unauthorized' });
     }
     if (!claimId) return res.status(400).json({ error: 'claimId is required' });

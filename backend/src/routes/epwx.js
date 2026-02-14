@@ -422,8 +422,9 @@ router.post('/claim', async (req, res) => {
 router.get('/claims', async (req, res) => {
   const { admin, wallet } = req.query;
   if (admin) {
-    // Only allow admin wallet to access all claims
-    if (admin !== '0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735') {
+    // Only allow admin wallet(s) to access all claims
+    const ADMIN_WALLETS = (process.env.ADMIN_WALLETS || '').split(',').map(w => w.trim().toLowerCase()).filter(Boolean);
+    if (!ADMIN_WALLETS.includes(admin.toLowerCase())) {
       return res.status(403).json({ error: 'Unauthorized' });
     }
     try {
