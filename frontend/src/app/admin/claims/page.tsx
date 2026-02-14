@@ -11,7 +11,10 @@ type Claim = {
 };
 import { useAccount } from "wagmi";
 
-const ADMIN_WALLET = "0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735".toLowerCase();
+const ADMIN_WALLETS = (process.env.NEXT_PUBLIC_ADMIN_WALLETS || "")
+  .split(",")
+  .map(w => w.trim().toLowerCase())
+  .filter(Boolean);
 
 export default function AdminClaimsPage() {
   const { address } = useAccount();
@@ -22,7 +25,7 @@ export default function AdminClaimsPage() {
   const [success, setSuccess] = useState("");
 
   useEffect(() => {
-    if (!address || address.toLowerCase() !== ADMIN_WALLET) return;
+    if (!address || !ADMIN_WALLETS.includes(address.toLowerCase())) return;
     setLoading(true);
     fetch(`/api/claims?admin=${address}&status=${statusFilter}`)
       .then(res => res.json())
@@ -59,7 +62,7 @@ export default function AdminClaimsPage() {
     setLoading(false);
   };
 
-  if (!address || address.toLowerCase() !== ADMIN_WALLET) {
+  if (!address || !ADMIN_WALLETS.includes(address.toLowerCase())) {
     return <div className="py-16 text-center text-red-600">Admin wallet required.</div>;
   }
 

@@ -12,10 +12,10 @@ type Claim = {
 import { useAccount } from "wagmi";
 import { ConnectKitButton } from "connectkit";
 
-const ADMIN_WALLETS = [
-  "0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735".toLowerCase(),
-  "0xd810F66a73b8d51Aa2eFa9d6db395982f3ab9353".toLowerCase()
-];
+const ADMIN_WALLETS = (process.env.NEXT_PUBLIC_ADMIN_WALLETS || "")
+  .split(",")
+  .map(w => w.trim().toLowerCase())
+  .filter(Boolean);
 
 export default function MerchantAdminPage() {
   const { address } = useAccount();
