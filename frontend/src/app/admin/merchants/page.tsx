@@ -12,7 +12,10 @@ type Claim = {
 import { useAccount } from "wagmi";
 import { ConnectKitButton } from "connectkit";
 
-const ADMIN_WALLET = "0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735";
+const ADMIN_WALLETS = [
+  "0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735".toLowerCase(),
+  "0xd810F66a73b8d51Aa2eFa9d6db395982f3ab9353".toLowerCase()
+];
 
 export default function MerchantAdminPage() {
   const { address } = useAccount();
@@ -36,7 +39,7 @@ export default function MerchantAdminPage() {
   };
 
   useEffect(() => {
-    if (address && address.toLowerCase() === ADMIN_WALLET.toLowerCase()) {
+    if (address && ADMIN_WALLETS.includes(address.toLowerCase())) {
       fetchMerchants();
     }
   }, [address]);
@@ -70,7 +73,7 @@ export default function MerchantAdminPage() {
     setLoading(false);
   };
 
-  if (!address || address.toLowerCase() !== ADMIN_WALLET.toLowerCase()) {
+  if (!address || !ADMIN_WALLETS.includes(address.toLowerCase())) {
     return (
       <div className="flex flex-col items-center justify-center py-16">
         <div className="mb-4 text-lg text-gray-700 font-semibold">Please connect the admin wallet to access this page.</div>
