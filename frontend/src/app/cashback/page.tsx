@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { EPWXCashbackClaim } from "../../components/EPWXCashbackClaim";
+import { EPWXCashbackClaim } from "../../components/EPWXCashbackClaim_clean";
 
 export default function CashbackPage() {
   return (

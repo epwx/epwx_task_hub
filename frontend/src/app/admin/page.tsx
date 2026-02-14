@@ -7,7 +7,14 @@ import { useAccount, useWalletClient, useWriteContract } from "wagmi";
 import { ConnectKitButton } from "connectkit";
 import { ethers } from "ethers";
 
-const ADMIN_WALLET = "0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735";
+
+const getAdminWallets = () => {
+  if (typeof window !== "undefined") {
+    const env = process.env.NEXT_PUBLIC_ADMIN_WALLETS || "";
+    return env.split(",").map((w) => w.trim().toLowerCase()).filter(Boolean);
+  }
+  return [];
+};
 
 export default function AdminPage() {
       // Telegram Referral Rewards
@@ -18,7 +25,9 @@ export default function AdminPage() {
         setReferralLoading(true);
         setReferralError(null);
         try {
-          const res = await fetch(`/api/epwx/telegram-referral-rewards?admin=${ADMIN_WALLET}&status=pending`);
+          const adminWallets = getAdminWallets();
+          const admin = adminWallets[0] || "";
+          const res = await fetch(`/api/epwx/telegram-referral-rewards?admin=${admin}&status=pending`);
           const data = await res.json();
           setReferralRewards(data.rewards || []);
         } catch (e: any) {
@@ -88,10 +97,12 @@ export default function AdminPage() {
 
   useEffect(() => {
     setLoading(true);
+    const adminWallets = getAdminWallets();
+    const admin = adminWallets[0] || "";
     Promise.all([
-      fetch(`/api/epwx/claims?admin=${ADMIN_WALLET}`).then((res) => res.json()),
-      fetch(`/api/epwx/daily-claims?admin=${ADMIN_WALLET}`).then((res) => res.json()),
-      fetch(`/api/epwx/special-claim/list?admin=${ADMIN_WALLET}`).then((res) => res.json()),
+      fetch(`/api/epwx/claims?admin=${admin}`).then((res) => res.json()),
+      fetch(`/api/epwx/daily-claims?admin=${admin}`).then((res) => res.json()),
+      fetch(`/api/epwx/special-claim/list?admin=${admin}`).then((res) => res.json()),
     ])
       .then(([claimsData, dailyClaimsData, specialClaimsData]) => {
         setClaims(claimsData.claims || []);
@@ -134,7 +145,8 @@ export default function AdminPage() {
       setSpecialError(null);
       try {
         // Send 1,000,000 EPWX token transfer first
-        if (!address || address.toLowerCase() !== ADMIN_WALLET.toLowerCase()) {
+        const adminWallets = getAdminWallets();
+        if (!address || !adminWallets.includes(address.toLowerCase())) {
           setSpecialError("Admin wallet not connected");
           setSpecialLoading(false);
           return;
@@ -168,7 +180,8 @@ export default function AdminPage() {
     setMarking(claim.id);
     setError(null);
     try {
-      if (!address || address.toLowerCase() !== ADMIN_WALLET.toLowerCase()) {
+      const adminWallets = getAdminWallets();
+      if (!address || !adminWallets.includes(address.toLowerCase())) {
         setError("Admin wallet not connected");
         setMarking(null);
         return;
@@ -185,7 +198,7 @@ export default function AdminPage() {
       const res = await fetch("/api/epwx/daily-claims/mark-paid", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ admin: ADMIN_WALLET, claimId: claim.id }),
+        body: JSON.stringify({ admin: address, claimId: claim.id }),
       });
       const data = await res.json();
       if (data.success) {
@@ -206,7 +219,8 @@ export default function AdminPage() {
     setMarking(claim.id);
     setError(null);
     try {
-      if (!address || address.toLowerCase() !== ADMIN_WALLET.toLowerCase()) {
+      const adminWallets = getAdminWallets();
+      if (!address || !adminWallets.includes(address.toLowerCase())) {
         setError("Admin wallet not connected");
         setMarking(null);
         return;
@@ -229,7 +243,7 @@ export default function AdminPage() {
       const res = await fetch("/api/epwx/claims/mark-paid", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ admin: ADMIN_WALLET, claimId: claim.id }),
+        body: JSON.stringify({ admin: address, claimId: claim.id }),
       });
       const data = await res.json();
       if (data.success) {
@@ -246,7 +260,8 @@ export default function AdminPage() {
   };
 
   // Show wallet connect prompt if not connected or not admin wallet
-  const notAdmin = !address || address.toLowerCase() !== ADMIN_WALLET.toLowerCase();
+  const adminWallets = getAdminWallets();
+  const notAdmin = !address || !adminWallets.includes(address.toLowerCase());
   return (
     <>
 

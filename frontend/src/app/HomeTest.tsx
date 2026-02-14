@@ -2,7 +2,7 @@
 import Link from "next/link";
 import Header from "@/components/Header";
 import { EPWXStats } from "@/components/EPWXStats";
-import { EPWXCashbackClaim } from "@/components/EPWXCashbackClaim";
+import { EPWXCashbackClaim } from "@/components/EPWXCashbackClaim_clean";
 import { useState, useEffect } from "react";
 import DailyClaimsTable from "@/components/DailyClaimsTable";
 import { useAccount, useSignMessage } from "wagmi";

@@ -142,7 +142,12 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
                 💰 Buy EPWX
               </a>
               {/* Show Admin Dashboard link if admin wallet is connected */}
-              {address && address.toLowerCase() === "0xc3f5e57ed34fa3492616e9b20a0621a87fdd2735" ? (
+              {(() => {
+                if (!address) return false;
+                const env = process.env.NEXT_PUBLIC_ADMIN_WALLETS || "";
+                const adminWallets = env.split(",").map((w) => w.trim().toLowerCase()).filter(Boolean);
+                return adminWallets.includes(address.toLowerCase());
+              })() ? (
                 <>
                   <a
                     href="/admin"
