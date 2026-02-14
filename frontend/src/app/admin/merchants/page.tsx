@@ -1,5 +1,14 @@
 "use client";
 import { useState, useEffect } from "react";
+
+type Claim = {
+  id: number;
+  merchantId: number;
+  customer: string;
+  bill: string;
+  status: string;
+  createdAt: string;
+};
 import { useAccount } from "wagmi";
 import { ConnectKitButton } from "connectkit";
 
@@ -70,6 +79,28 @@ export default function MerchantAdminPage() {
     );
   }
 
+  // Track which merchant's claims are expanded and their claims
+  const [expanded, setExpanded] = useState<{ [merchantId: number]: boolean }>({});
+  const [claims, setClaims] = useState<{ [merchantId: number]: Claim[] }>({});
+  const [claimsLoading, setClaimsLoading] = useState<{ [merchantId: number]: boolean }>({});
+  const [claimsError, setClaimsError] = useState<{ [merchantId: number]: string | null }>({});
+
+  const toggleClaims = async (merchantId: number) => {
+    setExpanded(exp => ({ ...exp, [merchantId]: !exp[merchantId] }));
+    if (!claims[merchantId] && !claimsLoading[merchantId]) {
+      setClaimsLoading(cl => ({ ...cl, [merchantId]: true }));
+      setClaimsError(cl => ({ ...cl, [merchantId]: null }));
+      try {
+        const res = await fetch(`/api/claims?merchantId=${merchantId}`);
+        const data = await res.json();
+        setClaims(cl => ({ ...cl, [merchantId]: data.claims || [] }));
+      } catch (e: any) {
+        setClaimsError(cl => ({ ...cl, [merchantId]: e?.message || "Failed to fetch claims" }));
+      }
+      setClaimsLoading(cl => ({ ...cl, [merchantId]: false }));
+    }
+  };
+
   return (
     <div className="max-w-2xl mx-auto py-8">
       <h2 className="text-2xl font-bold mb-4">Merchant Onboarding (Admin Only)</h2>
@@ -104,6 +135,39 @@ export default function MerchantAdminPage() {
               <div><span className="font-semibold text-gray-700">Address:</span> <span className="text-gray-800">{m.address}</span></div>
               <div><span className="font-semibold text-gray-700">Latitude:</span> <span className="text-gray-800">{m.latitude}</span></div>
               <div><span className="font-semibold text-gray-700">Longitude:</span> <span className="text-gray-800">{m.longitude}</span></div>
+              <button className="mt-2 text-blue-600 underline self-start" onClick={() => toggleClaims(m.id)}>
+                {expanded[m.id] ? "Hide Claims" : "View Claims"}
+              </button>
+              {expanded[m.id] && (
+                <div className="mt-2 w-full">
+                  {claimsLoading[m.id] ? <div>Loading claims...</div> :
+                    claimsError[m.id] ? <div className="text-red-600">{claimsError[m.id]}</div> :
+                    (claims[m.id] && claims[m.id].length > 0 ? (
+                      <table className="w-full border mt-2 text-xs">
+                        <thead>
+                          <tr className="bg-gray-100">
+                            <th className="p-1 border">ID</th>
+                            <th className="p-1 border">Customer</th>
+                            <th className="p-1 border">Bill</th>
+                            <th className="p-1 border">Status</th>
+                            <th className="p-1 border">Date</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {claims[m.id].map(claim => (
+                            <tr key={claim.id}>
+                              <td className="p-1 border">{claim.id}</td>
+                              <td className="p-1 border">{claim.customer}</td>
+                              <td className="p-1 border">{claim.bill}</td>
+                              <td className="p-1 border">{claim.status}</td>
+                              <td className="p-1 border">{new Date(claim.createdAt).toLocaleString()}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    ) : <div className="text-gray-600">No claims for this merchant.</div>)}
+                </div>
+              )}
             </div>
           ))}
         </div>

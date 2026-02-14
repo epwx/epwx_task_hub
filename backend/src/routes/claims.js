@@ -19,14 +19,20 @@ router.post('/add', async (req, res) => {
 });
 
 
-// GET /api/claims - List claims (admin only, filter by status)
+// GET /api/claims - List claims
+// - If merchantId is provided, return claims for that merchant (view-only, no admin required)
+// - If admin is provided, return all claims (optionally filter by status)
 router.get('/', async (req, res) => {
-  const { admin, status } = req.query;
-  if (admin !== '0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735') {
-    return res.status(403).json({ error: 'Unauthorized' });
-  }
+  const { admin, status, merchantId } = req.query;
   try {
-    const where = status ? { status } : {};
+    let where = {};
+    if (merchantId) {
+      where = { merchantId };
+    } else if (admin === '0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735') {
+      if (status) where = { status };
+    } else {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
     const claims = await Claim.findAll({ where, order: [['createdAt', 'DESC']] });
     res.json({ claims });
   } catch (err) {
