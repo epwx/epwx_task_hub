@@ -157,7 +157,7 @@ export default function MerchantAdminPage() {
                           </tr>
                         </thead>
                         <tbody>
-                          {claims[m.id].map(claim => (
+                          {Array.isArray(claims[m.id]) && claims[m.id].map(claim => (
                             <tr key={claim.id}>
                               <td className="p-1 border">{claim.id}</td>
                               <td className="p-1 border">{claim.customer}</td>
