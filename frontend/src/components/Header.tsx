@@ -1,8 +1,4 @@
-              {/* Debug: Show connected address and admin wallets */}
-              <div className="text-xs text-red-500 font-mono mt-2">
-                <div>Connected: {address}</div>
-                <div>Admins: {(process.env.NEXT_PUBLIC_ADMIN_WALLETS || '').split(',').map(w => w.trim()).join(', ')}</div>
-              </div>
+
 'use client';
 
 import Link from 'next/link';
