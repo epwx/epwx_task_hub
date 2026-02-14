@@ -83,21 +83,15 @@ export default function MerchantAdminPage() {
   }
 
   // Track which merchant's claims are expanded and their claims
-    // Track which merchant's claims are expanded and their claims
-    const [expanded, setExpanded] = useState<{ [merchantId: number]: boolean }>({});
-    const [claims, setClaims] = useState<{ [merchantId: number]: Claim[] }>({});
-    const [claimsLoading, setClaimsLoading] = useState<{ [merchantId: number]: boolean }>({});
-    const [claimsError, setClaimsError] = useState<{ [merchantId: number]: string | null }>({});
-
-    // Debug: Log merchants and claims to catch undefined/null
-    useEffect(() => {
-      if (typeof window !== 'undefined') {
-        // eslint-disable-next-line no-console
-        console.log('DEBUG merchants:', merchants);
-        // eslint-disable-next-line no-console
-        console.log('DEBUG claims:', claims);
-      }
-    }, [merchants, claims]);
+  // Debug: Log merchants and claims to catch undefined/null
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // eslint-disable-next-line no-console
+      console.log('DEBUG merchants:', merchants);
+      // eslint-disable-next-line no-console
+      console.log('DEBUG claims:', claims);
+    }
+  }, [merchants, claims]);
   const [expanded, setExpanded] = useState<{ [merchantId: number]: boolean }>({});
   const [claims, setClaims] = useState<{ [merchantId: number]: Claim[] }>({});
   const [claimsLoading, setClaimsLoading] = useState<{ [merchantId: number]: boolean }>({});
