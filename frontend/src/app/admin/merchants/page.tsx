@@ -160,8 +160,11 @@ export default function MerchantAdminPage() {
         try {
           const res = await fetch(`/api/claims?merchantId=${claim.merchantId}`);
           const data = await res.json();
+          console.log('[claims refetch after distribute]', data.claims);
           setClaims(claims => ({ ...claims, [claim.merchantId]: data.claims || [] }));
-        } catch {}
+        } catch (e) {
+          console.error('[claims refetch error]', e);
+        }
         setClaimsError(cl => ({ ...cl, [claim.merchantId]: null }));
       } else {
         // Fallback: refetch claims for this merchant

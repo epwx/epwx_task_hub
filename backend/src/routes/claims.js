@@ -14,11 +14,16 @@ router.post('/epwx/claims/mark-paid', async (req, res) => {
   if (!claimId) return res.status(400).json({ error: 'claimId is required' });
   try {
     const claim = await Claim.findByPk(claimId);
-    if (!claim) return res.status(404).json({ error: 'Claim not found' });
+    if (!claim) {
+      console.log('[mark-paid] Claim not found for id:', claimId);
+      return res.status(404).json({ error: 'Claim not found' });
+    }
     claim.status = 'paid';
     await claim.save();
+    console.log('[mark-paid] Updated claim:', claim.id, 'status:', claim.status);
     res.json({ success: true, claim });
   } catch (err) {
+    console.error('[mark-paid] Error:', err);
     res.status(500).json({ error: err.message });
   }
 });
