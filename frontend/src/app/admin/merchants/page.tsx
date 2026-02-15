@@ -243,33 +243,38 @@ export default function MerchantAdminPage() {
                           <div className="mt-2 w-full">
                             {claimsLoading[m.id] ? (
                               <div>Loading claims...</div>
-                            ) : claimsError[m.id] ? (
-                              <div className="text-red-600">{claimsError[m.id]}</div>
-                            ) : (Array.isArray(claims[m.id]) && claims[m.id].length > 0 ? (
-                              <>
-                                <MerchantClaimsTable
-                                  claims={getPaginatedClaims(m.id)}
-                                  isAdmin={!!(address && ADMIN_WALLETS.includes(address.toLowerCase()))}
-                                  onDistribute={distributeCashback}
-                                  marking={marking}
-                                />
-                                <div className="flex justify-end items-center mt-2 space-x-2">
-                                  <button
-                                    className="px-2 py-1 border rounded bg-gray-100"
-                                    disabled={(claimsPage[m.id] || 1) === 1}
-                                    onClick={() => setClaimsPage(cp => ({ ...cp, [m.id]: (cp[m.id] || 1) - 1 }))}
-                                  >Previous</button>
-                                  <span>Page {(claimsPage[m.id] || 1)} of {getClaimsPageCount(m.id)}</span>
-                                  <button
-                                    className="px-2 py-1 border rounded bg-gray-100"
-                                    disabled={(claimsPage[m.id] || 1) === getClaimsPageCount(m.id)}
-                                    onClick={() => setClaimsPage(cp => ({ ...cp, [m.id]: (cp[m.id] || 1) + 1 }))}
-                                  >Next</button>
-                                </div>
-                              </>
                             ) : (
-                              <div className="text-gray-600">No claims for this merchant.</div>
-                            ))}
+                              <>
+                                {claimsError[m.id] && (
+                                  <div className="text-red-600 mb-2">{claimsError[m.id]}</div>
+                                )}
+                                {Array.isArray(claims[m.id]) && claims[m.id].length > 0 ? (
+                                  <>
+                                    <MerchantClaimsTable
+                                      claims={getPaginatedClaims(m.id)}
+                                      isAdmin={!!(address && ADMIN_WALLETS.includes(address.toLowerCase()))}
+                                      onDistribute={distributeCashback}
+                                      marking={marking}
+                                    />
+                                    <div className="flex justify-end items-center mt-2 space-x-2">
+                                      <button
+                                        className="px-2 py-1 border rounded bg-gray-100"
+                                        disabled={(claimsPage[m.id] || 1) === 1}
+                                        onClick={() => setClaimsPage(cp => ({ ...cp, [m.id]: (cp[m.id] || 1) - 1 }))}
+                                      >Previous</button>
+                                      <span>Page {(claimsPage[m.id] || 1)} of {getClaimsPageCount(m.id)}</span>
+                                      <button
+                                        className="px-2 py-1 border rounded bg-gray-100"
+                                        disabled={(claimsPage[m.id] || 1) === getClaimsPageCount(m.id)}
+                                        onClick={() => setClaimsPage(cp => ({ ...cp, [m.id]: (cp[m.id] || 1) + 1 }))}
+                                      >Next</button>
+                                    </div>
+                                  </>
+                                ) : (
+                                  <div className="text-gray-600">No claims for this merchant.</div>
+                                )}
+                              </>
+                            )}
                           </div>
                       )}
                     </div>
