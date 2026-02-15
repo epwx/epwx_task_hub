@@ -18,6 +18,28 @@ const ADMIN_WALLETS = (process.env.NEXT_PUBLIC_ADMIN_WALLETS || "")
   .filter(Boolean);
 
 export default function MerchantAdminPage() {
+    // Pagination state for merchants
+    const [merchantPage, setMerchantPage] = useState(1);
+    const merchantsPerPage = 5;
+    const paginatedMerchants = Array.isArray(merchants)
+      ? merchants.filter(m => m && typeof m === 'object' && m.id != null).slice((merchantPage - 1) * merchantsPerPage, merchantPage * merchantsPerPage)
+      : [];
+    const merchantPageCount = Array.isArray(merchants)
+      ? Math.ceil(merchants.filter(m => m && typeof m === 'object' && m.id != null).length / merchantsPerPage)
+      : 1;
+
+    // Pagination state for claims per merchant
+    const [claimsPage, setClaimsPage] = useState<{ [merchantId: number]: number }>({});
+    const claimsPerPage = 5;
+    const getPaginatedClaims = (merchantId: number) => {
+      const allClaims = Array.isArray(claims[merchantId]) ? claims[merchantId].filter(claim => claim && claim.id != null) : [];
+      const page = claimsPage[merchantId] || 1;
+      return allClaims.slice((page - 1) * claimsPerPage, page * claimsPerPage);
+    };
+    const getClaimsPageCount = (merchantId: number) => {
+      const allClaims = Array.isArray(claims[merchantId]) ? claims[merchantId].filter(claim => claim && claim.id != null) : [];
+      return Math.ceil(allClaims.length / claimsPerPage) || 1;
+    };
   const { address } = useAccount();
   const [form, setForm] = useState({ name: "", wallet: "", address: "", longitude: "", latitude: "" });
   const [loading, setLoading] = useState(false);
@@ -134,52 +156,82 @@ export default function MerchantAdminPage() {
           {loading ? <div>Loading...</div> : (
             <div className="space-y-4 mt-2">
               {Array.isArray(merchants) && merchants.length > 0 ? (
-                merchants.filter(m => m && typeof m === 'object' && m.id != null).map((m) => (
-                  <div key={String(m.id)} className="bg-white rounded shadow p-4 border flex flex-col text-sm text-gray-800">
-                    <div className="font-bold text-lg mb-2 text-gray-900">{m.name}</div>
-                    <div><span className="font-semibold text-gray-700">Wallet:</span> <span className="break-all text-gray-800">{m.wallet}</span></div>
-                    <div><span className="font-semibold text-gray-700">Address:</span> <span className="text-gray-800">{m.address}</span></div>
-                    <div><span className="font-semibold text-gray-700">Latitude:</span> <span className="text-gray-800">{m.latitude}</span></div>
-                    <div><span className="font-semibold text-gray-700">Longitude:</span> <span className="text-gray-800">{m.longitude}</span></div>
-                    <button className="mt-2 text-blue-600 underline self-start" onClick={() => toggleClaims(m.id)}>
-                      {expanded[m.id] ? "Hide Claims" : "View Claims"}
-                    </button>
-                    {expanded[m.id] && (
-                      <div className="mt-2 w-full">
-                        {claimsLoading[m.id] ? (
-                          <div>Loading claims...</div>
-                        ) : claimsError[m.id] ? (
-                          <div className="text-red-600">{claimsError[m.id]}</div>
-                        ) : (Array.isArray(claims[m.id]) && claims[m.id].length > 0 ? (
-                          <table className="w-full border mt-2 text-xs">
-                            <thead>
-                              <tr className="bg-gray-100">
-                                <th className="p-1 border">ID</th>
-                                <th className="p-1 border">Customer</th>
-                                <th className="p-1 border">Bill</th>
-                                <th className="p-1 border">Status</th>
-                                <th className="p-1 border">Date</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {Array.isArray(claims[m.id]) && claims[m.id].length > 0 && claims[m.id].filter(claim => claim && claim.id != null).map(claim => (
-                                <tr key={String(claim.id)}>
-                                  <td className="p-1 border">{claim.id}</td>
-                                  <td className="p-1 border">{claim.customer}</td>
-                                  <td className="p-1 border">{claim.bill}</td>
-                                  <td className="p-1 border">{claim.status}</td>
-                                  <td className="p-1 border">{new Date(claim.createdAt).toLocaleString()}</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        ) : (
-                          <div className="text-gray-600">No claims for this merchant.</div>
-                        ))}
-                      </div>
-                    )}
+                <>
+                  {paginatedMerchants.map((m) => (
+                    <div key={String(m.id)} className="bg-white rounded shadow p-4 border flex flex-col text-sm text-gray-800">
+                      <div className="font-bold text-lg mb-2 text-gray-900">{m.name}</div>
+                      <div><span className="font-semibold text-gray-700">Wallet:</span> <span className="break-all text-gray-800">{m.wallet}</span></div>
+                      <div><span className="font-semibold text-gray-700">Address:</span> <span className="text-gray-800">{m.address}</span></div>
+                      <div><span className="font-semibold text-gray-700">Latitude:</span> <span className="text-gray-800">{m.latitude}</span></div>
+                      <div><span className="font-semibold text-gray-700">Longitude:</span> <span className="text-gray-800">{m.longitude}</span></div>
+                      <button className="mt-2 text-blue-600 underline self-start" onClick={() => toggleClaims(m.id)}>
+                        {expanded[m.id] ? "Hide Claims" : "View Claims"}
+                      </button>
+                      {expanded[m.id] && (
+                        <div className="mt-2 w-full">
+                          {claimsLoading[m.id] ? (
+                            <div>Loading claims...</div>
+                          ) : claimsError[m.id] ? (
+                            <div className="text-red-600">{claimsError[m.id]}</div>
+                          ) : (Array.isArray(claims[m.id]) && claims[m.id].length > 0 ? (
+                            <>
+                              <table className="w-full border mt-2 text-xs">
+                                <thead>
+                                  <tr className="bg-gray-100">
+                                    <th className="p-1 border">ID</th>
+                                    <th className="p-1 border">Customer</th>
+                                    <th className="p-1 border">Bill</th>
+                                    <th className="p-1 border">Status</th>
+                                    <th className="p-1 border">Date</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {getPaginatedClaims(m.id).map(claim => (
+                                    <tr key={String(claim.id)}>
+                                      <td className="p-1 border">{claim.id}</td>
+                                      <td className="p-1 border">{claim.customer}</td>
+                                      <td className="p-1 border">{claim.bill}</td>
+                                      <td className="p-1 border">{claim.status}</td>
+                                      <td className="p-1 border">{new Date(claim.createdAt).toLocaleString()}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                              <div className="flex justify-end items-center mt-2 space-x-2">
+                                <button
+                                  className="px-2 py-1 border rounded bg-gray-100"
+                                  disabled={(claimsPage[m.id] || 1) === 1}
+                                  onClick={() => setClaimsPage(cp => ({ ...cp, [m.id]: (cp[m.id] || 1) - 1 }))}
+                                >Previous</button>
+                                <span>Page {(claimsPage[m.id] || 1)} of {getClaimsPageCount(m.id)}</span>
+                                <button
+                                  className="px-2 py-1 border rounded bg-gray-100"
+                                  disabled={(claimsPage[m.id] || 1) === getClaimsPageCount(m.id)}
+                                  onClick={() => setClaimsPage(cp => ({ ...cp, [m.id]: (cp[m.id] || 1) + 1 }))}
+                                >Next</button>
+                              </div>
+                            </>
+                          ) : (
+                            <div className="text-gray-600">No claims for this merchant.</div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  <div className="flex justify-end items-center mt-4 space-x-2">
+                    <button
+                      className="px-2 py-1 border rounded bg-gray-100"
+                      disabled={merchantPage === 1}
+                      onClick={() => setMerchantPage(merchantPage - 1)}
+                    >Previous</button>
+                    <span>Page {merchantPage} of {merchantPageCount}</span>
+                    <button
+                      className="px-2 py-1 border rounded bg-gray-100"
+                      disabled={merchantPage === merchantPageCount}
+                      onClick={() => setMerchantPage(merchantPage + 1)}
+                    >Next</button>
                   </div>
-                ))
+                </>
               ) : (
                 <div className="text-gray-600">No merchants found.</div>
               )}
