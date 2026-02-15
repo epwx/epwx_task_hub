@@ -18,34 +18,41 @@ const ADMIN_WALLETS = (process.env.NEXT_PUBLIC_ADMIN_WALLETS || "")
   .filter(Boolean);
 
 export default function MerchantAdminPage() {
-    // Pagination state for merchants
-    const [merchantPage, setMerchantPage] = useState(1);
-    const merchantsPerPage = 5;
-    const paginatedMerchants = Array.isArray(merchants)
-      ? merchants.filter(m => m && typeof m === 'object' && m.id != null).slice((merchantPage - 1) * merchantsPerPage, merchantPage * merchantsPerPage)
-      : [];
-    const merchantPageCount = Array.isArray(merchants)
-      ? Math.ceil(merchants.filter(m => m && typeof m === 'object' && m.id != null).length / merchantsPerPage)
-      : 1;
-
-    // Pagination state for claims per merchant
-    const [claimsPage, setClaimsPage] = useState<{ [merchantId: number]: number }>({});
-    const claimsPerPage = 5;
-    const getPaginatedClaims = (merchantId: number) => {
-      const allClaims = Array.isArray(claims[merchantId]) ? claims[merchantId].filter(claim => claim && claim.id != null) : [];
-      const page = claimsPage[merchantId] || 1;
-      return allClaims.slice((page - 1) * claimsPerPage, page * claimsPerPage);
-    };
-    const getClaimsPageCount = (merchantId: number) => {
-      const allClaims = Array.isArray(claims[merchantId]) ? claims[merchantId].filter(claim => claim && claim.id != null) : [];
-      return Math.ceil(allClaims.length / claimsPerPage) || 1;
-    };
   const { address } = useAccount();
   const [form, setForm] = useState({ name: "", wallet: "", address: "", longitude: "", latitude: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [merchants, setMerchants] = useState<any[]>([]);
+  // Track which merchant's claims are expanded and their claims
+  const [expanded, setExpanded] = useState<{ [merchantId: number]: boolean }>({});
+  const [claims, setClaims] = useState<{ [merchantId: number]: Claim[] }>({});
+  const [claimsLoading, setClaimsLoading] = useState<{ [merchantId: number]: boolean }>({});
+  const [claimsError, setClaimsError] = useState<{ [merchantId: number]: string | null }>({});
+
+  // Pagination state for merchants
+  const [merchantPage, setMerchantPage] = useState(1);
+  const merchantsPerPage = 5;
+  const paginatedMerchants = Array.isArray(merchants)
+    ? merchants.filter(m => m && typeof m === 'object' && m.id != null).slice((merchantPage - 1) * merchantsPerPage, merchantPage * merchantsPerPage)
+    : [];
+  const merchantPageCount = Array.isArray(merchants)
+    ? Math.ceil(merchants.filter(m => m && typeof m === 'object' && m.id != null).length / merchantsPerPage)
+    : 1;
+
+  // Pagination state for claims per merchant
+  const [claimsPage, setClaimsPage] = useState<{ [merchantId: number]: number }>({});
+  const claimsPerPage = 5;
+  const getPaginatedClaims = (merchantId: number) => {
+    const allClaims = Array.isArray(claims[merchantId]) ? claims[merchantId].filter(claim => claim && claim.id != null) : [];
+    const page = claimsPage[merchantId] || 1;
+    return allClaims.slice((page - 1) * claimsPerPage, page * claimsPerPage);
+  };
+  const getClaimsPageCount = (merchantId: number) => {
+    const allClaims = Array.isArray(claims[merchantId]) ? claims[merchantId].filter(claim => claim && claim.id != null) : [];
+    return Math.ceil(allClaims.length / claimsPerPage) || 1;
+  };
+  // ...existing code...
 
   const fetchMerchants = async () => {
     setLoading(true);
@@ -96,12 +103,7 @@ export default function MerchantAdminPage() {
   }
 
   const notAdmin = !address || !ADMIN_WALLETS.includes(address.toLowerCase());
-
-  // Track which merchant's claims are expanded and their claims
-  const [expanded, setExpanded] = useState<{ [merchantId: number]: boolean }>({});
-  const [claims, setClaims] = useState<{ [merchantId: number]: Claim[] }>({});
-  const [claimsLoading, setClaimsLoading] = useState<{ [merchantId: number]: boolean }>({});
-  const [claimsError, setClaimsError] = useState<{ [merchantId: number]: string | null }>({});
+  // ...existing code...
 
   // ...existing code...
 
