@@ -81,15 +81,7 @@ export default function MerchantAdminPage() {
   const [claimsLoading, setClaimsLoading] = useState<{ [merchantId: number]: boolean }>({});
   const [claimsError, setClaimsError] = useState<{ [merchantId: number]: string | null }>({});
 
-  // Debug: Log merchants and claims to catch undefined/null
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      // eslint-disable-next-line no-console
-      console.log('DEBUG merchants:', merchants);
-      // eslint-disable-next-line no-console
-      console.log('DEBUG claims:', claims);
-    }
-  }, [merchants, claims]);
+  // ...existing code...
 
   const toggleClaims = async (merchantId: number) => {
     setExpanded(exp => ({ ...exp, [merchantId]: !exp[merchantId] }));
