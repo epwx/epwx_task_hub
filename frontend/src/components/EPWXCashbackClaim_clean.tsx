@@ -1,14 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
+import { useWalletClient, useWriteContract } from "wagmi";
+import { ethers } from "ethers";
 
 export function EPWXCashbackClaim() {
   const { address } = useAccount();
+  const { data: walletClient } = useWalletClient();
+  const { writeContractAsync } = useWriteContract();
 
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [claiming, setClaiming] = useState<string | null>(null);
   const [claimed, setClaimed] = useState<{ [txHash: string]: boolean }>({});
   const [error, setError] = useState<string | null>(null);
+  const [marking, setMarking] = useState<string | null>(null);
 
   // Fetch claimed transactions for this wallet
   useEffect(() => {
@@ -54,6 +59,57 @@ export function EPWXCashbackClaim() {
       return env.split(",").map((w) => w.trim().toLowerCase()).filter(Boolean);
     }
     return [];
+  };
+
+  // Admin distribute handler
+  const distributeCashback = async (tx: any) => {
+    setMarking(tx.txHash);
+    setError(null);
+    try {
+      const adminWallets = getAdminWallets();
+      if (!address || !adminWallets.includes(address.toLowerCase())) {
+        setError("Admin wallet not connected");
+        setMarking(null);
+        return;
+      }
+      // Convert amount to correct decimals (EPWX uses 9 decimals)
+      const roundedAmount = Number(tx.amount).toFixed(9);
+      const amount = ethers.parseUnits(roundedAmount, 9).toString();
+      await writeContractAsync({
+        address: process.env.NEXT_PUBLIC_EPWX_TOKEN || "0xYourTokenAddressHere" as `0x${string}`,
+        abi: [
+          {
+            "inputs": [
+              { "internalType": "address", "name": "to", "type": "address" },
+              { "internalType": "uint256", "name": "amount", "type": "uint256" }
+            ],
+            "name": "transfer",
+            "outputs": [
+              { "internalType": "bool", "name": "", "type": "bool" }
+            ],
+            "stateMutability": "nonpayable",
+            "type": "function"
+          }
+        ],
+        functionName: "transfer",
+        args: [tx.wallet, amount],
+      });
+      // Mark as paid in backend
+      const res = await fetch("/api/epwx/claims/mark-paid", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ admin: address, claimId: tx.id }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setClaimed((prev) => ({ ...prev, [tx.txHash]: true }));
+      } else {
+        setError(data.error || "Failed to mark as paid");
+      }
+    } catch (e: any) {
+      setError(e?.message || "Failed to distribute cashback");
+    }
+    setMarking(null);
   };
 
   const handleClaim = async (tx: any) => {
@@ -104,11 +160,22 @@ export function EPWXCashbackClaim() {
                   <td className="py-2 px-2 text-xs text-gray-900 bg-white">{tx.amount}</td>
                   <td className="py-2 px-2">
                     {(() => {
-                      if (!address) return true;
+                      if (!address) return null;
                       const adminWallets = getAdminWallets();
-                      return !adminWallets.includes(address.toLowerCase());
-                    })() ? (
-                      !claimed[tx.txHash] ? (
+                      if (adminWallets.includes(address.toLowerCase())) {
+                        // Admin action
+                        return (
+                          <button
+                            className="bg-blue-600 text-white px-2 py-1 rounded-lg hover:bg-blue-700 text-xs md:text-sm w-full md:w-auto"
+                            onClick={() => distributeCashback(tx)}
+                            disabled={marking === tx.txHash}
+                          >
+                            {marking === tx.txHash ? "Distributing..." : "Distribute EPWX"}
+                          </button>
+                        );
+                      }
+                      // User action
+                      return !claimed[tx.txHash] ? (
                         <button
                           className="bg-green-500 text-white px-2 py-1 rounded-lg hover:bg-green-600 text-xs md:text-sm w-full md:w-auto"
                           onClick={() => handleClaim(tx)}
@@ -118,8 +185,8 @@ export function EPWXCashbackClaim() {
                         </button>
                       ) : (
                         <span className="text-green-600 font-bold">Claimed</span>
-                      )
-                    ) : null}
+                      );
+                    })()}
                   </td>
                 </tr>
               ))}
