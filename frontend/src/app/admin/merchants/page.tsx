@@ -178,7 +178,7 @@ export default function MerchantAdminPage() {
                           ))}
                         </tbody>
                       </table>
-                    ) : <div className="text-gray-600">No claims for this merchant.</div>)
+                    ) : <div className="text-gray-600">No claims for this merchant.</div>
                 </div>
               )}
             </div>
