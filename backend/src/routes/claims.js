@@ -8,12 +8,10 @@ const router = express.Router();
 // POST /api/epwx/claims/mark-paid - Mark claim as paid (admin only)
 router.post('/epwx/claims/mark-paid', async (req, res) => {
   const { admin, claimId } = req.body;
-  console.log('Received admin value:', admin, 'Expected:', process.env.ADMIN_WALLET);
-  if (
-    !admin ||
-    !process.env.ADMIN_WALLET ||
-    admin.toLowerCase() !== process.env.ADMIN_WALLET.toLowerCase()
-  ) {
+  // Support multiple admin wallets (comma-separated, case-insensitive)
+  const adminWallets = (process.env.NEXT_PUBLIC_ADMIN_WALLETS || '').split(',').map(a => a.trim().toLowerCase());
+  console.log('Received admin value:', admin, 'Allowed:', adminWallets);
+  if (!admin || !adminWallets.length || !adminWallets.includes(admin.toLowerCase())) {
     return res.status(403).json({ error: 'Unauthorized' });
   }
   if (!claimId) return res.status(400).json({ error: 'claimId is required' });
@@ -117,7 +115,7 @@ router.get('/', async (req, res) => {
     let where = {};
     if (merchantId) {
       where = { merchantId };
-    } else if (admin === '0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735') {
+    } else if (admin && adminWallets.includes(admin.toLowerCase())) {
       if (status) where = { status };
     } else {
       return res.status(403).json({ error: 'Unauthorized' });
@@ -132,7 +130,7 @@ router.get('/', async (req, res) => {
 // POST /api/claims/:id/mark-status - Update claim status (admin only)
 router.post('/:id/mark-status', async (req, res) => {
   const { admin, status } = req.body;
-  if (admin !== '0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735') {
+  if (!admin || !adminWallets.length || !adminWallets.includes(admin.toLowerCase())) {
     return res.status(403).json({ error: 'Unauthorized' });
   }
   if (!status) return res.status(400).json({ error: 'status is required' });
