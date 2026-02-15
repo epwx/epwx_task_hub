@@ -1,14 +1,36 @@
 import express from 'express';
-import { Claim } from '../models/index.js';
+import { Claim, Merchant } from '../models/index.js';
 import { Op } from 'sequelize';
 
 const router = express.Router();
+
+function haversineDistance(lat1, lon1, lat2, lon2) {
+  const toRad = x => (x * Math.PI) / 180;
+  const R = 6371000; // meters
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
 
 // POST /api/claims/add - Add a new customer claim
 router.post('/add', async (req, res) => {
   const { merchantId, customer, bill, lat, lng } = req.body;
   if (!merchantId || !customer || lat == null || lng == null) {
     return res.status(400).json({ error: 'Missing required fields' });
+  }
+  // Geofencing: check if user is near merchant
+  const merchant = await Merchant.findByPk(merchantId);
+  if (!merchant) {
+    return res.status(404).json({ error: 'Merchant not found' });
+  }
+  const distance = haversineDistance(Number(lat), Number(lng), merchant.latitude, merchant.longitude);
+  if (distance > 100) {
+    return res.status(403).json({ error: `You must be at the shop to claim. Distance: ${distance.toFixed(1)} meters.` });
   }
   const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.connection?.remoteAddress || req.socket?.remoteAddress;
   const now = new Date();
