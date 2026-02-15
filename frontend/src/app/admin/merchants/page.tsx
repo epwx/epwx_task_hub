@@ -36,7 +36,7 @@ export default function MerchantAdminPage() {
       setError(e?.message || "Failed to fetch merchants");
     }
     setLoading(false);
-  };
+  }
 
   useEffect(() => {
     if (address && ADMIN_WALLETS.includes(address.toLowerCase())) {
