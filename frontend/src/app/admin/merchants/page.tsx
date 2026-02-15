@@ -141,52 +141,56 @@ export default function MerchantAdminPage() {
       <h3 className="text-xl font-bold mt-8 mb-2">All Merchants</h3>
       {loading ? <div>Loading...</div> : (
         <div className="space-y-4 mt-2">
-          {Array.isArray(merchants) && merchants.filter(m => m && typeof m === 'object' && m.id != null).map((m) => (
-            <div key={String(m.id)} className="bg-white rounded shadow p-4 border flex flex-col text-sm text-gray-800">
-              <div className="font-bold text-lg mb-2 text-gray-900">{m.name}</div>
-              <div><span className="font-semibold text-gray-700">Wallet:</span> <span className="break-all text-gray-800">{m.wallet}</span></div>
-              <div><span className="font-semibold text-gray-700">Address:</span> <span className="text-gray-800">{m.address}</span></div>
-              <div><span className="font-semibold text-gray-700">Latitude:</span> <span className="text-gray-800">{m.latitude}</span></div>
-              <div><span className="font-semibold text-gray-700">Longitude:</span> <span className="text-gray-800">{m.longitude}</span></div>
-              <button className="mt-2 text-blue-600 underline self-start" onClick={() => toggleClaims(m.id)}>
-                {expanded[m.id] ? "Hide Claims" : "View Claims"}
-              </button>
-              {expanded[m.id] && (
-                <div className="mt-2 w-full">
-                  {claimsLoading[m.id] ? (
-                    <div>Loading claims...</div>
-                  ) : claimsError[m.id] ? (
-                    <div className="text-red-600">{claimsError[m.id]}</div>
-                  ) : Array.isArray(claims[m.id]) && claims[m.id].length > 0 ? (
-                    <table className="w-full border mt-2 text-xs">
-                      <thead>
-                        <tr className="bg-gray-100">
-                          <th className="p-1 border">ID</th>
-                          <th className="p-1 border">Customer</th>
-                          <th className="p-1 border">Bill</th>
-                          <th className="p-1 border">Status</th>
-                          <th className="p-1 border">Date</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {Array.isArray(claims[m.id]) && claims[m.id].filter(claim => claim && claim.id != null).map(claim => (
-                          <tr key={String(claim.id)}>
-                            <td className="p-1 border">{claim.id}</td>
-                            <td className="p-1 border">{claim.customer}</td>
-                            <td className="p-1 border">{claim.bill}</td>
-                            <td className="p-1 border">{claim.status}</td>
-                            <td className="p-1 border">{new Date(claim.createdAt).toLocaleString()}</td>
+          {Array.isArray(merchants) && merchants.length > 0 ? (
+            merchants.filter(m => m && typeof m === 'object' && m.id != null).map((m) => (
+              <div key={String(m.id)} className="bg-white rounded shadow p-4 border flex flex-col text-sm text-gray-800">
+                <div className="font-bold text-lg mb-2 text-gray-900">{m.name}</div>
+                <div><span className="font-semibold text-gray-700">Wallet:</span> <span className="break-all text-gray-800">{m.wallet}</span></div>
+                <div><span className="font-semibold text-gray-700">Address:</span> <span className="text-gray-800">{m.address}</span></div>
+                <div><span className="font-semibold text-gray-700">Latitude:</span> <span className="text-gray-800">{m.latitude}</span></div>
+                <div><span className="font-semibold text-gray-700">Longitude:</span> <span className="text-gray-800">{m.longitude}</span></div>
+                <button className="mt-2 text-blue-600 underline self-start" onClick={() => toggleClaims(m.id)}>
+                  {expanded[m.id] ? "Hide Claims" : "View Claims"}
+                </button>
+                {expanded[m.id] && (
+                  <div className="mt-2 w-full">
+                    {claimsLoading[m.id] ? (
+                      <div>Loading claims...</div>
+                    ) : claimsError[m.id] ? (
+                      <div className="text-red-600">{claimsError[m.id]}</div>
+                    ) : (Array.isArray(claims[m.id]) && claims[m.id].length > 0 ? (
+                      <table className="w-full border mt-2 text-xs">
+                        <thead>
+                          <tr className="bg-gray-100">
+                            <th className="p-1 border">ID</th>
+                            <th className="p-1 border">Customer</th>
+                            <th className="p-1 border">Bill</th>
+                            <th className="p-1 border">Status</th>
+                            <th className="p-1 border">Date</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  ) : (
-                    <div className="text-gray-600">No claims for this merchant.</div>
-                  )}
-                </div>
-              )}
-            </div>
-          ))}
+                        </thead>
+                        <tbody>
+                          {Array.isArray(claims[m.id]) && claims[m.id].length > 0 && claims[m.id].filter(claim => claim && claim.id != null).map(claim => (
+                            <tr key={String(claim.id)}>
+                              <td className="p-1 border">{claim.id}</td>
+                              <td className="p-1 border">{claim.customer}</td>
+                              <td className="p-1 border">{claim.bill}</td>
+                              <td className="p-1 border">{claim.status}</td>
+                              <td className="p-1 border">{new Date(claim.createdAt).toLocaleString()}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    ) : (
+                      <div className="text-gray-600">No claims for this merchant.</div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))
+          ) : (
+            <div className="text-gray-600">No merchants found.</div>
+          )}
         </div>
       )}
     </div>
