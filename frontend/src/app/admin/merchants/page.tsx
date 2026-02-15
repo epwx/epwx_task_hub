@@ -46,7 +46,7 @@ export default function MerchantAdminPage() {
 
   const handleChange = (e: any) => {
     setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  }
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
