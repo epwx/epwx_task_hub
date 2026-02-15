@@ -76,21 +76,8 @@ export function EPWXCashbackClaim() {
       const roundedAmount = Number(tx.amount).toFixed(9);
       const amount = ethers.parseUnits(roundedAmount, 9).toString();
       await writeContractAsync({
-        address: process.env.NEXT_PUBLIC_EPWX_TOKEN || "0xYourTokenAddressHere" as `0x${string}`,
-        abi: [
-          {
-            "inputs": [
-              { "internalType": "address", "name": "to", "type": "address" },
-              { "internalType": "uint256", "name": "amount", "type": "uint256" }
-            ],
-            "name": "transfer",
-            "outputs": [
-              { "internalType": "bool", "name": "", "type": "bool" }
-            ],
-            "stateMutability": "nonpayable",
-            "type": "function"
-          }
-        ],
+        address: EPWX_TOKEN_ADDRESS,
+        abi: EPWX_TOKEN_ABI,
         functionName: "transfer",
         args: [tx.wallet, amount],
       });
@@ -224,3 +211,20 @@ export function EPWXCashbackClaim() {
     </div>
   );
 }
+
+// Define the EPWX token address and ABI
+const EPWX_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_EPWX_TOKEN as `0x${string}`) || "0x0000000000000000000000000000000000000000";
+const EPWX_TOKEN_ABI = [
+  {
+    "inputs": [
+      { "internalType": "address", "name": "to", "type": "address" },
+      { "internalType": "uint256", "name": "amount", "type": "uint256" }
+    ],
+    "name": "transfer",
+    "outputs": [
+      { "internalType": "bool", "name": "", "type": "bool" }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+];
