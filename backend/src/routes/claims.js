@@ -1,3 +1,10 @@
+
+import express from 'express';
+import { Claim, Merchant } from '../models/index.js';
+import { Op } from 'sequelize';
+
+const router = express.Router();
+
 // POST /api/epwx/claims/mark-paid - Mark claim as paid (admin only)
 router.post('/epwx/claims/mark-paid', async (req, res) => {
   const { admin, claimId } = req.body;
@@ -15,9 +22,6 @@ router.post('/epwx/claims/mark-paid', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-import express from 'express';
-import { Claim, Merchant } from '../models/index.js';
-import { Op } from 'sequelize';
 
 const router = express.Router();
 
