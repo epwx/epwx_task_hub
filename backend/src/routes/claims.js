@@ -1,3 +1,20 @@
+// POST /api/epwx/claims/mark-paid - Mark claim as paid (admin only)
+router.post('/epwx/claims/mark-paid', async (req, res) => {
+  const { admin, claimId } = req.body;
+  if (admin !== '0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735') {
+    return res.status(403).json({ error: 'Unauthorized' });
+  }
+  if (!claimId) return res.status(400).json({ error: 'claimId is required' });
+  try {
+    const claim = await Claim.findByPk(claimId);
+    if (!claim) return res.status(404).json({ error: 'Claim not found' });
+    claim.status = 'paid';
+    await claim.save();
+    res.json({ success: true, claim });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 import express from 'express';
 import { Claim, Merchant } from '../models/index.js';
 import { Op } from 'sequelize';
