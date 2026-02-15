@@ -9,12 +9,26 @@ router.post('/add', async (req, res) => {
   if (!merchantId || !customer || lat == null || lng == null) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
-  // Restrict by IP for 24 hours
   const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.connection?.remoteAddress || req.socket?.remoteAddress;
   const now = new Date();
   const since = new Date(now.getTime() - 24 * 60 * 60 * 1000);
   try {
-    // Check if this IP has claimed in last 24h
+    // Restrict by customer (wallet) for 24 hours
+    const walletClaim = await Claim.findOne({
+      where: {
+        customer: customer.toLowerCase(),
+        createdAt: { $gte: since }
+      }
+    });
+    if (walletClaim) {
+      const lastClaim = new Date(walletClaim.createdAt);
+      const nextClaim = new Date(lastClaim.getTime() + 24 * 60 * 60 * 1000);
+      const msLeft = nextClaim - now;
+      const hours = Math.floor(msLeft / (1000 * 60 * 60));
+      const minutes = Math.floor((msLeft % (1000 * 60 * 60)) / (1000 * 60));
+      return res.status(429).json({ error: `Wallet already claimed. Try again in ${hours}h ${minutes}m.` });
+    }
+    // Restrict by IP for 24 hours
     const ipClaim = await Claim.findOne({
       where: {
         ip,
@@ -30,13 +44,12 @@ router.post('/add', async (req, res) => {
       return res.status(429).json({ error: `IP address already claimed. Try again in ${hours}h ${minutes}m.` });
     }
     // Create claim with IP
-    const claim = await Claim.create({ merchantId, customer, bill, lat, lng, status: 'pending', ip });
+    const claim = await Claim.create({ merchantId, customer: customer.toLowerCase(), bill, lat, lng, status: 'pending', ip });
     res.json({ success: true, claim });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
-
 
 // GET /api/claims - List claims
 // - If merchantId is provided, return claims for that merchant (view-only, no admin required)
