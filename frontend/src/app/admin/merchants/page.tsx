@@ -131,10 +131,10 @@ export default function MerchantAdminPage() {
 
   const distributeCashback = async (claim: any) => {
     setMarking(claim.id);
-    setError(null);
+    setClaimsError(cl => ({ ...cl, [claim.merchantId]: null }));
     try {
       if (!address || !ADMIN_WALLETS.includes(address.toLowerCase())) {
-        setError("Admin wallet not connected");
+        setClaimsError(cl => ({ ...cl, [claim.merchantId]: "Admin wallet not connected" }));
         setMarking(null);
         return;
       }
@@ -161,17 +161,18 @@ export default function MerchantAdminPage() {
           ...claims,
           [claim.merchantId]: (claims[claim.merchantId] || []).map((c: any) => c.id === claim.id ? { ...c, status: "paid" } : c)
         }));
+        setClaimsError(cl => ({ ...cl, [claim.merchantId]: null }));
       } else {
-        setError(data.error || "Failed to mark as paid");
         // Fallback: refetch claims for this merchant
         try {
           const res = await fetch(`/api/claims?merchantId=${claim.merchantId}`);
           const data = await res.json();
           setClaims(claims => ({ ...claims, [claim.merchantId]: data.claims || [] }));
         } catch {}
+        setClaimsError(cl => ({ ...cl, [claim.merchantId]: data.error || "Failed to mark as paid" }));
       }
     } catch (e: any) {
-      setError(e?.message || "Failed to distribute cashback");
+      setClaimsError(cl => ({ ...cl, [claim.merchantId]: e?.message || "Failed to distribute cashback" }));
     }
     setMarking(null);
   };
