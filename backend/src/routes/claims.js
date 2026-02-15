@@ -1,3 +1,5 @@
+// DEBUG: Print admin wallets env variable on backend startup
+console.log('BACKEND ENV NEXT_PUBLIC_ADMIN_WALLETS:', process.env.NEXT_PUBLIC_ADMIN_WALLETS);
 
 import express from 'express';
 import { Claim, Merchant } from '../models/index.js';
