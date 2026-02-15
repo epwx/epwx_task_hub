@@ -8,7 +8,12 @@ const router = express.Router();
 // POST /api/epwx/claims/mark-paid - Mark claim as paid (admin only)
 router.post('/epwx/claims/mark-paid', async (req, res) => {
   const { admin, claimId } = req.body;
-  if (admin !== '0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735') {
+  console.log('Received admin value:', admin, 'Expected:', process.env.ADMIN_WALLET);
+  if (
+    !admin ||
+    !process.env.ADMIN_WALLET ||
+    admin.toLowerCase() !== process.env.ADMIN_WALLET.toLowerCase()
+  ) {
     return res.status(403).json({ error: 'Unauthorized' });
   }
   if (!claimId) return res.status(400).json({ error: 'claimId is required' });
