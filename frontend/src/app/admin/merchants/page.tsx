@@ -156,12 +156,19 @@ export default function MerchantAdminPage() {
       });
       const data = await res.json();
       if (data.success) {
+        // Optimistically update status to paid
         setClaims(claims => ({
           ...claims,
           [claim.merchantId]: (claims[claim.merchantId] || []).map((c: any) => c.id === claim.id ? { ...c, status: "paid" } : c)
         }));
       } else {
         setError(data.error || "Failed to mark as paid");
+        // Fallback: refetch claims for this merchant
+        try {
+          const res = await fetch(`/api/claims?merchantId=${claim.merchantId}`);
+          const data = await res.json();
+          setClaims(claims => ({ ...claims, [claim.merchantId]: data.claims || [] }));
+        } catch {}
       }
     } catch (e: any) {
       setError(e?.message || "Failed to distribute cashback");
