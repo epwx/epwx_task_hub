@@ -26,12 +26,6 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
   return (
     <header className="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl shadow-lg border-b border-gray-100 dark:border-gray-800">
       <div className="container mx-auto px-4 py-4">
-        {/* Debug: Show connected address and admin wallets and admin check */}
-        <div className="text-xs text-red-500 font-mono mb-2">
-          <div>Connected: {address}</div>
-          <div>Admins: {adminWallets.join(', ')}</div>
-          <div>isAdmin: {String(isAdmin)}</div>
-        </div>
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 group">
