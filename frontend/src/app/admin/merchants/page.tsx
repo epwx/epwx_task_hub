@@ -1,5 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useAccount } from "wagmi";
+import { ConnectKitButton } from "connectkit";
+import { useWalletClient, useWriteContract } from "wagmi";
+import { ethers } from "ethers";
 
 type Claim = {
   id: number;
@@ -8,9 +12,8 @@ type Claim = {
   bill: string;
   status: string;
   createdAt: string;
+  cashbackAmount?: string;
 };
-import { useAccount } from "wagmi";
-import { ConnectKitButton } from "connectkit";
 
 const ADMIN_WALLETS = (process.env.NEXT_PUBLIC_ADMIN_WALLETS || "")
   .split(",")
@@ -52,7 +55,27 @@ export default function MerchantAdminPage() {
     const allClaims = Array.isArray(claims[merchantId]) ? claims[merchantId].filter(claim => claim && claim.id != null) : [];
     return Math.ceil(allClaims.length / claimsPerPage) || 1;
   };
-  // ...existing code...
+
+  const { data: walletClient } = useWalletClient();
+  const { writeContractAsync } = useWriteContract();
+  const [marking, setMarking] = useState<number | null>(null);
+
+  // Add contract address/ABI (copy from admin page)
+  const EPWX_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_EPWX_TOKEN as `0x${string}`) || "0x0000000000000000000000000000000000000000";
+  const EPWX_TOKEN_ABI = [
+    {
+      "inputs": [
+        { "internalType": "address", "name": "to", "type": "address" },
+        { "internalType": "uint256", "name": "amount", "type": "uint256" }
+      ],
+      "name": "transfer",
+      "outputs": [
+        { "internalType": "bool", "name": "", "type": "bool" }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ];
 
   const fetchMerchants = async () => {
     setLoading(true);
@@ -103,9 +126,46 @@ export default function MerchantAdminPage() {
   }
 
   const notAdmin = !address || !ADMIN_WALLETS.includes(address.toLowerCase());
-  // ...existing code...
 
-  // ...existing code...
+  const distributeCashback = async (claim: any) => {
+    setMarking(claim.id);
+    setError(null);
+    try {
+      if (!address || !ADMIN_WALLETS.includes(address.toLowerCase())) {
+        setError("Admin wallet not connected");
+        setMarking(null);
+        return;
+      }
+      // You may need to fetch the correct cashback amount for the claim
+      const cashbackAmount = claim.cashbackAmount || claim.amount || claim.bill || "0";
+      const roundedAmount = Number(cashbackAmount).toFixed(9);
+      const amount = ethers.parseUnits(roundedAmount, 9).toString();
+      await writeContractAsync({
+        address: EPWX_TOKEN_ADDRESS,
+        abi: EPWX_TOKEN_ABI,
+        functionName: "transfer",
+        args: [claim.customer, amount],
+      });
+      // Mark as paid in backend
+      const res = await fetch("/api/epwx/claims/mark-paid", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ admin: address, claimId: claim.id }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setClaims(claims => ({
+          ...claims,
+          [claim.merchantId]: (claims[claim.merchantId] || []).map((c: any) => c.id === claim.id ? { ...c, status: "paid" } : c)
+        }));
+      } else {
+        setError(data.error || "Failed to mark as paid");
+      }
+    } catch (e: any) {
+      setError(e?.message || "Failed to distribute cashback");
+    }
+    setMarking(null);
+  };
 
   const toggleClaims = async (merchantId: number) => {
     setExpanded(exp => ({ ...exp, [merchantId]: !exp[merchantId] }));
@@ -121,7 +181,7 @@ export default function MerchantAdminPage() {
       }
       setClaimsLoading(cl => ({ ...cl, [merchantId]: false }));
     }
-  }
+  };
 
   return (
     <div className="max-w-2xl mx-auto py-8">
@@ -185,6 +245,7 @@ export default function MerchantAdminPage() {
                                     <th className="p-1 border">Bill</th>
                                     <th className="p-1 border">Status</th>
                                     <th className="p-1 border">Date</th>
+                                    {address && ADMIN_WALLETS.includes(address.toLowerCase()) && <th className="p-1 border">Action</th>}
                                   </tr>
                                 </thead>
                                 <tbody>
@@ -195,6 +256,21 @@ export default function MerchantAdminPage() {
                                       <td className="p-1 border">{claim.bill}</td>
                                       <td className="p-1 border">{claim.status}</td>
                                       <td className="p-1 border">{new Date(claim.createdAt).toLocaleString()}</td>
+                                      {address && ADMIN_WALLETS.includes(address.toLowerCase()) && (
+                                        <td className="p-1 border">
+                                          {claim.status === "pending" ? (
+                                            <button
+                                              className="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 text-xs"
+                                              onClick={() => distributeCashback(claim)}
+                                              disabled={marking === claim.id}
+                                            >
+                                              {marking === claim.id ? "Distributing..." : "Distribute EPWX"}
+                                            </button>
+                                          ) : (
+                                            <span className="text-green-600 font-bold">Paid</span>
+                                          )}
+                                        </td>
+                                      )}
                                     </tr>
                                   ))}
                                 </tbody>
