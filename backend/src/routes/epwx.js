@@ -256,7 +256,8 @@ router.get('/telegram-verified', async (req, res) => {
 router.get('/daily-claims', async (req, res) => {
   const { admin, wallet, status, limit } = req.query;
   if (admin) {
-    if (admin !== '0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735') {
+    const ADMIN_WALLETS = (process.env.ADMIN_WALLETS || '').split(',').map(w => w.trim().toLowerCase()).filter(Boolean);
+    if (!ADMIN_WALLETS.includes(admin.toLowerCase())) {
       return res.status(403).json({ error: 'Unauthorized' });
     }
     try {
@@ -301,7 +302,8 @@ router.get('/daily-claims', async (req, res) => {
 // POST /api/epwx/daily-claims/mark-paid
 router.post('/daily-claims/mark-paid', async (req, res) => {
   const { admin, claimId } = req.body;
-  if (admin !== '0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735') {
+  const ADMIN_WALLETS = (process.env.ADMIN_WALLETS || '').split(',').map(w => w.trim().toLowerCase()).filter(Boolean);
+  if (!ADMIN_WALLETS.includes(admin.toLowerCase())) {
     return res.status(403).json({ error: 'Unauthorized' });
   }
   try {
