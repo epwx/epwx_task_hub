@@ -1,5 +1,5 @@
 // DEBUG: Print admin wallets env variable on backend startup
-console.log('BACKEND ENV NEXT_PUBLIC_ADMIN_WALLETS:', process.env.NEXT_PUBLIC_ADMIN_WALLETS);
+console.log('BACKEND ENV ADMIN_WALLETS:', process.env.ADMIN_WALLETS);
 
 import express from 'express';
 import { Claim, Merchant } from '../models/index.js';
@@ -11,7 +11,7 @@ const router = express.Router();
 router.post('/epwx/claims/mark-paid', async (req, res) => {
   const { admin, claimId } = req.body;
   // Support multiple admin wallets (comma-separated, case-insensitive)
-  const adminWallets = (process.env.NEXT_PUBLIC_ADMIN_WALLETS || '').split(',').map(a => a.trim().toLowerCase());
+  const adminWallets = (process.env.ADMIN_WALLETS || '').split(',').map(a => a.trim().toLowerCase());
   console.log('Received admin value:', admin, 'Allowed:', adminWallets);
   if (!admin || !adminWallets.length || !adminWallets.includes(admin.toLowerCase())) {
     return res.status(403).json({ error: 'Unauthorized' });
