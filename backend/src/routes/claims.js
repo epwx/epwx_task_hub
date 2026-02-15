@@ -1,5 +1,6 @@
 import express from 'express';
 import { Claim } from '../models/index.js';
+import { Op } from 'sequelize';
 
 const router = express.Router();
 
@@ -12,12 +13,14 @@ router.post('/add', async (req, res) => {
   const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.connection?.remoteAddress || req.socket?.remoteAddress;
   const now = new Date();
   const since = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  const customerLc = customer.toLowerCase();
+  console.log('Claim attempt:', { ip, customer: customerLc });
   try {
     // Restrict by customer (wallet) for 24 hours
     const walletClaim = await Claim.findOne({
       where: {
-        customer: customer.toLowerCase(),
-        createdAt: { $gte: since }
+        customer: customerLc,
+        createdAt: { [Op.gte]: since }
       }
     });
     if (walletClaim) {
@@ -26,13 +29,14 @@ router.post('/add', async (req, res) => {
       const msLeft = nextClaim - now;
       const hours = Math.floor(msLeft / (1000 * 60 * 60));
       const minutes = Math.floor((msLeft % (1000 * 60 * 60)) / (1000 * 60));
+      console.log('Blocked by wallet:', customerLc, 'Last:', lastClaim);
       return res.status(429).json({ error: `Wallet already claimed. Try again in ${hours}h ${minutes}m.` });
     }
     // Restrict by IP for 24 hours
     const ipClaim = await Claim.findOne({
       where: {
         ip,
-        createdAt: { $gte: since }
+        createdAt: { [Op.gte]: since }
       }
     });
     if (ipClaim) {
@@ -41,10 +45,11 @@ router.post('/add', async (req, res) => {
       const msLeft = nextClaim - now;
       const hours = Math.floor(msLeft / (1000 * 60 * 60));
       const minutes = Math.floor((msLeft % (1000 * 60 * 60)) / (1000 * 60));
+      console.log('Blocked by IP:', ip, 'Last:', lastClaim);
       return res.status(429).json({ error: `IP address already claimed. Try again in ${hours}h ${minutes}m.` });
     }
     // Create claim with IP
-    const claim = await Claim.create({ merchantId, customer: customer.toLowerCase(), bill, lat, lng, status: 'pending', ip });
+    const claim = await Claim.create({ merchantId, customer: customerLc, bill, lat, lng, status: 'pending', ip });
     res.json({ success: true, claim });
   } catch (err) {
     res.status(500).json({ error: err.message });
