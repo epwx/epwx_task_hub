@@ -9,6 +9,7 @@ const Claim = sequelize.define('Claim', {
   lat: { type: DataTypes.FLOAT, allowNull: false },
   lng: { type: DataTypes.FLOAT, allowNull: false },
   status: { type: DataTypes.STRING, allowNull: false, defaultValue: 'pending' },
+  ip: { type: DataTypes.STRING, allowNull: false },
   createdAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
   updatedAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
 }, {

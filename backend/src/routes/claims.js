@@ -9,9 +9,28 @@ router.post('/add', async (req, res) => {
   if (!merchantId || !customer || lat == null || lng == null) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
-  // TODO: Add geofencing and 24-hour claim rule validation here
+  // Restrict by IP for 24 hours
+  const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.connection?.remoteAddress || req.socket?.remoteAddress;
+  const now = new Date();
+  const since = new Date(now.getTime() - 24 * 60 * 60 * 1000);
   try {
-    const claim = await Claim.create({ merchantId, customer, bill, lat, lng, status: 'pending' });
+    // Check if this IP has claimed in last 24h
+    const ipClaim = await Claim.findOne({
+      where: {
+        ip,
+        createdAt: { $gte: since }
+      }
+    });
+    if (ipClaim) {
+      const lastClaim = new Date(ipClaim.createdAt);
+      const nextClaim = new Date(lastClaim.getTime() + 24 * 60 * 60 * 1000);
+      const msLeft = nextClaim - now;
+      const hours = Math.floor(msLeft / (1000 * 60 * 60));
+      const minutes = Math.floor((msLeft % (1000 * 60 * 60)) / (1000 * 60));
+      return res.status(429).json({ error: `IP address already claimed. Try again in ${hours}h ${minutes}m.` });
+    }
+    // Create claim with IP
+    const claim = await Claim.create({ merchantId, customer, bill, lat, lng, status: 'pending', ip });
     res.json({ success: true, claim });
   } catch (err) {
     res.status(500).json({ error: err.message });
