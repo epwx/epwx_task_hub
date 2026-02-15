@@ -3,7 +3,7 @@ import express from 'express';
 import { Claim, Merchant } from '../models/index.js';
 import { Op } from 'sequelize';
 
-const router = express.Router();
+
 
 // POST /api/epwx/claims/mark-paid - Mark claim as paid (admin only)
 router.post('/epwx/claims/mark-paid', async (req, res) => {
@@ -23,7 +23,6 @@ router.post('/epwx/claims/mark-paid', async (req, res) => {
   }
 });
 
-const router = express.Router();
 
 function haversineDistance(lat1, lon1, lat2, lon2) {
   const toRad = x => (x * Math.PI) / 180;
