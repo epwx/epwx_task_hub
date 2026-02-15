@@ -71,7 +71,7 @@ export default function MerchantAdminPage() {
       setError(e?.message || "Failed to add merchant");
     }
     setLoading(false);
-  };
+  }
 
   if (!address || !ADMIN_WALLETS.includes(address.toLowerCase())) {
     return (
@@ -112,7 +112,7 @@ export default function MerchantAdminPage() {
       }
       setClaimsLoading(cl => ({ ...cl, [merchantId]: false }));
     }
-  };
+  }
 
   return (
     <div className="max-w-2xl mx-auto py-8">
@@ -153,32 +153,36 @@ export default function MerchantAdminPage() {
               </button>
               {expanded[m.id] && (
                 <div className="mt-2 w-full">
-                  {claimsLoading[m.id] ? <div>Loading claims...</div> :
-                    claimsError[m.id] ? <div className="text-red-600">{claimsError[m.id]}</div> :
-                    (Array.isArray(claims[m.id]) && claims[m.id].length > 0 ? (
-                      <table className="w-full border mt-2 text-xs">
-                        <thead>
-                          <tr className="bg-gray-100">
-                            <th className="p-1 border">ID</th>
-                            <th className="p-1 border">Customer</th>
-                            <th className="p-1 border">Bill</th>
-                            <th className="p-1 border">Status</th>
-                            <th className="p-1 border">Date</th>
+                  {claimsLoading[m.id] ? (
+                    <div>Loading claims...</div>
+                  ) : claimsError[m.id] ? (
+                    <div className="text-red-600">{claimsError[m.id]}</div>
+                  ) : Array.isArray(claims[m.id]) && claims[m.id].length > 0 ? (
+                    <table className="w-full border mt-2 text-xs">
+                      <thead>
+                        <tr className="bg-gray-100">
+                          <th className="p-1 border">ID</th>
+                          <th className="p-1 border">Customer</th>
+                          <th className="p-1 border">Bill</th>
+                          <th className="p-1 border">Status</th>
+                          <th className="p-1 border">Date</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {Array.isArray(claims[m.id]) && claims[m.id].filter(claim => claim && claim.id != null).map(claim => (
+                          <tr key={String(claim.id)}>
+                            <td className="p-1 border">{claim.id}</td>
+                            <td className="p-1 border">{claim.customer}</td>
+                            <td className="p-1 border">{claim.bill}</td>
+                            <td className="p-1 border">{claim.status}</td>
+                            <td className="p-1 border">{new Date(claim.createdAt).toLocaleString()}</td>
                           </tr>
-                        </thead>
-                        <tbody>
-                          {Array.isArray(claims[m.id]) && claims[m.id].filter(claim => claim && claim.id != null).map(claim => (
-                            <tr key={String(claim.id)}>
-                              <td className="p-1 border">{claim.id}</td>
-                              <td className="p-1 border">{claim.customer}</td>
-                              <td className="p-1 border">{claim.bill}</td>
-                              <td className="p-1 border">{claim.status}</td>
-                              <td className="p-1 border">{new Date(claim.createdAt).toLocaleString()}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    ) : <div className="text-gray-600">No claims for this merchant.</div>
+                        ))}
+                      </tbody>
+                    </table>
+                  ) : (
+                    <div className="text-gray-600">No claims for this merchant.</div>
+                  )}
                 </div>
               )}
             </div>
