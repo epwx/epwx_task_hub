@@ -135,6 +135,9 @@ function ClaimPage() {
         <span className="block mt-4 text-gray-700">
           Please enable GPS/location services on your device and allow location access in your browser settings to claim your reward.
         </span>
+        <div className="flex justify-center mt-4">
+          <img src="/enable-location-example.png" alt="Enable location example" className="max-w-xs rounded shadow" />
+        </div>
         <button
           className="mt-6 px-4 py-2 bg-blue-600 text-white rounded font-semibold"
           onClick={handleRetryLocation}
