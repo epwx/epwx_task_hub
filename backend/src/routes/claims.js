@@ -7,36 +7,6 @@ import { Op } from 'sequelize';
 
 const router = express.Router();
 
-// POST /api/epwx/claims/mark-paid - Mark claim as paid (admin only)
-router.post('/epwx/claims/mark-paid', async (req, res) => {
-      // DEBUG: Log route hit and admin values for troubleshooting
-      console.log('--- mark-paid route HIT ---');
-      console.log('admin:', req.body.admin, 'ADMIN_WALLETS:', process.env.ADMIN_WALLETS);
-    // DEBUG: Log the entire request body for troubleshooting
-    console.log('[mark-paid] Incoming req.body:', req.body);
-  const { admin, claimId } = req.body;
-  // Support multiple admin wallets (comma-separated, case-insensitive)
-  const adminWallets = (process.env.ADMIN_WALLETS || '').split(',').map(a => a.trim().toLowerCase());
-  console.log('Received admin value:', admin, 'Allowed:', adminWallets);
-  if (!admin || !adminWallets.length || !adminWallets.includes(admin.toLowerCase())) {
-    return res.status(403).json({ error: 'Unauthorized' });
-  }
-  if (!claimId) return res.status(400).json({ error: 'claimId is required' });
-  try {
-    const claim = await Claim.findByPk(claimId);
-    if (!claim) {
-      console.log('[mark-paid] Claim not found for id:', claimId);
-      return res.status(404).json({ error: 'Claim not found' });
-    }
-    claim.status = 'paid';
-    await claim.save();
-    console.log('[mark-paid] Updated claim:', claim.id, 'status:', claim.status);
-    res.json({ success: true, claim });
-  } catch (err) {
-    console.error('[mark-paid] Error:', err);
-    res.status(500).json({ error: err.message });
-  }
-});
 
 
 function haversineDistance(lat1, lon1, lat2, lon2) {
