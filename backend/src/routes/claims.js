@@ -9,6 +9,9 @@ const router = express.Router();
 
 // POST /api/epwx/claims/mark-paid - Mark claim as paid (admin only)
 router.post('/epwx/claims/mark-paid', async (req, res) => {
+      // DEBUG: Log route hit and admin values for troubleshooting
+      console.log('--- mark-paid route HIT ---');
+      console.log('admin:', req.body.admin, 'ADMIN_WALLETS:', process.env.ADMIN_WALLETS);
     // DEBUG: Log the entire request body for troubleshooting
     console.log('[mark-paid] Incoming req.body:', req.body);
   const { admin, claimId } = req.body;
