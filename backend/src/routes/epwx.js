@@ -1,3 +1,11 @@
+
+import express from 'express';
+import { User, DailyClaim, CashbackClaim, SpecialClaim, TelegramReferral, Claim } from '../models/index.js';
+import { Op } from 'sequelize';
+import { ethers } from 'ethers';
+import { getEPWXPurchaseTransactions } from '../services/epwxCashback.js';
+const router = express.Router();
+
 // POST /api/epwx/claims/mark-paid - Mark claim as paid (admin only)
 router.post('/claims/mark-paid', async (req, res) => {
   // DEBUG: Log route hit and admin values for troubleshooting
@@ -25,13 +33,6 @@ router.post('/claims/mark-paid', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
-import express from 'express';
-import { User, DailyClaim, CashbackClaim, SpecialClaim, TelegramReferral } from '../models/index.js';
-import { Op } from 'sequelize';
-import { ethers } from 'ethers';
-import { getEPWXPurchaseTransactions } from '../services/epwxCashback.js';
-const router = express.Router();
 
 // GET /api/epwx/telegram-referral-rewards?admin=...&status=pending|paid
 router.get('/telegram-referral-rewards', async (req, res) => {
