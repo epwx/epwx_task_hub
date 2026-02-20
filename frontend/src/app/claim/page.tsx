@@ -3,6 +3,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 import { ConnectKitButton } from "connectkit";
 import { useSearchParams } from "next/navigation";
+import ReceiptUploadClaim from "../../components/ReceiptUploadClaim";
 
 function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
   // Haversine formula
@@ -22,16 +23,15 @@ function ClaimPage() {
   const merchantId = searchParams.get("merchant") || searchParams.get("merchantId");
   const [merchantLat, setMerchantLat] = useState<number | null>(null);
   const [merchantLng, setMerchantLng] = useState<number | null>(null);
+  const [merchantInfo, setMerchantInfo] = useState<any | null>(null);
   const [location, setLocation] = useState<GeolocationCoordinates | null>(null);
   const [distance, setDistance] = useState<number | null>(null);
   const [geoError, setGeoError] = useState<string | null>(null);
   const { address } = useAccount();
-  const [form, setForm] = useState({ bill: "" });
   const [claimStatus, setClaimStatus] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
   const [merchantError, setMerchantError] = useState<string | null>(null);
 
-  // Fetch merchant coordinates if not present in URL
+  // Fetch merchant coordinates and info if not present in URL
   useEffect(() => {
     const urlLat = searchParams.get("lat");
     const urlLng = searchParams.get("lng");
@@ -48,6 +48,7 @@ function ClaimPage() {
           if (typeof data.latitude === "number" && typeof data.longitude === "number") {
             setMerchantLat(data.latitude);
             setMerchantLng(data.longitude);
+            setMerchantInfo(data);
           } else {
             setMerchantError("Merchant location not set");
           }
@@ -76,34 +77,7 @@ function ClaimPage() {
     }
   }, [merchantLat, merchantLng]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setLoading(true);
-    setClaimStatus(null);
-    try {
-      const res = await fetch("/api/claims/add", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          merchantId,
-          bill: form.bill,
-          customer: address,
-          lat: location?.latitude,
-          lng: location?.longitude,
-        }),
-      });
-      const data = await res.json();
-      if (data.success) setClaimStatus("Claim submitted successfully!");
-      else setClaimStatus(data.error || "Failed to submit claim");
-    } catch (e: any) {
-      setClaimStatus(e.message || "Failed to submit claim");
-    }
-    setLoading(false);
-  };
+  // ...existing code...
 
   if (merchantError) {
     return <div className="py-16 text-center text-red-600">{merchantError}</div>;
@@ -162,11 +136,7 @@ function ClaimPage() {
           <ConnectKitButton />
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded shadow">
-          <input name="bill" value={form.bill} onChange={handleChange} placeholder="Bill Amount (optional)" className="w-full border rounded px-3 py-2 text-gray-700" />
-          <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded font-semibold" disabled={loading}>{loading ? "Submitting..." : "Submit Claim"}</button>
-          {claimStatus && <div className="mt-2 text-green-600">{claimStatus}</div>}
-        </form>
+        <ReceiptUploadClaim merchantId={merchantId} merchantInfo={merchantInfo} />
       )}
     </div>
   );
