@@ -1,9 +1,29 @@
 // DEBUG: Print admin wallets env variable on backend startup
 console.log('BACKEND ENV ADMIN_WALLETS:', process.env.ADMIN_WALLETS);
 
+
 import express from 'express';
 import { Claim, Merchant } from '../models/index.js';
 import { Op } from 'sequelize';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+
+// Set up multer storage for receipt images
+const uploadDir = path.join(process.cwd(), 'uploads/receipts');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + '-' + file.originalname.replace(/\s+/g, '_'));
+  }
+});
+const upload = multer({ storage });
 
 const router = express.Router();
 
@@ -22,9 +42,14 @@ function haversineDistance(lat1, lon1, lat2, lon2) {
   return R * c;
 }
 
-// POST /api/claims/add - Add a new customer claim
-router.post('/add', async (req, res) => {
+// POST /api/claims/add - Add a new customer claim with receipt image upload
+router.post('/add', upload.single('receiptImage'), async (req, res) => {
   const { merchantId, customer, bill, lat, lng } = req.body;
+  let receiptImagePath = null;
+  if (req.file) {
+    // Store relative path for portability
+    receiptImagePath = path.relative(process.cwd(), req.file.path);
+  }
   if (!merchantId || !customer || lat == null || lng == null) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
@@ -75,8 +100,8 @@ router.post('/add', async (req, res) => {
       console.log('Blocked by IP:', ip, 'Last:', lastClaim);
       return res.status(429).json({ error: `IP address already claimed. Try again in ${hours}h ${minutes}m.` });
     }
-    // Create claim with IP
-    const claim = await Claim.create({ merchantId, customer: customerLc, bill, lat, lng, status: 'pending', ip });
+    // Create claim with IP and receipt image
+    const claim = await Claim.create({ merchantId, customer: customerLc, bill, lat, lng, status: 'pending', ip, receiptImage: receiptImagePath });
     res.json({ success: true, claim });
   } catch (err) {
     res.status(500).json({ error: err.message });
