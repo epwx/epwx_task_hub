@@ -1,6 +1,17 @@
 import React, { useState } from 'react';
 
-const ReceiptUploadClaim = ({ merchantId, merchantInfo }) => {
+interface MerchantInfo {
+  name?: string;
+  address?: string;
+  [key: string]: any;
+}
+
+interface ReceiptUploadClaimProps {
+  merchantId: string | number | null;
+  merchantInfo?: MerchantInfo | null;
+}
+
+const ReceiptUploadClaim: React.FC<ReceiptUploadClaimProps> = ({ merchantId, merchantInfo }) => {
     // Display merchant info if available
     const renderMerchantInfo = () => {
       if (!merchantInfo) return null;
@@ -12,18 +23,18 @@ const ReceiptUploadClaim = ({ merchantId, merchantInfo }) => {
         </div>
       );
     };
-  const [file, setFile] = useState(null);
+  const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
 
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFile(e.target.files && e.target.files[0]);
     setSuccess(false);
     setError('');
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!file) {
       setError('Please upload a receipt image.');
@@ -32,7 +43,7 @@ const ReceiptUploadClaim = ({ merchantId, merchantInfo }) => {
     setLoading(true);
     setError('');
     const formData = new FormData();
-    formData.append('merchantId', merchantId);
+    formData.append('merchantId', merchantId ? String(merchantId) : '');
     formData.append('customer', ''); // Fill with user info if available
     formData.append('receiptImage', file);
     try {
