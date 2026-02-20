@@ -10,6 +10,7 @@ const Claim = sequelize.define('Claim', {
   lng: { type: DataTypes.FLOAT, allowNull: false },
   status: { type: DataTypes.STRING, allowNull: false, defaultValue: 'pending' },
   ip: { type: DataTypes.STRING, allowNull: false },
+  receiptImage: { type: DataTypes.STRING, allowNull: true }, // Path or URL to uploaded receipt image
   createdAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
   updatedAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
 }, {
