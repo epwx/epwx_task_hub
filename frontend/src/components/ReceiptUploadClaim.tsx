@@ -9,9 +9,12 @@ interface MerchantInfo {
 interface ReceiptUploadClaimProps {
   merchantId: string | number | null;
   merchantInfo?: MerchantInfo | null;
+  wallet?: string;
+  lat?: number | null;
+  lng?: number | null;
 }
 
-const ReceiptUploadClaim: React.FC<ReceiptUploadClaimProps> = ({ merchantId, merchantInfo }) => {
+const ReceiptUploadClaim: React.FC<ReceiptUploadClaimProps> = ({ merchantId, merchantInfo, wallet, lat, lng }) => {
     // Display merchant info if available
     const renderMerchantInfo = () => {
       if (!merchantInfo) return null;
@@ -44,7 +47,9 @@ const ReceiptUploadClaim: React.FC<ReceiptUploadClaimProps> = ({ merchantId, mer
     setError('');
     const formData = new FormData();
     formData.append('merchantId', merchantId ? String(merchantId) : '');
-    formData.append('customer', ''); // Fill with user info if available
+    formData.append('customer', wallet || '');
+    if (lat !== undefined && lat !== null) formData.append('lat', String(lat));
+    if (lng !== undefined && lng !== null) formData.append('lng', String(lng));
     formData.append('receiptImage', file);
     try {
       const res = await fetch('/api/claims/add', {

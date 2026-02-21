@@ -136,7 +136,13 @@ function ClaimPage() {
           <ConnectKitButton />
         </div>
       ) : (
-        <ReceiptUploadClaim merchantId={merchantId} merchantInfo={merchantInfo} />
+        <ReceiptUploadClaim 
+          merchantId={merchantId} 
+          merchantInfo={merchantInfo} 
+          wallet={address}
+          lat={location?.latitude}
+          lng={location?.longitude}
+        />
       )}
     </div>
   );
