@@ -4,6 +4,8 @@ import { User, DailyClaim, CashbackClaim, SpecialClaim, TelegramReferral, Claim 
 import { Op } from 'sequelize';
 import { ethers } from 'ethers';
 import { getEPWXPurchaseTransactions } from '../services/epwxCashback.js';
+import { ethers } from 'ethers';
+import { epwxTokenContract } from '../services/blockchain.js';
 const router = express.Router();
 
 // POST /api/epwx/claims/mark-paid - Mark claim as paid (admin only)
@@ -24,10 +26,30 @@ router.post('/claims/mark-paid', async (req, res) => {
       console.log('[mark-paid] Claim not found for id:', claimId);
       return res.status(404).json({ error: 'Claim not found' });
     }
+    // Send EPWX tokens to the customer wallet
+    const recipient = claim.customer;
+    const rewardAmount = ethers.parseUnits('100', 9); // 100 EPWX, adjust decimals as needed
+    let txHash = null;
+    try {
+      if (epwxTokenContract && ethers.isAddress(recipient)) {
+        // You must have a signer with private key loaded for this to work
+        const signer = epwxTokenContract.runner;
+        if (!signer) throw new Error('No signer configured for EPWX token contract');
+        const tx = await epwxTokenContract.connect(signer).transfer(recipient, rewardAmount);
+        await tx.wait();
+        txHash = tx.hash;
+        console.log(`[mark-paid] Sent ${rewardAmount} EPWX to ${recipient}: ${txHash}`);
+      } else {
+        throw new Error('EPWX token contract or recipient address invalid');
+      }
+    } catch (tokenErr) {
+      console.error('[mark-paid] Token transfer failed:', tokenErr);
+      return res.status(500).json({ error: 'Token transfer failed: ' + tokenErr.message });
+    }
     claim.status = 'paid';
     await claim.save();
-    console.log('[mark-paid] Updated claim:', claim.id, 'status:', claim.status);
-    res.json({ success: true, claim });
+    console.log('[mark-paid] Updated claim:', claim.id, 'status:', claim.status, 'tx:', txHash);
+    res.json({ success: true, claim, txHash });
   } catch (err) {
     console.error('[mark-paid] Error:', err);
     res.status(500).json({ error: err.message });
