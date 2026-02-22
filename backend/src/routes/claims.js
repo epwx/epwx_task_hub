@@ -77,7 +77,7 @@ router.post('/add', upload.single('receiptImage'), async (req, res) => {
     });
     if (walletClaim) {
       const lastClaim = new Date(walletClaim.createdAt);
-      const nextClaim = new Date(lastClaim.getTime() + 24 * 60 * 60 * 1000);
+      const nextClaim = new Date(lastClaim.getTime() + 1 * 60 * 1000); // 1 minute interval
       const msLeft = nextClaim - now;
       const hours = Math.floor(msLeft / (1000 * 60 * 60));
       const minutes = Math.floor((msLeft % (1000 * 60 * 60)) / (1000 * 60));
@@ -93,7 +93,7 @@ router.post('/add', upload.single('receiptImage'), async (req, res) => {
     });
     if (ipClaim) {
       const lastClaim = new Date(ipClaim.createdAt);
-      const nextClaim = new Date(lastClaim.getTime() + 24 * 60 * 60 * 1000);
+      const nextClaim = new Date(lastClaim.getTime() + 1 * 60 * 1000); // 1 minute interval
       const msLeft = nextClaim - now;
       const hours = Math.floor(msLeft / (1000 * 60 * 60));
       const minutes = Math.floor((msLeft % (1000 * 60 * 60)) / (1000 * 60));
