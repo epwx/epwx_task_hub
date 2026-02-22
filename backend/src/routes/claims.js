@@ -79,10 +79,13 @@ router.post('/add', upload.single('receiptImage'), async (req, res) => {
       const lastClaim = new Date(walletClaim.createdAt);
       const nextClaim = new Date(lastClaim.getTime() + 1 * 60 * 1000); // 1 minute interval
       const msLeft = nextClaim - now;
-      const hours = Math.floor(msLeft / (1000 * 60 * 60));
-      const minutes = Math.floor((msLeft % (1000 * 60 * 60)) / (1000 * 60));
-      console.log('Blocked by wallet:', customerLc, 'Last:', lastClaim);
-      return res.status(429).json({ error: `Wallet already claimed. Try again in ${hours}h ${minutes}m.` });
+      if (msLeft > 0) {
+        const hours = Math.floor(msLeft / (1000 * 60 * 60));
+        const minutes = Math.floor((msLeft % (1000 * 60 * 60)) / (1000 * 60));
+        console.log('Blocked by wallet:', customerLc, 'Last:', lastClaim);
+        return res.status(429).json({ error: `Wallet already claimed. Try again in ${hours}h ${minutes}m.` });
+      }
+      // else, allow claim
     }
     // Restrict by IP for 24 hours
     const ipClaim = await Claim.findOne({
