@@ -2,7 +2,7 @@
 import express from 'express';
 import { User, DailyClaim, CashbackClaim, SpecialClaim, TelegramReferral, Claim } from '../models/index.js';
 import { Op } from 'sequelize';
-import { ethers } from 'ethers';
+// import { ethers } from 'ethers'; // Removed duplicate import
 import { getEPWXPurchaseTransactions } from '../services/epwxCashback.js';
 import { ethers } from 'ethers';
 import { epwxTokenContract } from '../services/blockchain.js';
