@@ -79,6 +79,9 @@ const ReceiptUploadClaim: React.FC<ReceiptUploadClaimProps> = ({ merchantId, mer
         onChange={handleFileChange}
         className="mb-2"
       />
+      {file && (
+        <div className="mb-2 text-blue-700 font-medium break-all">Selected file: {file.name}</div>
+      )}
       <button
         type="submit"
         disabled={loading}
