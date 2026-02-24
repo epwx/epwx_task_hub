@@ -39,6 +39,13 @@ const PAIR_ABI = [
 // Contract instances (mock addresses if env vars missing)
 const taskManagerContract = TASK_MANAGER ? new ethers.Contract(TASK_MANAGER, TASK_MANAGER_ABI, provider) : null;
 const epwxTokenContract = EPWX_TOKEN_ADDRESS ? new ethers.Contract(EPWX_TOKEN_ADDRESS, ERC20_ABI, provider) : null;
+
+// Token contract with signer for sending transactions
+let epwxTokenWithSigner = null;
+if (process.env.ADMIN_PRIVATE_KEY && epwxTokenContract) {
+  const adminWallet = new ethers.Wallet(process.env.ADMIN_PRIVATE_KEY, provider);
+  epwxTokenWithSigner = epwxTokenContract.connect(adminWallet);
+}
 // Always use PancakeSwap pair for price display
 const pairContract = PANCAKE_EPWX_WETH_PAIR ? new ethers.Contract(PANCAKE_EPWX_WETH_PAIR, PAIR_ABI, provider) : null;
 
@@ -54,6 +61,7 @@ export {
   taskManagerContract,
   taskManagerWithSigner,
   epwxTokenContract,
+  epwxTokenWithSigner,
   pairContract,
   EPWX_TOKEN_ADDRESS,
   EPWX_WETH_PAIR,

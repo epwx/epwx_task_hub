@@ -5,7 +5,7 @@ import { Op } from 'sequelize';
 // import { ethers } from 'ethers'; // Removed duplicate import
 import { getEPWXPurchaseTransactions } from '../services/epwxCashback.js';
 import { ethers } from 'ethers';
-import { epwxTokenContract } from '../services/blockchain.js';
+import { epwxTokenContract, epwxTokenWithSigner } from '../services/blockchain.js';
 const router = express.Router();
 
 // POST /api/epwx/claims/mark-paid - Mark claim as paid (admin only)
@@ -18,22 +18,19 @@ router.post('/claims/mark-paid', async (req, res) => {
   const adminWallets = (process.env.ADMIN_WALLETS || '').split(',').map(a => a.trim().toLowerCase());
   if (!admin || !adminWallets.length || !adminWallets.includes(admin.toLowerCase())) {
     return res.status(403).json({ error: 'Unauthorized' });
-  }
-  if (!claimId) return res.status(400).json({ error: 'claimId is required' });
-  try {
-    const claim = await Claim.findByPk(claimId);
-    if (!claim) {
-      console.log('[mark-paid] Claim not found for id:', claimId);
-      return res.status(404).json({ error: 'Claim not found' });
-    }
-    // Send EPWX tokens to the customer wallet
-    const recipient = claim.customer;
-    const rewardAmount = ethers.parseUnits('100', 9); // 100 EPWX, adjust decimals as needed
-    let txHash = null;
     try {
-      if (epwxTokenContract && ethers.isAddress(recipient)) {
-        // You must have a signer with private key loaded for this to work
-        const signer = epwxTokenContract.runner;
+      if (epwxTokenWithSigner && ethers.isAddress(recipient)) {
+        const tx = await epwxTokenWithSigner.transfer(recipient, rewardAmount);
+        await tx.wait();
+        txHash = tx.hash;
+      } else {
+        throw new Error('EPWX token contract or recipient address invalid');
+      }
+    } catch (err) {
+      claim.status = 'failed';
+      await claim.save();
+      return res.status(500).json({ error: 'Token transfer failed: ' + err.message });
+    }
         if (!signer) throw new Error('No signer configured for EPWX token contract');
         const tx = await epwxTokenContract.connect(signer).transfer(recipient, rewardAmount);
         await tx.wait();
@@ -364,10 +361,8 @@ router.post('/daily-claims/mark-paid', async (req, res) => {
     const rewardAmount = ethers.parseUnits('100', 9); // 100 EPWX, adjust decimals as needed
     let txHash = null;
     try {
-      if (epwxTokenContract && ethers.isAddress(recipient)) {
-        const signer = epwxTokenContract.runner;
-        if (!signer) throw new Error('No signer configured for EPWX token contract');
-        const tx = await epwxTokenContract.connect(signer).transfer(recipient, rewardAmount);
+      if (epwxTokenWithSigner && ethers.isAddress(recipient)) {
+        const tx = await epwxTokenWithSigner.transfer(recipient, rewardAmount);
         await tx.wait();
         txHash = tx.hash;
       } else {
