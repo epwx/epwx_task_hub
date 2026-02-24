@@ -359,7 +359,27 @@ router.post('/daily-claims/mark-paid', async (req, res) => {
   try {
     const claim = await DailyClaim.findByPk(claimId);
     if (!claim) return res.status(404).json({ error: 'Claim not found' });
+    // Send EPWX tokens to the customer wallet
+    const recipient = claim.wallet;
+    const rewardAmount = ethers.parseUnits('100', 9); // 100 EPWX, adjust decimals as needed
+    let txHash = null;
+    try {
+      if (epwxTokenContract && ethers.isAddress(recipient)) {
+        const signer = epwxTokenContract.runner;
+        if (!signer) throw new Error('No signer configured for EPWX token contract');
+        const tx = await epwxTokenContract.connect(signer).transfer(recipient, rewardAmount);
+        await tx.wait();
+        txHash = tx.hash;
+      } else {
+        throw new Error('EPWX token contract or recipient address invalid');
+      }
+    } catch (err) {
+      claim.status = 'failed';
+      await claim.save();
+      return res.status(500).json({ error: 'Token transfer failed: ' + err.message });
+    }
     claim.status = 'paid';
+    claim.txHash = txHash;
     await claim.save();
     res.json({ success: true, claim });
   } catch (err) {
