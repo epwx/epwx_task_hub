@@ -20,9 +20,9 @@ const ReceiptUploadClaim: React.FC<ReceiptUploadClaimProps> = ({ merchantId, mer
       if (!merchantInfo) return null;
       return (
         <div className="mb-4 p-2 border rounded bg-gray-50">
-          <div className="font-semibold">Merchant:</div>
-          <div>{merchantInfo.name}</div>
-          <div className="text-sm text-gray-600">{merchantInfo.address}</div>
+          <div className="font-semibold text-gray-800">Merchant:</div>
+          <div className="text-gray-900 font-medium">{merchantInfo.name}</div>
+          <div className="text-sm text-gray-700">{merchantInfo.address}</div>
         </div>
       );
     };
@@ -72,7 +72,7 @@ const ReceiptUploadClaim: React.FC<ReceiptUploadClaimProps> = ({ merchantId, mer
   return (
     <form onSubmit={handleSubmit} className="p-4 border rounded bg-white max-w-md mx-auto">
       {renderMerchantInfo()}
-      <h2 className="text-lg font-bold mb-2">Upload Store Receipt</h2>
+      <h2 className="text-lg font-bold mb-2 text-gray-900">Upload Store Receipt</h2>
       <input
         type="file"
         accept="image/*"
@@ -80,7 +80,7 @@ const ReceiptUploadClaim: React.FC<ReceiptUploadClaimProps> = ({ merchantId, mer
         className="mb-2"
       />
       {file && (
-        <div className="mb-2 text-blue-700 font-medium break-all">Selected file: {file.name}</div>
+        <div className="mb-2 text-gray-900 font-medium break-all">Selected file: {file.name}</div>
       )}
       <button
         type="submit"
