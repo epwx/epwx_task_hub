@@ -18,21 +18,20 @@ router.post('/claims/mark-paid', async (req, res) => {
   const adminWallets = (process.env.ADMIN_WALLETS || '').split(',').map(a => a.trim().toLowerCase());
   if (!admin || !adminWallets.length || !adminWallets.includes(admin.toLowerCase())) {
     return res.status(403).json({ error: 'Unauthorized' });
+  }
+  try {
+    const claim = await Claim.findByPk(claimId);
+    if (!claim) {
+      console.log('[mark-paid] Claim not found for id:', claimId);
+      return res.status(404).json({ error: 'Claim not found' });
+    }
+    // Send EPWX tokens to the customer wallet
+    const recipient = claim.customer;
+    const rewardAmount = ethers.parseUnits('100', 9); // 100 EPWX, adjust decimals as needed
+    let txHash = null;
     try {
       if (epwxTokenWithSigner && ethers.isAddress(recipient)) {
         const tx = await epwxTokenWithSigner.transfer(recipient, rewardAmount);
-        await tx.wait();
-        txHash = tx.hash;
-      } else {
-        throw new Error('EPWX token contract or recipient address invalid');
-      }
-    } catch (err) {
-      claim.status = 'failed';
-      await claim.save();
-      return res.status(500).json({ error: 'Token transfer failed: ' + err.message });
-    }
-        if (!signer) throw new Error('No signer configured for EPWX token contract');
-        const tx = await epwxTokenContract.connect(signer).transfer(recipient, rewardAmount);
         await tx.wait();
         txHash = tx.hash;
         console.log(`[mark-paid] Sent ${rewardAmount} EPWX to ${recipient}: ${txHash}`);
@@ -40,7 +39,8 @@ router.post('/claims/mark-paid', async (req, res) => {
         throw new Error('EPWX token contract or recipient address invalid');
       }
     } catch (tokenErr) {
-      console.error('[mark-paid] Token transfer failed:', tokenErr);
+      claim.status = 'failed';
+      await claim.save();
       return res.status(500).json({ error: 'Token transfer failed: ' + tokenErr.message });
     }
     claim.status = 'paid';
