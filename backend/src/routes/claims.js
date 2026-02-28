@@ -64,7 +64,7 @@ router.post('/add', upload.single('receiptImage'), async (req, res) => {
   }
   const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.connection?.remoteAddress || req.socket?.remoteAddress;
   const now = new Date();
-  const since = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  const since = new Date(now.getTime() - 1 * 60 * 1000); // 1 minute window
   const customerLc = customer.toLowerCase();
   console.log('Claim attempt:', { ip, customer: customerLc });
   try {
