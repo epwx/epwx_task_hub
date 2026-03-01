@@ -28,6 +28,20 @@ module.exports = {
       error_file: "/var/log/pm2/epwx-frontend-error.log",
       out_file: "/var/log/pm2/epwx-frontend-out.log",
       log_date_format: "YYYY-MM-DD HH:mm:ss Z"
+    },
+    {
+      name: "epwx-api-test",
+      script: "src/index.js",
+      cwd: "/var/www/epwx-tasks/backend",
+      instances: 1,
+      exec_mode: "fork",
+      env: {
+        NODE_ENV: "test",
+        PORT: 4100
+      },
+      error_file: "/var/log/pm2/epwx-api-test-error.log",
+      out_file: "/var/log/pm2/epwx-api-test-out.log",
+      log_date_format: "YYYY-MM-DD HH:mm:ss Z"
     }
   ]
 };
