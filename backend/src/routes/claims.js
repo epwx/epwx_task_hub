@@ -8,6 +8,8 @@ import { Op } from 'sequelize';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+// Set up admin wallets from environment variable (lowercase, trimmed)
+const adminWallets = (process.env.ADMIN_WALLETS || '').split(',').map(a => a.trim().toLowerCase());
 
 // Set up multer storage for receipt images
 const uploadDir = path.join(process.cwd(), 'uploads/receipts');
