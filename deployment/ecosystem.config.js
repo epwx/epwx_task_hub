@@ -32,7 +32,7 @@ module.exports = {
     {
       name: "epwx-api-test",
       script: "src/index.js",
-      cwd: "/var/www/epwx-tasks/backend",
+      cwd: "/home/deployer/epwx_task_hub_test/backend",
       instances: 1,
       exec_mode: "fork",
       env: {
