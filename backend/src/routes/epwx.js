@@ -10,8 +10,6 @@ const router = express.Router();
 
 // POST /api/epwx/claims/mark-paid - Mark claim as paid (admin only)
 router.post('/claims/mark-paid', async (req, res) => {
-    // Log contract and recipient info for troubleshooting
-    console.log('[mark-paid] epwxTokenWithSigner:', !!epwxTokenWithSigner, 'recipient:', recipient, 'isAddress:', ethers.isAddress(recipient));
   // DEBUG: Log route hit and admin values for troubleshooting
   console.log('--- mark-paid route HIT ---');
   console.log('admin:', req.body.admin, 'ADMIN_WALLETS:', process.env.ADMIN_WALLETS);
@@ -27,6 +25,10 @@ router.post('/claims/mark-paid', async (req, res) => {
       console.log('[mark-paid] Claim not found for id:', claimId);
       return res.status(404).json({ error: 'Claim not found' });
     }
+    // Define recipient after claim is fetched
+    const recipient = claim.wallet;
+    // Log contract and recipient info for troubleshooting
+    console.log('[mark-paid] epwxTokenWithSigner:', !!epwxTokenWithSigner, 'recipient:', recipient, 'isAddress:', ethers.isAddress(recipient));
     // Send EPWX tokens to the customer wallet
     const recipient = claim.customer;
     const rewardAmount = ethers.parseUnits('100', 9); // 100 EPWX, adjust decimals as needed
