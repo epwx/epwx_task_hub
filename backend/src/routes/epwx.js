@@ -25,6 +25,8 @@ router.post('/claims/mark-paid', async (req, res) => {
       console.log('[mark-paid] Claim not found for id:', claimId);
       return res.status(404).json({ error: 'Claim not found' });
     }
+      // Debug: log claim object to inspect wallet field
+      console.log('[mark-paid] claim object:', claim);
     // Define recipient after claim is fetched
     const recipient = claim.wallet;
     // Log contract and recipient info for troubleshooting
