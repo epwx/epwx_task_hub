@@ -30,7 +30,6 @@ router.post('/claims/mark-paid', async (req, res) => {
     // Log contract and recipient info for troubleshooting
     console.log('[mark-paid] epwxTokenWithSigner:', !!epwxTokenWithSigner, 'recipient:', recipient, 'isAddress:', ethers.isAddress(recipient));
     // Send EPWX tokens to the customer wallet
-    const recipient = claim.customer;
     const rewardAmount = ethers.parseUnits('100', 9); // 100 EPWX, adjust decimals as needed
     let txHash = null;
     try {
