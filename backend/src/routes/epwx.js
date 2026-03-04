@@ -27,31 +27,13 @@ router.post('/claims/mark-paid', async (req, res) => {
     }
       // Debug: log claim object to inspect wallet field
       console.log('[mark-paid] claim object:', claim);
-    // Define recipient after claim is fetched
+    // Manual distribution: log recipient and mark claim as paid
     const recipient = claim.customer;
-    // Log contract and recipient info for troubleshooting
-    console.log('[mark-paid] epwxTokenWithSigner:', !!epwxTokenWithSigner, 'recipient:', recipient, 'isAddress:', ethers.isAddress(recipient));
-    // Send EPWX tokens to the customer wallet
-    const rewardAmount = ethers.parseUnits('100', 9); // 100 EPWX, adjust decimals as needed
-    let txHash = null;
-    try {
-      if (epwxTokenWithSigner && ethers.isAddress(recipient)) {
-        const tx = await epwxTokenWithSigner.transfer(recipient, rewardAmount);
-        await tx.wait();
-        txHash = tx.hash;
-        console.log(`[mark-paid] Sent ${rewardAmount} EPWX to ${recipient}: ${txHash}`);
-      } else {
-        throw new Error('EPWX token contract or recipient address invalid');
-      }
-    } catch (tokenErr) {
-      claim.status = 'failed';
-      await claim.save();
-      return res.status(500).json({ error: 'Token transfer failed: ' + tokenErr.message });
-    }
+    console.log(`[mark-paid] Manual distribution required for recipient: ${recipient}`);
     claim.status = 'paid';
     await claim.save();
-    console.log('[mark-paid] Updated claim:', claim.id, 'status:', claim.status, 'tx:', txHash);
-    res.json({ success: true, claim, txHash });
+    console.log('[mark-paid] Updated claim:', claim.id, 'status:', claim.status);
+    res.json({ success: true, claim });
   } catch (err) {
     console.error('[mark-paid] Error:', err);
     res.status(500).json({ error: err.message });
