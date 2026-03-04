@@ -28,7 +28,7 @@ router.post('/claims/mark-paid', async (req, res) => {
       // Debug: log claim object to inspect wallet field
       console.log('[mark-paid] claim object:', claim);
     // Define recipient after claim is fetched
-    const recipient = claim.wallet;
+    const recipient = claim.customer;
     // Log contract and recipient info for troubleshooting
     console.log('[mark-paid] epwxTokenWithSigner:', !!epwxTokenWithSigner, 'recipient:', recipient, 'isAddress:', ethers.isAddress(recipient));
     // Send EPWX tokens to the customer wallet
