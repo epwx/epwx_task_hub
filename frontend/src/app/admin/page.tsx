@@ -6,7 +6,7 @@ import DailyClaimsTable from "@/components/DailyClaimsTable";
 import { useAccount, useWalletClient, useWriteContract } from "wagmi";
 import { ConnectKitButton } from "connectkit";
 import { ethers } from "ethers";
-import { publicClient } from "wagmi";
+import { usePublicClient } from "wagmi";
 
 const getAdminWallets = () => {
   if (typeof window !== "undefined") {
