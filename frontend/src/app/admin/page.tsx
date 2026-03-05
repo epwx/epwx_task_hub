@@ -6,7 +6,7 @@ import DailyClaimsTable from "@/components/DailyClaimsTable";
 import { useAccount, useWalletClient, useWriteContract } from "wagmi";
 import { ConnectKitButton } from "connectkit";
 import { ethers } from "ethers";
-
+import { publicClient } from "wagmi";
 
 const getAdminWallets = () => {
   if (typeof window !== "undefined") {
@@ -239,9 +239,9 @@ export default function AdminPage() {
         functionName: "transfer",
         args: [claim.wallet, amount],
       });
-      // Wait for transaction to be mined/confirmed
-      const receipt = await provider.waitForTransaction(tx.hash);
-      if (receipt.status !== 1) {
+      // Wait for transaction to be mined/confirmed using wagmi publicClient
+      const receipt = await publicClient.waitForTransactionReceipt({ hash: tx.hash });
+      if (receipt.status !== 'success') {
         setError("Token transfer failed or was reverted");
         setMarking(null);
         return;
