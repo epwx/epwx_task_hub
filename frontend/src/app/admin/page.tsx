@@ -239,8 +239,14 @@ export default function AdminPage() {
         functionName: "transfer",
         args: [claim.wallet, amount],
       });
+      const publicClient = usePublicClient();
       // Wait for transaction to be mined/confirmed using wagmi publicClient
-      const receipt = await publicClient.waitForTransactionReceipt({ hash: tx.hash });
+      if (!publicClient) {
+        setError("Public client not available");
+        setMarking(null);
+        return;
+      }
+      const receipt = await publicClient.waitForTransactionReceipt({ hash: tx });
       if (receipt.status !== 'success') {
         setError("Token transfer failed or was reverted");
         setMarking(null);
