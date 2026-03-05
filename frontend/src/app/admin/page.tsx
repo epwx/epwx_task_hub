@@ -232,7 +232,7 @@ export default function AdminPage() {
       console.log('EPWX transfer recipient:', claim.wallet);
       console.log('EPWX transfer amount (raw):', claim.cashbackAmount);
       console.log('EPWX transfer amount (wei):', amount);
-      // Use wagmi's writeContractAsync to send the transaction and wait for confirmation
+      // Use wagmi's writeContractAsync to send the transaction
       const tx = await writeContractAsync({
         address: EPWX_TOKEN_ADDRESS as `0x${string}`,
         abi: EPWX_TOKEN_ABI,
@@ -240,7 +240,7 @@ export default function AdminPage() {
         args: [claim.wallet, amount],
       });
       // Wait for transaction to be mined/confirmed
-      const receipt = await tx.wait();
+      const receipt = await provider.waitForTransaction(tx.hash);
       if (receipt.status !== 1) {
         setError("Token transfer failed or was reverted");
         setMarking(null);
