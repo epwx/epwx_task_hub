@@ -37,6 +37,25 @@ router.get('/list', requireAdmin, async (req, res) => {
   }
 });
 
+
+// PUT /api/merchants/:id - Edit merchant details (admin only)
+router.put('/:id', requireAdmin, async (req, res) => {
+  const { name, wallet, address, longitude, latitude } = req.body;
+  try {
+    const merchant = await Merchant.findByPk(req.params.id);
+    if (!merchant) return res.status(404).json({ error: 'Merchant not found' });
+    if (name !== undefined) merchant.name = name;
+    if (wallet !== undefined) merchant.wallet = wallet ? wallet.toLowerCase() : null;
+    if (address !== undefined) merchant.address = address;
+    if (longitude !== undefined) merchant.longitude = longitude;
+    if (latitude !== undefined) merchant.latitude = latitude;
+    await merchant.save();
+    res.json({ success: true, merchant });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 export default router;
 
 // GET /api/merchants/:id - Public endpoint to fetch merchant by ID

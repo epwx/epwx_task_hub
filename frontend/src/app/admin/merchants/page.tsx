@@ -1,5 +1,80 @@
 "use client";
 import { useState, useEffect } from "react";
+// Edit modal state
+type EditMerchantState = {
+  open: boolean;
+  merchant: any | null;
+  form: { name: string; wallet: string; address: string; latitude: string; longitude: string };
+  error: string | null;
+  loading: boolean;
+};
+  // Edit merchant modal state
+  const [editState, setEditState] = useState<EditMerchantState>({
+    open: false,
+    merchant: null,
+    form: { name: "", wallet: "", address: "", latitude: "", longitude: "" },
+    error: null,
+    loading: false,
+  });
+  // Open edit modal and populate form
+  const openEditModal = (merchant: any) => {
+    setEditState({
+      open: true,
+      merchant,
+      form: {
+        name: merchant.name || "",
+        wallet: merchant.wallet || "",
+        address: merchant.address || "",
+        latitude: merchant.latitude?.toString() || "",
+        longitude: merchant.longitude?.toString() || "",
+      },
+      error: null,
+      loading: false,
+    });
+  };
+
+  // Close edit modal
+  const closeEditModal = () => setEditState(s => ({ ...s, open: false, merchant: null, error: null, loading: false }));
+
+  // Handle edit form change
+  const handleEditChange = (e: any) => {
+    setEditState(s => ({ ...s, form: { ...s.form, [e.target.name]: e.target.value } }));
+  };
+
+  // Submit edit
+  const handleEditSubmit = async (e: any) => {
+    e.preventDefault();
+    setEditState(s => ({ ...s, loading: true, error: null }));
+    const { name, wallet, address, latitude, longitude } = editState.form;
+    // Validate
+    if (!name || !address || latitude === "" || longitude === "") {
+      setEditState(s => ({ ...s, error: "All fields except wallet are required.", loading: false }));
+      return;
+    }
+    const lat = parseFloat(latitude);
+    const lng = parseFloat(longitude);
+    if (isNaN(lat) || isNaN(lng)) {
+      setEditState(s => ({ ...s, error: "Latitude and Longitude must be valid numbers.", loading: false }));
+      return;
+    }
+    try {
+      const res = await fetch(`/api/merchants/${editState.merchant.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, wallet, address, latitude: lat, longitude: lng, admin: address: address }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        // Update merchants list
+        setMerchants(ms => ms.map(m => m.id === data.merchant.id ? data.merchant : m));
+        closeEditModal();
+      } else {
+        setEditState(s => ({ ...s, error: data.error || "Failed to update merchant.", loading: false }));
+      }
+    } catch (e: any) {
+      setEditState(s => ({ ...s, error: e?.message || "Failed to update merchant.", loading: false }));
+    }
+  };
 
 import { useAccount } from "wagmi";
 import { ConnectKitButton } from "connectkit";
@@ -240,9 +315,14 @@ export default function MerchantAdminPage() {
                       <div><span className="font-semibold text-gray-700">Address:</span> <span className="text-gray-800">{m.address}</span></div>
                       <div><span className="font-semibold text-gray-700">Latitude:</span> <span className="text-gray-800">{m.latitude}</span></div>
                       <div><span className="font-semibold text-gray-700">Longitude:</span> <span className="text-gray-800">{m.longitude}</span></div>
-                      <button className="mt-2 text-blue-600 underline self-start" onClick={() => toggleClaims(m.id)}>
-                        {expanded[m.id] ? "Hide Claims" : "View Claims"}
-                      </button>
+                      <div className="flex flex-row gap-2 mt-2">
+                        <button className="text-blue-600 underline self-start" onClick={() => toggleClaims(m.id)}>
+                          {expanded[m.id] ? "Hide Claims" : "View Claims"}
+                        </button>
+                        <button className="text-green-600 underline self-start" onClick={() => openEditModal(m)}>
+                          Edit
+                        </button>
+                      </div>
                       {expanded[m.id] && (
                           <div className="mt-2 w-full">
                             {claimsLoading[m.id] ? (
@@ -283,6 +363,24 @@ export default function MerchantAdminPage() {
                       )}
                     </div>
                   ))}
+                        {/* Edit Merchant Modal */}
+                        {editState.open && (
+                          <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+                            <div className="bg-white rounded shadow-lg p-6 w-full max-w-md relative">
+                              <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-700" onClick={closeEditModal}>&times;</button>
+                              <h3 className="text-lg font-bold mb-4">Edit Merchant</h3>
+                              <form onSubmit={handleEditSubmit} className="space-y-4">
+                                <input name="name" value={editState.form.name} onChange={handleEditChange} placeholder="Merchant Name" className="w-full border rounded px-3 py-2 text-gray-700" required />
+                                <input name="wallet" value={editState.form.wallet} onChange={handleEditChange} placeholder="Merchant Wallet Address (optional)" className="w-full border rounded px-3 py-2 text-gray-700" />
+                                <input name="address" value={editState.form.address} onChange={handleEditChange} placeholder="Shop Address" className="w-full border rounded px-3 py-2 text-gray-700" required />
+                                <input name="latitude" value={editState.form.latitude} onChange={handleEditChange} placeholder="Latitude" className="w-full border rounded px-3 py-2 text-gray-700" required type="text" />
+                                <input name="longitude" value={editState.form.longitude} onChange={handleEditChange} placeholder="Longitude" className="w-full border rounded px-3 py-2 text-gray-700" required type="text" />
+                                <button type="submit" className="bg-green-600 text-white px-6 py-2 rounded font-semibold" disabled={editState.loading}>{editState.loading ? "Saving..." : "Save Changes"}</button>
+                                {editState.error && <div className="text-red-600 mt-2">{editState.error}</div>}
+                              </form>
+                            </div>
+                          </div>
+                        )}
                   <div className="flex justify-end items-center mt-4 space-x-2">
                     <button
                       className="px-2 py-1 border rounded bg-gray-100"
