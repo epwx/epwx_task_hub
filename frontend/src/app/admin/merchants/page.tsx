@@ -1,7 +1,7 @@
 
 "use client";
 import { useState, useEffect } from "react";
-import { useWalletClient, useWriteContract } from "wagmi";
+import { useWalletClient, useWriteContract, useAccount } from "wagmi";
 import { ethers } from "ethers";
 import { ConnectKitButton } from "connectkit";
 import MerchantClaimsTable from "@/components/MerchantClaimsTable";
@@ -18,8 +18,8 @@ type EditMerchantState = {
 
 export default function MerchantAdminPage() {
 
-  // Placeholder admin wallet address and list
-  const [address, setAddress] = useState<string>("");
+  // Use connected wallet address
+  const { address } = useAccount();
   const ADMIN_WALLETS = ["0xAdminWalletAddress1", "0xAdminWalletAddress2"];
 
   const [form, setForm] = useState({ name: "", wallet: "", address: "", latitude: "", longitude: "" });
