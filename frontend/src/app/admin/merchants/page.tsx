@@ -1,6 +1,12 @@
+
 "use client";
 import { useState, useEffect } from "react";
-// Edit modal state
+import { useWalletClient, useWriteContract } from "wagmi";
+import { ethers } from "ethers";
+import { ConnectKitButton } from "connectkit";
+import MerchantClaimsTable from "@/components/MerchantClaimsTable";
+
+// Edit modal state type
 type EditMerchantState = {
   open: boolean;
   merchant: any | null;
@@ -8,7 +14,21 @@ type EditMerchantState = {
   error: string | null;
   loading: boolean;
 };
-  // Edit merchant modal state
+
+
+export default function MerchantAdminPage() {
+
+  // Placeholder admin wallet address and list
+  const [address, setAddress] = useState<string>("");
+  const ADMIN_WALLETS = ["0xAdminWalletAddress1", "0xAdminWalletAddress2"];
+
+  const [form, setForm] = useState({ name: "", wallet: "", address: "", latitude: "", longitude: "" });
+  const [merchants, setMerchants] = useState<any[]>([]);
+  const [paginatedMerchants, setPaginatedMerchants] = useState<any[]>([]);
+  const [expanded, setExpanded] = useState<{ [key: number]: boolean }>({});
+  const [claims, setClaims] = useState<{ [key: number]: any[] }>({});
+  const [claimsLoading, setClaimsLoading] = useState<{ [key: number]: boolean }>({});
+  const [claimsError, setClaimsError] = useState<{ [key: number]: string | null }>({});
   const [editState, setEditState] = useState<EditMerchantState>({
     open: false,
     merchant: null,
@@ -16,7 +36,37 @@ type EditMerchantState = {
     error: null,
     loading: false,
   });
-  // Open edit modal and populate form
+  const [merchantPage, setMerchantPage] = useState(1);
+  const [merchantPageCount, setMerchantPageCount] = useState(1);
+  const [claimsPage, setClaimsPage] = useState<{ [key: number]: number }>({});
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  const { data: walletClient } = useWalletClient();
+  const { writeContractAsync } = useWriteContract();
+  const [marking, setMarking] = useState<number | null>(null);
+
+  // Placeholder for paginated merchants (simple passthrough for now)
+  useEffect(() => {
+    setPaginatedMerchants(merchants);
+  }, [merchants]);
+
+  // Placeholder for merchant page count
+  useEffect(() => {
+    setMerchantPageCount(1);
+  }, [merchants]);
+
+  // Placeholder for claims pagination
+  const getPaginatedClaims = (merchantId: number) => {
+    return claims[merchantId] || [];
+  };
+  const getClaimsPageCount = (merchantId: number) => {
+    return 1;
+  };
+
+  // Edit modal handlers
   const openEditModal = (merchant: any) => {
     setEditState({
       open: true,
@@ -25,117 +75,48 @@ type EditMerchantState = {
         name: merchant.name || "",
         wallet: merchant.wallet || "",
         address: merchant.address || "",
-        latitude: merchant.latitude?.toString() || "",
-        longitude: merchant.longitude?.toString() || "",
+        latitude: merchant.latitude || "",
+        longitude: merchant.longitude || "",
       },
       error: null,
       loading: false,
     });
   };
-
-  // Close edit modal
-  const closeEditModal = () => setEditState(s => ({ ...s, open: false, merchant: null, error: null, loading: false }));
-
-  // Handle edit form change
-  const handleEditChange = (e: any) => {
-    setEditState(s => ({ ...s, form: { ...s.form, [e.target.name]: e.target.value } }));
+  const closeEditModal = () => {
+    setEditState({
+      open: false,
+      merchant: null,
+      form: { name: "", wallet: "", address: "", latitude: "", longitude: "" },
+      error: null,
+      loading: false,
+    });
   };
-
-  // Submit edit
+  const handleEditChange = (e: any) => {
+    setEditState(prev => ({
+      ...prev,
+      form: { ...prev.form, [e.target.name]: e.target.value },
+    }));
+  };
   const handleEditSubmit = async (e: any) => {
     e.preventDefault();
-    setEditState(s => ({ ...s, loading: true, error: null }));
-    const { name, wallet, address, latitude, longitude } = editState.form;
-    // Validate
-    if (!name || !address || latitude === "" || longitude === "") {
-      setEditState(s => ({ ...s, error: "All fields except wallet are required.", loading: false }));
-      return;
-    }
-    const lat = parseFloat(latitude);
-    const lng = parseFloat(longitude);
-    if (isNaN(lat) || isNaN(lng)) {
-      setEditState(s => ({ ...s, error: "Latitude and Longitude must be valid numbers.", loading: false }));
-      return;
-    }
+    setEditState(prev => ({ ...prev, loading: true, error: null }));
     try {
       const res = await fetch(`/api/merchants/${editState.merchant.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, wallet, address, latitude: lat, longitude: lng, admin: address: address }),
+        body: JSON.stringify({ ...editState.form, admin: address }),
       });
       const data = await res.json();
       if (data.success) {
-        // Update merchants list
-        setMerchants(ms => ms.map(m => m.id === data.merchant.id ? data.merchant : m));
-        closeEditModal();
+        setEditState(prev => ({ ...prev, loading: false, open: false }));
+        fetchMerchants();
       } else {
-        setEditState(s => ({ ...s, error: data.error || "Failed to update merchant.", loading: false }));
+        setEditState(prev => ({ ...prev, loading: false, error: data.error || "Failed to update merchant" }));
       }
     } catch (e: any) {
-      setEditState(s => ({ ...s, error: e?.message || "Failed to update merchant.", loading: false }));
+      setEditState(prev => ({ ...prev, loading: false, error: e?.message || "Failed to update merchant" }));
     }
   };
-
-import { useAccount } from "wagmi";
-import { ConnectKitButton } from "connectkit";
-import { useWalletClient, useWriteContract } from "wagmi";
-import { ethers } from "ethers";
-import MerchantClaimsTable from "@/components/MerchantClaimsTable";
-
-type Claim = {
-  id: number;
-  merchantId: number;
-  customer: string;
-  bill: string;
-  status: string;
-  createdAt: string;
-  cashbackAmount?: string;
-};
-
-const ADMIN_WALLETS = (process.env.NEXT_PUBLIC_ADMIN_WALLETS || "")
-  .split(",")
-  .map(w => w.trim().toLowerCase())
-  .filter(Boolean);
-
-export default function MerchantAdminPage() {
-  const { address } = useAccount();
-  const [form, setForm] = useState({ name: "", wallet: "", address: "", longitude: "", latitude: "" });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-  const [merchants, setMerchants] = useState<any[]>([]);
-  // Track which merchant's claims are expanded and their claims
-  const [expanded, setExpanded] = useState<{ [merchantId: number]: boolean }>({});
-  const [claims, setClaims] = useState<{ [merchantId: number]: Claim[] }>({});
-  const [claimsLoading, setClaimsLoading] = useState<{ [merchantId: number]: boolean }>({});
-  const [claimsError, setClaimsError] = useState<{ [merchantId: number]: string | null }>({});
-
-  // Pagination state for merchants
-  const [merchantPage, setMerchantPage] = useState(1);
-  const merchantsPerPage = 5;
-  const paginatedMerchants = Array.isArray(merchants)
-    ? merchants.filter(m => m && typeof m === 'object' && m.id != null).slice((merchantPage - 1) * merchantsPerPage, merchantPage * merchantsPerPage)
-    : [];
-  const merchantPageCount = Array.isArray(merchants)
-    ? Math.ceil(merchants.filter(m => m && typeof m === 'object' && m.id != null).length / merchantsPerPage)
-    : 1;
-
-  // Pagination state for claims per merchant
-  const [claimsPage, setClaimsPage] = useState<{ [merchantId: number]: number }>({});
-  const claimsPerPage = 5;
-  const getPaginatedClaims = (merchantId: number) => {
-    const allClaims = Array.isArray(claims[merchantId]) ? claims[merchantId].filter(claim => claim && claim.id != null) : [];
-    const page = claimsPage[merchantId] || 1;
-    return allClaims.slice((page - 1) * claimsPerPage, page * claimsPerPage);
-  };
-  const getClaimsPageCount = (merchantId: number) => {
-    const allClaims = Array.isArray(claims[merchantId]) ? claims[merchantId].filter(claim => claim && claim.id != null) : [];
-    return Math.ceil(allClaims.length / claimsPerPage) || 1;
-  };
-
-  const { data: walletClient } = useWalletClient();
-  const { writeContractAsync } = useWriteContract();
-  const [marking, setMarking] = useState<number | null>(null);
 
   // Add contract address/ABI (copy from admin page)
   const EPWX_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_EPWX_TOKEN as `0x${string}`) || "0x0000000000000000000000000000000000000000";
@@ -271,7 +252,7 @@ export default function MerchantAdminPage() {
       setClaimsLoading(cl => ({ ...cl, [merchantId]: false }));
     }
   };
-
+  // Component render starts here
   return (
     <div className="max-w-2xl mx-auto py-8">
       {notAdmin ? (
