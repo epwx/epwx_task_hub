@@ -6,6 +6,8 @@ interface MerchantClaim {
   bill: string;
   status: string;
   createdAt: string;
+  cashbackAmount?: string | number;
+  amount?: string | number;
 }
 
 interface MerchantClaimsTableProps {
