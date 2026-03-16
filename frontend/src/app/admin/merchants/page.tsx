@@ -20,7 +20,10 @@ export default function MerchantAdminPage() {
 
   // Use connected wallet address
   const { address } = useAccount();
-  const ADMIN_WALLETS = ["0xAdminWalletAddress1", "0xAdminWalletAddress2"];
+  const ADMIN_WALLETS = (process.env.NEXT_PUBLIC_ADMIN_WALLETS || "")
+    .split(",")
+    .map(w => w.trim().toLowerCase())
+    .filter(Boolean);
 
   const [form, setForm] = useState({ name: "", wallet: "", address: "", latitude: "", longitude: "" });
   const [merchants, setMerchants] = useState<any[]>([]);
