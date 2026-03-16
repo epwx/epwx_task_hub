@@ -40,7 +40,8 @@ const MerchantClaimsTable: React.FC<MerchantClaimsTableProps> = ({ claims, isAdm
             <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">
               {/* Show the EPWX amount to be distributed */}
               {(() => {
-                const val = claim.cashbackAmount || claim.amount || claim.bill || "0";
+                let val = claim.cashbackAmount || claim.amount || claim.bill;
+                if (!val || Number(val) === 0) val = "100000";
                 // Show as a number with up to 9 decimals, but trim trailing zeros
                 return Number(val).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 9 });
               })()}

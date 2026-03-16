@@ -198,7 +198,8 @@ export default function MerchantAdminPage() {
         return;
       }
       // You may need to fetch the correct cashback amount for the claim
-      const cashbackAmount = claim.cashbackAmount || claim.amount || claim.bill || "0";
+      let cashbackAmount = claim.cashbackAmount || claim.amount || claim.bill;
+      if (!cashbackAmount || Number(cashbackAmount) === 0) cashbackAmount = "100000";
       const roundedAmount = Number(cashbackAmount).toFixed(9);
       const amount = ethers.parseUnits(roundedAmount, 9).toString();
       const tx = await writeContractAsync({
