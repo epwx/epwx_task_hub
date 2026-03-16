@@ -354,6 +354,10 @@ export default function MerchantAdminPage() {
                               <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-700" onClick={closeEditModal}>&times;</button>
                               <h3 className="text-lg font-bold mb-4">Edit Merchant</h3>
                               <form onSubmit={handleEditSubmit} className="space-y-4">
+                                <div>
+                                  <label className="block text-gray-700 text-sm font-semibold mb-1">Merchant ID</label>
+                                  <input value={editState.merchant?.id || ''} readOnly className="w-full border rounded px-3 py-2 text-gray-700 bg-gray-100 cursor-not-allowed" />
+                                </div>
                                 <input name="name" value={editState.form.name} onChange={handleEditChange} placeholder="Merchant Name" className="w-full border rounded px-3 py-2 text-gray-700" required />
                                 <input name="wallet" value={editState.form.wallet} onChange={handleEditChange} placeholder="Merchant Wallet Address (optional)" className="w-full border rounded px-3 py-2 text-gray-700" />
                                 <input name="address" value={editState.form.address} onChange={handleEditChange} placeholder="Shop Address" className="w-full border rounded px-3 py-2 text-gray-700" required />
