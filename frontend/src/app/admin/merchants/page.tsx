@@ -201,12 +201,17 @@ export default function MerchantAdminPage() {
       const cashbackAmount = claim.cashbackAmount || claim.amount || claim.bill || "0";
       const roundedAmount = Number(cashbackAmount).toFixed(9);
       const amount = ethers.parseUnits(roundedAmount, 9).toString();
-      await writeContractAsync({
+      const tx = await writeContractAsync({
         address: EPWX_TOKEN_ADDRESS,
         abi: EPWX_TOKEN_ABI,
         functionName: "transfer",
         args: [claim.customer, amount],
       });
+      // Wait for transaction confirmation
+      if (tx && tx.hash) {
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        await provider.waitForTransaction(tx.hash);
+      }
       // Mark as paid in backend
       const res = await fetch("/api/epwx/claims/mark-paid", {
         method: "POST",
