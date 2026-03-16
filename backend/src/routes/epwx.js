@@ -13,7 +13,7 @@ router.post('/claims/mark-paid', async (req, res) => {
   // DEBUG: Log route hit and admin values for troubleshooting
   console.log('--- mark-paid route HIT ---');
   console.log('admin:', req.body.admin, 'ADMIN_WALLETS:', process.env.ADMIN_WALLETS);
-  const { admin, claimId } = req.body;
+  const { admin, claimId, txHash } = req.body;
   // Support multiple admin wallets (comma-separated, case-insensitive)
   const adminWallets = (process.env.ADMIN_WALLETS || '').split(',').map(a => a.trim().toLowerCase());
   if (!admin || !adminWallets.length || !adminWallets.includes(admin.toLowerCase())) {
@@ -25,12 +25,28 @@ router.post('/claims/mark-paid', async (req, res) => {
       console.log('[mark-paid] Claim not found for id:', claimId);
       return res.status(404).json({ error: 'Claim not found' });
     }
-      // Debug: log claim object to inspect wallet field
-      console.log('[mark-paid] claim object:', claim);
-    // Manual distribution: log recipient and mark claim as paid
-    const recipient = claim.customer;
-    console.log(`[mark-paid] Manual distribution required for recipient: ${recipient}`);
+    // Debug: log claim object to inspect wallet field
+    console.log('[mark-paid] claim object:', claim);
+    if (!txHash) {
+      return res.status(400).json({ error: 'Transaction hash required for verification.' });
+    }
+    // On-chain verification
+    const provider = new ethers.JsonRpcProvider(process.env.BASE_RPC_URL || process.env.RPC_URL);
+    let receipt;
+    try {
+      receipt = await provider.getTransactionReceipt(txHash);
+      if (!receipt || receipt.status !== 1) {
+        return res.status(400).json({ error: 'Transaction not found or failed.' });
+      }
+    } catch (err) {
+      console.error('[mark-paid] Error fetching tx receipt:', err);
+      return res.status(500).json({ error: 'Failed to fetch transaction receipt.' });
+    }
+    // Optionally: decode input data to verify transfer details
+    // For now, just log the receipt
+    console.log('[mark-paid] Verified on-chain tx:', txHash, 'for claim:', claimId);
     claim.status = 'paid';
+    claim.txHash = txHash;
     await claim.save();
     console.log('[mark-paid] Updated claim:', claim.id, 'status:', claim.status);
     res.json({ success: true, claim });

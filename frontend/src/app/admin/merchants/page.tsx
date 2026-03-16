@@ -212,11 +212,11 @@ export default function MerchantAdminPage() {
         const provider = new ethers.BrowserProvider(window.ethereum);
         await provider.waitForTransaction(tx);
       }
-      // Mark as paid in backend
+      // Mark as paid in backend, include tx hash
       const res = await fetch("/api/epwx/claims/mark-paid", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ admin: address, claimId: claim.id }),
+        body: JSON.stringify({ admin: address, claimId: claim.id, txHash: tx }),
       });
       const data = await res.json();
       if (data.success) {
