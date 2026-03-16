@@ -23,6 +23,7 @@ const MerchantClaimsTable: React.FC<MerchantClaimsTableProps> = ({ claims, isAdm
           <th className="py-2 px-2 sm:px-4 text-gray-700">ID</th>
           <th className="py-2 px-2 sm:px-4 text-gray-700">Customer</th>
           <th className="py-2 px-2 sm:px-4 text-gray-700">Bill</th>
+          <th className="py-2 px-2 sm:px-4 text-gray-700">EPWX</th>
           <th className="py-2 px-2 sm:px-4 text-gray-700">Status</th>
           <th className="py-2 px-2 sm:px-4 text-gray-700">Date</th>
           {isAdmin && <th className="py-2 px-2 sm:px-4 text-gray-700">Action</th>}
@@ -34,6 +35,14 @@ const MerchantClaimsTable: React.FC<MerchantClaimsTableProps> = ({ claims, isAdm
             <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{claim.id}</td>
             <td className="py-2 px-2 sm:px-4 break-all bg-white text-gray-900">{claim.customer}</td>
             <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{claim.bill}</td>
+            <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">
+              {/* Show the EPWX amount to be distributed */}
+              {(() => {
+                const val = claim.cashbackAmount || claim.amount || claim.bill || "0";
+                // Show as a number with up to 9 decimals, but trim trailing zeros
+                return Number(val).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 9 });
+              })()}
+            </td>
             <td className="py-2 px-2 sm:px-4 bg-white text-gray-900 capitalize">{claim.status}</td>
             <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{new Date(claim.createdAt).toLocaleString()}</td>
             {isAdmin && (
