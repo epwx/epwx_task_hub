@@ -208,9 +208,9 @@ export default function MerchantAdminPage() {
         args: [claim.customer, amount],
       });
       // Wait for transaction confirmation
-      if (tx && tx.hash) {
+      if (tx) {
         const provider = new ethers.BrowserProvider(window.ethereum);
-        await provider.waitForTransaction(tx.hash);
+        await provider.waitForTransaction(tx);
       }
       // Mark as paid in backend
       const res = await fetch("/api/epwx/claims/mark-paid", {
