@@ -1,6 +1,8 @@
 import 'dotenv/config';
 import express from 'express';
 import path from 'path';
+const app = express();
+
 // Serve uploads directory as static files
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 import cors from 'cors';
