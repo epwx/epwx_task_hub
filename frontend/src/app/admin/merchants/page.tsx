@@ -5,6 +5,38 @@ import { useWalletClient, useWriteContract, useAccount } from "wagmi";
 import { ethers } from "ethers";
 import { ConnectKitButton } from "connectkit";
 import MerchantClaimsTable from "@/components/MerchantClaimsTable";
+  // Handle claim rejection with comment
+  const rejectClaim = async (claim: any, rejectionComment: string) => {
+    setMarking(claim.id);
+    setClaimsError(cl => ({ ...cl, [claim.merchantId]: null }));
+    try {
+      if (!address || !ADMIN_WALLETS.includes(address.toLowerCase())) {
+        setClaimsError(cl => ({ ...cl, [claim.merchantId]: "Admin wallet not connected" }));
+        setMarking(null);
+        return;
+      }
+      const res = await fetch(`/api/claims/${claim.id}/mark-status`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ admin: address, status: "rejected", rejectionComment }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        // Refetch claims for this merchant after rejection
+        try {
+          const res = await fetch(`/api/claims?merchantId=${claim.merchantId}`);
+          const data = await res.json();
+          setClaims(claims => ({ ...claims, [claim.merchantId]: data.claims || [] }));
+        } catch (e) {}
+        setClaimsError(cl => ({ ...cl, [claim.merchantId]: null }));
+      } else {
+        setClaimsError(cl => ({ ...cl, [claim.merchantId]: data.error || "Failed to reject claim" }));
+      }
+    } catch (e: any) {
+      setClaimsError(cl => ({ ...cl, [claim.merchantId]: e?.message || "Failed to reject claim" }));
+    }
+    setMarking(null);
+  };
 
 // Edit modal state type
 type EditMerchantState = {
@@ -328,6 +360,7 @@ export default function MerchantAdminPage() {
                                       claims={getPaginatedClaims(m.id)}
                                       isAdmin={!!(address && ADMIN_WALLETS.includes(address.toLowerCase()))}
                                       onDistribute={distributeCashback}
+                                      onReject={rejectClaim}
                                       marking={marking}
                                     />
                                     <div className="flex justify-end items-center mt-2 space-x-2">
