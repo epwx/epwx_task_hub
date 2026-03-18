@@ -138,9 +138,11 @@ const MerchantClaimsTable: React.FC<MerchantClaimsTableProps> = ({ claims, isAdm
                         </div>
                       )}
                     </div>
-                  ) : (
+                  ) : claim.status === "paid" ? (
                     <span className="text-green-600 font-semibold">Paid</span>
-                  )}
+                  ) : claim.status === "rejected" ? (
+                    <span className="text-red-600 font-semibold">Rejected</span>
+                  ) : null}
                 </td>
               )}
             </tr>
