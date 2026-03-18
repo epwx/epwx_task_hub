@@ -1,4 +1,4 @@
-import React from "react";
+
 
 interface MerchantClaim {
   id: number | string;
@@ -16,21 +16,24 @@ interface MerchantClaimsTableProps {
   claims: MerchantClaim[];
   isAdmin?: boolean;
   onDistribute?: (claim: MerchantClaim) => void;
+  onReject?: (claim: MerchantClaim, rejectionComment: string) => void;
   marking?: number | string | null;
 }
 
 
 import React, { useState } from "react";
 
-const MerchantClaimsTable: React.FC<MerchantClaimsTableProps> = ({ claims, isAdmin = false, onDistribute, marking }) => {
+const MerchantClaimsTable: React.FC<MerchantClaimsTableProps> = ({ claims, isAdmin = false, onDistribute, onReject, marking }) => {
   const [rejectingId, setRejectingId] = useState<number | string | null>(null);
   const [rejectionComment, setRejectionComment] = useState("");
   const [viewImage, setViewImage] = useState<string | null>(null);
 
-  // Dummy reject handler, to be replaced by parent
-  const onReject = async (claim: MerchantClaim, comment: string) => {
-    // Should be passed as prop for real use
-    alert(`Rejected claim ${claim.id} with comment: ${comment}`);
+
+  // Use the passed onReject prop, or fallback to a dummy handler
+  const handleReject = async (claim: MerchantClaim, comment: string) => {
+    if (typeof onReject === 'function') {
+      await onReject(claim, comment);
+    }
     setRejectingId(null);
     setRejectionComment("");
   };
@@ -73,7 +76,7 @@ const MerchantClaimsTable: React.FC<MerchantClaimsTableProps> = ({ claims, isAdm
               <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{new Date(claim.createdAt).toLocaleString()}</td>
               <td className="py-2 px-2 sm:px-4 bg-white text-blue-700 underline cursor-pointer">
                 {claim.receiptImage ? (
-                  <button onClick={() => setViewImage(claim.receiptImage)}>View Receipt</button>
+                  <button onClick={() => setViewImage(claim.receiptImage || null)}>View Receipt</button>
                 ) : (
                   <span className="text-gray-400">No Image</span>
                 )}
@@ -108,7 +111,7 @@ const MerchantClaimsTable: React.FC<MerchantClaimsTableProps> = ({ claims, isAdm
                             <button
                               className="bg-red-700 text-white px-2 py-1 rounded text-xs"
                               disabled={!rejectionComment.trim()}
-                              onClick={() => onReject(claim, rejectionComment)}
+                              onClick={() => handleReject(claim, rejectionComment)}
                             >
                               Confirm Reject
                             </button>
