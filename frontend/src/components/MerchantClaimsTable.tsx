@@ -152,7 +152,18 @@ const MerchantClaimsTable: React.FC<MerchantClaimsTableProps> = ({ claims, isAdm
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded shadow-lg p-4 relative max-w-lg w-full">
             <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-700" onClick={() => setViewImage(null)}>&times;</button>
-            <img src={viewImage} alt="Receipt" className="max-w-full max-h-[70vh] mx-auto" onError={e => (e.currentTarget.src = '/broken-image.png')} />
+            <img
+              src={viewImage}
+              alt="Receipt"
+              className="max-w-full max-h-[70vh] mx-auto"
+              onError={e => {
+                // Only set fallback if not already set
+                const fallback = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="120"><rect width="100%" height="100%" fill="%23eee"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%23666" font-size="16">Image not found</text></svg>';
+                if (e.currentTarget.src !== fallback) {
+                  e.currentTarget.src = fallback;
+                }
+              }}
+            />
           </div>
         </div>
       )}
