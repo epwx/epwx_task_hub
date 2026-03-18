@@ -136,7 +136,7 @@ router.get('/', async (req, res) => {
 
 // POST /api/claims/:id/mark-status - Update claim status (admin only)
 router.post('/:id/mark-status', async (req, res) => {
-  const { admin, status } = req.body;
+  const { admin, status, rejectionComment } = req.body;
   if (!admin || !adminWallets.length || !adminWallets.includes(admin.toLowerCase())) {
     return res.status(403).json({ error: 'Unauthorized' });
   }
@@ -145,6 +145,11 @@ router.post('/:id/mark-status', async (req, res) => {
     const claim = await Claim.findByPk(req.params.id);
     if (!claim) return res.status(404).json({ error: 'Claim not found' });
     claim.status = status;
+    if (status === 'rejected') {
+      claim.rejectionComment = rejectionComment || null;
+    } else {
+      claim.rejectionComment = null;
+    }
     await claim.save();
     res.json({ success: true });
   } catch (err) {
