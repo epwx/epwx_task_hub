@@ -21,12 +21,25 @@ interface MerchantClaimsTableProps {
 }
 
 
+
 import React, { useState } from "react";
+
+// Set your backend API base URL here (should match production backend domain)
+const BACKEND_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.epowex.com";
 
 const MerchantClaimsTable: React.FC<MerchantClaimsTableProps> = ({ claims, isAdmin = false, onDistribute, onReject, marking }) => {
   const [rejectingId, setRejectingId] = useState<number | string | null>(null);
   const [rejectionComment, setRejectionComment] = useState("");
   const [viewImage, setViewImage] = useState<string | null>(null);
+
+  // Helper to get absolute image URL
+  const getImageUrl = (imgPath?: string | null) => {
+    if (!imgPath) return '';
+    if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) return imgPath;
+    // Ensure leading slash
+    const relPath = imgPath.startsWith('/') ? imgPath : `/${imgPath}`;
+    return `${BACKEND_BASE_URL}${relPath}`;
+  };
 
 
   // Use the passed onReject prop, or fallback to a dummy handler
@@ -76,7 +89,7 @@ const MerchantClaimsTable: React.FC<MerchantClaimsTableProps> = ({ claims, isAdm
               <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{new Date(claim.createdAt).toLocaleString()}</td>
               <td className="py-2 px-2 sm:px-4 bg-white text-blue-700 underline cursor-pointer">
                 {claim.receiptImage ? (
-                  <button onClick={() => setViewImage(claim.receiptImage || null)}>View Receipt</button>
+                  <button onClick={() => setViewImage(getImageUrl(claim.receiptImage))}>View Receipt</button>
                 ) : (
                   <span className="text-gray-400">No Image</span>
                 )}
@@ -139,7 +152,7 @@ const MerchantClaimsTable: React.FC<MerchantClaimsTableProps> = ({ claims, isAdm
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded shadow-lg p-4 relative max-w-lg w-full">
             <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-700" onClick={() => setViewImage(null)}>&times;</button>
-            <img src={viewImage} alt="Receipt" className="max-w-full max-h-[70vh] mx-auto" />
+            <img src={viewImage} alt="Receipt" className="max-w-full max-h-[70vh] mx-auto" onError={e => (e.currentTarget.src = '/broken-image.png')} />
           </div>
         </div>
       )}
