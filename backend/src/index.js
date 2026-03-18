@@ -5,13 +5,12 @@ const app = express();
 
 // Serve uploads directory as static files
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import session from 'express-session';
 import passport from './config/passport.js';
-
-const app = express();
 
 // Trust proxy - required when behind nginx/load balancer
 app.set('trust proxy', 1);
