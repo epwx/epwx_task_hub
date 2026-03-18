@@ -7,6 +7,7 @@ type Claim = {
   customer: string;
   bill: string;
   status: string;
+  rejectionComment?: string;
   // add other fields if needed
 };
 import { useAccount } from "wagmi";
@@ -39,20 +40,27 @@ export default function AdminClaimsPage() {
       });
   }, [address, statusFilter]);
 
-  const updateStatus = async (id: number, status: string) => {
+  const [rejectingId, setRejectingId] = useState<number|null>(null);
+  const [rejectionComment, setRejectionComment] = useState("");
+
+  const updateStatus = async (id: number, status: string, rejectionComment?: string) => {
     setLoading(true);
     setError("");
     setSuccess("");
     try {
+      const body: any = { admin: address, status };
+      if (status === "rejected") body.rejectionComment = rejectionComment;
       const res = await fetch(`/api/claims/${id}/mark-status`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ admin: address, status }),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
       if (data.success) {
         setSuccess("Claim status updated.");
-        setClaims(claims => claims.map(c => c.id === id ? { ...c, status } : c));
+        setClaims(claims => claims.map(c => c.id === id ? { ...c, status, rejectionComment: status === "rejected" ? rejectionComment : undefined } : c));
+        setRejectingId(null);
+        setRejectionComment("");
       } else {
         setError(data.error || "Failed to update status");
       }
@@ -98,10 +106,43 @@ export default function AdminClaimsPage() {
               <td className="p-2 border">{claim.merchantId}</td>
               <td className="p-2 border">{claim.customer}</td>
               <td className="p-2 border">{claim.bill}</td>
-              <td className="p-2 border">{claim.status}</td>
+              <td className="p-2 border capitalize">{claim.status}
+                {claim.status === "rejected" && claim.rejectionComment && (
+                  <div className="text-xs text-red-600 mt-1">Reason: {claim.rejectionComment}</div>
+                )}
+              </td>
               <td className="p-2 border">
                 {claim.status === "pending" && (
-                  <button className="bg-blue-600 text-white px-3 py-1 rounded" onClick={() => updateStatus(claim.id, "sent")}>Mark as Sent</button>
+                  <div className="flex flex-col gap-2">
+                    <button className="bg-blue-600 text-white px-3 py-1 rounded" onClick={() => updateStatus(claim.id, "sent")}>Mark as Sent</button>
+                    <button className="bg-red-600 text-white px-3 py-1 rounded" onClick={() => setRejectingId(claim.id)}>Reject</button>
+                    {rejectingId === claim.id && (
+                      <div className="mt-2 flex flex-col gap-1">
+                        <textarea
+                          className="border rounded p-1 text-xs"
+                          rows={2}
+                          placeholder="Enter rejection reason..."
+                          value={rejectionComment}
+                          onChange={e => setRejectionComment(e.target.value)}
+                        />
+                        <div className="flex gap-2 mt-1">
+                          <button
+                            className="bg-red-700 text-white px-2 py-1 rounded text-xs"
+                            disabled={!rejectionComment.trim()}
+                            onClick={() => updateStatus(claim.id, "rejected", rejectionComment)}
+                          >
+                            Confirm Reject
+                          </button>
+                          <button
+                            className="bg-gray-300 text-gray-800 px-2 py-1 rounded text-xs"
+                            onClick={() => { setRejectingId(null); setRejectionComment(""); }}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 )}
               </td>
             </tr>
