@@ -5,7 +5,35 @@ import { useWalletClient, useWriteContract, useAccount } from "wagmi";
 import { ethers } from "ethers";
 import { ConnectKitButton } from "connectkit";
 import MerchantClaimsTable from "@/components/MerchantClaimsTable";
-  // Handle claim rejection with comment
+
+
+  // ...existing code...
+
+
+  // ...existing code...
+
+
+
+// Edit modal state type
+type EditMerchantState = {
+  open: boolean;
+  merchant: any | null;
+  form: { name: string; wallet: string; address: string; latitude: string; longitude: string };
+  error: string | null;
+  loading: boolean;
+};
+
+
+export default function MerchantAdminPage() {
+
+  // ...existing hooks and state...
+
+
+  // ...existing hooks and state...
+
+  // ...other functions...
+
+  // Handle claim rejection with comment (must be after all hooks)
   const rejectClaim = async (claim: any, rejectionComment: string) => {
     setMarking(claim.id);
     setClaimsError(cl => ({ ...cl, [claim.merchantId]: null }));
@@ -37,18 +65,6 @@ import MerchantClaimsTable from "@/components/MerchantClaimsTable";
     }
     setMarking(null);
   };
-
-// Edit modal state type
-type EditMerchantState = {
-  open: boolean;
-  merchant: any | null;
-  form: { name: string; wallet: string; address: string; latitude: string; longitude: string };
-  error: string | null;
-  loading: boolean;
-};
-
-
-export default function MerchantAdminPage() {
 
   // Use connected wallet address
   const { address } = useAccount();
