@@ -1,14 +1,11 @@
-"use strict";
 
-module.exports = {
-  up: async (queryInterface, Sequelize) => {
-    await queryInterface.addColumn("Claims", "rejectionComment", {
-      type: Sequelize.STRING,
-      allowNull: true,
-    });
-  },
+export async function up(queryInterface, Sequelize) {
+  await queryInterface.addColumn("Claims", "rejectionComment", {
+    type: Sequelize.STRING,
+    allowNull: true,
+  });
+}
 
-  down: async (queryInterface, Sequelize) => {
-    await queryInterface.removeColumn("Claims", "rejectionComment");
-  },
-};
+export async function down(queryInterface, Sequelize) {
+  await queryInterface.removeColumn("Claims", "rejectionComment");
+}
