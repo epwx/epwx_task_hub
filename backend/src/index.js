@@ -1,6 +1,9 @@
 import 'dotenv/config';
 import express from 'express';
 import path from 'path';
+
+// Debug: Print backend working directory on startup
+console.log('Backend CWD:', process.cwd());
 const app = express();
 
 // Serve uploads directory as static files
