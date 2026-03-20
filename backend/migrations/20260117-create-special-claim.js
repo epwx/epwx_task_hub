@@ -33,14 +33,14 @@ export default {
     }
     // Add indexes if not exist
     const indexes = await queryInterface.showIndex('special_claims');
-    const indexNames = indexes.map(idx => idx.name);
+    const indexNames = indexes.map(idx => idx.name.toLowerCase());
     if (!indexNames.includes('special_claims_wallet')) {
       await queryInterface.addIndex('special_claims', ['wallet']);
     }
     if (!indexNames.includes('special_claims_status')) {
       await queryInterface.addIndex('special_claims', ['status']);
     }
-    if (!indexNames.includes('special_claims_createdAt')) {
+    if (!indexNames.includes('special_claims_created_at')) {
       await queryInterface.addIndex('special_claims', ['createdAt']);
     }
   },
