@@ -41,10 +41,20 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">
-            <a href="/" className={pathname === "/" ? "font-bold text-blue-600" : ""}>Main Site</a>
+            <a 
+              href="https://epowex.com" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600 transition-colors py-2"
+            >Main Site</a>
             <a href="/referral" className={pathname === "/referral" ? "font-bold text-blue-600" : ""}>Referral</a>
             <a href="/platform-stats" className={pathname === "/platform-stats" ? "font-bold text-blue-600" : ""}>Platform Stats</a>
-            <a href="/contact" className={pathname === "/contact" ? "font-bold text-blue-600" : ""}>Contact Us</a>
+            <a 
+              href="https://t.me/ePowerX_On_Base" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600 transition-colors py-2"
+            >Contact Us</a>
             <a
               href={`https://pancakeswap.finance/swap?chain=base&outputCurrency=${process.env.NEXT_PUBLIC_EPWX_TOKEN}`}
               target="_blank"
