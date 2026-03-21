@@ -188,17 +188,29 @@ export default function AdminPage() {
       }
       // Set daily reward amount (100,000 EPWX)
       const dailyAmount = ethers.parseUnits("100000", 9).toString();
-      await writeContractAsync({
+      const tx = await writeContractAsync({
         address: EPWX_TOKEN_ADDRESS as `0x${string}`,
         abi: EPWX_TOKEN_ABI,
         functionName: "transfer",
         args: [claim.wallet, dailyAmount],
       });
-      // Mark as paid in backend
+      const publicClient = usePublicClient();
+      if (!publicClient) {
+        setError("Public client not available");
+        setMarking(null);
+        return;
+      }
+      const receipt = await publicClient.waitForTransactionReceipt({ hash: tx });
+      if (receipt.status !== 'success') {
+        setError("Token transfer failed or was reverted");
+        setMarking(null);
+        return;
+      }
+      // Mark as paid in backend with txHash
       const res = await fetch("/api/epwx/daily-claims/mark-paid", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ admin: address, claimId: claim.id }),
+        body: JSON.stringify({ admin: address, claimId: claim.id, txHash: tx }),
       });
       const data = await res.json();
       if (data.success) {

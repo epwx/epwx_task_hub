@@ -351,7 +351,7 @@ router.get('/daily-claims', async (req, res) => {
 
 // POST /api/epwx/daily-claims/mark-paid
 router.post('/daily-claims/mark-paid', async (req, res) => {
-  const { admin, claimId } = req.body;
+  const { admin, claimId, txHash } = req.body;
   const ADMIN_WALLETS = (process.env.ADMIN_WALLETS || '').split(',').map(w => w.trim().toLowerCase()).filter(Boolean);
   if (!ADMIN_WALLETS.includes(admin.toLowerCase())) {
     return res.status(403).json({ error: 'Unauthorized' });
@@ -359,23 +359,25 @@ router.post('/daily-claims/mark-paid', async (req, res) => {
   try {
     const claim = await DailyClaim.findByPk(claimId);
     if (!claim) return res.status(404).json({ error: 'Claim not found' });
-    // Send EPWX tokens to the customer wallet
-    const recipient = claim.wallet;
-    const rewardAmount = ethers.parseUnits('100', 9); // 100 EPWX, adjust decimals as needed
-    let txHash = null;
+    if (!txHash) {
+      return res.status(400).json({ error: 'Transaction hash required for verification.' });
+    }
+    // On-chain verification
+    const provider = new ethers.JsonRpcProvider(process.env.BASE_RPC_URL || process.env.RPC_URL);
+    let receipt;
     try {
-      if (epwxTokenWithSigner && ethers.isAddress(recipient)) {
-        const tx = await epwxTokenWithSigner.transfer(recipient, rewardAmount);
-        await tx.wait();
-        txHash = tx.hash;
-      } else {
-        throw new Error('EPWX token contract or recipient address invalid');
+      receipt = await provider.getTransactionReceipt(txHash);
+      if (!receipt || receipt.status !== 1) {
+        claim.status = 'failed';
+        await claim.save();
+        return res.status(400).json({ error: 'Transaction not found or failed.' });
       }
     } catch (err) {
       claim.status = 'failed';
       await claim.save();
-      return res.status(500).json({ error: 'Token transfer failed: ' + err.message });
+      return res.status(500).json({ error: 'Failed to fetch transaction receipt.' });
     }
+    // Optionally: decode input data to verify transfer details
     claim.status = 'paid';
     claim.txHash = txHash;
     await claim.save();
