@@ -59,7 +59,8 @@ router.post('/claims/mark-paid', async (req, res) => {
 // GET /api/epwx/telegram-referral-rewards?admin=...&status=pending|paid
 router.get('/telegram-referral-rewards', async (req, res) => {
   const { admin, status } = req.query;
-  if (admin !== '0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735') {
+  const adminWallets = (process.env.ADMIN_WALLETS || '').split(',').map(a => a.trim().toLowerCase());
+  if (!admin || !adminWallets.length || !adminWallets.includes(admin.toLowerCase())) {
     return res.status(403).json({ error: 'Unauthorized' });
   }
   try {
@@ -79,7 +80,8 @@ router.get('/telegram-referral-rewards', async (req, res) => {
 // POST /api/epwx/telegram-referral-reward/mark-paid
 router.post('/telegram-referral-reward/mark-paid', async (req, res) => {
   const { admin, referralId, referrer, referred } = req.body;
-  if (admin !== '0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735') {
+  const adminWallets = (process.env.ADMIN_WALLETS || '').split(',').map(a => a.trim().toLowerCase());
+  if (!admin || !adminWallets.length || !adminWallets.includes(admin.toLowerCase())) {
     return res.status(403).json({ error: 'Unauthorized' });
   }
   if (!referralId) return res.status(400).json({ error: 'referralId is required' });
@@ -129,7 +131,8 @@ router.post('/telegram-referral', async (req, res) => {
 // GET /api/epwx/special-claim/list (admin only)
 router.get('/special-claim/list', async (req, res) => {
   const { admin } = req.query;
-  if (admin !== '0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735') {
+  const adminWallets = (process.env.ADMIN_WALLETS || '').split(',').map(a => a.trim().toLowerCase());
+  if (!admin || !adminWallets.length || !adminWallets.includes(admin.toLowerCase())) {
     return res.status(403).json({ error: 'Unauthorized' });
   }
   try {
@@ -143,7 +146,8 @@ router.get('/special-claim/list', async (req, res) => {
 // POST /api/epwx/special-claim/add (admin only)
 router.post('/special-claim/add', async (req, res) => {
   const { admin, wallet } = req.body;
-  if (admin !== '0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735') {
+  const adminWallets = (process.env.ADMIN_WALLETS || '').split(',').map(a => a.trim().toLowerCase());
+  if (!admin || !adminWallets.length || !adminWallets.includes(admin.toLowerCase())) {
     return res.status(403).json({ error: 'Unauthorized' });
   }
   if (!wallet) return res.status(400).json({ error: 'wallet is required' });
@@ -208,7 +212,8 @@ router.post('/special-claim/claim', async (req, res) => {
 // POST /api/epwx/special-claim/approve (admin only)
 router.post('/special-claim/approve', async (req, res) => {
   const { admin, wallet } = req.body;
-  if (admin !== '0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735') {
+  const adminWallets = (process.env.ADMIN_WALLETS || '').split(',').map(a => a.trim().toLowerCase());
+  if (!admin || !adminWallets.length || !adminWallets.includes(admin.toLowerCase())) {
     return res.status(403).json({ error: 'Unauthorized' });
   }
   if (!wallet) return res.status(400).json({ error: 'wallet is required' });
@@ -504,7 +509,8 @@ router.get('/claims', async (req, res) => {
 // POST /api/epwx/claims/mark-paid
 router.post('/claims/mark-paid', async (req, res) => {
   const { admin, claimId } = req.body;
-  if (admin !== '0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735') {
+  const adminWallets = (process.env.ADMIN_WALLETS || '').split(',').map(a => a.trim().toLowerCase());
+  if (!admin || !adminWallets.length || !adminWallets.includes(admin.toLowerCase())) {
     return res.status(403).json({ error: 'Unauthorized' });
   }
   try {
