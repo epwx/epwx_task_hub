@@ -359,25 +359,6 @@ router.post('/daily-claims/mark-paid', async (req, res) => {
   try {
     const claim = await DailyClaim.findByPk(claimId);
     if (!claim) return res.status(404).json({ error: 'Claim not found' });
-    if (!txHash) {
-      return res.status(400).json({ error: 'Transaction hash required for verification.' });
-    }
-    // On-chain verification
-    const provider = new ethers.JsonRpcProvider(process.env.BASE_RPC_URL || process.env.RPC_URL);
-    let receipt;
-    try {
-      receipt = await provider.getTransactionReceipt(txHash);
-      if (!receipt || receipt.status !== 1) {
-        claim.status = 'failed';
-        await claim.save();
-        return res.status(400).json({ error: 'Transaction not found or failed.' });
-      }
-    } catch (err) {
-      claim.status = 'failed';
-      await claim.save();
-      return res.status(500).json({ error: 'Failed to fetch transaction receipt.' });
-    }
-    // Optionally: decode input data to verify transfer details
     claim.status = 'paid';
     claim.txHash = txHash;
     await claim.save();
