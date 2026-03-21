@@ -17,7 +17,7 @@ const getAdminWallets = () => {
 };
 
 export default function AdminPage() {
-      // Telegram Referral Rewards
+  // Telegram Referral Rewards
       const [referralRewards, setReferralRewards] = useState<any[]>([]);
       const [referralLoading, setReferralLoading] = useState(false);
       const [referralError, setReferralError] = useState<string | null>(null);
@@ -77,6 +77,7 @@ export default function AdminPage() {
   const { address } = useAccount();
   const { data: walletClient } = useWalletClient();
   const { writeContractAsync } = useWriteContract();
+  const publicClient = usePublicClient();
 
   // Use the existing NEXT_PUBLIC_EPWX_TOKEN env property for contract address
   const EPWX_TOKEN_ADDRESS = process.env.NEXT_PUBLIC_EPWX_TOKEN || "0xYourTokenAddressHere";
@@ -194,7 +195,6 @@ export default function AdminPage() {
         functionName: "transfer",
         args: [claim.wallet, dailyAmount],
       });
-      const publicClient = usePublicClient();
       if (!publicClient) {
         setError("Public client not available");
         setMarking(null);
@@ -253,7 +253,6 @@ export default function AdminPage() {
         functionName: "transfer",
         args: [claim.wallet, amount],
       });
-      const publicClient = usePublicClient();
       // Wait for transaction to be mined/confirmed using wagmi publicClient
       if (!publicClient) {
         setError("Public client not available");
