@@ -220,6 +220,8 @@ export default function AdminPage() {
       } else {
         setError(data.error || "Failed to mark as paid");
       }
+      // Debug: log backend response for troubleshooting
+      console.log('Backend response for mark-paid:', data);
     } catch (e: any) {
       setError(e?.message || "Failed to distribute daily claim");
     }
