@@ -207,7 +207,7 @@ export default function AdminPage() {
         return;
       }
       // Mark as paid in backend with txHash
-      const res = await fetch("/epwx/daily-claims/mark-paid", {
+      const res = await fetch("/api/epwx/daily-claims/mark-paid", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ admin: address, claimId: claim.id, txHash: tx }),
