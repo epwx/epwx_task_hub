@@ -18,8 +18,8 @@ const MerchantQRCode: React.FC<MerchantQRCodeProps> = ({ url, merchantName, merc
   // Helper to generate a professional SVG for download
   const generateStyledSVG = () => {
     // SVG size and layout
-    const width = 320;
-    const height = 420;
+    const width = 340;
+    const height = 600;
     const qrSize = 200;
     const borderRadius = 24;
     const borderColor = '#0070f3';
@@ -32,7 +32,20 @@ const MerchantQRCode: React.FC<MerchantQRCodeProps> = ({ url, merchantName, merc
     // Get QR code SVG markup from the rendered QRCode
     const qrSvg = svgRef.current ? svgRef.current.outerHTML : '';
 
-    // Compose SVG with border, merchant info, and QR code
+    // Claim instructions (SVG text, multi-line)
+    const howToClaim = [
+      'How to Claim:',
+      '1. Scan the QR code above using your phone camera or QR app.',
+      '2. Enable location access when prompted.',
+      '3. Connect your wallet (Metamask, TrustWallet, etc.) if required.',
+      '4. Follow the link to the merchant’s claim page.',
+      '5. Submit your bill and details as required.',
+      '6. Wait for approval and receive your reward!',
+      '',
+      'For Merchants: Print and display this QR code at your shop counter for customers to claim rewards easily.'
+    ];
+
+    // Compose SVG with border, merchant info, QR code, and instructions
     return `<?xml version="1.0" encoding="UTF-8"?>
 <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
   <rect x="0" y="0" width="${width}" height="${height}" rx="${borderRadius}" fill="${bgColor}" stroke="${borderColor}" stroke-width="4"/>
@@ -42,6 +55,15 @@ const MerchantQRCode: React.FC<MerchantQRCodeProps> = ({ url, merchantName, merc
     ${qrSvg}
   </g>
   <text x="50%" y="${100 + qrSize + 40}" text-anchor="middle" font-size="16" font-family="${fontFamily}" fill="${textColor}">Scan to claim rewards</text>
+  <g font-family="${fontFamily}" font-size="13" fill="#333">
+    <text x="20" y="${100 + qrSize + 70}" font-weight="bold">${esc(howToClaim[0])}</text>
+    <text x="28" y="${100 + qrSize + 95}">${esc(howToClaim[1])}</text>
+    <text x="28" y="${100 + qrSize + 115}">${esc(howToClaim[2])}</text>
+    <text x="28" y="${100 + qrSize + 135}">${esc(howToClaim[3])}</text>
+    <text x="28" y="${100 + qrSize + 155}">${esc(howToClaim[4])}</text>
+    <text x="28" y="${100 + qrSize + 175}">${esc(howToClaim[5])}</text>
+    <text x="28" y="${100 + qrSize + 205}" font-size="12" fill="#666">${esc(howToClaim[7])}</text>
+  </g>
 </svg>`;
   };
 
