@@ -5,6 +5,7 @@ import { useWalletClient, useWriteContract, useAccount } from "wagmi";
 import { ethers } from "ethers";
 import { ConnectKitButton } from "connectkit";
 import MerchantClaimsTable from "@/components/MerchantClaimsTable";
+import MerchantQRCode from "@/components/MerchantQRCode";
 
 
   // ...existing code...
@@ -346,62 +347,70 @@ export default function MerchantAdminPage() {
             <div className="space-y-4 mt-2">
               {Array.isArray(merchants) && merchants.length > 0 ? (
                 <>
-                  {paginatedMerchants.map((m) => (
-                    <div key={String(m.id)} className="bg-white rounded shadow p-4 border flex flex-col text-sm text-gray-800">
-                      <div className="font-bold text-lg mb-2 text-gray-900">{m.name}</div>
-                      <div><span className="font-semibold text-gray-700">Wallet:</span> <span className="break-all text-gray-800">{m.wallet}</span></div>
-                      <div><span className="font-semibold text-gray-700">Address:</span> <span className="text-gray-800">{m.address}</span></div>
-                      <div><span className="font-semibold text-gray-700">Latitude:</span> <span className="text-gray-800">{m.latitude}</span></div>
-                      <div><span className="font-semibold text-gray-700">Longitude:</span> <span className="text-gray-800">{m.longitude}</span></div>
-                      <div className="flex flex-row gap-2 mt-2">
-                        <button className="text-blue-600 underline self-start" onClick={() => toggleClaims(m.id)}>
-                          {expanded[m.id] ? "Hide Claims" : "View Claims"}
-                        </button>
-                        <button className="text-green-600 underline self-start" onClick={() => openEditModal(m)}>
-                          Edit
-                        </button>
+                  {paginatedMerchants.map((m) => {
+                    // Construct the merchant claim URL for QR code
+                    const merchantUrl = `https://tasks.epowex.com/claim?merchant=${m.id}`;
+                    return (
+                      <div key={String(m.id)} className="bg-white rounded shadow p-4 border flex flex-col text-sm text-gray-800">
+                        <div className="font-bold text-lg mb-2 text-gray-900">{m.name}</div>
+                        <div><span className="font-semibold text-gray-700">Wallet:</span> <span className="break-all text-gray-800">{m.wallet}</span></div>
+                        <div><span className="font-semibold text-gray-700">Address:</span> <span className="text-gray-800">{m.address}</span></div>
+                        <div><span className="font-semibold text-gray-700">Latitude:</span> <span className="text-gray-800">{m.latitude}</span></div>
+                        <div><span className="font-semibold text-gray-700">Longitude:</span> <span className="text-gray-800">{m.longitude}</span></div>
+                        {/* QR Code for merchant */}
+                        <div className="mt-4">
+                          <MerchantQRCode url={merchantUrl} merchantName={m.name} />
+                        </div>
+                        <div className="flex flex-row gap-2 mt-2">
+                          <button className="text-blue-600 underline self-start" onClick={() => toggleClaims(m.id)}>
+                            {expanded[m.id] ? "Hide Claims" : "View Claims"}
+                          </button>
+                          <button className="text-green-600 underline self-start" onClick={() => openEditModal(m)}>
+                            Edit
+                          </button>
+                        </div>
+                        {expanded[m.id] && (
+                            <div className="mt-2 w-full">
+                              {claimsLoading[m.id] ? (
+                                <div>Loading claims...</div>
+                              ) : (
+                                <>
+                                  {claimsError[m.id] && (
+                                    <div className="text-red-600 mb-2">{claimsError[m.id]}</div>
+                                  )}
+                                  {Array.isArray(claims[m.id]) && claims[m.id].length > 0 ? (
+                                    <>
+                                      <MerchantClaimsTable
+                                        claims={getPaginatedClaims(m.id)}
+                                        isAdmin={!!(address && ADMIN_WALLETS.includes(address.toLowerCase()))}
+                                        onDistribute={distributeCashback}
+                                        onReject={rejectClaim}
+                                        marking={marking}
+                                      />
+                                      <div className="flex justify-end items-center mt-2 space-x-2">
+                                        <button
+                                          className="px-2 py-1 border rounded bg-gray-100"
+                                          disabled={(claimsPage[m.id] || 1) === 1}
+                                          onClick={() => setClaimsPage(cp => ({ ...cp, [m.id]: (cp[m.id] || 1) - 1 }))}
+                                        >Previous</button>
+                                        <span>Page {(claimsPage[m.id] || 1)} of {getClaimsPageCount(m.id)}</span>
+                                        <button
+                                          className="px-2 py-1 border rounded bg-gray-100"
+                                          disabled={(claimsPage[m.id] || 1) === getClaimsPageCount(m.id)}
+                                          onClick={() => setClaimsPage(cp => ({ ...cp, [m.id]: (cp[m.id] || 1) + 1 }))}
+                                        >Next</button>
+                                      </div>
+                                    </>
+                                  ) : (
+                                    <div className="text-gray-600">No claims for this merchant.</div>
+                                  )}
+                                </>
+                              )}
+                            </div>
+                        )}
                       </div>
-                      {expanded[m.id] && (
-                          <div className="mt-2 w-full">
-                            {claimsLoading[m.id] ? (
-                              <div>Loading claims...</div>
-                            ) : (
-                              <>
-                                {claimsError[m.id] && (
-                                  <div className="text-red-600 mb-2">{claimsError[m.id]}</div>
-                                )}
-                                {Array.isArray(claims[m.id]) && claims[m.id].length > 0 ? (
-                                  <>
-                                    <MerchantClaimsTable
-                                      claims={getPaginatedClaims(m.id)}
-                                      isAdmin={!!(address && ADMIN_WALLETS.includes(address.toLowerCase()))}
-                                      onDistribute={distributeCashback}
-                                      onReject={rejectClaim}
-                                      marking={marking}
-                                    />
-                                    <div className="flex justify-end items-center mt-2 space-x-2">
-                                      <button
-                                        className="px-2 py-1 border rounded bg-gray-100"
-                                        disabled={(claimsPage[m.id] || 1) === 1}
-                                        onClick={() => setClaimsPage(cp => ({ ...cp, [m.id]: (cp[m.id] || 1) - 1 }))}
-                                      >Previous</button>
-                                      <span>Page {(claimsPage[m.id] || 1)} of {getClaimsPageCount(m.id)}</span>
-                                      <button
-                                        className="px-2 py-1 border rounded bg-gray-100"
-                                        disabled={(claimsPage[m.id] || 1) === getClaimsPageCount(m.id)}
-                                        onClick={() => setClaimsPage(cp => ({ ...cp, [m.id]: (cp[m.id] || 1) + 1 }))}
-                                      >Next</button>
-                                    </div>
-                                  </>
-                                ) : (
-                                  <div className="text-gray-600">No claims for this merchant.</div>
-                                )}
-                              </>
-                            )}
-                          </div>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                         {/* Edit Merchant Modal */}
                         {editState.open && (
                           <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
