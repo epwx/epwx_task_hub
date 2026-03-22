@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from "react";
 // Utility to detect in-app browsers (Metamask, TrustWallet, etc.) and mobile
 function isInAppBrowser() {
-  const ua = navigator.userAgent || navigator.vendor || window.opera;
+  const ua = navigator.userAgent || navigator.vendor;
   // Common wallet/in-app browser indicators
   return /MetaMask|Trust|Coinbase|imToken|TokenPocket|WalletConnect|Opera Mini|OPR\//i.test(ua) ||
     (/android|iphone|ipad|ipod|mobile/i.test(ua) && /wv|; wv\)/i.test(ua));
