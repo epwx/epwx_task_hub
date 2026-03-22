@@ -71,6 +71,18 @@ const MerchantQRCode: React.FC<MerchantQRCodeProps> = ({ url, merchantName, merc
           Download QR Code
         </button>
       </div>
+      <div style={{ marginTop: '1.5rem', color: '#333', fontSize: 15, maxWidth: 320, marginLeft: 'auto', marginRight: 'auto', textAlign: 'left', background: '#f8f8f8', borderRadius: 8, padding: 12, border: '1px solid #e0e0e0' }}>
+        <b>How to Claim:</b>
+        <ol style={{ margin: '8px 0 0 18px', padding: 0 }}>
+          <li>Scan the QR code above using your phone camera or QR app.</li>
+          <li>Follow the link to the merchant’s claim page.</li>
+          <li>Submit your bill and details as required.</li>
+          <li>Wait for approval and receive your reward!</li>
+        </ol>
+        <div style={{ marginTop: 8, fontSize: 13, color: '#666' }}>
+          <b>For Merchants:</b> Print and display this QR code at your shop counter for customers to claim rewards easily.
+        </div>
+      </div>
     </div>
   );
 };
