@@ -1,4 +1,12 @@
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
+// Utility to detect in-app browsers (Metamask, TrustWallet, etc.) and mobile
+function isInAppBrowser() {
+  const ua = navigator.userAgent || navigator.vendor || window.opera;
+  // Common wallet/in-app browser indicators
+  return /MetaMask|Trust|Coinbase|imToken|TokenPocket|WalletConnect|Opera Mini|OPR\//i.test(ua) ||
+    (/android|iphone|ipad|ipod|mobile/i.test(ua) && /wv|; wv\)/i.test(ua));
+}
+
 import QRCode from "react-qr-code";
 
 interface MerchantQRCodeProps {
@@ -14,6 +22,11 @@ interface MerchantQRCodeProps {
 
 const MerchantQRCode: React.FC<MerchantQRCodeProps> = ({ url, merchantName, merchantAddress }) => {
   const svgRef = useRef<SVGSVGElement | null>(null);
+  const [inApp, setInApp] = useState(false);
+
+  useEffect(() => {
+    setInApp(isInAppBrowser());
+  }, []);
 
   // Helper to generate a professional SVG for download
   const generateStyledSVG = () => {
@@ -91,9 +104,16 @@ const MerchantQRCode: React.FC<MerchantQRCodeProps> = ({ url, merchantName, merc
         <QRCode ref={svgRef} value={url} size={200} />
       </div>
       <div style={{ marginTop: '1rem' }}>
-        <button onClick={downloadQR} style={{ padding: '8px 16px', borderRadius: 4, background: '#0070f3', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 600 }}>
-          Download QR Code
-        </button>
+        {!inApp ? (
+          <button onClick={downloadQR} style={{ padding: '8px 16px', borderRadius: 4, background: '#0070f3', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 600 }}>
+            Download QR Code
+          </button>
+        ) : (
+          <div style={{ color: '#b91c1c', fontWeight: 500, fontSize: 15, marginTop: 8, maxWidth: 260, marginLeft: 'auto', marginRight: 'auto' }}>
+            <span>Download not supported in this browser.<br />
+            <span style={{ color: '#222' }}>Long-press the QR code above to save it as an image.</span></span>
+          </div>
+        )}
       </div>
     </div>
   );
