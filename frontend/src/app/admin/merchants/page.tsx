@@ -359,7 +359,7 @@ export default function MerchantAdminPage() {
                         <div><span className="font-semibold text-gray-700">Longitude:</span> <span className="text-gray-800">{m.longitude}</span></div>
                         {/* QR Code for merchant */}
                         <div className="mt-4">
-                          <MerchantQRCode url={merchantUrl} merchantName={m.name} />
+                          <MerchantQRCode url={merchantUrl} merchantName={m.name} merchantAddress={m.address} />
                         </div>
                         <div className="flex flex-row gap-2 mt-2">
                           <button className="text-blue-600 underline self-start" onClick={() => toggleClaims(m.id)}>
