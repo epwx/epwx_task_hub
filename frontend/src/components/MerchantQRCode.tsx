@@ -37,7 +37,8 @@ const MerchantQRCode: React.FC<MerchantQRCodeProps> = ({ url, merchantName, merc
       'How to Claim:',
       '1. Scan the QR code above using your phone camera or QR app.',
       '2. Enable location access when prompted.',
-      '3. Connect your wallet (Metamask, TrustWallet, etc.) if required.',
+        '3. Connect your wallet (Metamask, TrustWallet, etc.)',
+        '   if required.',
       '4. Follow the link to the merchant’s claim page.',
       '5. Submit your bill and details as required.',
       '6. Wait for approval and receive your reward!',
@@ -62,7 +63,8 @@ const MerchantQRCode: React.FC<MerchantQRCodeProps> = ({ url, merchantName, merc
     <text x="28" y="${100 + qrSize + 135}">${esc(howToClaim[3])}</text>
     <text x="28" y="${100 + qrSize + 155}">${esc(howToClaim[4])}</text>
     <text x="28" y="${100 + qrSize + 175}">${esc(howToClaim[5])}</text>
-    <text x="28" y="${100 + qrSize + 205}" font-size="12" fill="#666">${esc(howToClaim[7])}</text>
+      <text x="28" y="${100 + qrSize + 195}">${esc(howToClaim[6])}</text>
+      <text x="28" y="${100 + qrSize + 225}" font-size="12" fill="#666">${esc(howToClaim[8])}</text>
   </g>
 </svg>`;
   };
@@ -92,18 +94,6 @@ const MerchantQRCode: React.FC<MerchantQRCodeProps> = ({ url, merchantName, merc
         <button onClick={downloadQR} style={{ padding: '8px 16px', borderRadius: 4, background: '#0070f3', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 600 }}>
           Download QR Code
         </button>
-      </div>
-      <div style={{ marginTop: '1.5rem', color: '#333', fontSize: 15, maxWidth: 320, marginLeft: 'auto', marginRight: 'auto', textAlign: 'left', background: '#f8f8f8', borderRadius: 8, padding: 12, border: '1px solid #e0e0e0' }}>
-        <b>How to Claim:</b>
-        <ol style={{ margin: '8px 0 0 18px', padding: 0 }}>
-          <li>Scan the QR code above using your phone camera or QR app.</li>
-          <li>Follow the link to the merchant’s claim page.</li>
-          <li>Submit your bill and details as required.</li>
-          <li>Wait for approval and receive your reward!</li>
-        </ol>
-        <div style={{ marginTop: 8, fontSize: 13, color: '#666' }}>
-          <b>For Merchants:</b> Print and display this QR code at your shop counter for customers to claim rewards easily.
-        </div>
       </div>
     </div>
   );
