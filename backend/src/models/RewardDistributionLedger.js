@@ -1,12 +1,12 @@
-const { Model } = require("sequelize");
+import { Model } from "sequelize";
 
-module.exports = (sequelize, DataTypes) => {
-  class RewardDistributionLedger extends Model {
+const RewardDistributionLedger = (sequelize, DataTypes) => {
+  class RewardDistributionLedgerClass extends Model {
     static associate(models) {
       // Define associations here if needed
     }
   }
-  RewardDistributionLedger.init(
+  RewardDistributionLedgerClass.init(
     {
       date: {
         type: DataTypes.DATE,
@@ -51,5 +51,7 @@ module.exports = (sequelize, DataTypes) => {
       tableName: "RewardDistributionLedger",
     }
   );
-  return RewardDistributionLedger;
+  return RewardDistributionLedgerClass;
 };
+
+export default RewardDistributionLedger;
