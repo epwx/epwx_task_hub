@@ -1,22 +1,18 @@
 "use client";
 import React from "react";
 
-// Placeholder for fetching data from backend API
+
 const fetchLedgerEntries = async () => {
-  // Replace with actual API call
-  return [
-    {
-      id: 1,
-      date: "2026-03-30T12:00:00Z",
-      merchant_name: "Test Merchant",
-      customer_id: "cust123",
-      receipt_id: "rcpt001",
-      epwx_amount: "100.5",
-      fiat_value: "50.25",
-      transaction_hash: "0xabc123",
-      notes: "Test entry",
-    },
-  ];
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE || ""}/api/reward-ledger`, {
+      cache: "no-store"
+    });
+    if (!res.ok) throw new Error("Failed to fetch ledger entries");
+    const data = await res.json();
+    return data.entries || [];
+  } catch (e) {
+    return [];
+  }
 };
 
 export default async function RewardLedgerPage() {
