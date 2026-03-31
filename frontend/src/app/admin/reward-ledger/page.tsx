@@ -1,8 +1,19 @@
+type LedgerEntry = {
+  id: number;
+  date: string;
+  merchant_name: string;
+  customer_id: string;
+  receipt_id: string;
+  epwx_amount: string;
+  fiat_value: string;
+  transaction_hash: string;
+  notes: string;
+};
 "use client";
 import React from "react";
 
 
-const fetchLedgerEntries = async () => {
+const fetchLedgerEntries = async (): Promise<LedgerEntry[]> => {
   try {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE || ""}/api/reward-ledger`, {
       cache: "no-store"
@@ -16,7 +27,7 @@ const fetchLedgerEntries = async () => {
 };
 
 export default async function RewardLedgerPage() {
-  const ledgerEntries = await fetchLedgerEntries();
+  const ledgerEntries: LedgerEntry[] = await fetchLedgerEntries();
 
   return (
     <div className="p-6">
@@ -35,7 +46,7 @@ export default async function RewardLedgerPage() {
           </tr>
         </thead>
         <tbody>
-          {ledgerEntries.map((entry) => (
+          {ledgerEntries.map((entry: LedgerEntry) => (
             <tr key={entry.id}>
               <td className="border px-2 py-1">{new Date(entry.date).toLocaleString()}</td>
               <td className="border px-2 py-1">{entry.merchant_name}</td>
