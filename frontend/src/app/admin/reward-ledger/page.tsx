@@ -27,15 +27,15 @@ export default async function RewardLedgerPage() {
       <h1 className="text-2xl font-bold mb-4">Reward Distribution Ledger</h1>
       <table className="min-w-full border border-gray-300">
         <thead>
-          <tr className="bg-gray-100">
-            <th className="border px-2 py-1">Date</th>
-            <th className="border px-2 py-1">Merchant</th>
-            <th className="border px-2 py-1">Customer</th>
-            <th className="border px-2 py-1">Receipt</th>
-            <th className="border px-2 py-1">EPWX Amount</th>
-            <th className="border px-2 py-1">Fiat Value</th>
-            <th className="border px-2 py-1">Tx Hash</th>
-            <th className="border px-2 py-1">Notes</th>
+          <tr className="bg-gray-100 dark:bg-gray-800">
+            <th className="border px-2 py-1 text-gray-700 dark:text-gray-100">Date</th>
+            <th className="border px-2 py-1 text-gray-700 dark:text-gray-100">Merchant</th>
+            <th className="border px-2 py-1 text-gray-700 dark:text-gray-100">Customer</th>
+            <th className="border px-2 py-1 text-gray-700 dark:text-gray-100">Receipt</th>
+            <th className="border px-2 py-1 text-gray-700 dark:text-gray-100">EPWX Amount</th>
+            <th className="border px-2 py-1 text-gray-700 dark:text-gray-100">Fiat Value</th>
+            <th className="border px-2 py-1 text-gray-700 dark:text-gray-100">Tx Hash</th>
+            <th className="border px-2 py-1 text-gray-700 dark:text-gray-100">Notes</th>
           </tr>
         </thead>
         <tbody>
