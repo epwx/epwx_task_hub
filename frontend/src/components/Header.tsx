@@ -164,6 +164,13 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
                   >
                     🏪 Merchant Admin
                   </a>
+                  <a
+                    href="/admin/reward-ledger"
+                    className="px-5 py-2.5 text-sm font-bold bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 rounded-xl hover:from-blue-100 hover:to-blue-200 transition-all shadow-md text-center block mt-2"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    📒 Reward Ledger
+                  </a>
                 </>
               ) : null}
               <button
