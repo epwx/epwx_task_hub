@@ -1,6 +1,6 @@
 
 import express from 'express';
-import { User, DailyClaim, CashbackClaim, SpecialClaim, TelegramReferral, Claim } from '../models/index.js';
+import { User, DailyClaim, CashbackClaim, SpecialClaim, TelegramReferral, Claim, RewardDistributionLedger, Merchant } from '../models/index.js';
 import { Op } from 'sequelize';
 // import { ethers } from 'ethers'; // Removed duplicate import
 import { getEPWXPurchaseTransactions } from '../services/epwxCashback.js';
@@ -49,6 +49,25 @@ router.post('/claims/mark-paid', async (req, res) => {
     claim.txHash = txHash;
     await claim.save();
     console.log('[mark-paid] Updated claim:', claim.id, 'status:', claim.status);
+
+    // Insert into RewardDistributionLedger
+    try {
+      const merchant = await Merchant.findByPk(claim.merchantId);
+      await RewardDistributionLedger.create({
+        date: new Date(),
+        merchant_id: claim.merchantId,
+        merchant_name: merchant ? merchant.name : '',
+        customer_id: claim.customer,
+        receipt_id: claim.id.toString(),
+        epwx_amount: claim.cashbackAmount || '',
+        fiat_value: null,
+        transaction_hash: txHash,
+        notes: 'Cashback claim paid'
+      });
+    } catch (ledgerErr) {
+      console.error('Failed to insert RewardDistributionLedger entry:', ledgerErr);
+    }
+
     res.json({ success: true, claim });
   } catch (err) {
     console.error('[mark-paid] Error:', err);
