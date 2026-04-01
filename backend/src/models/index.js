@@ -1,3 +1,6 @@
+
+import sequelize from '../config/database.js';
+import { DataTypes } from 'sequelize';
 import User from './User.js';
 import Campaign from './Campaign.js';
 import TaskSubmission from './TaskSubmission.js';
@@ -7,7 +10,9 @@ import SpecialClaim from './SpecialClaim.js';
 import TelegramReferral from './TelegramReferral.js';
 import Merchant from './Merchant.js';
 import Claim from './Claim.js';
-import RewardDistributionLedger from './RewardDistributionLedger.js';
+import RewardDistributionLedgerDef from './RewardDistributionLedger.js';
+
+const RewardDistributionLedger = RewardDistributionLedgerDef(sequelize, DataTypes);
 
 // Define associations
 Campaign.belongsTo(User, { foreignKey: 'advertiserId', as: 'advertiser' });
