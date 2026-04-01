@@ -392,6 +392,16 @@ router.post('/daily-claims/mark-paid', async (req, res) => {
   }
 });
 
+// GET /api/reward-ledger - Return all reward distribution ledger entries
+router.get('/reward-ledger', async (req, res) => {
+  try {
+    const entries = await RewardDistributionLedger.findAll({ order: [['date', 'DESC']] });
+    res.json({ ledger: entries });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.post('/daily-claim', async (req, res) => {
   const { wallet, signature } = req.body;
   if (!wallet || !signature) return res.status(400).json({ error: 'wallet and signature are required' });
