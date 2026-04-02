@@ -50,10 +50,10 @@ router.post('/claims/mark-paid', async (req, res) => {
     await claim.save();
     console.log('[mark-paid] Updated claim:', claim.id, 'status:', claim.status);
 
-    // Insert into RewardDistributionLedger
+    // Insert into RewardDistributionLedger with detailed logging
     try {
       const merchant = await Merchant.findByPk(claim.merchantId);
-      await RewardDistributionLedger.create({
+      console.log('[RewardLedger] Attempting insert:', {
         date: new Date(),
         merchant_id: claim.merchantId,
         merchant_name: merchant ? merchant.name : '',
@@ -64,8 +64,20 @@ router.post('/claims/mark-paid', async (req, res) => {
         transaction_hash: txHash,
         notes: 'Cashback claim paid'
       });
+      const ledgerEntry = await RewardDistributionLedger.create({
+        date: new Date(),
+        merchant_id: claim.merchantId,
+        merchant_name: merchant ? merchant.name : '',
+        customer_id: claim.customer,
+        receipt_id: claim.id.toString(),
+        epwx_amount: claim.cashbackAmount || '',
+        fiat_value: null,
+        transaction_hash: txHash,
+        notes: 'Cashback claim paid'
+      });
+      console.log('[RewardLedger] Insert successful, entry id:', ledgerEntry.id);
     } catch (ledgerErr) {
-      console.error('Failed to insert RewardDistributionLedger entry:', ledgerErr);
+      console.error('[RewardLedger] Failed to insert RewardDistributionLedger entry:', ledgerErr);
     }
 
     res.json({ success: true, claim });
