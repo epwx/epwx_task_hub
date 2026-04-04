@@ -1,3 +1,7 @@
+
+import dotenv from 'dotenv';
+dotenv.config();
+
 import sequelize from './src/config/database.js';
 import { DataTypes } from 'sequelize';
 import RewardDistributionLedgerDef from './src/models/RewardDistributionLedger.js';
