@@ -2,7 +2,7 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-import sequelize from './src/config/database.js';
+import sequelize from './src/config/database.js'; // DB_USER is used only from env, no fallback
 import { DataTypes } from 'sequelize';
 import RewardDistributionLedgerDef from './src/models/RewardDistributionLedger.js';
 
