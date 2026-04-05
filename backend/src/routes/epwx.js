@@ -70,7 +70,7 @@ router.post('/claims/mark-paid', async (req, res) => {
         merchant_name: merchant ? merchant.name : '',
         customer_id: claim.customer,
         receipt_id: claim.id.toString(),
-        epwx_amount: claim.cashbackAmount || '',
+        epwx_amount: (claim.cashbackAmount && !isNaN(Number(claim.cashbackAmount))) ? String(claim.cashbackAmount) : '0',
         fiat_value: null,
         transaction_hash: txHash,
         notes: 'Cashback claim paid'
