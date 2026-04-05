@@ -64,13 +64,17 @@ router.post('/claims/mark-paid', async (req, res) => {
         transaction_hash: txHash,
         notes: 'Cashback claim paid'
       });
+    // Centralized default cashback amount for all cashback logic
+    const DEFAULT_CASHBACK = '100000';
+
+      const epwxAmount = (claim.cashbackAmount && !isNaN(Number(claim.cashbackAmount))) ? String(claim.cashbackAmount) : DEFAULT_CASHBACK;
       const ledgerEntry = await RewardDistributionLedger.create({
         date: new Date(),
         merchant_id: claim.merchantId,
         merchant_name: merchant ? merchant.name : '',
         customer_id: claim.customer,
         receipt_id: claim.id.toString(),
-        epwx_amount: (claim.cashbackAmount && !isNaN(Number(claim.cashbackAmount))) ? String(claim.cashbackAmount) : '0',
+        epwx_amount: epwxAmount,
         fiat_value: null,
         transaction_hash: txHash,
         notes: 'Cashback claim paid'
