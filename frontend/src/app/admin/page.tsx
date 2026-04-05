@@ -17,42 +17,6 @@ const getAdminWallets = () => {
 };
 
 export default function AdminPage() {
-  // Telegram Referral Rewards
-      const [referralRewards, setReferralRewards] = useState<any[]>([]);
-      const [referralLoading, setReferralLoading] = useState(false);
-      const [referralError, setReferralError] = useState<string | null>(null);
-      const fetchReferralRewards = async () => {
-        setReferralLoading(true);
-        setReferralError(null);
-        try {
-          const adminWallets = getAdminWallets();
-          const admin = adminWallets[0] || "";
-          const res = await fetch(`/api/epwx/telegram-referral-rewards?admin=${admin}&status=pending`);
-          const data = await res.json();
-          setReferralRewards(data.rewards || []);
-        } catch (e: any) {
-          setReferralError(e?.message || 'Failed to fetch referral rewards');
-        }
-        setReferralLoading(false);
-      };
-      useEffect(() => { fetchReferralRewards(); }, []);
-      const markReferralPaid = async (referralId: string, referrer: boolean, referred: boolean) => {
-        setReferralLoading(true);
-        setReferralError(null);
-        try {
-          const res = await fetch('/api/epwx/telegram-referral-reward/mark-paid', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ admin: address, referralId, referrer, referred })
-          });
-          const data = await res.json();
-          if (data.success) fetchReferralRewards();
-          else setReferralError(data.error || 'Failed to mark as paid');
-        } catch (e: any) {
-          setReferralError(e?.message || 'Failed to mark as paid');
-        }
-        setReferralLoading(false);
-      };
     // Special Claims Pagination/Filter
     const [specialClaimsPage, setSpecialClaimsPage] = useState(1);
       const [specialClaimsFilter, setSpecialClaimsFilter] = useState({ wallet: '', status: 'pending' });

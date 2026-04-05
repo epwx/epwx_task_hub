@@ -46,18 +46,6 @@ function LastFivePaidDailyClaims() {
 
 export default function HomeTest() {
   const { address, isConnected } = useAccount();
-  const referralLink = address ? `https://t.me/epwx_bot?start=${address}` : '';
-  const [referralCount, setReferralCount] = useState<number | null>(null);
-  useEffect(() => {
-    if (!address) {
-      setReferralCount(null);
-      return;
-    }
-    fetch(`/api/epwx/telegram-referral-stats?wallet=${address}`)
-      .then(res => res.json())
-      .then(data => setReferralCount(typeof data.count === 'number' ? data.count : 0))
-      .catch(() => setReferralCount(null));
-  }, [address]);
 
   const [specialEligible, setSpecialEligible] = useState(false);
   const [specialClaiming, setSpecialClaiming] = useState(false);
@@ -105,13 +93,6 @@ export default function HomeTest() {
   };
 
   const [copied, setCopied] = useState(false);
-  const handleCopyReferral = () => {
-    if (referralLink) {
-      navigator.clipboard.writeText(referralLink);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
 
   const { signMessageAsync } = useSignMessage();
   const [claiming, setClaiming] = useState(false);

@@ -7,7 +7,6 @@ import TaskSubmission from './TaskSubmission.js';
 import CashbackClaim from './CashbackClaim.js';
 import DailyClaim from './DailyClaim.js';
 import SpecialClaim from './SpecialClaim.js';
-import TelegramReferral from './TelegramReferral.js';
 import Merchant from './Merchant.js';
 import Claim from './Claim.js';
 import RewardDistributionLedgerDef from './RewardDistributionLedger.js';
@@ -23,4 +22,4 @@ TaskSubmission.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 Campaign.hasMany(TaskSubmission, { foreignKey: 'campaignId', as: 'submissions' });
 User.hasMany(TaskSubmission, { foreignKey: 'userId', as: 'submissions' });
 
-export { User, Campaign, TaskSubmission, CashbackClaim, DailyClaim, SpecialClaim, TelegramReferral, Merchant, Claim, RewardDistributionLedger };
+export { User, Campaign, TaskSubmission, CashbackClaim, DailyClaim, SpecialClaim, Merchant, Claim, RewardDistributionLedger };

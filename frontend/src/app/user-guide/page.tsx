@@ -45,14 +45,6 @@ export default function UserGuide() {
             </ul>
           </li>
           <li>
-            <strong>Referrals:</strong>
-            <ul className="list-disc pl-6">
-              <li>Share your referral link from the homepage to invite new users.</li>
-              <li>Successful referrals will be tracked and displayed in your referral stats.</li>
-              <li>Referral rewards are distributed after verification.</li>
-            </ul>
-          </li>
-          <li>
             <strong>Platform Stats:</strong>
             <ul className="list-disc pl-6">
               <li>The <b>Platform Stats</b> section shows real-time statistics about the EPWX ecosystem, such as total tokens distributed and active campaigns.</li>
