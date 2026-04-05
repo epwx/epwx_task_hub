@@ -10,7 +10,10 @@ type LedgerEntry = {
   notes: string;
 };
 "use client";
+
 import React from "react";
+import { useAccount } from "wagmi";
+import { ConnectKitButton } from "connectkit";
 
 
 const fetchLedgerEntries = async (): Promise<LedgerEntry[]> => {
@@ -26,12 +29,27 @@ const fetchLedgerEntries = async (): Promise<LedgerEntry[]> => {
   }
 };
 
-export default async function RewardLedgerPage() {
-  const ledgerEntries: LedgerEntry[] = await fetchLedgerEntries();
+export default function RewardLedgerPage() {
+  const { address, isConnected } = useAccount();
+  const [ledgerEntries, setLedgerEntries] = React.useState<LedgerEntry[]>([]);
+
+  React.useEffect(() => {
+    fetchLedgerEntries().then(setLedgerEntries);
+  }, []);
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Reward Distribution Ledger</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-4">
+        <h1 className="text-2xl font-bold">Reward Distribution Ledger</h1>
+        <div className="flex items-center gap-2">
+          <ConnectKitButton />
+          {isConnected && address && (
+            <span className="text-xs sm:text-sm text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 rounded px-2 py-1 font-mono">
+              Connected: {address}
+            </span>
+          )}
+        </div>
+      </div>
       <div className="overflow-x-auto">
         <table className="min-w-full border border-gray-300">
           <thead>
