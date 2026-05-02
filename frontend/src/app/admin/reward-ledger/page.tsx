@@ -30,12 +30,29 @@ const fetchLedgerEntries = async (): Promise<LedgerEntry[]> => {
 };
 
 export default function RewardLedgerPage() {
+
   const { address, isConnected } = useAccount();
   const [ledgerEntries, setLedgerEntries] = React.useState<LedgerEntry[]>([]);
+
+  // Store filtered entries for connected merchant
+  const [filteredEntries, setFilteredEntries] = React.useState<LedgerEntry[]>([]);
 
   React.useEffect(() => {
     fetchLedgerEntries().then(setLedgerEntries);
   }, []);
+
+  React.useEffect(() => {
+    if (address) {
+      // Filter entries where merchant_name (wallet) matches connected address (case-insensitive)
+      setFilteredEntries(
+        ledgerEntries.filter(
+          (entry) => entry.customer_id && entry.merchant_name && entry.merchant_name.toLowerCase() === address.toLowerCase()
+        )
+      );
+    } else {
+      setFilteredEntries(ledgerEntries);
+    }
+  }, [ledgerEntries, address]);
 
   return (
     <div className="p-6">
@@ -65,7 +82,7 @@ export default function RewardLedgerPage() {
             </tr>
           </thead>
           <tbody>
-            {ledgerEntries.map((entry: LedgerEntry) => (
+            {filteredEntries.map((entry: LedgerEntry) => (
               <tr key={entry.id}>
                 <td className="border px-2 py-1">{new Date(entry.date).toLocaleString()}</td>
                 <td className="border px-2 py-1">{entry.merchant_name}</td>
