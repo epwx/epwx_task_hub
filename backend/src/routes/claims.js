@@ -70,42 +70,7 @@ router.post('/add', upload.single('receiptImage'), async (req, res) => {
   const customerLc = customer.toLowerCase();
   console.log('Claim attempt:', { ip, customer: customerLc });
   try {
-    // Restrict by customer (wallet) for 24 hours
-    const walletClaim = await Claim.findOne({
-      where: {
-        customer: customerLc,
-        createdAt: { [Op.gte]: since }
-      }
-    });
-    if (walletClaim) {
-      const lastClaim = new Date(walletClaim.createdAt);
-      const nextClaim = new Date(lastClaim.getTime() + 1 * 60 * 1000); // 1 minute interval
-      const msLeft = nextClaim - now;
-      if (msLeft > 0) {
-        const hours = Math.floor(msLeft / (1000 * 60 * 60));
-        const minutes = Math.floor((msLeft % (1000 * 60 * 60)) / (1000 * 60));
-        console.log('Blocked by wallet:', customerLc, 'Last:', lastClaim);
-        return res.status(429).json({ error: `Wallet already claimed. Try again in ${hours}h ${minutes}m.` });
-      }
-      // else, allow claim
-    }
-    // Restrict by IP for 24 hours
-    const ipClaim = await Claim.findOne({
-      where: {
-        ip,
-        createdAt: { [Op.gte]: since }
-      }
-    });
-    if (ipClaim) {
-      const lastClaim = new Date(ipClaim.createdAt);
-      const nextClaim = new Date(lastClaim.getTime() + 1 * 60 * 1000); // 1 minute interval
-      const msLeft = nextClaim - now;
-      const hours = Math.floor(msLeft / (1000 * 60 * 60));
-      const minutes = Math.floor((msLeft % (1000 * 60 * 60)) / (1000 * 60));
-      console.log('Blocked by IP:', ip, 'Last:', lastClaim);
-      return res.status(429).json({ error: `IP address already claimed. Try again in ${hours}h ${minutes}m.` });
-    }
-    // Create claim with IP and receipt image
+    // Create claim with IP and receipt image (rate limiting removed)
     const claim = await Claim.create({ merchantId, customer: customerLc, bill, lat, lng, status: 'pending', ip, receiptImage: receiptImagePath });
     res.json({ success: true, claim });
   } catch (err) {
