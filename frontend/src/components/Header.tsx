@@ -48,6 +48,15 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
   const isAdmin = address && adminWallets.includes(address.toLowerCase());
   const isMerchant = address && merchantWallets.includes(address.toLowerCase());
 
+  // Debug logs for troubleshooting
+  useEffect(() => {
+    if (address) {
+      console.log('[DEBUG] Connected address:', address.toLowerCase());
+      console.log('[DEBUG] Merchant wallets:', merchantWallets);
+      console.log('[DEBUG] isMerchant:', isMerchant);
+    }
+  }, [address, merchantWallets, isMerchant]);
+
   return (
     <header className="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl shadow-lg border-b border-gray-100 dark:border-gray-800">
       <div className="container mx-auto px-4 py-4">
