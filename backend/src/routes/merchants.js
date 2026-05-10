@@ -1,3 +1,10 @@
+
+import express from 'express';
+import { Merchant } from '../models/index.js';
+import { Op } from 'sequelize';
+
+const router = express.Router();
+
 // GET /api/merchants/wallets - List all merchant wallet addresses (public)
 router.get('/wallets', async (req, res) => {
   try {
@@ -8,11 +15,6 @@ router.get('/wallets', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-import express from 'express';
-import { Merchant } from '../models/index.js';
-import { Op } from 'sequelize';
-
-const router = express.Router();
 
 // Admin-only middleware (supports multiple admin wallets from env)
 function requireAdmin(req, res, next) {
