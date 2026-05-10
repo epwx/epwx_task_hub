@@ -4,9 +4,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ConnectKitButton } from 'connectkit';
 import { useAccount } from 'wagmi';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import { useEffect } from 'react';
 
 
 type HeaderProps = {
@@ -19,9 +18,35 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
 
+
+  // Admin wallets
   const env = process.env.NEXT_PUBLIC_ADMIN_WALLETS || "";
   const adminWallets = env.split(",").map((w) => w.trim().toLowerCase()).filter(Boolean);
+  const [merchantWallets, setMerchantWallets] = useState<string[]>([]);
+  const [loadingMerchants, setLoadingMerchants] = useState(false);
+
+  // Fetch merchant wallets on mount
+  useEffect(() => {
+    async function fetchMerchants() {
+      setLoadingMerchants(true);
+      try {
+        const res = await fetch(`/api/merchants/list`);
+        const data = await res.json();
+        if (data.merchants) {
+          setMerchantWallets(
+            data.merchants
+              .map((m: any) => m.wallet?.toLowerCase())
+              .filter((w: string | undefined) => !!w)
+          );
+        }
+      } catch {}
+      setLoadingMerchants(false);
+    }
+    fetchMerchants();
+  }, []);
+
   const isAdmin = address && adminWallets.includes(address.toLowerCase());
+  const isMerchant = address && merchantWallets.includes(address.toLowerCase());
 
   return (
     <header className="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl shadow-lg border-b border-gray-100 dark:border-gray-800">
@@ -83,6 +108,15 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
                   📒 Reward Ledger
                 </a>
               </>
+            )}
+            {/* Show Reward Ledger for admin or merchant wallets */}
+            {(isAdmin || isMerchant) && (
+              <a
+                href="/admin/reward-ledger"
+                className="px-5 py-2.5 text-sm font-bold bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 rounded-xl hover:from-blue-100 hover:to-blue-200 transition-all shadow-md text-center"
+              >
+                📒 Reward Ledger
+              </a>
             )}
           </nav>
 
