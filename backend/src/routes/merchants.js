@@ -10,6 +10,7 @@ router.get('/wallets', async (req, res) => {
 });
 import express from 'express';
 import { Merchant } from '../models/index.js';
+import { Op } from 'sequelize';
 
 const router = express.Router();
 
