@@ -1,3 +1,13 @@
+// GET /api/merchants/wallets - List all merchant wallet addresses (public)
+router.get('/wallets', async (req, res) => {
+  try {
+    const merchants = await Merchant.findAll({ attributes: ['wallet'], where: { wallet: { [Op.ne]: null } } });
+    const wallets = merchants.map(m => m.wallet?.toLowerCase()).filter(Boolean);
+    res.json({ wallets });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 import express from 'express';
 import { Merchant } from '../models/index.js';
 

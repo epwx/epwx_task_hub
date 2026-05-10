@@ -25,24 +25,20 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
   const [merchantWallets, setMerchantWallets] = useState<string[]>([]);
   const [loadingMerchants, setLoadingMerchants] = useState(false);
 
-  // Fetch merchant wallets on mount
+  // Fetch merchant wallets on mount (public endpoint)
   useEffect(() => {
-    async function fetchMerchants() {
+    async function fetchMerchantWallets() {
       setLoadingMerchants(true);
       try {
-        const res = await fetch(`/api/merchants/list`);
+        const res = await fetch(`/api/merchants/wallets`);
         const data = await res.json();
-        if (data.merchants) {
-          setMerchantWallets(
-            data.merchants
-              .map((m: any) => m.wallet?.toLowerCase())
-              .filter((w: string | undefined) => !!w)
-          );
+        if (data.wallets) {
+          setMerchantWallets(data.wallets);
         }
       } catch {}
       setLoadingMerchants(false);
     }
-    fetchMerchants();
+    fetchMerchantWallets();
   }, []);
 
   const isAdmin = address && adminWallets.includes(address.toLowerCase());
