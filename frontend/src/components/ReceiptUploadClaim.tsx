@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import imageCompression from 'browser-image-compression';
 
 interface MerchantInfo {
   name?: string;
@@ -31,10 +32,27 @@ const ReceiptUploadClaim: React.FC<ReceiptUploadClaimProps> = ({ merchantId, mer
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFile(e.target.files && e.target.files[0]);
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setSuccess(false);
     setError('');
+    const selectedFile = e.target.files && e.target.files[0];
+    if (!selectedFile) {
+      setFile(null);
+      return;
+    }
+    // Compress image if it's over 800KB or always compress for consistency
+    try {
+      const options = {
+        maxSizeMB: 0.8, // 800KB
+        maxWidthOrHeight: 1280,
+        useWebWorker: true
+      };
+      const compressedFile = await imageCompression(selectedFile, options);
+      setFile(compressedFile);
+    } catch (err) {
+      setError('Image compression failed. Please try another image.');
+      setFile(null);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
