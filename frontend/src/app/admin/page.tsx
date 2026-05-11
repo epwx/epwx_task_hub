@@ -28,6 +28,7 @@ export default function AdminPage() {
   const [specialWallet, setSpecialWallet] = useState("");
   const [specialLoading, setSpecialLoading] = useState(false);
   const [specialError, setSpecialError] = useState<string | null>(null);
+  const [specialResult, setSpecialResult] = useState<any[] | null>(null);
   // Pagination and filter state
   const [claimsPage, setClaimsPage] = useState(1);
   const [dailyClaimsPage, setDailyClaimsPage] = useState(1);
@@ -81,6 +82,7 @@ export default function AdminPage() {
     const handleAddSpecialWallet = async () => {
       setSpecialLoading(true);
       setSpecialError(null);
+      setSpecialResult(null);
       try {
         const res = await fetch("/api/epwx/special-claim/add", {
           method: "POST",
@@ -92,14 +94,14 @@ export default function AdminPage() {
         });
         const data = await res.json();
         if (data.success) {
-          // Add new wallet to the top and sort by createdAt descending
-          setSpecialClaims((prev) => [{ wallet: specialWallet, status: "pending", createdAt: new Date().toISOString() }, ...prev].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+          setSpecialResult(data.results);
+          // Optionally, refresh the special claims list here if needed
           setSpecialWallet("");
         } else {
-          setSpecialError(data.error || "Failed to add wallet");
+          setSpecialError(data.error || "Failed to add wallet(s)");
         }
       } catch (e: any) {
-        setSpecialError(e?.message || "Failed to add wallet");
+        setSpecialError(e?.message || "Failed to add wallet(s)");
       }
       setSpecialLoading(false);
     };
@@ -273,19 +275,30 @@ export default function AdminPage() {
           </div>
         ) : (
           <>
-            <div className="flex gap-2 mb-4">
-              <input
-                type="text"
-                placeholder="Wallet address"
-                className="border rounded px-2 py-1 bg-gray-100 text-gray-900"
+            <div className="flex flex-col gap-2 mb-4">
+              <textarea
+                placeholder="Enter wallet addresses, comma separated (e.g. 0x123..., 0x456..., ...)"
+                className="border rounded px-2 py-1 bg-gray-100 text-gray-900 min-h-[60px]"
                 value={specialWallet}
                 onChange={e => setSpecialWallet(e.target.value)}
               />
               <button
-                className="px-4 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                className="px-4 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 w-fit"
                 disabled={specialLoading || !specialWallet}
                 onClick={handleAddSpecialWallet}
-              >{specialLoading ? "Adding..." : "Add Wallet"}</button>
+              >{specialLoading ? "Adding..." : "Add Wallets"}</button>
+              {specialResult && (
+                <div className="mt-2">
+                  <div className="font-semibold mb-1">Bulk Add Results:</div>
+                  <ul className="list-disc ml-6 text-sm">
+                    {specialResult.map((r, i) => (
+                      <li key={i} className={r.error ? "text-red-600" : r.updated ? "text-yellow-700" : "text-green-700"}>
+                        {r.wallet}: {r.created ? "Created" : r.updated ? "Updated" : r.error}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
             {/* Special Claims Filter Controls */}
             <div className="mb-2 flex gap-2 items-center">

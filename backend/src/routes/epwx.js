@@ -115,29 +115,42 @@ router.post('/special-claim/add', async (req, res) => {
     return res.status(403).json({ error: 'Unauthorized' });
   }
   if (!wallet) return res.status(400).json({ error: 'wallet is required' });
-  try {
-    const now = new Date();
-    const threeHoursAgo = new Date(now.getTime() - 3 * 60 * 60 * 1000);
-    // Check for existing pending claim within 3 hours
-    const existing = await SpecialClaim.findOne({
-      where: {
-        wallet: wallet.toLowerCase(),
-        status: 'pending',
-        createdAt: { [Op.gte]: threeHoursAgo }
+
+  // Support comma-separated wallets
+  const wallets = wallet.split(',').map(w => w.trim()).filter(w => w);
+  if (wallets.length === 0) return res.status(400).json({ error: 'No valid wallet addresses provided' });
+
+  const now = new Date();
+  const threeHoursAgo = new Date(now.getTime() - 3 * 60 * 60 * 1000);
+  const results = [];
+
+  for (const w of wallets) {
+    try {
+      if (!/^0x[a-fA-F0-9]{40}$/.test(w)) {
+        results.push({ wallet: w, error: 'Invalid wallet address' });
+        continue;
       }
-    });
-    if (existing) {
-      // Update createdAt to now
-      existing.createdAt = now;
-      await existing.save();
-      return res.json({ success: true, updated: true });
-    } else {
-      await SpecialClaim.create({ wallet: wallet.toLowerCase(), createdAt: now });
-      return res.json({ success: true, created: true });
+      const lowerWallet = w.toLowerCase();
+      const existing = await SpecialClaim.findOne({
+        where: {
+          wallet: lowerWallet,
+          status: 'pending',
+          createdAt: { [Op.gte]: threeHoursAgo }
+        }
+      });
+      if (existing) {
+        existing.createdAt = now;
+        await existing.save();
+        results.push({ wallet: lowerWallet, updated: true });
+      } else {
+        await SpecialClaim.create({ wallet: lowerWallet, createdAt: now });
+        results.push({ wallet: lowerWallet, created: true });
+      }
+    } catch (err) {
+      results.push({ wallet: w, error: err.message });
     }
-  } catch (err) {
-    res.status(500).json({ error: err.message });
   }
+  return res.json({ success: true, results });
 });
 
 // POST /api/epwx/special-claim/claim
