@@ -180,6 +180,26 @@ export default function HomeTest() {
           </div>
         </section>
 
+        {/* Special EPWX Claim Section */}
+        {address && isTelegramVerified && specialEligible && (
+          <section className="py-12">
+            <div className="bg-white rounded-xl shadow p-8 flex flex-col items-center w-full max-w-lg mx-auto border-2 border-yellow-400">
+              <h2 className="text-2xl font-bold mb-4 text-yellow-700">Special Claim</h2>
+              <p className="mb-4 text-gray-700 text-center">You are eligible for a <b>Special 1,000,000 EPWX</b> reward!</p>
+              <button
+                onClick={handleSpecialClaim}
+                disabled={specialClaiming}
+                className={`px-6 py-3 rounded-lg font-bold text-white bg-yellow-500 hover:bg-yellow-600 transition-colors mb-4 ${specialClaiming ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                {specialClaiming ? 'Claiming...' : 'Claim Special 1,000,000 EPWX'}
+              </button>
+              {specialClaimStatus && (
+                <div className="text-center text-lg font-semibold text-yellow-700 mb-2">{specialClaimStatus}</div>
+              )}
+            </div>
+          </section>
+        )}
+
         {/* Daily Claim Section */}
         <section className="py-12">
           <div className="bg-white rounded-xl shadow p-8 flex flex-col items-center w-full max-w-lg mx-auto">
