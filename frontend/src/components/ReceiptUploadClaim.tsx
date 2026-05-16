@@ -31,6 +31,7 @@ const ReceiptUploadClaim: React.FC<ReceiptUploadClaimProps> = ({ merchantId, mer
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [agreed, setAgreed] = useState(false);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setSuccess(false);
@@ -100,10 +101,22 @@ const ReceiptUploadClaim: React.FC<ReceiptUploadClaimProps> = ({ merchantId, mer
       {file && (
         <div className="mb-2 text-gray-900 font-medium break-all">Selected file: {file.name}</div>
       )}
+      <div className="flex items-center mb-4 mt-2">
+        <input
+          id="terms-checkbox"
+          type="checkbox"
+          checked={agreed}
+          onChange={e => setAgreed(e.target.checked)}
+          className="mr-2"
+        />
+        <label htmlFor="terms-checkbox" className="text-sm text-gray-700">
+          I agree to the <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline text-blue-600 hover:text-blue-800">terms and conditions</a>
+        </label>
+      </div>
       <button
         type="submit"
-        disabled={loading}
-        className="bg-blue-600 text-white px-4 py-2 rounded"
+        disabled={loading || !agreed}
+        className={`bg-blue-600 text-white px-4 py-2 rounded ${(!agreed || loading) ? 'opacity-50 cursor-not-allowed' : ''}`}
       >
         {loading ? 'Submitting...' : 'Submit Claim'}
       </button>
