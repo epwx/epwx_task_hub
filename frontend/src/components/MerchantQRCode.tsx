@@ -84,15 +84,35 @@ const MerchantQRCode: React.FC<MerchantQRCodeProps> = ({ url, merchantName, merc
 
   const downloadQR = () => {
     const svgContent = generateStyledSVG();
-    const svgBlob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' });
-    const urlBlob = URL.createObjectURL(svgBlob);
-    const link = document.createElement('a');
-    link.href = urlBlob;
-    link.download = `${merchantName || 'merchant'}-qr.svg`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(urlBlob);
+    const img = new window.Image();
+    const svg64 = btoa(unescape(encodeURIComponent(svgContent)));
+    const image64 = 'data:image/svg+xml;base64,' + svg64;
+    img.onload = function () {
+      // Set high resolution
+      const scale = 3; // 3x for HD
+      const canvas = document.createElement('canvas');
+      canvas.width = 340 * scale;
+      canvas.height = 600 * scale;
+      const ctx = canvas.getContext('2d');
+      ctx!.fillStyle = '#fff';
+      ctx!.fillRect(0, 0, canvas.width, canvas.height);
+      ctx!.drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(blob);
+          link.download = `${merchantName || 'merchant'}-qr.jpg`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(link.href);
+        }
+      }, 'image/jpeg', 0.95);
+    };
+    img.onerror = function () {
+      alert('Failed to render QR code as JPEG.');
+    };
+    img.src = image64;
   };
 
   return (
