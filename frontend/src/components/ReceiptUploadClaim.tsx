@@ -124,15 +124,15 @@ const ReceiptUploadClaim: React.FC<ReceiptUploadClaimProps> = ({ merchantId, mer
       </div>
       {showTerms && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto relative">
+          <div className="bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100 rounded-lg shadow-lg p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto relative">
             <button
-              className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 text-2xl font-bold"
+              className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 text-2xl font-bold"
               onClick={() => setShowTerms(false)}
               aria-label="Close"
             >
               &times;
             </button>
-            <div className="prose max-w-none">
+            <div className="prose max-w-none text-gray-900 dark:text-gray-100">
               <h1 className="text-2xl font-bold mb-4">Terms of Service</h1>
               <p className="mb-4">Welcome to EPWX Task Hub. Please read these Terms of Service carefully before using our platform.</p>
               <h2 className="text-lg font-semibold mt-6 mb-2">1. Acceptance of Terms</h2>
