@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import termsContent from '../app/terms/page';
 import imageCompression from 'browser-image-compression';
 
 interface MerchantInfo {
@@ -32,6 +33,7 @@ const ReceiptUploadClaim: React.FC<ReceiptUploadClaimProps> = ({ merchantId, mer
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
   const [agreed, setAgreed] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setSuccess(false);
@@ -110,9 +112,52 @@ const ReceiptUploadClaim: React.FC<ReceiptUploadClaimProps> = ({ merchantId, mer
           className="mr-2"
         />
         <label htmlFor="terms-checkbox" className="text-sm text-gray-700">
-          I agree to the <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline text-blue-600 hover:text-blue-800">terms and conditions</a>
+          I agree to the{' '}
+          <button
+            type="button"
+            className="underline text-blue-600 hover:text-blue-800"
+            onClick={() => setShowTerms(true)}
+          >
+            terms and conditions
+          </button>
         </label>
       </div>
+      {showTerms && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto relative">
+            <button
+              className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 text-2xl font-bold"
+              onClick={() => setShowTerms(false)}
+              aria-label="Close"
+            >
+              &times;
+            </button>
+            <div className="prose max-w-none">
+              <h1 className="text-2xl font-bold mb-4">Terms of Service</h1>
+              <p className="mb-4">Welcome to EPWX Task Hub. Please read these Terms of Service carefully before using our platform.</p>
+              <h2 className="text-lg font-semibold mt-6 mb-2">1. Acceptance of Terms</h2>
+              <p className="mb-4">By accessing or using EPWX Task Hub, you agree to be bound by these Terms of Service and all applicable laws and regulations.</p>
+              <h2 className="text-lg font-semibold mt-6 mb-2">2. User Responsibilities</h2>
+              <ul className="list-disc pl-6 mb-4">
+                <li>Provide accurate information during registration and task submissions.</li>
+                <li>Do not engage in fraudulent or abusive activities.</li>
+                <li>Respect other users and platform administrators.</li>
+              </ul>
+              <h2 className="text-lg font-semibold mt-6 mb-2">3. Platform Usage</h2>
+              <ul className="list-disc pl-6 mb-4">
+                <li>EPWX Task Hub reserves the right to modify, suspend, or terminate services at any time.</li>
+                <li>Rewards and campaigns are subject to change without prior notice.</li>
+              </ul>
+              <h2 className="text-lg font-semibold mt-6 mb-2">4. Limitation of Liability</h2>
+              <p className="mb-4">EPWX Task Hub is not liable for any losses or damages resulting from the use of the platform.</p>
+              <h2 className="text-lg font-semibold mt-6 mb-2">5. Changes to Terms</h2>
+              <p className="mb-4">We may update these Terms of Service periodically. Continued use of the platform constitutes acceptance of the revised terms.</p>
+              <h2 className="text-lg font-semibold mt-6 mb-2">6. Contact</h2>
+              <p>If you have questions about these Terms, please contact info@epowex.com.</p>
+            </div>
+          </div>
+        </div>
+      )}
       <button
         type="submit"
         disabled={loading || !agreed}
