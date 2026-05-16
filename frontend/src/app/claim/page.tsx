@@ -109,8 +109,20 @@ function ClaimPage() {
         <span className="block mt-4 text-gray-700">
           Please enable GPS/location services on your device and allow location access in your browser settings to claim your reward.
         </span>
-        <div className="mt-4 flex justify-center">
-          <img src="/enable-location-example.png" alt="Enable location example" className="max-w-xs rounded shadow" />
+        <div className="mt-4 flex flex-col items-center gap-4">
+          <img src="/enable-location-example.png" alt="Enable location example (Android)" className="max-w-xs rounded shadow" />
+          <div className="bg-gray-50 border border-gray-200 rounded p-3 max-w-xs text-left text-sm">
+            <div className="font-semibold mb-1">iPhone (iOS) instructions:</div>
+            <ol className="list-decimal list-inside space-y-1">
+              <li>Open the <b>Settings</b> app.</li>
+              <li>Tap <b>Privacy & Security</b>.</li>
+              <li>Tap <b>Location Services</b>.</li>
+              <li>Make sure <b>Location Services</b> is <span className="text-green-700 font-semibold">ON</span>.</li>
+              <li>Scroll down, tap your browser (e.g., Safari or Chrome).</li>
+              <li>Select <b>While Using the App</b> or <b>Always</b>.</li>
+              <li>(Optional) Enable <b>Precise Location</b> for best accuracy.</li>
+            </ol>
+          </div>
         </div>
         <button
           className="mt-6 px-4 py-2 bg-blue-600 text-white rounded font-semibold"
