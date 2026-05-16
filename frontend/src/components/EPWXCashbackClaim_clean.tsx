@@ -14,6 +14,7 @@ export function EPWXCashbackClaim() {
   const [claimed, setClaimed] = useState<{ [txHash: string]: boolean }>({});
   const [error, setError] = useState<string | null>(null);
   const [marking, setMarking] = useState<string | null>(null);
+  const [agreed, setAgreed] = useState(false);
 
   // Fetch claimed transactions for this wallet
   useEffect(() => {
@@ -163,13 +164,27 @@ export function EPWXCashbackClaim() {
                       }
                       // User action
                       return !claimed[tx.txHash] ? (
-                        <button
-                          className="bg-green-500 text-white px-2 py-1 rounded-lg hover:bg-green-600 text-xs md:text-sm w-full md:w-auto"
-                          onClick={() => handleClaim(tx)}
-                          disabled={claiming === tx.txHash}
-                        >
-                          {claiming === tx.txHash ? "Claiming..." : "Claim 3% Cashback"}
-                        </button>
+                        <div>
+                          <div className="flex items-center mb-2">
+                            <input
+                              id={`agree-terms-${tx.txHash}`}
+                              type="checkbox"
+                              checked={agreed}
+                              onChange={e => setAgreed(e.target.checked)}
+                              className="mr-2"
+                            />
+                            <label htmlFor={`agree-terms-${tx.txHash}`} className="text-xs text-gray-700">
+                              I agree to the <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">terms and conditions</a>
+                            </label>
+                          </div>
+                          <button
+                            className="bg-green-500 text-white px-2 py-1 rounded-lg hover:bg-green-600 text-xs md:text-sm w-full md:w-auto"
+                            onClick={() => handleClaim(tx)}
+                            disabled={claiming === tx.txHash || !agreed}
+                          >
+                            {claiming === tx.txHash ? "Claiming..." : "Claim 3% Cashback"}
+                          </button>
+                        </div>
                       ) : (
                         <span className="text-green-600 font-bold">Claimed</span>
                       );
