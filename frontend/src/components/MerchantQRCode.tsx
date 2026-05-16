@@ -51,7 +51,8 @@ const MerchantQRCode: React.FC<MerchantQRCodeProps> = ({ url, merchantName, merc
       '1. Scan the QR code above using your phone camera or QR app.',
       '2. Enable location access when prompted.',
       '3. Connect your wallet (Metamask, TrustWallet, etc.).',
-      '4. On the Connect Wallet screen, you can also choose "Continue with Family" for supported wallets.',
+      '4. On the Connect Wallet screen, you can also choose',
+      '   "Continue with Family" for supported wallets.',
       '5. Follow the link to the merchant’s claim page.',
       '6. Submit your bill and details as required.',
       '7. Wait for approval and receive your reward!',
@@ -75,9 +76,10 @@ const MerchantQRCode: React.FC<MerchantQRCodeProps> = ({ url, merchantName, merc
     <text x="28" y="${100 + qrSize + 115}">${esc(howToClaim[2])}</text>
     <text x="28" y="${100 + qrSize + 135}">${esc(howToClaim[3])}</text>
     <text x="28" y="${100 + qrSize + 155}">${esc(howToClaim[4])}</text>
-    <text x="28" y="${100 + qrSize + 175}">${esc(howToClaim[5])}</text>
-      <text x="28" y="${100 + qrSize + 195}">${esc(howToClaim[6])}</text>
-      <text x="28" y="${100 + qrSize + 225}" font-size="12" fill="#666">${esc(howToClaim[8])}</text>
+    <text x="28" y="${100 + qrSize + 170}">${esc(howToClaim[5])}</text>
+    <text x="28" y="${100 + qrSize + 190}">${esc(howToClaim[6])}</text>
+    <text x="28" y="${100 + qrSize + 210}">${esc(howToClaim[7])}</text>
+    <text x="28" y="${100 + qrSize + 225}" font-size="12" fill="#666">${esc(howToClaim[9])}</text>
   </g>
 </svg>`;
   };
