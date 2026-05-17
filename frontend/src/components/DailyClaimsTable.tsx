@@ -15,61 +15,65 @@ interface DailyClaimsTableProps {
   marking?: number | string | null;
 }
 
-const DailyClaimsTable: React.FC<DailyClaimsTableProps> = ({ claims, isAdmin = false, onDistribute, marking }) => (
-  <table className="min-w-full bg-white rounded shadow text-xs sm:text-sm">
-    <thead className="bg-gray-200">
-      <tr>
-        <th className="py-2 px-2 sm:px-4 text-gray-700">Wallet</th>
-        <th className="py-2 px-2 sm:px-4 text-gray-700">IP</th>
-        <th className="py-2 px-2 sm:px-4 text-gray-700">Claimed At</th>
-        <th className="py-2 px-2 sm:px-4 text-gray-700">Status</th>
-        {isAdmin && <th className="py-2 px-2 sm:px-4 text-gray-700">Action</th>}
-      </tr>
-    </thead>
-    <tbody>
-      {claims.map((claim) => (
-        <tr key={claim.id} className="border-b last:border-none">
-          <td className="py-2 px-2 sm:px-4 break-all bg-white text-gray-900">{claim.wallet}</td>
-          <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{claim.ip}</td>
-          <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{new Date(claim.claimedAt).toLocaleString()}</td>
-          <td className="py-2 px-2 sm:px-4 bg-white text-gray-900 capitalize">{claim.status}</td>
-          {isAdmin && (
-            <td className="py-2 px-2 sm:px-4 bg-white">
-              {claim.status === "pending" ? (
-                <div className="flex flex-col items-start">
-                  <label className="flex items-center mb-1">
-                    <input
-                      type="checkbox"
-                      className="mr-2"
-                      checked={claim.coinMarketCapChecked || false}
-                      onChange={e => {
-                        claim.coinMarketCapChecked = e.target.checked;
-                        // Force update if needed
-                        if (typeof window !== 'undefined') window.dispatchEvent(new Event('forceUpdate'));
-                      }}
-                    />
-                    <span className="text-sm text-gray-700">
-                      I have added EPX to my
-                      <a href="https://coinmarketcap.com/currencies/epowerx-on-base/" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline ml-1">CoinMarketCap watchlist</a>
-                    </span>
-                  </label>
-                  <button
-                    className="px-2 sm:px-4 py-1 sm:py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 text-xs sm:text-sm"
-                    disabled={marking === claim.id || !claim.coinMarketCapChecked}
-                    onClick={() => onDistribute && onDistribute(claim)}
-                  >
-                    {marking === claim.id ? "Distributing..." : `Distribute Daily EPWX`}
-                  </button>
-                </div>
-              ) : (
-                <span className="text-green-600 font-semibold">Paid</span>
-              )}
-            </td>
-          )}
+const DailyClaimsTable: React.FC<DailyClaimsTableProps> = ({ claims, isAdmin = false, onDistribute, marking }) => {
+  const [cmcChecked, setCmcChecked] = React.useState<{ [claimId: string]: boolean }>({});
+
+  const handleCheckboxChange = (claimId: string, checked: boolean) => {
+    setCmcChecked(prev => ({ ...prev, [claimId]: checked }));
+  };
+
+  return (
+    <table className="min-w-full bg-white rounded shadow text-xs sm:text-sm">
+      <thead className="bg-gray-200">
+        <tr>
+          <th className="py-2 px-2 sm:px-4 text-gray-700">Wallet</th>
+          <th className="py-2 px-2 sm:px-4 text-gray-700">IP</th>
+          <th className="py-2 px-2 sm:px-4 text-gray-700">Claimed At</th>
+          <th className="py-2 px-2 sm:px-4 text-gray-700">Status</th>
+          {isAdmin && <th className="py-2 px-2 sm:px-4 text-gray-700">Action</th>}
         </tr>
-      ))}
-    </tbody>
-  </table>
-);
+      </thead>
+      <tbody>
+        {claims.map((claim) => (
+          <tr key={claim.id} className="border-b last:border-none">
+            <td className="py-2 px-2 sm:px-4 break-all bg-white text-gray-900">{claim.wallet}</td>
+            <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{claim.ip}</td>
+            <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{new Date(claim.claimedAt).toLocaleString()}</td>
+            <td className="py-2 px-2 sm:px-4 bg-white text-gray-900 capitalize">{claim.status}</td>
+            {isAdmin && (
+              <td className="py-2 px-2 sm:px-4 bg-white">
+                {claim.status === "pending" ? (
+                  <div className="flex flex-col items-start">
+                    <label className="flex items-center mb-1">
+                      <input
+                        type="checkbox"
+                        className="mr-2"
+                        checked={!!cmcChecked[claim.id]}
+                        onChange={e => handleCheckboxChange(claim.id, e.target.checked)}
+                      />
+                      <span className="text-sm text-gray-700">
+                        I have added EPX to my
+                        <a href="https://coinmarketcap.com/currencies/epowerx-on-base/" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline ml-1">CoinMarketCap watchlist</a>
+                      </span>
+                    </label>
+                    <button
+                      className="px-2 sm:px-4 py-1 sm:py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 text-xs sm:text-sm"
+                      disabled={marking === claim.id || !cmcChecked[claim.id]}
+                      onClick={() => onDistribute && onDistribute(claim)}
+                    >
+                      {marking === claim.id ? "Distributing..." : `Distribute Daily EPWX`}
+                    </button>
+                  </div>
+                ) : (
+                  <span className="text-green-600 font-semibold">Paid</span>
+                )}
+              </td>
+            )}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+};
 
 export default DailyClaimsTable;
