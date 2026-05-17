@@ -43,27 +43,13 @@ const DailyClaimsTable: React.FC<DailyClaimsTableProps> = ({ claims, isAdmin = f
             {isAdmin && (
               <td className="py-2 px-2 sm:px-4 bg-white">
                 {claim.status === "pending" ? (
-                  <div className="flex flex-col items-start">
-                    <label className="flex items-center mb-1">
-                      <input
-                        type="checkbox"
-                        className="mr-2"
-                        checked={!!cmcChecked[claim.id]}
-                        onChange={e => handleCheckboxChange(claim.id, e.target.checked)}
-                      />
-                      <span className="text-sm text-gray-700">
-                        I have added EPX to my
-                        <a href="https://coinmarketcap.com/currencies/epowerx-on-base/" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline ml-1">CoinMarketCap watchlist</a>
-                      </span>
-                    </label>
-                    <button
-                      className="px-2 sm:px-4 py-1 sm:py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 text-xs sm:text-sm"
-                      disabled={marking === claim.id || !cmcChecked[claim.id]}
-                      onClick={() => onDistribute && onDistribute(claim)}
-                    >
-                      {marking === claim.id ? "Distributing..." : `Distribute Daily EPWX`}
-                    </button>
-                  </div>
+                  <button
+                    className="px-2 sm:px-4 py-1 sm:py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 text-xs sm:text-sm"
+                    disabled={marking === claim.id}
+                    onClick={() => onDistribute && onDistribute(claim)}
+                  >
+                    {marking === claim.id ? "Distributing..." : `Distribute Daily EPWX`}
+                  </button>
                 ) : (
                   <span className="text-green-600 font-semibold">Paid</span>
                 )}
