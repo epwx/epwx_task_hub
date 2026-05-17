@@ -97,6 +97,7 @@ const ReceiptUploadClaim: React.FC<ReceiptUploadClaimProps> = ({ merchantId, mer
       <input
         type="file"
         accept="image/*"
+        capture="environment"
         onChange={handleFileChange}
         className="mb-2"
       />
