@@ -300,13 +300,6 @@ export default function HomeTest() {
                       </button>
                     </label>
                   </div>
-                  <button
-                    onClick={handleDailyClaim}
-                    disabled={claiming || !agreed || !cmcChecked}
-                    className={`px-6 py-3 rounded-lg font-bold text-white bg-green-600 hover:bg-green-700 transition-colors mb-2 ${claiming || !agreed || !cmcChecked ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
-                    {claiming ? 'Claiming...' : 'Claim Daily Reward'}
-                  </button>
                   <div className="flex items-center mb-4">
                     <input
                       id="cmc-watchlist-checkbox"
@@ -320,6 +313,13 @@ export default function HomeTest() {
                       <a href="https://coinmarketcap.com/currencies/epowerx-on-base/" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline ml-1">CoinMarketCap watchlist</a>
                     </label>
                   </div>
+                  <button
+                    onClick={handleDailyClaim}
+                    disabled={claiming || !agreed || !cmcChecked}
+                    className={`px-6 py-3 rounded-lg font-bold text-white bg-green-600 hover:bg-green-700 transition-colors mb-4 ${claiming || !agreed || !cmcChecked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    {claiming ? 'Claiming...' : 'Claim Daily Reward'}
+                  </button>
                   {showTerms && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
                       <div className="bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100 rounded-lg shadow-lg p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto relative">
