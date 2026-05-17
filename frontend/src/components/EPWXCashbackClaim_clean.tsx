@@ -15,7 +15,6 @@ export function EPWXCashbackClaim() {
   const [error, setError] = useState<string | null>(null);
   const [marking, setMarking] = useState<string | null>(null);
   const [agreed, setAgreed] = useState(false);
-  const [cmcChecked, setCmcChecked] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
 
   // Fetch claimed transactions for this wallet
@@ -167,39 +166,24 @@ export function EPWXCashbackClaim() {
                       // User action
                       return !claimed[tx.txHash] ? (
                         <div>
-                          <div className="flex flex-col gap-2 mb-2">
-                            <div className="flex items-center">
-                              <input
-                                id={`agree-terms-${tx.txHash}`}
-                                type="checkbox"
-                                checked={agreed}
-                                onChange={e => setAgreed(e.target.checked)}
-                                className="mr-2"
-                              />
-                              <label htmlFor={`agree-terms-${tx.txHash}`} className="text-xs text-gray-700">
-                                I agree to the{' '}
-                                <button
-                                  type="button"
-                                  className="text-blue-600 underline hover:text-blue-800"
-                                  onClick={() => setShowTerms(true)}
-                                >
-                                  terms and conditions
-                                </button>
-                              </label>
-                            </div>
-                            <div className="flex items-center">
-                              <input
-                                id={`cmc-watchlist-${tx.txHash}`}
-                                type="checkbox"
-                                checked={cmcChecked}
-                                onChange={e => setCmcChecked(e.target.checked)}
-                                className="mr-2"
-                              />
-                              <label htmlFor={`cmc-watchlist-${tx.txHash}`} className="text-xs text-gray-700">
-                                I have added EPX to my
-                                <a href="https://coinmarketcap.com/currencies/epowerx-on-base/" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline ml-1">CoinMarketCap watchlist</a>
-                              </label>
-                            </div>
+                          <div className="flex items-center mb-2">
+                            <input
+                              id={`agree-terms-${tx.txHash}`}
+                              type="checkbox"
+                              checked={agreed}
+                              onChange={e => setAgreed(e.target.checked)}
+                              className="mr-2"
+                            />
+                            <label htmlFor={`agree-terms-${tx.txHash}`} className="text-xs text-gray-700">
+                              I agree to the{' '}
+                              <button
+                                type="button"
+                                className="text-blue-600 underline hover:text-blue-800"
+                                onClick={() => setShowTerms(true)}
+                              >
+                                terms and conditions
+                              </button>
+                            </label>
                           </div>
                           {showTerms && (
                             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -254,7 +238,7 @@ export function EPWXCashbackClaim() {
                           <button
                             className="bg-green-500 text-white px-2 py-1 rounded-lg hover:bg-green-600 text-xs md:text-sm w-full md:w-auto"
                             onClick={() => handleClaim(tx)}
-                            disabled={claiming === tx.txHash || !agreed || !cmcChecked}
+                            disabled={claiming === tx.txHash || !agreed}
                           >
                             {claiming === tx.txHash ? "Claiming..." : "Claim 3% Cashback"}
                           </button>
