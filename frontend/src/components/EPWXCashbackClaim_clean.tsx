@@ -168,39 +168,24 @@ export function EPWXCashbackClaim() {
                       return !claimed[tx.txHash] ? (
                         <div>
                           <div className="flex flex-col gap-2 mb-2">
-                            <div className="flex flex-col gap-2 mb-2">
-                              <div className="flex items-center">
-                                <input
-                                  id={`agree-terms-${tx.txHash}`}
-                                  type="checkbox"
-                                  checked={agreed}
-                                  onChange={e => setAgreed(e.target.checked)}
-                                  className="mr-2"
-                                />
-                                <label htmlFor={`agree-terms-${tx.txHash}`} className="text-xs text-gray-700">
-                                  I agree to the{' '}
-                                  <button
-                                    type="button"
-                                    className="text-blue-600 underline hover:text-blue-800"
-                                    onClick={() => setShowTerms(true)}
-                                  >
-                                    terms and conditions
-                                  </button>
-                                </label>
-                              </div>
-                              <div className="flex items-center">
-                                <input
-                                  id={`cmc-watchlist-${tx.txHash}`}
-                                  type="checkbox"
-                                  checked={cmcChecked}
-                                  onChange={e => setCmcChecked(e.target.checked)}
-                                  className="mr-2"
-                                />
-                                <label htmlFor={`cmc-watchlist-${tx.txHash}`} className="text-xs text-gray-700">
-                                  I have added EPX to my
-                                  <a href="https://coinmarketcap.com/currencies/epowerx-on-base/" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline ml-1">CoinMarketCap watchlist</a>
-                                </label>
-                              </div>
+                            <div className="flex items-center">
+                              <input
+                                id={`agree-terms-${tx.txHash}`}
+                                type="checkbox"
+                                checked={agreed}
+                                onChange={e => setAgreed(e.target.checked)}
+                                className="mr-2"
+                              />
+                              <label htmlFor={`agree-terms-${tx.txHash}`} className="text-xs text-gray-700">
+                                I agree to the{' '}
+                                <button
+                                  type="button"
+                                  className="text-blue-600 underline hover:text-blue-800"
+                                  onClick={() => setShowTerms(true)}
+                                >
+                                  terms and conditions
+                                </button>
+                              </label>
                             </div>
                             <div className="flex items-center">
                               <input
