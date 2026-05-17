@@ -99,6 +99,7 @@ export default function HomeTest() {
   const [claimStatus, setClaimStatus] = useState<string | null>(null);
   const [isTelegramVerified, setIsTelegramVerified] = useState<boolean>(false);
   const [agreed, setAgreed] = useState(false);
+  const [cmcChecked, setCmcChecked] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
   const [specialAgreed, setSpecialAgreed] = useState(false);
   const [showSpecialTerms, setShowSpecialTerms] = useState(false);
@@ -301,11 +302,24 @@ export default function HomeTest() {
                   </div>
                   <button
                     onClick={handleDailyClaim}
-                    disabled={claiming || !agreed}
-                    className={`px-6 py-3 rounded-lg font-bold text-white bg-green-600 hover:bg-green-700 transition-colors mb-4 ${claiming || !agreed ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    disabled={claiming || !agreed || !cmcChecked}
+                    className={`px-6 py-3 rounded-lg font-bold text-white bg-green-600 hover:bg-green-700 transition-colors mb-2 ${claiming || !agreed || !cmcChecked ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     {claiming ? 'Claiming...' : 'Claim Daily Reward'}
                   </button>
+                  <div className="flex items-center mb-4">
+                    <input
+                      id="cmc-watchlist-checkbox"
+                      type="checkbox"
+                      checked={cmcChecked}
+                      onChange={e => setCmcChecked(e.target.checked)}
+                      className="mr-2"
+                    />
+                    <label htmlFor="cmc-watchlist-checkbox" className="text-sm text-gray-700">
+                      I have added EPX to my
+                      <a href="https://coinmarketcap.com/currencies/epowerx-on-base/" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline ml-1">CoinMarketCap watchlist</a>
+                    </label>
+                  </div>
                   {showTerms && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
                       <div className="bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100 rounded-lg shadow-lg p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto relative">
