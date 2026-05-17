@@ -33,7 +33,6 @@ const ReceiptUploadClaim: React.FC<ReceiptUploadClaimProps> = ({ merchantId, mer
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
   const [agreed, setAgreed] = useState(false);
-  const [cmcChecked, setCmcChecked] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -121,26 +120,13 @@ const ReceiptUploadClaim: React.FC<ReceiptUploadClaimProps> = ({ merchantId, mer
             onClick={() => setShowTerms(true)}
           >
             terms and conditions
-          <div className="flex items-center mb-4">
-            <input
-              id="cmc-watchlist-checkbox"
-              type="checkbox"
-              checked={cmcChecked}
-              onChange={e => setCmcChecked(e.target.checked)}
-              className="mr-2"
-            />
-            <label htmlFor="cmc-watchlist-checkbox" className="text-sm text-gray-700">
-              I have added EPWX to my
-              <a href="https://coinmarketcap.com/currencies/epowerx-on-base/" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline ml-1">CoinMarketCap watchlist</a>
-            </label>
-          </div>
-          <button
-            type="submit"
-            disabled={loading || !agreed || !cmcChecked}
-            className={`bg-blue-600 text-white px-4 py-2 rounded ${(!agreed || !cmcChecked || loading) ? 'opacity-50 cursor-not-allowed' : ''}`}
-          >
-            Submit Claim
           </button>
+        </label>
+      </div>
+      {showTerms && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100 rounded-lg shadow-lg p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto relative">
+            <button
               className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 text-2xl font-bold"
               onClick={() => setShowTerms(false)}
               aria-label="Close"
