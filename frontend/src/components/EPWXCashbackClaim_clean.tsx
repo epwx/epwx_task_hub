@@ -16,6 +16,7 @@ export function EPWXCashbackClaim() {
   const [marking, setMarking] = useState<string | null>(null);
   const [agreed, setAgreed] = useState(false);
   const [cmcChecked, setCmcChecked] = useState(false);
+  const [cmcChecked, setCmcChecked] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
 
   // Fetch claimed transactions for this wallet
@@ -168,24 +169,39 @@ export function EPWXCashbackClaim() {
                       return !claimed[tx.txHash] ? (
                         <div>
                           <div className="flex flex-col gap-2 mb-2">
-                            <div className="flex items-center">
-                              <input
-                                id={`agree-terms-${tx.txHash}`}
-                                type="checkbox"
-                                checked={agreed}
-                                onChange={e => setAgreed(e.target.checked)}
-                                className="mr-2"
-                              />
-                              <label htmlFor={`agree-terms-${tx.txHash}`} className="text-xs text-gray-700">
-                                I agree to the{' '}
-                                <button
-                                  type="button"
-                                  className="text-blue-600 underline hover:text-blue-800"
-                                  onClick={() => setShowTerms(true)}
-                                >
-                                  terms and conditions
-                                </button>
-                              </label>
+                            <div className="flex flex-col gap-2 mb-2">
+                              <div className="flex items-center">
+                                <input
+                                  id={`agree-terms-${tx.txHash}`}
+                                  type="checkbox"
+                                  checked={agreed}
+                                  onChange={e => setAgreed(e.target.checked)}
+                                  className="mr-2"
+                                />
+                                <label htmlFor={`agree-terms-${tx.txHash}`} className="text-xs text-gray-700">
+                                  I agree to the{' '}
+                                  <button
+                                    type="button"
+                                    className="text-blue-600 underline hover:text-blue-800"
+                                    onClick={() => setShowTerms(true)}
+                                  >
+                                    terms and conditions
+                                  </button>
+                                </label>
+                              </div>
+                              <div className="flex items-center">
+                                <input
+                                  id={`cmc-watchlist-${tx.txHash}`}
+                                  type="checkbox"
+                                  checked={cmcChecked}
+                                  onChange={e => setCmcChecked(e.target.checked)}
+                                  className="mr-2"
+                                />
+                                <label htmlFor={`cmc-watchlist-${tx.txHash}`} className="text-xs text-gray-700">
+                                  I have added EPX to my
+                                  <a href="https://coinmarketcap.com/currencies/epowerx-on-base/" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline ml-1">CoinMarketCap watchlist</a>
+                                </label>
+                              </div>
                             </div>
                             <div className="flex items-center">
                               <input
@@ -210,13 +226,13 @@ export function EPWXCashbackClaim() {
                                   aria-label="Close"
                                 >
                                   &times;
+                                <button
+                                  className="bg-green-500 text-white px-2 py-1 rounded-lg hover:bg-green-600 text-xs md:text-sm w-full md:w-auto"
+                                  onClick={() => handleClaim(tx)}
+                                  disabled={claiming === tx.txHash || !agreed || !cmcChecked}
+                                >
+                                  {claiming === tx.txHash ? "Claiming..." : "Claim 3% Cashback"}
                                 </button>
-                                <div className="prose max-w-none text-gray-900 dark:text-gray-100">
-                                  <h1 className="text-2xl font-bold mb-4">Terms and Conditions</h1>
-                                  <p className="mb-4">Welcome to EPWX Task Hub. By accessing or using our platform, you agree to these Terms and Conditions. Please read them carefully.</p>
-                                  <h2 className="text-lg font-semibold mt-6 mb-2">1. Acceptance of Terms</h2>
-                                  <p className="mb-4">By using EPWX Task Hub, you agree to comply with these Terms and all applicable laws. If you do not agree, do not use the platform.</p>
-                                  <h2 className="text-lg font-semibold mt-6 mb-2">2. User Responsibilities</h2>
                                   <ul className="list-disc pl-6 mb-4">
                                     <li>Provide accurate, complete, and current information during registration and task submissions.</li>
                                     <li>Do not engage in fraudulent, abusive, or illegal activities.</li>
