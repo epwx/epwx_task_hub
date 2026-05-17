@@ -16,6 +16,7 @@ export function EPWXCashbackClaim() {
   const [marking, setMarking] = useState<string | null>(null);
   const [agreed, setAgreed] = useState(false);
   const [cmcChecked, setCmcChecked] = useState(false);
+  const [cmcChecked, setCmcChecked] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
 
   // Fetch claimed transactions for this wallet
