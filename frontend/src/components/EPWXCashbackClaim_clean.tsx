@@ -123,6 +123,8 @@ export function EPWXCashbackClaim() {
     setClaiming(null);
   };
 
+  };
+
   const unclaimedTxs = transactions.filter((tx: any) => !claimed[tx.txHash]);
   const claimedTxs = transactions.filter((tx: any) => claimed[tx.txHash]);
 
