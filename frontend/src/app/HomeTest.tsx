@@ -309,7 +309,7 @@ export default function HomeTest() {
                       className="mr-2"
                     />
                     <label htmlFor="cmc-watchlist-checkbox" className="text-sm text-gray-700">
-                      I have added EPX to my
+                      I have added EPWX to my
                       <a href="https://coinmarketcap.com/currencies/epowerx-on-base/" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline ml-1">CoinMarketCap watchlist</a>
                     </label>
                   </div>
