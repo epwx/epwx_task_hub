@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useAccount, useReadContract } from 'wagmi';
+import { formatUnits } from 'ethers';
 
 interface PriceData {
   priceUSD: number;
@@ -14,6 +16,39 @@ interface PriceData {
 export function EPWXStats() {
   const [priceData, setPriceData] = useState<PriceData | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Wallet connection
+  const { address, isConnected } = useAccount();
+
+  // EPWX Token contract details
+  const EPWX_TOKEN_ADDRESS = '0xef5f5751cf3eca6cc3572768298b7783d33d60eb';
+  const ERC20_ABI = [
+    'function balanceOf(address owner) view returns (uint256)',
+    'function decimals() view returns (uint8)'
+  ];
+
+  // Read balance (only if connected)
+  const {
+    data: rawBalance,
+    isLoading: balanceLoading,
+    error: balanceError
+  } = useReadContract({
+    address: EPWX_TOKEN_ADDRESS,
+    abi: ERC20_ABI,
+    functionName: 'balanceOf',
+    args: address ? [address] : undefined,
+    enabled: !!address
+  });
+
+  // Read decimals (optional, default to 18)
+  const {
+    data: decimals
+  } = useReadContract({
+    address: EPWX_TOKEN_ADDRESS,
+    abi: ERC20_ABI,
+    functionName: 'decimals',
+    enabled: !!address
+  });
 
   useEffect(() => {
     fetchPrice();
@@ -80,6 +115,16 @@ export function EPWXStats() {
     return `$${price.toFixed(12)}`;
   };
 
+  // Format wallet balance
+  let formattedBalance = '';
+  if (isConnected && rawBalance !== undefined && decimals !== undefined) {
+    try {
+      formattedBalance = parseFloat(formatUnits(rawBalance as bigint, decimals as number)).toLocaleString(undefined, { maximumFractionDigits: 4 });
+    } catch {
+      formattedBalance = '';
+    }
+  }
+
   return (
     <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-3xl shadow-2xl p-8">
       {/* Animated background elements */}
@@ -97,6 +142,20 @@ export function EPWXStats() {
           <h3 className="text-3xl font-black text-white">EPWX Token Stats</h3>
         </div>
         
+        {/* Wallet Balance (if connected) */}
+        {isConnected && (
+          <div className="mb-6 flex items-center gap-3 p-4 bg-white/10 rounded-xl border border-white/20 w-fit">
+            <span className="text-white/80 font-semibold">Your EPWX Balance:</span>
+            {balanceLoading ? (
+              <span className="text-white/60 animate-pulse">Loading...</span>
+            ) : balanceError ? (
+              <span className="text-red-400">Error</span>
+            ) : (
+              <span className="text-emerald-300 font-bold">{formattedBalance}</span>
+            )}
+          </div>
+        )}
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Price Card */}
           <div className="group relative bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6 hover:bg-white/15 transition-all duration-300 hover:scale-105 hover:shadow-2xl">
