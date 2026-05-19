@@ -37,7 +37,7 @@ export function EPWXStats() {
     abi: ERC20_ABI,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
-    enabled: !!address
+    // enabled: !!address
   });
 
   // Read decimals (optional, default to 18)
@@ -47,7 +47,7 @@ export function EPWXStats() {
     address: EPWX_TOKEN_ADDRESS,
     abi: ERC20_ABI,
     functionName: 'decimals',
-    enabled: !!address
+    // enabled: !!address
   });
 
   useEffect(() => {
