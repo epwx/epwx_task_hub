@@ -1,47 +1,50 @@
 module.exports = {
   apps: [
-    {
-      name: "epwx-backend",
-      script: "src/index.js",
-      cwd: "/var/www/epwx-tasks/backend",
-      instances: 2,
-      exec_mode: "cluster",
+     {
+      name: "epwx-api",
+      script: "npm",
+      args: "start",
+      cwd: "/mnt/volume1_nyc3_1778885684099/epwx_task_hub/backend",
+      instances: 1,
+      exec_mode: "fork",
       env: {
         NODE_ENV: "production",
         PORT: 4000
       },
-      error_file: "/var/log/pm2/epwx-backend-error.log",
-      out_file: "/var/log/pm2/epwx-backend-out.log",
+      error_file: "/home/deployer/.pm2/logs/epwx-api-error.log",
+      out_file: "/home/deployer/.pm2/logs/epwx-api-out.log",
       log_date_format: "YYYY-MM-DD HH:mm:ss Z"
     },
     {
       name: "epwx-frontend",
       script: "npm",
       args: "start",
-      cwd: "/var/www/epwx-tasks/frontend",
+      cwd: "/mnt/volume1_nyc3_1778885684099/epwx_task_hub/frontend",
       instances: 1,
       exec_mode: "fork",
       env: {
         NODE_ENV: "production",
-        PORT: 3000
+        PORT: 3000,
+        NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: process.env.NEXT_SERVER_ACTIONS_ENCRYPTION_KEY
       },
-      error_file: "/var/log/pm2/epwx-frontend-error.log",
-      out_file: "/var/log/pm2/epwx-frontend-out.log",
+      error_file: "/home/deployer/.pm2/logs/epwx-frontend-error.log",
+      out_file: "/home/deployer/.pm2/logs/epwx-frontend-out.log",
       log_date_format: "YYYY-MM-DD HH:mm:ss Z"
     },
     {
-      name: "epwx-api-test",
-      script: "src/index.js",
-      cwd: "/home/deployer/epwx_task_hub_test/backend",
+      name: "epwx-telegram-bot",
+      script: "npm",
+      args: "start",
+      cwd: "/mnt/volume1_nyc3_1778885684099/epwx_task_hub/backend",
       instances: 1,
       exec_mode: "fork",
       env: {
-        NODE_ENV: "test",
-        PORT: 4100
+        // Add any required environment variables here
       },
-      error_file: "/var/log/pm2/epwx-api-test-error.log",
-      out_file: "/var/log/pm2/epwx-api-test-out.log",
+      error_file: "/home/deployer/.pm2/logs/epwx-telegram-bot-error.log",
+      out_file: "/home/deployer/.pm2/logs/epwx-telegram-bot-out.log",
       log_date_format: "YYYY-MM-DD HH:mm:ss Z"
     }
-  ]
-};
+   
+    ]
+  };
