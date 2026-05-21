@@ -129,7 +129,7 @@ export function EPWXCashbackClaim() {
     <div className="bg-gradient-to-br from-white to-gray-100 rounded-xl shadow-lg p-4 mb-8 max-w-lg mx-auto">
       <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">EPWX Cashback Rewards</h2>
       <p className="mb-4 rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
-        Only EPWX purchases of 100,000,000,000 or more made within the last 3 hours are eligible for cashback.
+        Earn 3% cashback on EPWX purchases of 100,000,000,000 or more made within the last 3 hours.
       </p>
       {loading ? (
         <div className="text-center py-8 text-gray-500">Loading eligible transactions...</div>
