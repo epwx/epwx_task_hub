@@ -32,8 +32,7 @@ module.exports = {
     },
     {
       name: "epwx-telegram-bot",
-      script: "npm",
-      args: "start",
+      script: "telegramBot.js",
       cwd: "/mnt/volume1_nyc3_1778885684099/epwx_task_hub/backend",
       instances: 1,
       exec_mode: "fork",
