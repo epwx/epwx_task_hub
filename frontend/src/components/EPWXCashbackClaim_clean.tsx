@@ -131,7 +131,7 @@ export function EPWXCashbackClaim() {
       {loading ? (
         <div className="text-center py-8 text-gray-500">Loading eligible transactions...</div>
       ) : unclaimedTxs.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">No unclaimed EPWX swap transactions in the last 3 hours.</div>
+        <div className="text-center py-8 text-gray-500">No unclaimed EPWX purchases of 100,000,000,000+ in the last 3 hours.</div>
       ) : (
         <div className="overflow-x-auto">
           <table className="min-w-full text-left border rounded-lg">
