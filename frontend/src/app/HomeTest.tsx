@@ -46,6 +46,24 @@ function LastFivePaidDailyClaims() {
 
 export default function HomeTest() {
   const { address, isConnected } = useAccount();
+  const [darkMode, setDarkMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const theme = localStorage.getItem('theme');
+      if (theme === 'light') return false;
+      return true;
+    }
+    return true;
+  });
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [darkMode]);
 
   const [specialEligible, setSpecialEligible] = useState(false);
   const [specialClaiming, setSpecialClaiming] = useState(false);
@@ -150,11 +168,18 @@ export default function HomeTest() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:bg-gray-950 dark:bg-none flex flex-col">
-      <main className="container mx-auto px-4 flex-1">
+      <Header darkMode={darkMode} setDarkMode={setDarkMode} />
+
+      <main className="container mx-auto px-4 py-12 flex-1">
+        <section className="mb-12">
+          <h1 className="text-2xl font-bold mb-6 text-center text-blue-700">EPWX Task Platform</h1>
+          <EPWXStats />
+        </section>
+
         {/* Wallet Connection & Verification Section */}
         <section className="my-8">
-          <div className="flex flex-col items-center justify-center gap-4 p-6 bg-white rounded-xl shadow mb-6 w-full max-w-lg mx-auto">
-            <h2 className="text-xl font-bold mb-2 text-center w-full">Wallet & Telegram Verification</h2>
+          <div className="flex flex-col items-center justify-center gap-4 p-6 bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-blue-100 mb-6 w-full max-w-lg mx-auto">
+            <h2 className="text-xl font-bold mb-2 text-center text-blue-700 w-full">Wallet & Telegram Verification</h2>
             {!address ? (
               <div className="flex flex-col items-center w-full">
                 <span className="mb-2 text-gray-700 text-center">Please connect your wallet to access all features.</span>
@@ -188,7 +213,7 @@ export default function HomeTest() {
         {/* Special EPWX Claim Section */}
         {address && isTelegramVerified && specialEligible && (
           <section className="py-12">
-            <div className="bg-white rounded-xl shadow p-8 flex flex-col items-center w-full max-w-lg mx-auto border-2 border-yellow-400">
+            <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-8 flex flex-col items-center w-full max-w-lg mx-auto border-2 border-yellow-400">
               <h2 className="text-2xl font-bold mb-4 text-yellow-700">Special Claim</h2>
               <p className="mb-4 text-gray-700 text-center">You are eligible for a <b>Special 1,000,000 EPWX</b> reward!</p>
               <div className="flex items-center mb-4">
@@ -219,7 +244,7 @@ export default function HomeTest() {
               </button>
               {showSpecialTerms && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-                  <div className="bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100 rounded-lg shadow-lg p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto relative">
+                  <div className="bg-white/95 backdrop-blur-md text-gray-900 dark:bg-gray-900/95 dark:text-gray-100 rounded-2xl shadow-2xl border border-blue-100 p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto relative">
                     <button
                       className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 text-2xl font-bold"
                       onClick={() => setShowSpecialTerms(false)}
@@ -276,7 +301,7 @@ export default function HomeTest() {
 
         {/* Daily Claim Section */}
         <section className="py-12">
-          <div className="bg-white rounded-xl shadow p-8 flex flex-col items-center w-full max-w-lg mx-auto">
+          <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-green-100 p-8 flex flex-col items-center w-full max-w-lg mx-auto">
             <h2 className="text-2xl font-bold mb-4 text-green-700">Daily Claim</h2>
             {address ? (
               isTelegramVerified ? (
@@ -322,7 +347,7 @@ export default function HomeTest() {
                   </button>
                   {showTerms && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-                      <div className="bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100 rounded-lg shadow-lg p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto relative">
+                      <div className="bg-white/95 backdrop-blur-md text-gray-900 dark:bg-gray-900/95 dark:text-gray-100 rounded-2xl shadow-2xl border border-blue-100 p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto relative">
                         <button
                           className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 text-2xl font-bold"
                           onClick={() => setShowTerms(false)}
@@ -386,8 +411,8 @@ export default function HomeTest() {
         {/* Cashback Rewards Section */}
         <section className="py-12">
           <div className="flex flex-col items-center">
-            <h2 className="text-2xl font-bold mb-4 text-indigo-700 text-center">Cashback Rewards</h2>
-            <div className="bg-white rounded-xl shadow p-8 w-full max-w-xl">
+            <h2 className="text-2xl font-bold mb-4 text-blue-700 text-center">Cashback Rewards</h2>
+            <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-blue-100 p-8 w-full max-w-xl">
               <EPWXCashbackClaim />
             </div>
           </div>
@@ -398,7 +423,7 @@ export default function HomeTest() {
           <section className="py-12">
             <div className="flex flex-col items-center">
               <h2 className="text-2xl font-bold mb-4 text-blue-700 text-center">Your Daily Pending Claims</h2>
-              <div className="bg-white rounded-xl shadow p-8 w-full max-w-xl">
+              <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-blue-100 p-8 w-full max-w-xl">
                 <UserDailyClaims address={address} />
               </div>
             </div>
@@ -409,7 +434,7 @@ export default function HomeTest() {
         <section className="py-12">
           <div className="flex flex-col items-center">
             <h2 className="text-2xl font-bold mb-4 text-blue-700 text-center">Last 5 Paid Daily Claims (All Wallets)</h2>
-            <div className="bg-white rounded-xl shadow p-8 w-full max-w-xl">
+            <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-blue-100 p-8 w-full max-w-xl">
               <LastFivePaidDailyClaims />
             </div>
           </div>
@@ -417,24 +442,24 @@ export default function HomeTest() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-12 mt-20 dark:bg-gray-950 dark:bg-none">
+      <footer className="bg-white/80 backdrop-blur-xl border-t border-blue-100 text-gray-800 py-12 mt-20 dark:bg-gray-950/80 dark:text-gray-100 dark:border-gray-800">
         <div className="container mx-auto px-4">
           <div className="text-center mb-8">
-            <h3 className="text-2xl font-bold mb-2">EPWX Task Platform</h3>
-            <p className="text-gray-400">Earn tokens by completing campaigns on Base Network</p>
+            <h3 className="text-2xl font-bold mb-2 text-blue-700 dark:text-blue-300">EPWX Task Platform</h3>
+            <p className="text-gray-500 dark:text-gray-400">Earn tokens by completing campaigns on Base Network</p>
           </div>
           <div className="flex flex-col md:flex-row justify-center items-center gap-6 mb-6">
-            <a href="https://epowex.com" target="_blank" rel="noopener noreferrer" className="hover:text-blue-400 transition-colors">Main Site</a>
-            <span className="hidden md:block text-gray-600">•</span>
-            <a href="/terms" className="hover:text-blue-400 transition-colors">Terms of Service</a>
-            <span className="hidden md:block text-gray-600">•</span>
-            <a href="/privacy" className="hover:text-blue-400 transition-colors">Privacy Policy</a>
-            <span className="hidden md:block text-gray-600">•</span>
-            <a href="/user-guide" className="hover:text-blue-400 transition-colors">User Guide</a>
-            <span className="hidden md:block text-gray-600">•</span>
-            <a href="https://twitter.com/epowex" target="_blank" rel="noopener noreferrer" className="hover:text-blue-400 transition-colors">Twitter</a>
+            <a href="https://epowex.com" target="_blank" rel="noopener noreferrer" className="hover:text-blue-600 transition-colors">Main Site</a>
+            <span className="hidden md:block text-blue-200 dark:text-gray-700">•</span>
+            <a href="/terms" className="hover:text-blue-600 transition-colors">Terms of Service</a>
+            <span className="hidden md:block text-blue-200 dark:text-gray-700">•</span>
+            <a href="/privacy" className="hover:text-blue-600 transition-colors">Privacy Policy</a>
+            <span className="hidden md:block text-blue-200 dark:text-gray-700">•</span>
+            <a href="/user-guide" className="hover:text-blue-600 transition-colors">User Guide</a>
+            <span className="hidden md:block text-blue-200 dark:text-gray-700">•</span>
+            <a href="https://twitter.com/epowex" target="_blank" rel="noopener noreferrer" className="hover:text-blue-600 transition-colors">Twitter</a>
           </div>
-          <div className="text-center text-gray-400 text-sm">
+          <div className="text-center text-gray-500 dark:text-gray-400 text-sm">
             <p>&copy; 2025 EPWX Task Platform. All rights reserved.</p>
           </div>
         </div>
