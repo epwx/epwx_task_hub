@@ -1,7 +1,5 @@
 "use client";
 import Link from "next/link";
-import Header from "@/components/Header";
-import { EPWXStats } from "@/components/EPWXStats";
 import { EPWXCashbackClaim } from "@/components/EPWXCashbackClaim_clean";
 import { useState, useEffect } from "react";
 import DailyClaimsTable from "@/components/DailyClaimsTable";
@@ -44,26 +42,12 @@ function LastFivePaidDailyClaims() {
   return <DailyClaimsTable claims={claims} isAdmin={false} />;
 }
 
+const themedSectionClass = "relative overflow-hidden bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-3xl shadow-2xl p-8";
+const themedInnerClass = "relative z-10 flex flex-col items-center";
+const glassPanelClass = "bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl";
+
 export default function HomeTest() {
   const { address, isConnected } = useAccount();
-  const [darkMode, setDarkMode] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const theme = localStorage.getItem('theme');
-      if (theme === 'light') return false;
-      return true;
-    }
-    return true;
-  });
-
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  }, [darkMode]);
 
   const [specialEligible, setSpecialEligible] = useState(false);
   const [specialClaiming, setSpecialClaiming] = useState(false);
@@ -168,54 +152,52 @@ export default function HomeTest() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:bg-gray-950 dark:bg-none flex flex-col">
-      <Header darkMode={darkMode} setDarkMode={setDarkMode} />
-
       <main className="container mx-auto px-4 py-12 flex-1">
-        <section className="mb-12">
-          <h1 className="text-2xl font-bold mb-6 text-center text-blue-700">EPWX Task Platform</h1>
-          <EPWXStats />
-        </section>
-
         {/* Wallet Connection & Verification Section */}
         <section className="my-8">
-          <div className="flex flex-col items-center justify-center gap-4 p-6 bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-blue-100 mb-6 w-full max-w-lg mx-auto">
-            <h2 className="text-xl font-bold mb-2 text-center text-blue-700 w-full">Wallet & Telegram Verification</h2>
+          <div className={`${themedSectionClass} mb-6 w-full max-w-lg mx-auto`}>
+            <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
+            <div className={themedInnerClass}>
+            <h2 className="text-2xl font-black mb-4 text-center text-white w-full">Wallet & Telegram Verification</h2>
             {!address ? (
               <div className="flex flex-col items-center w-full">
-                <span className="mb-2 text-gray-700 text-center">Please connect your wallet to access all features.</span>
+                <span className="mb-2 text-white/80 text-center">Please connect your wallet to access all features.</span>
                 <ConnectKitButton />
               </div>
             ) : (
               <div className="flex flex-col items-center w-full">
-                <div className="mb-2 w-full flex flex-col items-center">
-                  <span className="text-gray-700 font-medium text-center break-all w-full">
+                <div className={`mb-3 w-full flex flex-col items-center p-4 ${glassPanelClass}`}>
+                  <span className="text-white/80 font-medium text-center break-all w-full">
                     Connected wallet:
-                    <span className="block text-xs text-gray-500 font-mono bg-gray-100 rounded px-2 py-1 mt-1 w-full overflow-x-auto" style={{wordBreak: 'break-all'}}>{address}</span>
+                    <span className="block text-xs text-white font-mono bg-white/10 rounded px-2 py-1 mt-1 w-full overflow-x-auto" style={{wordBreak: 'break-all'}}>{address}</span>
                   </span>
                 </div>
                 {checkingVerification ? (
-                  <span className="text-gray-500">Checking Telegram verification...</span>
+                  <span className="text-white/70">Checking Telegram verification...</span>
                 ) : isTelegramVerified ? (
-                  <span className="bg-green-100 text-green-700 font-bold py-2 px-4 rounded-lg mb-2 w-full text-center block">✅ Telegram membership verified</span>
+                  <span className="bg-emerald-400/20 border border-emerald-300/30 text-emerald-100 font-bold py-3 px-4 rounded-xl mb-2 w-full text-center block">✅ Telegram membership verified</span>
                 ) : (
                   <a
                     href={`https://t.me/epwx_bot?start=${address}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg mb-2 w-full text-center"
+                    className="bg-white/15 hover:bg-white/20 border border-white/20 text-white font-bold py-3 px-4 rounded-xl mb-2 w-full text-center transition-colors"
                   >Verify Telegram Membership</a>
                 )}
               </div>
             )}
+            </div>
           </div>
         </section>
 
         {/* Special EPWX Claim Section */}
         {address && isTelegramVerified && specialEligible && (
           <section className="py-12">
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-8 flex flex-col items-center w-full max-w-lg mx-auto border-2 border-yellow-400">
-              <h2 className="text-2xl font-bold mb-4 text-yellow-700">Special Claim</h2>
-              <p className="mb-4 text-gray-700 text-center">You are eligible for a <b>Special 1,000,000 EPWX</b> reward!</p>
+            <div className={`${themedSectionClass} w-full max-w-lg mx-auto`}>
+              <div className="absolute bottom-0 left-0 w-40 h-40 bg-yellow-300/20 rounded-full blur-3xl"></div>
+              <div className={themedInnerClass}>
+              <h2 className="text-2xl font-black mb-4 text-white">Special Claim</h2>
+              <p className="mb-4 text-white/85 text-center">You are eligible for a <b>Special 1,000,000 EPWX</b> reward!</p>
               <div className="flex items-center mb-4">
                 <input
                   id="special-terms-checkbox"
@@ -224,11 +206,11 @@ export default function HomeTest() {
                   onChange={e => setSpecialAgreed(e.target.checked)}
                   className="mr-2"
                 />
-                <label htmlFor="special-terms-checkbox" className="text-sm text-gray-700">
+                <label htmlFor="special-terms-checkbox" className="text-sm text-white/85">
                   I agree to the{' '}
                   <button
                     type="button"
-                    className="text-yellow-700 underline hover:text-yellow-900"
+                    className="text-emerald-200 underline hover:text-white"
                     onClick={() => setShowSpecialTerms(true)}
                   >
                     terms and conditions
@@ -293,16 +275,19 @@ export default function HomeTest() {
                 </div>
               )}
               {specialClaimStatus && (
-                <div className="text-center text-lg font-semibold text-yellow-700 mb-2">{specialClaimStatus}</div>
+                <div className="text-center text-lg font-semibold text-white mb-2">{specialClaimStatus}</div>
               )}
+              </div>
             </div>
           </section>
         )}
 
         {/* Daily Claim Section */}
         <section className="py-12">
-          <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-green-100 p-8 flex flex-col items-center w-full max-w-lg mx-auto">
-            <h2 className="text-2xl font-bold mb-4 text-green-700">Daily Claim</h2>
+          <div className={`${themedSectionClass} w-full max-w-lg mx-auto`}>
+            <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
+            <div className={themedInnerClass}>
+            <h2 className="text-2xl font-black mb-4 text-white">Daily Claim</h2>
             {address ? (
               isTelegramVerified ? (
                 <>
@@ -314,11 +299,11 @@ export default function HomeTest() {
                       onChange={e => setAgreed(e.target.checked)}
                       className="mr-2"
                     />
-                    <label htmlFor="daily-terms-checkbox" className="text-sm text-gray-700">
+                    <label htmlFor="daily-terms-checkbox" className="text-sm text-white/85">
                       I agree to the{' '}
                       <button
                         type="button"
-                        className="text-blue-600 underline hover:text-blue-800"
+                        className="text-emerald-200 underline hover:text-white"
                         onClick={() => setShowTerms(true)}
                       >
                         terms and conditions
@@ -333,9 +318,9 @@ export default function HomeTest() {
                       onChange={e => setCmcChecked(e.target.checked)}
                       className="mr-2"
                     />
-                    <label htmlFor="cmc-watchlist-checkbox" className="text-sm text-gray-700">
+                    <label htmlFor="cmc-watchlist-checkbox" className="text-sm text-white/85">
                       I have added EPWX to my
-                      <a href="https://coinmarketcap.com/currencies/epowerx-on-base/" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline ml-1">CoinMarketCap watchlist</a>
+                      <a href="https://coinmarketcap.com/currencies/epowerx-on-base/" target="_blank" rel="noopener noreferrer" className="text-emerald-200 underline ml-1 hover:text-white">CoinMarketCap watchlist</a>
                     </label>
                   </div>
                   <button
@@ -396,23 +381,24 @@ export default function HomeTest() {
                     </div>
                   )}
                   {claimStatus && (
-                    <div className="text-center text-lg font-semibold text-green-700 mb-2">{claimStatus}</div>
+                    <div className="text-center text-lg font-semibold text-white mb-2">{claimStatus}</div>
                   )}
                 </>
               ) : (
-                <div className="text-center text-red-600 font-semibold mb-2">Please verify your Telegram membership to claim daily rewards.</div>
+                <div className="text-center text-red-200 font-semibold mb-2">Please verify your Telegram membership to claim daily rewards.</div>
               )
             ) : (
-              <div className="text-center text-gray-600 font-semibold mb-2">Connect your wallet to claim daily rewards.</div>
+              <div className="text-center text-white/80 font-semibold mb-2">Connect your wallet to claim daily rewards.</div>
             )}
+            </div>
           </div>
         </section>
 
         {/* Cashback Rewards Section */}
         <section className="py-12">
           <div className="flex flex-col items-center">
-            <h2 className="text-2xl font-bold mb-4 text-blue-700 text-center">Cashback Rewards</h2>
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-blue-100 p-8 w-full max-w-xl">
+            <h2 className="text-2xl font-black mb-4 text-blue-700 text-center">Cashback Rewards</h2>
+            <div className={`${themedSectionClass} w-full max-w-xl`}>
               <EPWXCashbackClaim />
             </div>
           </div>
@@ -422,8 +408,8 @@ export default function HomeTest() {
         {address && (
           <section className="py-12">
             <div className="flex flex-col items-center">
-              <h2 className="text-2xl font-bold mb-4 text-blue-700 text-center">Your Daily Pending Claims</h2>
-              <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-blue-100 p-8 w-full max-w-xl">
+              <h2 className="text-2xl font-black mb-4 text-blue-700 text-center">Your Daily Pending Claims</h2>
+              <div className={`${themedSectionClass} w-full max-w-xl`}>
                 <UserDailyClaims address={address} />
               </div>
             </div>
@@ -433,8 +419,8 @@ export default function HomeTest() {
         {/* Last 5 Paid Daily Claims Section */}
         <section className="py-12">
           <div className="flex flex-col items-center">
-            <h2 className="text-2xl font-bold mb-4 text-blue-700 text-center">Last 5 Paid Daily Claims (All Wallets)</h2>
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-blue-100 p-8 w-full max-w-xl">
+            <h2 className="text-2xl font-black mb-4 text-blue-700 text-center">Last 5 Paid Daily Claims (All Wallets)</h2>
+            <div className={`${themedSectionClass} w-full max-w-xl`}>
               <LastFivePaidDailyClaims />
             </div>
           </div>
