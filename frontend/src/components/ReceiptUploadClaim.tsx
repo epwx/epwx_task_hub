@@ -21,10 +21,10 @@ const ReceiptUploadClaim: React.FC<ReceiptUploadClaimProps> = ({ merchantId, mer
     const renderMerchantInfo = () => {
       if (!merchantInfo) return null;
       return (
-        <div className="mb-4 p-2 border rounded bg-gray-50">
-          <div className="font-semibold text-gray-800">Merchant:</div>
-          <div className="text-gray-900 font-medium">{merchantInfo.name}</div>
-          <div className="text-sm text-gray-700">{merchantInfo.address}</div>
+        <div className="mb-4 p-4 border border-white/20 rounded-2xl bg-white/10 backdrop-blur-lg">
+          <div className="font-semibold text-white/80">Merchant:</div>
+          <div className="text-white font-medium">{merchantInfo.name}</div>
+          <div className="text-sm text-white/70">{merchantInfo.address}</div>
         </div>
       );
     };
@@ -91,18 +91,18 @@ const ReceiptUploadClaim: React.FC<ReceiptUploadClaimProps> = ({ merchantId, mer
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-4 border rounded bg-white max-w-md mx-auto">
+    <form onSubmit={handleSubmit} className="p-4 border border-white/20 rounded-2xl bg-white/10 backdrop-blur-lg max-w-md mx-auto text-white">
       {renderMerchantInfo()}
-      <h2 className="text-lg font-bold mb-2 text-gray-900">Upload Store Receipt</h2>
+      <h2 className="text-lg font-bold mb-2 text-white">Upload Store Receipt</h2>
       <input
         type="file"
         accept="image/*"
         capture="environment"
         onChange={handleFileChange}
-        className="mb-2"
+        className="mb-2 block w-full text-sm text-white file:mr-4 file:rounded-xl file:border-0 file:bg-white/15 file:px-4 file:py-2 file:font-semibold file:text-white hover:file:bg-white/20"
       />
       {file && (
-        <div className="mb-2 text-gray-900 font-medium break-all">Selected file: {file.name}</div>
+        <div className="mb-2 text-white font-medium break-all">Selected file: {file.name}</div>
       )}
       <div className="flex items-center mb-4 mt-2">
         <input
@@ -112,11 +112,11 @@ const ReceiptUploadClaim: React.FC<ReceiptUploadClaimProps> = ({ merchantId, mer
           onChange={e => setAgreed(e.target.checked)}
           className="mr-2"
         />
-        <label htmlFor="terms-checkbox" className="text-sm text-gray-700">
+        <label htmlFor="terms-checkbox" className="text-sm text-white/85">
           I agree to the{' '}
           <button
             type="button"
-            className="underline text-blue-600 hover:text-blue-800"
+            className="underline text-emerald-200 hover:text-white"
             onClick={() => setShowTerms(true)}
           >
             terms and conditions
@@ -125,7 +125,7 @@ const ReceiptUploadClaim: React.FC<ReceiptUploadClaimProps> = ({ merchantId, mer
       </div>
       {showTerms && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100 rounded-lg shadow-lg p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto relative">
+          <div className="bg-white/95 backdrop-blur-md text-gray-900 dark:bg-gray-900/95 dark:text-gray-100 rounded-2xl shadow-2xl border border-blue-100 p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto relative">
             <button
               className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 text-2xl font-bold"
               onClick={() => setShowTerms(false)}
@@ -176,12 +176,12 @@ const ReceiptUploadClaim: React.FC<ReceiptUploadClaimProps> = ({ merchantId, mer
       <button
         type="submit"
         disabled={loading || !agreed}
-        className={`bg-blue-600 text-white px-4 py-2 rounded ${(!agreed || loading) ? 'opacity-50 cursor-not-allowed' : ''}`}
+        className={`bg-white/15 border border-white/20 text-white px-4 py-2 rounded-xl font-semibold ${(!agreed || loading) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white/20 transition-colors'}`}
       >
         {loading ? 'Submitting...' : 'Submit Claim'}
       </button>
-      {success && <div className="text-green-600 mt-2">Claim submitted successfully!</div>}
-      {error && <div className="text-red-600 mt-2">{error}</div>}
+      {success && <div className="text-emerald-200 mt-2">Claim submitted successfully!</div>}
+      {error && <div className="text-red-200 mt-2">{error}</div>}
     </form>
   );
 };

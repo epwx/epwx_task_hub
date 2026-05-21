@@ -30,6 +30,8 @@ function ClaimPage() {
   const { address } = useAccount();
   const [claimStatus, setClaimStatus] = useState<string | null>(null);
   const [merchantError, setMerchantError] = useState<string | null>(null);
+  const pageShellClass = "relative overflow-hidden bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-3xl shadow-2xl p-8";
+  const centeredMessageClass = "max-w-2xl mx-auto py-16 px-6 text-center";
 
   // Fetch merchant coordinates and info if not present in URL
   useEffect(() => {
@@ -80,10 +82,10 @@ function ClaimPage() {
   // ...existing code...
 
   if (merchantError) {
-    return <div className="py-16 text-center text-red-600">{merchantError}</div>;
+    return <div className={`${centeredMessageClass} text-red-200`}>{merchantError}</div>;
   }
   if (merchantLat === null || merchantLng === null) {
-    return <div className="py-16 text-center">Loading merchant info...</div>;
+    return <div className={`${centeredMessageClass} text-white/80`}>Loading merchant info...</div>;
   }
   const handleRetryLocation = () => {
     setGeoError(null);
@@ -103,15 +105,16 @@ function ClaimPage() {
   };
   if (geoError) {
     return (
-      <div className="py-16 text-center text-red-600">
-        Location error: {geoError}
-        <br />
-        <span className="block mt-4 text-gray-700">
+      <div className={`${centeredMessageClass} ${pageShellClass} text-white`}>
+        <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full blur-3xl"></div>
+        <div className="relative z-10">
+        <div className="text-red-200 font-semibold">Location error: {geoError}</div>
+        <span className="block mt-4 text-white/80">
           Please enable GPS/location services on your device and allow location access in your browser settings to claim your reward.
         </span>
         <div className="mt-4 flex flex-col items-center gap-4">
-          <img src="/enable-location-example.png" alt="Enable location example (Android)" className="max-w-xs rounded shadow" />
-          <div className="bg-gray-50 border border-gray-200 rounded p-3 max-w-xs text-left text-sm">
+          <img src="/enable-location-example.png" alt="Enable location example (Android)" className="max-w-xs rounded-2xl shadow-2xl border border-white/20" />
+          <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-3 max-w-xs text-left text-sm text-white/90">
             <div className="font-semibold mb-1">iPhone (iOS) instructions:</div>
             <ol className="list-decimal list-inside space-y-1">
               <li>Open the <b>Settings</b> app.</li>
@@ -125,26 +128,30 @@ function ClaimPage() {
           </div>
         </div>
         <button
-          className="mt-6 px-4 py-2 bg-blue-600 text-white rounded font-semibold"
+          className="mt-6 px-4 py-2 bg-white/15 hover:bg-white/20 border border-white/20 text-white rounded-xl font-semibold transition-colors"
           onClick={handleRetryLocation}
         >
           Retry Location
         </button>
+        </div>
       </div>
     );
   }
   if (distance === null) {
-    return <div className="py-16 text-center">Checking your location...</div>;
+    return <div className={`${centeredMessageClass} text-white/80`}>Checking your location...</div>;
   }
   if (distance > 50) {
-    return <div className="py-16 text-center text-yellow-700">You must be at the merchant location to claim rewards.</div>;
+    return <div className={`${centeredMessageClass} text-yellow-200`}>You must be at the merchant location to claim rewards.</div>;
   }
   return (
     <div className="max-w-md mx-auto py-8">
-      <h2 className="text-2xl font-bold mb-4">Claim EPWX Reward</h2>
+      <div className={pageShellClass}>
+        <div className="absolute bottom-0 left-0 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
+        <div className="relative z-10">
+      <h2 className="text-3xl font-black mb-4 text-white text-center">Claim EPWX Reward</h2>
       {!address ? (
-        <div className="mb-4">
-          <div className="text-gray-700 mb-2">Connect your wallet to claim.</div>
+        <div className="mb-4 flex flex-col items-center">
+          <div className="text-white/80 mb-4">Connect your wallet to claim.</div>
           <ConnectKitButton />
         </div>
       ) : (
@@ -156,6 +163,8 @@ function ClaimPage() {
           lng={location?.longitude}
         />
       )}
+        </div>
+      </div>
     </div>
   );
 }
