@@ -9,8 +9,10 @@ import { epwxTokenContract, epwxTokenWithSigner } from '../services/blockchain.j
 const router = express.Router();
 
 const DAILY_REWARD_DEFAULT = '100000';
+const DAILY_REWARD_MID_TIER = '120000';
 const DAILY_REWARD_BONUS = '200000';
-const DAILY_REWARD_BALANCE_THRESHOLD = ethers.parseUnits('100000000000', 9);
+const DAILY_REWARD_BONUS_THRESHOLD = ethers.parseUnits('100000000000', 9);
+const DAILY_REWARD_MID_TIER_THRESHOLD = ethers.parseUnits('10000000000', 9);
 
 async function getDailyRewardAmount(wallet) {
   if (!epwxTokenContract) {
@@ -18,7 +20,15 @@ async function getDailyRewardAmount(wallet) {
   }
 
   const balance = await epwxTokenContract.balanceOf(wallet);
-  return balance >= DAILY_REWARD_BALANCE_THRESHOLD ? DAILY_REWARD_BONUS : DAILY_REWARD_DEFAULT;
+  if (balance >= DAILY_REWARD_BONUS_THRESHOLD) {
+    return DAILY_REWARD_BONUS;
+  }
+
+  if (balance >= DAILY_REWARD_MID_TIER_THRESHOLD) {
+    return DAILY_REWARD_MID_TIER;
+  }
+
+  return DAILY_REWARD_DEFAULT;
 }
 
 // POST /api/epwx/claims/mark-paid - Mark claim as paid (admin only)
