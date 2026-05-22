@@ -47,6 +47,22 @@ const themedSectionClass = "relative overflow-hidden bg-gradient-to-br from-blue
 const themedInnerClass = "relative z-10 flex flex-col items-center";
 const glassPanelClass = "bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl";
 const EPWX_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_EPWX_TOKEN as `0x${string}`) || "0xef5f5751cf3eca6cc3572768298b7783d33d60eb";
+
+function formatDuration(msLeft: number) {
+  if (msLeft <= 0) return "0m 0s";
+
+  const totalSeconds = Math.floor(msLeft / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (hours > 0) {
+    return `${hours}h ${minutes}m ${seconds}s`;
+  }
+
+  return `${minutes}m ${seconds}s`;
+}
+
 function formatEpwxBalance(normalized: number) {
   if (!Number.isFinite(normalized) || normalized === 0) {
     return "0";
@@ -125,6 +141,8 @@ export default function HomeTest() {
   const { signMessageAsync } = useSignMessage();
   const [claiming, setClaiming] = useState(false);
   const [claimStatus, setClaimStatus] = useState<string | null>(null);
+  const [nextDailyClaimAt, setNextDailyClaimAt] = useState<number | null>(null);
+  const [remainingClaimTime, setRemainingClaimTime] = useState<string | null>(null);
   const [isTelegramVerified, setIsTelegramVerified] = useState<boolean>(false);
   const [agreed, setAgreed] = useState(false);
   const [cmcChecked, setCmcChecked] = useState(false);
@@ -151,6 +169,56 @@ export default function HomeTest() {
     };
     checkVerification();
   }, [address]);
+
+  useEffect(() => {
+    const fetchLatestDailyClaim = async () => {
+      if (!address) {
+        setNextDailyClaimAt(null);
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/epwx/daily-claims?wallet=${address}&limit=1`);
+        const data = await res.json();
+        const latestClaim = Array.isArray(data.claims) ? data.claims[0] : null;
+
+        if (!latestClaim?.claimedAt) {
+          setNextDailyClaimAt(null);
+          return;
+        }
+
+        const nextClaimTime = new Date(latestClaim.claimedAt).getTime() + 24 * 60 * 60 * 1000;
+        setNextDailyClaimAt(nextClaimTime);
+      } catch {
+        setNextDailyClaimAt(null);
+      }
+    };
+
+    fetchLatestDailyClaim();
+  }, [address, claimStatus]);
+
+  useEffect(() => {
+    if (!nextDailyClaimAt) {
+      setRemainingClaimTime(null);
+      return;
+    }
+
+    const updateRemainingTime = () => {
+      const msLeft = nextDailyClaimAt - Date.now();
+
+      if (msLeft <= 0) {
+        setRemainingClaimTime(null);
+        setNextDailyClaimAt(null);
+        return;
+      }
+
+      setRemainingClaimTime(formatDuration(msLeft));
+    };
+
+    updateRemainingTime();
+    const intervalId = window.setInterval(updateRemainingTime, 1000);
+    return () => window.clearInterval(intervalId);
+  }, [nextDailyClaimAt]);
 
   const handleDailyClaim = async () => {
     setClaiming(true);
@@ -368,11 +436,16 @@ export default function HomeTest() {
                   </div>
                   <button
                     onClick={handleDailyClaim}
-                    disabled={claiming || !agreed || !cmcChecked}
-                    className={`px-6 py-3 rounded-lg font-bold text-white bg-green-600 hover:bg-green-700 transition-colors mb-4 ${claiming || !agreed || !cmcChecked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    disabled={claiming || !agreed || !cmcChecked || !!remainingClaimTime}
+                    className={`px-6 py-3 rounded-lg font-bold text-white bg-green-600 hover:bg-green-700 transition-colors mb-4 ${claiming || !agreed || !cmcChecked || !!remainingClaimTime ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     {claiming ? 'Claiming...' : 'Claim Daily Reward'}
                   </button>
+                  {remainingClaimTime && (
+                    <div className="text-center text-sm font-semibold text-yellow-100 mb-4">
+                      Next daily claim available in {remainingClaimTime}
+                    </div>
+                  )}
                   {showTerms && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
                       <div className="bg-white/95 backdrop-blur-md text-gray-900 dark:bg-gray-900/95 dark:text-gray-100 rounded-2xl shadow-2xl border border-blue-100 p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto relative">
