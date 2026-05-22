@@ -13,6 +13,11 @@ interface PriceData {
   wethReserve: number;
 }
 
+const EPWX_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_EPWX_TOKEN as `0x${string}`) || '0xef5f5751cf3eca6cc3572768298b7783d33d60eb';
+const USDT_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_USDT_TOKEN as `0x${string}`) || '0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2';
+const EPWX_USDT_PAIR_ADDRESS = process.env.NEXT_PUBLIC_EPWX_USDT_PAIR || 'Not configured';
+const PANCAKESWAP_ROUTER_ADDRESS = process.env.NEXT_PUBLIC_PANCAKESWAP_ROUTER || '0x8cFe327CEc66d1C090Dd72bd0FF11d690C33a2Eb';
+
 export function EPWXStats() {
   const [priceData, setPriceData] = useState<PriceData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -21,7 +26,6 @@ export function EPWXStats() {
   const { address, isConnected } = useAccount();
 
   // EPWX Token contract details
-  const EPWX_TOKEN_ADDRESS = '0xef5f5751cf3eca6cc3572768298b7783d33d60eb';
   const ERC20_ABI = [
     'function balanceOf(address owner) view returns (uint256)',
     'function decimals() view returns (uint8)'
@@ -205,6 +209,50 @@ export function EPWXStats() {
               >
                 Trade Now →
               </a>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6">
+            <p className="text-white/70 text-sm font-semibold mb-4 uppercase tracking-wider">EPWX / USDT Pair Details</p>
+            <div className="space-y-4 text-sm text-white/85">
+              <div>
+                <p className="text-white/60 mb-1">EPWX token</p>
+                <p className="font-mono break-all text-white">{EPWX_TOKEN_ADDRESS}</p>
+              </div>
+              <div>
+                <p className="text-white/60 mb-1">USDT token</p>
+                <p className="font-mono break-all text-white">{USDT_TOKEN_ADDRESS}</p>
+              </div>
+              <div>
+                <p className="text-white/60 mb-1">Pair contract</p>
+                <p className="font-mono break-all text-white">{EPWX_USDT_PAIR_ADDRESS}</p>
+              </div>
+              <div>
+                <p className="text-white/60 mb-1">Router</p>
+                <p className="font-mono break-all text-white">{PANCAKESWAP_ROUTER_ADDRESS}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6">
+            <p className="text-white/70 text-sm font-semibold mb-4 uppercase tracking-wider">Pool Snapshot</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                <p className="text-white/60 text-xs uppercase tracking-wider mb-1">EPWX Reserve</p>
+                <p className="text-xl font-bold text-white">{priceData.epwxReserve.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                <p className="text-white/60 text-xs uppercase tracking-wider mb-1">Quote Reserve</p>
+                <p className="text-xl font-bold text-white">{priceData.wethReserve.toLocaleString(undefined, { maximumFractionDigits: 4 })}</p>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4 sm:col-span-2">
+                <p className="text-white/60 text-xs uppercase tracking-wider mb-1">Pricing Source</p>
+                <p className="text-white">
+                  Current API pricing still resolves from the live EPWX quote pool. If you want this snapshot to be computed strictly from the EPWX/USDT pair, set the pair address in <span className="font-mono">NEXT_PUBLIC_EPWX_USDT_PAIR</span> and update the backend price service to use that pool.
+                </p>
+              </div>
             </div>
           </div>
         </div>

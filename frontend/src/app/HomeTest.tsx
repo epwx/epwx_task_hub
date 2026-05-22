@@ -3,7 +3,8 @@ import Link from "next/link";
 import { EPWXCashbackClaim } from "@/components/EPWXCashbackClaim_clean";
 import { useState, useEffect } from "react";
 import DailyClaimsTable from "@/components/DailyClaimsTable";
-import { useAccount, useSignMessage } from "wagmi";
+import { formatUnits } from "ethers";
+import { useAccount, useReadContract, useSignMessage } from "wagmi";
 import toast from "react-hot-toast";
 import { ConnectKitButton } from "connectkit";
 
@@ -45,9 +46,25 @@ function LastFivePaidDailyClaims() {
 const themedSectionClass = "relative overflow-hidden bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-3xl shadow-2xl p-8";
 const themedInnerClass = "relative z-10 flex flex-col items-center";
 const glassPanelClass = "bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl";
+const EPWX_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_EPWX_TOKEN as `0x${string}`) || "0xef5f5751cf3eca6cc3572768298b7783d33d60eb";
+const EPWX_TOKEN_ABI = [
+  "function balanceOf(address owner) view returns (uint256)",
+  "function decimals() view returns (uint8)"
+];
 
 export default function HomeTest() {
   const { address, isConnected } = useAccount();
+  const { data: rawBalance, isLoading: balanceLoading } = useReadContract({
+    address: EPWX_TOKEN_ADDRESS,
+    abi: EPWX_TOKEN_ABI,
+    functionName: "balanceOf",
+    args: address ? [address] : undefined,
+  });
+  const { data: tokenDecimals } = useReadContract({
+    address: EPWX_TOKEN_ADDRESS,
+    abi: EPWX_TOKEN_ABI,
+    functionName: "decimals",
+  });
 
   const [specialEligible, setSpecialEligible] = useState(false);
   const [specialClaiming, setSpecialClaiming] = useState(false);
@@ -150,6 +167,17 @@ export default function HomeTest() {
     setClaiming(false);
   };
 
+  let formattedBalance = "0";
+  if (rawBalance !== undefined) {
+    try {
+      formattedBalance = Number(
+        formatUnits(rawBalance as bigint, Number(tokenDecimals ?? 9))
+      ).toLocaleString(undefined, { maximumFractionDigits: 4 });
+    } catch {
+      formattedBalance = "0";
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:bg-gray-950 dark:bg-none flex flex-col">
       <main className="container mx-auto px-4 py-12 flex-1">
@@ -171,6 +199,14 @@ export default function HomeTest() {
                     Connected wallet:
                     <span className="block text-xs text-white font-mono bg-white/10 rounded px-2 py-1 mt-1 w-full overflow-x-auto" style={{wordBreak: 'break-all'}}>{address}</span>
                   </span>
+                </div>
+                <div className={`mb-3 w-full p-4 ${glassPanelClass}`}>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-white/80 font-medium">EPWX balance</span>
+                    <span className="text-lg font-bold text-emerald-300">
+                      {balanceLoading ? "Loading..." : `${formattedBalance} EPWX`}
+                    </span>
+                  </div>
                 </div>
                 {checkingVerification ? (
                   <span className="text-white/70">Checking Telegram verification...</span>
