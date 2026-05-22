@@ -143,6 +143,7 @@ export default function HomeTest() {
   const [claimStatus, setClaimStatus] = useState<string | null>(null);
   const [nextDailyClaimAt, setNextDailyClaimAt] = useState<number | null>(null);
   const [remainingClaimTime, setRemainingClaimTime] = useState<string | null>(null);
+  const [hasDailyClaimHistory, setHasDailyClaimHistory] = useState(false);
   const [isTelegramVerified, setIsTelegramVerified] = useState<boolean>(false);
   const [agreed, setAgreed] = useState(false);
   const [cmcChecked, setCmcChecked] = useState(false);
@@ -173,6 +174,7 @@ export default function HomeTest() {
   useEffect(() => {
     const fetchLatestDailyClaim = async () => {
       if (!address) {
+        setHasDailyClaimHistory(false);
         setNextDailyClaimAt(null);
         return;
       }
@@ -183,13 +185,16 @@ export default function HomeTest() {
         const latestClaim = Array.isArray(data.claims) ? data.claims[0] : null;
 
         if (!latestClaim?.claimedAt) {
+          setHasDailyClaimHistory(false);
           setNextDailyClaimAt(null);
           return;
         }
 
+        setHasDailyClaimHistory(true);
         const nextClaimTime = new Date(latestClaim.claimedAt).getTime() + 24 * 60 * 60 * 1000;
         setNextDailyClaimAt(nextClaimTime);
       } catch {
+        setHasDailyClaimHistory(false);
         setNextDailyClaimAt(null);
       }
     };
@@ -444,6 +449,16 @@ export default function HomeTest() {
                   {remainingClaimTime && (
                     <div className="text-center text-sm font-semibold text-yellow-100 mb-4">
                       Next daily claim available in {remainingClaimTime}
+                    </div>
+                  )}
+                  {!remainingClaimTime && hasDailyClaimHistory && (
+                    <div className="text-center text-sm font-semibold text-emerald-100 mb-4">
+                      Daily claim is available now.
+                    </div>
+                  )}
+                  {!remainingClaimTime && !hasDailyClaimHistory && (
+                    <div className="text-center text-sm font-semibold text-white/80 mb-4">
+                      No previous daily claim found. You can claim now.
                     </div>
                   )}
                   {showTerms && (
