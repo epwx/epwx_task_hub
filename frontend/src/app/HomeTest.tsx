@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import DailyClaimsTable from "@/components/DailyClaimsTable";
 import { formatUnits } from "ethers";
 import { useAccount, useReadContract, useSignMessage } from "wagmi";
+import { base } from "wagmi/chains";
 import toast from "react-hot-toast";
 import { ConnectKitButton } from "connectkit";
 
@@ -83,11 +84,13 @@ export default function HomeTest() {
     abi: EPWX_TOKEN_ABI,
     functionName: "balanceOf",
     args: address ? [address] : undefined,
+    chainId: base.id,
   });
   const { data: tokenDecimals } = useReadContract({
     address: EPWX_TOKEN_ADDRESS,
     abi: EPWX_TOKEN_ABI,
     functionName: "decimals",
+    chainId: base.id,
   });
 
   const [specialEligible, setSpecialEligible] = useState(false);
