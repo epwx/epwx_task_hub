@@ -19,6 +19,11 @@ const DailyClaim = sequelize.define('DailyClaim', {
     type: DataTypes.DATE,
     allowNull: false,
   },
+  amount: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    defaultValue: '100000',
+  },
   status: {
     type: DataTypes.STRING,
     allowNull: false,

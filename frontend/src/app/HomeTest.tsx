@@ -47,6 +47,9 @@ const themedSectionClass = "relative overflow-hidden bg-gradient-to-br from-blue
 const themedInnerClass = "relative z-10 flex flex-col items-center";
 const glassPanelClass = "bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl";
 const EPWX_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_EPWX_TOKEN as `0x${string}`) || "0xef5f5751cf3eca6cc3572768298b7783d33d60eb";
+const DAILY_REWARD_THRESHOLD = 100_000_000_000;
+const DEFAULT_DAILY_REWARD = 100_000;
+const BONUS_DAILY_REWARD = 200_000;
 
 function formatDuration(msLeft: number) {
   if (msLeft <= 0) return "0m 0s";
@@ -90,6 +93,8 @@ export default function HomeTest() {
     token: EPWX_TOKEN_ADDRESS,
     chainId: base.id,
   });
+  const qualifiesForBonusDailyReward = Number(epwxBalance?.formatted || 0) >= DAILY_REWARD_THRESHOLD;
+  const currentDailyReward = qualifiesForBonusDailyReward ? BONUS_DAILY_REWARD : DEFAULT_DAILY_REWARD;
 
   const [specialEligible, setSpecialEligible] = useState(false);
   const [specialClaiming, setSpecialClaiming] = useState(false);
@@ -239,7 +244,8 @@ export default function HomeTest() {
       });
       const data = await res.json();
       if (data.success) {
-        setClaimStatus("Successfully claimed 100,000 EPWX! Your reward will be sent soon.");
+        const claimedAmount = Number(data.amount || DEFAULT_DAILY_REWARD).toLocaleString();
+        setClaimStatus(`Successfully claimed ${claimedAmount} EPWX! Your reward will be sent soon.`);
       } else {
         setClaimStatus(data.error || "Claim failed");
       }
@@ -407,6 +413,14 @@ export default function HomeTest() {
             {address ? (
               isTelegramVerified ? (
                 <>
+                  <div className="w-full text-center text-sm text-white/85 mb-4 space-y-1">
+                    <div>One daily reward claim per 24 hours.</div>
+                    <div>Wallets with at least {DAILY_REWARD_THRESHOLD.toLocaleString()} EPWX can claim {BONUS_DAILY_REWARD.toLocaleString()} EPWX.</div>
+                    <div>Other wallets claim the default {DEFAULT_DAILY_REWARD.toLocaleString()} EPWX.</div>
+                    {address && !balanceLoading && (
+                      <div className="font-semibold text-emerald-100">Your current daily reward tier: {currentDailyReward.toLocaleString()} EPWX</div>
+                    )}
+                  </div>
                   <div className="flex items-center mb-4">
                     <input
                       id="daily-terms-checkbox"

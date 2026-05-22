@@ -5,6 +5,7 @@ interface DailyClaim {
   wallet: string;
   ip: string;
   claimedAt: string;
+  amount?: string;
   status: string;
 }
 
@@ -22,6 +23,7 @@ const DailyClaimsTable: React.FC<DailyClaimsTableProps> = ({ claims, isAdmin = f
         <th className="py-2 px-2 sm:px-4 text-gray-700">Wallet</th>
         <th className="py-2 px-2 sm:px-4 text-gray-700">IP</th>
         <th className="py-2 px-2 sm:px-4 text-gray-700">Claimed At</th>
+        <th className="py-2 px-2 sm:px-4 text-gray-700">Amount</th>
         <th className="py-2 px-2 sm:px-4 text-gray-700">Status</th>
         {isAdmin && <th className="py-2 px-2 sm:px-4 text-gray-700">Action</th>}
       </tr>
@@ -32,6 +34,7 @@ const DailyClaimsTable: React.FC<DailyClaimsTableProps> = ({ claims, isAdmin = f
           <td className="py-2 px-2 sm:px-4 break-all bg-white text-gray-900">{claim.wallet}</td>
           <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{claim.ip}</td>
           <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{new Date(claim.claimedAt).toLocaleString()}</td>
+          <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{Number(claim.amount || "100000").toLocaleString()} EPWX</td>
           <td className="py-2 px-2 sm:px-4 bg-white text-gray-900 capitalize">{claim.status}</td>
           {isAdmin && (
             <td className="py-2 px-2 sm:px-4 bg-white">

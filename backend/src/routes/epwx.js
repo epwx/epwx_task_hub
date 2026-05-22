@@ -8,6 +8,19 @@ import { ethers } from 'ethers';
 import { epwxTokenContract, epwxTokenWithSigner } from '../services/blockchain.js';
 const router = express.Router();
 
+const DAILY_REWARD_DEFAULT = '100000';
+const DAILY_REWARD_BONUS = '200000';
+const DAILY_REWARD_BALANCE_THRESHOLD = ethers.parseUnits('100000000000', 9);
+
+async function getDailyRewardAmount(wallet) {
+  if (!epwxTokenContract) {
+    throw new Error('EPWX token contract not configured');
+  }
+
+  const balance = await epwxTokenContract.balanceOf(wallet);
+  return balance >= DAILY_REWARD_BALANCE_THRESHOLD ? DAILY_REWARD_BONUS : DAILY_REWARD_DEFAULT;
+}
+
 // POST /api/epwx/claims/mark-paid - Mark claim as paid (admin only)
 router.post('/claims/mark-paid', async (req, res) => {
   // DEBUG: Log route hit and admin values for troubleshooting
@@ -417,8 +430,19 @@ router.post('/daily-claim', async (req, res) => {
 
   // TODO: Send EPWX to wallet here (call contract or queue for admin)
   // For now, just record the claim
-  await DailyClaim.create({ wallet: wallet.toLowerCase(), ip, claimedAt: now });
-  res.json({ success: true, message: 'Daily claim successful!' });
+  let rewardAmount;
+  try {
+    rewardAmount = await getDailyRewardAmount(wallet.toLowerCase());
+  } catch (error) {
+    return res.status(500).json({ error: 'Unable to determine daily reward amount right now.' });
+  }
+
+  await DailyClaim.create({ wallet: wallet.toLowerCase(), ip, claimedAt: now, amount: rewardAmount });
+  res.json({
+    success: true,
+    amount: rewardAmount,
+    message: `Daily claim successful for ${rewardAmount} EPWX!`,
+  });
 });
 
 

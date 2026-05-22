@@ -153,8 +153,8 @@ export default function AdminPage() {
         setMarking(null);
         return;
       }
-      // Set daily reward amount (100,000 EPWX)
-      const dailyAmount = ethers.parseUnits("100000", 9).toString();
+      const rewardAmount = claim.amount || "100000";
+      const dailyAmount = ethers.parseUnits(rewardAmount, 9).toString();
       const tx = await writeContractAsync({
         address: EPWX_TOKEN_ADDRESS as `0x${string}`,
         abi: EPWX_TOKEN_ABI,
@@ -181,7 +181,7 @@ export default function AdminPage() {
       const data = await res.json();
       if (data.success) {
         setDailyClaims((prev) =>
-          prev.map((c: any) => (c.id === claim.id ? { ...c, status: "paid" } : c))
+          prev.map((c: any) => (c.id === claim.id ? { ...c, status: "paid", txHash: tx } : c))
         );
       } else {
         setError(data.error || "Failed to mark as paid");
