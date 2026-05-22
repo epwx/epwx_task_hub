@@ -18,6 +18,30 @@ const USDT_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_USDT_TOKEN as `0x${string}`)
 const EPWX_USDT_PAIR_ADDRESS = process.env.NEXT_PUBLIC_EPWX_USDT_PAIR || 'Not configured';
 const PANCAKESWAP_ROUTER_ADDRESS = process.env.NEXT_PUBLIC_PANCAKESWAP_ROUTER || '0x8cFe327CEc66d1C090Dd72bd0FF11d690C33a2Eb';
 
+function formatEpwxBalance(rawValue: bigint | undefined, decimals: number) {
+  if (rawValue === undefined) return '';
+
+  const normalized = Number(formatUnits(rawValue, decimals));
+
+  if (!Number.isFinite(normalized) || normalized === 0) {
+    return '0';
+  }
+
+  if (normalized >= 1) {
+    return normalized.toLocaleString(undefined, { maximumFractionDigits: 4 });
+  }
+
+  if (normalized >= 0.0001) {
+    return normalized.toLocaleString(undefined, { maximumFractionDigits: 4 });
+  }
+
+  if (normalized >= 0.00000001) {
+    return normalized.toLocaleString(undefined, { maximumFractionDigits: 8 });
+  }
+
+  return '<0.00000001';
+}
+
 export function EPWXStats() {
   const [priceData, setPriceData] = useState<PriceData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -123,7 +147,7 @@ export function EPWXStats() {
   let formattedBalance = '';
   if (isConnected && rawBalance !== undefined && decimals !== undefined) {
     try {
-      formattedBalance = parseFloat(formatUnits(rawBalance as bigint, decimals as number)).toLocaleString(undefined, { maximumFractionDigits: 4 });
+      formattedBalance = formatEpwxBalance(rawBalance as bigint, decimals as number);
     } catch {
       formattedBalance = '';
     }

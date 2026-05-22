@@ -52,6 +52,30 @@ const EPWX_TOKEN_ABI = [
   "function decimals() view returns (uint8)"
 ];
 
+function formatEpwxBalance(rawValue: bigint | undefined, decimals: number) {
+  if (rawValue === undefined) return "0";
+
+  const normalized = Number(formatUnits(rawValue, decimals));
+
+  if (!Number.isFinite(normalized) || normalized === 0) {
+    return "0";
+  }
+
+  if (normalized >= 1) {
+    return normalized.toLocaleString(undefined, { maximumFractionDigits: 4 });
+  }
+
+  if (normalized >= 0.0001) {
+    return normalized.toLocaleString(undefined, { maximumFractionDigits: 4 });
+  }
+
+  if (normalized >= 0.00000001) {
+    return normalized.toLocaleString(undefined, { maximumFractionDigits: 8 });
+  }
+
+  return "<0.00000001";
+}
+
 export default function HomeTest() {
   const { address, isConnected } = useAccount();
   const { data: rawBalance, isLoading: balanceLoading } = useReadContract({
@@ -170,9 +194,7 @@ export default function HomeTest() {
   let formattedBalance = "0";
   if (rawBalance !== undefined) {
     try {
-      formattedBalance = Number(
-        formatUnits(rawBalance as bigint, Number(tokenDecimals ?? 9))
-      ).toLocaleString(undefined, { maximumFractionDigits: 4 });
+      formattedBalance = formatEpwxBalance(rawBalance as bigint, Number(tokenDecimals ?? 9));
     } catch {
       formattedBalance = "0";
     }
