@@ -3,8 +3,7 @@ import Link from "next/link";
 import { EPWXCashbackClaim } from "@/components/EPWXCashbackClaim_clean";
 import { useState, useEffect } from "react";
 import DailyClaimsTable from "@/components/DailyClaimsTable";
-import { formatUnits } from "ethers";
-import { useAccount, useReadContract, useSignMessage } from "wagmi";
+import { useAccount, useBalance, useSignMessage } from "wagmi";
 import { base } from "wagmi/chains";
 import toast from "react-hot-toast";
 import { ConnectKitButton } from "connectkit";
@@ -48,16 +47,7 @@ const themedSectionClass = "relative overflow-hidden bg-gradient-to-br from-blue
 const themedInnerClass = "relative z-10 flex flex-col items-center";
 const glassPanelClass = "bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl";
 const EPWX_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_EPWX_TOKEN as `0x${string}`) || "0xef5f5751cf3eca6cc3572768298b7783d33d60eb";
-const EPWX_TOKEN_ABI = [
-  "function balanceOf(address owner) view returns (uint256)",
-  "function decimals() view returns (uint8)"
-];
-
-function formatEpwxBalance(rawValue: bigint | undefined, decimals: number) {
-  if (rawValue === undefined) return "0";
-
-  const normalized = Number(formatUnits(rawValue, decimals));
-
+function formatEpwxBalance(normalized: number) {
   if (!Number.isFinite(normalized) || normalized === 0) {
     return "0";
   }
@@ -79,17 +69,9 @@ function formatEpwxBalance(rawValue: bigint | undefined, decimals: number) {
 
 export default function HomeTest() {
   const { address, isConnected } = useAccount();
-  const { data: rawBalance, isLoading: balanceLoading } = useReadContract({
-    address: EPWX_TOKEN_ADDRESS,
-    abi: EPWX_TOKEN_ABI,
-    functionName: "balanceOf",
-    args: address ? [address] : undefined,
-    chainId: base.id,
-  });
-  const { data: tokenDecimals } = useReadContract({
-    address: EPWX_TOKEN_ADDRESS,
-    abi: EPWX_TOKEN_ABI,
-    functionName: "decimals",
+  const { data: epwxBalance, isLoading: balanceLoading } = useBalance({
+    address,
+    token: EPWX_TOKEN_ADDRESS,
     chainId: base.id,
   });
 
@@ -195,9 +177,9 @@ export default function HomeTest() {
   };
 
   let formattedBalance = "0";
-  if (rawBalance !== undefined) {
+  if (epwxBalance) {
     try {
-      formattedBalance = formatEpwxBalance(rawBalance as bigint, Number(tokenDecimals ?? 9));
+      formattedBalance = formatEpwxBalance(Number(epwxBalance.formatted));
     } catch {
       formattedBalance = "0";
     }

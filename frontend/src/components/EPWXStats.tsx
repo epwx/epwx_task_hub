@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useAccount, useReadContract } from 'wagmi';
+import { useAccount, useBalance } from 'wagmi';
 import { base } from 'wagmi/chains';
-import { formatUnits } from 'ethers';
 
 interface PriceData {
   priceUSD: number;
@@ -19,11 +18,7 @@ const USDT_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_USDT_TOKEN as `0x${string}`)
 const EPWX_USDT_PAIR_ADDRESS = process.env.NEXT_PUBLIC_EPWX_USDT_PAIR || 'Not configured';
 const PANCAKESWAP_ROUTER_ADDRESS = process.env.NEXT_PUBLIC_PANCAKESWAP_ROUTER || '0x8cFe327CEc66d1C090Dd72bd0FF11d690C33a2Eb';
 
-function formatEpwxBalance(rawValue: bigint | undefined, decimals: number) {
-  if (rawValue === undefined) return '';
-
-  const normalized = Number(formatUnits(rawValue, decimals));
-
+function formatEpwxBalance(normalized: number) {
   if (!Number.isFinite(normalized) || normalized === 0) {
     return '0';
   }
@@ -49,33 +44,13 @@ export function EPWXStats() {
 
   // Wallet connection
   const { address, isConnected } = useAccount();
-
-  // EPWX Token contract details
-  const ERC20_ABI = [
-    'function balanceOf(address owner) view returns (uint256)',
-    'function decimals() view returns (uint8)'
-  ];
-
-  // Read balance (only if connected)
   const {
-    data: rawBalance,
+    data: epwxBalance,
     isLoading: balanceLoading,
     error: balanceError
-  } = useReadContract({
-    address: EPWX_TOKEN_ADDRESS,
-    abi: ERC20_ABI,
-    functionName: 'balanceOf',
-    args: address ? [address] : undefined,
-    chainId: base.id,
-  });
-
-  // Read decimals (optional, default to 18)
-  const {
-    data: decimals
-  } = useReadContract({
-    address: EPWX_TOKEN_ADDRESS,
-    abi: ERC20_ABI,
-    functionName: 'decimals',
+  } = useBalance({
+    address,
+    token: EPWX_TOKEN_ADDRESS,
     chainId: base.id,
   });
 
@@ -146,9 +121,9 @@ export function EPWXStats() {
 
   // Format wallet balance
   let formattedBalance = '';
-  if (isConnected && rawBalance !== undefined && decimals !== undefined) {
+  if (isConnected && epwxBalance) {
     try {
-      formattedBalance = formatEpwxBalance(rawBalance as bigint, decimals as number);
+      formattedBalance = formatEpwxBalance(Number(epwxBalance.formatted));
     } catch {
       formattedBalance = '';
     }
