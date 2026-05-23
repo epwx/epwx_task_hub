@@ -2,14 +2,18 @@
 
 interface MerchantClaim {
   id: number | string;
+  merchantId?: number | null;
   customer: string;
-  bill: string;
+  bill?: string;
   status: string;
   createdAt: string;
   cashbackAmount?: string | number;
   amount?: string | number;
   receiptImage?: string;
   rejectionComment?: string;
+  claimType?: string;
+  campaignCode?: string;
+  twitterUsername?: string;
 }
 
 interface MerchantClaimsTableProps {
@@ -18,6 +22,7 @@ interface MerchantClaimsTableProps {
   onDistribute?: (claim: MerchantClaim) => void;
   onReject?: (claim: MerchantClaim, rejectionComment: string) => void;
   marking?: number | string | null;
+  context?: 'merchant' | 'twitter';
 }
 
 
@@ -27,7 +32,7 @@ import React, { useState } from "react";
 // Set your backend API base URL here (should match production backend domain)
 const BACKEND_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.epowex.com";
 
-const MerchantClaimsTable: React.FC<MerchantClaimsTableProps> = ({ claims, isAdmin = false, onDistribute, onReject, marking }) => {
+const MerchantClaimsTable: React.FC<MerchantClaimsTableProps> = ({ claims, isAdmin = false, onDistribute, onReject, marking, context = 'merchant' }) => {
   const [rejectingId, setRejectingId] = useState<number | string | null>(null);
   const [rejectionComment, setRejectionComment] = useState("");
   const [viewImage, setViewImage] = useState<string | null>(null);
@@ -58,11 +63,11 @@ const MerchantClaimsTable: React.FC<MerchantClaimsTableProps> = ({ claims, isAdm
           <tr>
             <th className="py-2 px-2 sm:px-4 text-gray-700">ID</th>
             <th className="py-2 px-2 sm:px-4 text-gray-700">Customer</th>
-            <th className="py-2 px-2 sm:px-4 text-gray-700">Bill</th>
+            <th className="py-2 px-2 sm:px-4 text-gray-700">{context === 'twitter' ? 'Campaign' : 'Bill'}</th>
             <th className="py-2 px-2 sm:px-4 text-gray-700">EPWX</th>
             <th className="py-2 px-2 sm:px-4 text-gray-700">Status</th>
             <th className="py-2 px-2 sm:px-4 text-gray-700">Date</th>
-            <th className="py-2 px-2 sm:px-4 text-gray-700">Receipt</th>
+            <th className="py-2 px-2 sm:px-4 text-gray-700">{context === 'twitter' ? 'Screenshot' : 'Receipt'}</th>
             {isAdmin && <th className="py-2 px-2 sm:px-4 text-gray-700">Action</th>}
           </tr>
         </thead>
@@ -71,7 +76,16 @@ const MerchantClaimsTable: React.FC<MerchantClaimsTableProps> = ({ claims, isAdm
             <tr key={claim.id} className="border-b last:border-none">
               <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{claim.id}</td>
               <td className="py-2 px-2 sm:px-4 break-all bg-white text-gray-900">{claim.customer}</td>
-              <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{claim.bill}</td>
+              <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">
+                {context === 'twitter' ? (
+                  <div>
+                    <div className="font-medium">{claim.campaignCode || 'twitter-retweet'}</div>
+                    {claim.twitterUsername ? <div className="text-xs text-gray-500">@{claim.twitterUsername}</div> : null}
+                  </div>
+                ) : (
+                  claim.bill
+                )}
+              </td>
               <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">
                 {/* Show the EPWX amount to be distributed */}
                 {(() => {
@@ -89,7 +103,7 @@ const MerchantClaimsTable: React.FC<MerchantClaimsTableProps> = ({ claims, isAdm
               <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{new Date(claim.createdAt).toLocaleString()}</td>
               <td className="py-2 px-2 sm:px-4 bg-white text-blue-700 underline cursor-pointer">
                 {claim.receiptImage ? (
-                  <button onClick={() => setViewImage(getImageUrl(claim.receiptImage))}>View Receipt</button>
+                  <button onClick={() => setViewImage(getImageUrl(claim.receiptImage))}>{context === 'twitter' ? 'View Screenshot' : 'View Receipt'}</button>
                 ) : (
                   <span className="text-gray-400">No Image</span>
                 )}

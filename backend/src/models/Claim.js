@@ -3,11 +3,14 @@ import sequelize from '../config/database.js';
 
 const Claim = sequelize.define('Claim', {
   id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-  merchantId: { type: DataTypes.INTEGER, allowNull: false },
+  merchantId: { type: DataTypes.INTEGER, allowNull: true },
   customer: { type: DataTypes.STRING, allowNull: false },
   bill: { type: DataTypes.STRING },
-  lat: { type: DataTypes.FLOAT, allowNull: false },
-  lng: { type: DataTypes.FLOAT, allowNull: false },
+  lat: { type: DataTypes.FLOAT, allowNull: true },
+  lng: { type: DataTypes.FLOAT, allowNull: true },
+  claimType: { type: DataTypes.STRING, allowNull: false, defaultValue: 'merchant' },
+  campaignCode: { type: DataTypes.STRING, allowNull: true },
+  twitterUsername: { type: DataTypes.STRING, allowNull: true },
   status: { type: DataTypes.STRING, allowNull: false, defaultValue: 'pending' },
   ip: { type: DataTypes.STRING, allowNull: false },
   receiptImage: { type: DataTypes.STRING, allowNull: true }, // Path or URL to uploaded receipt image

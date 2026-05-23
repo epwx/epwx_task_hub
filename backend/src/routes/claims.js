@@ -82,7 +82,59 @@ router.post('/add', upload.single('receiptImage'), async (req, res) => {
   console.log('Claim attempt:', { ip, customer: customerLc });
   try {
     // Create claim with IP and receipt image (rate limiting removed)
-    const claim = await Claim.create({ merchantId, customer: customerLc, bill, lat, lng, status: 'pending', ip, receiptImage: receiptImagePath });
+    const claim = await Claim.create({ merchantId, customer: customerLc, bill, lat, lng, claimType: 'merchant', status: 'pending', ip, receiptImage: receiptImagePath });
+    res.json({ success: true, claim });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/claims/twitter-retweet - Add a new Twitter retweet screenshot claim
+router.post('/twitter-retweet', upload.single('receiptImage'), async (req, res) => {
+  const { customer, campaignCode, twitterUsername } = req.body;
+  let receiptImagePath = null;
+
+  if (req.file) {
+    receiptImagePath = path.relative(process.cwd(), req.file.path);
+  }
+
+  if (!customer || !receiptImagePath) {
+    return res.status(400).json({ error: 'Wallet address and screenshot are required' });
+  }
+
+  const normalizedCustomer = customer.toLowerCase();
+  const normalizedCampaign = (campaignCode || 'twitter-retweet').trim().toLowerCase();
+  const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.connection?.remoteAddress || req.socket?.remoteAddress;
+
+  try {
+    const existing = await Claim.findOne({
+      where: {
+        customer: normalizedCustomer,
+        claimType: 'twitter_retweet',
+        campaignCode: normalizedCampaign,
+        status: { [Op.in]: ['pending', 'paid'] },
+      },
+      order: [['createdAt', 'DESC']],
+    });
+
+    if (existing) {
+      return res.status(409).json({ error: 'A Twitter retweet claim for this campaign is already pending or paid for this wallet.' });
+    }
+
+    const claim = await Claim.create({
+      merchantId: null,
+      customer: normalizedCustomer,
+      bill: null,
+      lat: null,
+      lng: null,
+      claimType: 'twitter_retweet',
+      campaignCode: normalizedCampaign,
+      twitterUsername: twitterUsername ? twitterUsername.trim().replace(/^@/, '') : null,
+      status: 'pending',
+      ip,
+      receiptImage: receiptImagePath,
+    });
+
     res.json({ success: true, claim });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -93,13 +145,14 @@ router.post('/add', upload.single('receiptImage'), async (req, res) => {
 // - If merchantId is provided, return claims for that merchant (view-only, no admin required)
 // - If admin is provided, return all claims (optionally filter by status)
 router.get('/', async (req, res) => {
-  const { admin, status, merchantId } = req.query;
+  const { admin, status, merchantId, claimType } = req.query;
   try {
     let where = {};
     if (merchantId) {
       where = { merchantId };
     } else if (admin && adminWallets.includes(admin.toLowerCase())) {
-      if (status) where = { status };
+      if (status) where.status = status;
+      if (claimType) where.claimType = claimType;
     } else {
       return res.status(403).json({ error: 'Unauthorized' });
     }
