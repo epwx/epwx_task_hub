@@ -52,6 +52,7 @@ const MID_TIER_DAILY_REWARD = 120_000;
 const BONUS_DAILY_REWARD = 200_000;
 const MID_TIER_DAILY_REWARD_THRESHOLD = 10_000_000_000;
 const BONUS_DAILY_REWARD_THRESHOLD = 100_000_000_000;
+const TELEGRAM_VERIFICATION_RECHECK_INTERVAL_MS = 60_000;
 
 interface DailyClaimsSummary {
   todayUtc: string;
@@ -225,18 +226,23 @@ export default function HomeTest() {
       return;
     }
 
-    const intervalId = window.setInterval(checkVerification, 15000);
     const handleFocus = () => {
       checkVerification();
     };
 
     window.addEventListener('focus', handleFocus);
 
+    const intervalId = isTelegramVerified
+      ? null
+      : window.setInterval(checkVerification, TELEGRAM_VERIFICATION_RECHECK_INTERVAL_MS);
+
     return () => {
-      window.clearInterval(intervalId);
+      if (intervalId !== null) {
+        window.clearInterval(intervalId);
+      }
       window.removeEventListener('focus', handleFocus);
     };
-  }, [address]);
+  }, [address, isTelegramVerified]);
 
   useEffect(() => {
     const fetchLatestDailyClaim = async () => {
