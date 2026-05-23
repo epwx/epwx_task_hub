@@ -398,6 +398,15 @@ export default function HomeTest() {
                       <p className="mb-4">These Terms are governed by the laws of the jurisdiction in which EPWX Task Hub operates.</p>
                       <h2 className="text-lg font-semibold mt-6 mb-2">10. Contact</h2>
                       <p>If you have questions about these Terms, please contact info@epowex.com.</p>
+                      <div className="mt-8 flex justify-end not-prose">
+                        <button
+                          type="button"
+                          className="inline-flex items-center rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700"
+                          onClick={() => setShowSpecialTerms(false)}
+                        >
+                          Close
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -528,6 +537,15 @@ export default function HomeTest() {
                           <p className="mb-4">These Terms are governed by the laws of the jurisdiction in which EPWX Task Hub operates.</p>
                           <h2 className="text-lg font-semibold mt-6 mb-2">10. Contact</h2>
                           <p>If you have questions about these Terms, please contact info@epowex.com.</p>
+                          <div className="mt-8 flex justify-end not-prose">
+                            <button
+                              type="button"
+                              className="inline-flex items-center rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700"
+                              onClick={() => setShowTerms(false)}
+                            >
+                              Close
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
