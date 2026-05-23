@@ -174,7 +174,7 @@ export default function HomeTest() {
   const fetchDailyClaimsSummary = async () => {
     setDailyClaimsSummaryLoading(true);
     try {
-      const res = await fetch('/api/epwx/daily-claims/summary');
+      const res = await fetch('/api/epwx/daily-claims/summary', { cache: 'no-store' });
       const data = await res.json();
 
       if (res.ok) {

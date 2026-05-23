@@ -325,7 +325,7 @@ router.get('/daily-claims/summary', async (req, res) => {
       DailyClaim.count({ where: { claimedAt, status: 'paid' } }),
     ]);
 
-    res.set('Cache-Control', 'public, max-age=60');
+    res.set('Cache-Control', 'no-store');
     return res.json({
       todayUtc: start.toISOString().slice(0, 10),
       totalClaimsToday,
