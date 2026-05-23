@@ -53,6 +53,12 @@ const BONUS_DAILY_REWARD = 200_000;
 const MID_TIER_DAILY_REWARD_THRESHOLD = 10_000_000_000;
 const BONUS_DAILY_REWARD_THRESHOLD = 100_000_000_000;
 
+interface DailyClaimsSummary {
+  todayUtc: string;
+  totalClaimsToday: number;
+  totalPaidToday: number;
+}
+
 function formatDuration(msLeft: number) {
   if (msLeft <= 0) return "0m 0s";
 
@@ -155,6 +161,8 @@ export default function HomeTest() {
   const [nextDailyClaimAt, setNextDailyClaimAt] = useState<number | null>(null);
   const [remainingClaimTime, setRemainingClaimTime] = useState<string | null>(null);
   const [hasDailyClaimHistory, setHasDailyClaimHistory] = useState(false);
+  const [dailyClaimsSummary, setDailyClaimsSummary] = useState<DailyClaimsSummary | null>(null);
+  const [dailyClaimsSummaryLoading, setDailyClaimsSummaryLoading] = useState(true);
   const [isTelegramVerified, setIsTelegramVerified] = useState<boolean>(false);
   const [agreed, setAgreed] = useState(false);
   const [cmcChecked, setCmcChecked] = useState(false);
@@ -162,6 +170,33 @@ export default function HomeTest() {
   const [specialAgreed, setSpecialAgreed] = useState(false);
   const [showSpecialTerms, setShowSpecialTerms] = useState(false);
   const [checkingVerification, setCheckingVerification] = useState(false);
+
+  const fetchDailyClaimsSummary = async () => {
+    setDailyClaimsSummaryLoading(true);
+    try {
+      const res = await fetch('/api/epwx/daily-claims/summary');
+      const data = await res.json();
+
+      if (res.ok) {
+        setDailyClaimsSummary({
+          todayUtc: data.todayUtc,
+          totalClaimsToday: Number(data.totalClaimsToday || 0),
+          totalPaidToday: Number(data.totalPaidToday || 0),
+        });
+      } else {
+        setDailyClaimsSummary(null);
+      }
+    } catch {
+      setDailyClaimsSummary(null);
+    } finally {
+      setDailyClaimsSummaryLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDailyClaimsSummary();
+  }, []);
+
   useEffect(() => {
     const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
     const checkVerification = async () => {
@@ -252,6 +287,7 @@ export default function HomeTest() {
       if (data.success) {
         const claimedAmount = Number(data.amount || DEFAULT_DAILY_REWARD).toLocaleString();
         setClaimStatus(`Successfully claimed ${claimedAmount} EPWX! Your reward will be sent soon.`);
+        fetchDailyClaimsSummary();
       } else {
         setClaimStatus(data.error || "Claim failed");
       }
@@ -425,6 +461,22 @@ export default function HomeTest() {
             <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
             <div className={themedInnerClass}>
             <h2 className="text-2xl font-black mb-4 text-white">Daily Claim</h2>
+            <div className="grid w-full grid-cols-1 gap-3 mb-6 sm:grid-cols-2">
+              <div className={`${glassPanelClass} p-4 text-center`}>
+                <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/65">Claims Today</div>
+                <div className="mt-2 text-3xl font-black text-white">
+                  {dailyClaimsSummaryLoading ? '...' : (dailyClaimsSummary?.totalClaimsToday ?? 0).toLocaleString()}
+                </div>
+                <div className="mt-1 text-sm text-white/75">Total submitted today</div>
+              </div>
+              <div className={`${glassPanelClass} p-4 text-center`}>
+                <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/65">Paid Today</div>
+                <div className="mt-2 text-3xl font-black text-emerald-200">
+                  {dailyClaimsSummaryLoading ? '...' : (dailyClaimsSummary?.totalPaidToday ?? 0).toLocaleString()}
+                </div>
+                <div className="mt-1 text-sm text-white/75">Rewards marked paid today</div>
+              </div>
+            </div>
             {address ? (
               isTelegramVerified ? (
                 <>

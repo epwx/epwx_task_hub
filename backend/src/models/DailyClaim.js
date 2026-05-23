@@ -33,6 +33,8 @@ const DailyClaim = sequelize.define('DailyClaim', {
   indexes: [
     { fields: ['wallet'] },
     { fields: ['ip'] },
+    { fields: ['claimedAt'] },
+    { fields: ['status', 'claimedAt'] },
   ],
   tableName: 'daily_claims',
   timestamps: false,

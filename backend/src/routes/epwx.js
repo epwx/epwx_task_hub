@@ -14,6 +14,13 @@ const DAILY_REWARD_BONUS = '200000';
 const DAILY_REWARD_BONUS_THRESHOLD = ethers.parseUnits('100000000000', 9);
 const DAILY_REWARD_MID_TIER_THRESHOLD = ethers.parseUnits('10000000000', 9);
 
+function getUtcDayRange(date = new Date()) {
+  const start = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+  const end = new Date(start);
+  end.setUTCDate(end.getUTCDate() + 1);
+  return { start, end };
+}
+
 async function getDailyRewardAmount(wallet) {
   if (!epwxTokenContract) {
     throw new Error('EPWX token contract not configured');
@@ -304,6 +311,28 @@ router.get('/telegram-verified', async (req, res) => {
     res.json({ verified: !!(user && user.telegramVerified) });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/epwx/daily-claims/summary
+router.get('/daily-claims/summary', async (req, res) => {
+  const { start, end } = getUtcDayRange();
+  const claimedAt = { [Op.gte]: start, [Op.lt]: end };
+
+  try {
+    const [totalClaimsToday, totalPaidToday] = await Promise.all([
+      DailyClaim.count({ where: { claimedAt } }),
+      DailyClaim.count({ where: { claimedAt, status: 'paid' } }),
+    ]);
+
+    res.set('Cache-Control', 'public, max-age=60');
+    return res.json({
+      todayUtc: start.toISOString().slice(0, 10),
+      totalClaimsToday,
+      totalPaidToday,
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
   }
 });
 
