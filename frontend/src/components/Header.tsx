@@ -183,7 +183,15 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
               >
                 Contact Us
               </a>
-              {/* Buy EPWX button removed from mobile menu */}
+              <a
+                href={`https://pancakeswap.finance/swap?chain=base&outputCurrency=${process.env.NEXT_PUBLIC_EPWX_TOKEN}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-5 py-2.5 text-sm font-bold bg-gradient-to-r from-blue-50 to-purple-50 text-blue-600 rounded-xl hover:from-blue-100 hover:to-purple-100 transition-all shadow-md text-center block"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                💰 Buy EPWX
+              </a>
               {/* Show Admin Dashboard link if admin wallet is connected */}
               {isAdmin ? (
                 <>
