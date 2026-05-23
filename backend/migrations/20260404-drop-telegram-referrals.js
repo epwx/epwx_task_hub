@@ -1,6 +1,6 @@
 /* Migration to drop the telegram_referrals table */
 
-module.exports = {
+export default {
   up: async (queryInterface, Sequelize) => {
     await queryInterface.dropTable('telegram_referrals');
   },
