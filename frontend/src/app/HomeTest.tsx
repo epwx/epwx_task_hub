@@ -353,16 +353,16 @@ export default function HomeTest() {
                 {specialClaiming ? 'Claiming...' : 'Claim Special 1,000,000 EPWX'}
               </button>
               {showSpecialTerms && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-                  <div className="bg-white/95 backdrop-blur-md text-gray-900 dark:bg-gray-900/95 dark:text-gray-100 rounded-2xl shadow-2xl border border-blue-100 p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto relative">
+                <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black bg-opacity-50 p-4 sm:items-center sm:p-6">
+                  <div className="bg-white/95 backdrop-blur-md text-gray-900 dark:bg-gray-900/95 dark:text-gray-100 rounded-2xl shadow-2xl border border-blue-100 p-6 pt-3 max-w-2xl w-full max-h-[calc(100vh-2rem)] sm:max-h-[80vh] overflow-y-auto relative my-4">
                     <button
-                      className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 text-2xl font-bold"
+                      className="sticky top-0 z-10 ml-auto flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-gray-600 hover:text-gray-900 dark:bg-gray-800/90 dark:text-gray-300 dark:hover:text-white text-2xl font-bold"
                       onClick={() => setShowSpecialTerms(false)}
                       aria-label="Close"
                     >
                       &times;
                     </button>
-                    <div className="prose max-w-none text-gray-900 dark:text-gray-100">
+                    <div className="prose max-w-none text-gray-900 dark:text-gray-100 pr-2">
                       <h1 className="text-2xl font-bold mb-4">Terms and Conditions</h1>
                       <p className="mb-4">Welcome to EPWX Task Hub. By accessing or using our platform, you agree to these Terms and Conditions. Please read them carefully.</p>
                       <h2 className="text-lg font-semibold mt-6 mb-2">1. Acceptance of Terms</h2>
@@ -483,16 +483,16 @@ export default function HomeTest() {
                     </div>
                   )}
                   {showTerms && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-                      <div className="bg-white/95 backdrop-blur-md text-gray-900 dark:bg-gray-900/95 dark:text-gray-100 rounded-2xl shadow-2xl border border-blue-100 p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto relative">
+                    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black bg-opacity-50 p-4 sm:items-center sm:p-6">
+                      <div className="bg-white/95 backdrop-blur-md text-gray-900 dark:bg-gray-900/95 dark:text-gray-100 rounded-2xl shadow-2xl border border-blue-100 p-6 pt-3 max-w-2xl w-full max-h-[calc(100vh-2rem)] sm:max-h-[80vh] overflow-y-auto relative my-4">
                         <button
-                          className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 text-2xl font-bold"
+                          className="sticky top-0 z-10 ml-auto flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-gray-600 hover:text-gray-900 dark:bg-gray-800/90 dark:text-gray-300 dark:hover:text-white text-2xl font-bold"
                           onClick={() => setShowTerms(false)}
                           aria-label="Close"
                         >
                           &times;
                         </button>
-                        <div className="prose max-w-none text-gray-900 dark:text-gray-100">
+                        <div className="prose max-w-none text-gray-900 dark:text-gray-100 pr-2">
                           <h1 className="text-2xl font-bold mb-4">Terms and Conditions</h1>
                           <p className="mb-4">Welcome to EPWX Task Hub. By accessing or using our platform, you agree to these Terms and Conditions. Please read them carefully.</p>
                           <h2 className="text-lg font-semibold mt-6 mb-2">1. Acceptance of Terms</h2>
