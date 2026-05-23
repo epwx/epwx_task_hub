@@ -163,7 +163,7 @@ export default function HomeTest() {
   const [hasDailyClaimHistory, setHasDailyClaimHistory] = useState(false);
   const [dailyClaimsSummary, setDailyClaimsSummary] = useState<DailyClaimsSummary | null>(null);
   const [dailyClaimsSummaryLoading, setDailyClaimsSummaryLoading] = useState(true);
-  const [isTelegramVerified, setIsTelegramVerified] = useState<boolean>(false);
+  const [isTelegramVerified, setIsTelegramVerified] = useState<boolean | null>(null);
   const [agreed, setAgreed] = useState(false);
   const [cmcChecked, setCmcChecked] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
@@ -204,17 +204,38 @@ export default function HomeTest() {
         setIsTelegramVerified(false);
         return;
       }
+
       setCheckingVerification(true);
       try {
-        const res = await fetch(`${API_URL}/api/epwx/telegram-verified?wallet=${address}`);
+        const res = await fetch(`${API_URL}/api/epwx/telegram-verified?wallet=${address}`, { cache: 'no-store' });
+        if (!res.ok) {
+          throw new Error('Verification check failed');
+        }
         const data = await res.json();
         setIsTelegramVerified(!!data.verified);
-      } catch (e) {
-        setIsTelegramVerified(false);
+      } catch {
+        setIsTelegramVerified((currentValue) => currentValue);
       }
       setCheckingVerification(false);
     };
+
     checkVerification();
+
+    if (!address) {
+      return;
+    }
+
+    const intervalId = window.setInterval(checkVerification, 15000);
+    const handleFocus = () => {
+      checkVerification();
+    };
+
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, [address]);
 
   useEffect(() => {
@@ -340,6 +361,8 @@ export default function HomeTest() {
                   <span className="text-white/70">Checking Telegram verification...</span>
                 ) : isTelegramVerified ? (
                   <span className="bg-emerald-400/20 border border-emerald-300/30 text-emerald-100 font-bold py-3 px-4 rounded-xl mb-2 w-full text-center block">✅ Telegram membership verified</span>
+                ) : isTelegramVerified === null ? (
+                  <span className="bg-white/10 border border-white/20 text-white/80 font-medium py-3 px-4 rounded-xl mb-2 w-full text-center block">Unable to confirm Telegram verification right now. Refresh or try again in a moment.</span>
                 ) : (
                   <a
                     href={`https://t.me/epwx_bot?start=${address}`}
