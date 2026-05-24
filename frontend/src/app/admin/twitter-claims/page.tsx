@@ -34,6 +34,10 @@ const ADMIN_WALLETS = (process.env.NEXT_PUBLIC_ADMIN_WALLETS || "")
   .map(wallet => wallet.trim().toLowerCase())
   .filter(Boolean);
 
+function isCampaignExpired(expiresAt?: string | null) {
+  return !!expiresAt && new Date(expiresAt).getTime() < Date.now();
+}
+
 export default function AdminTwitterClaimsPage() {
   const { address } = useAccount();
   const { writeContractAsync } = useWriteContract();
@@ -242,6 +246,7 @@ export default function AdminTwitterClaimsPage() {
             <input name="tweetUrl" value={campaignForm.tweetUrl} onChange={handleCampaignFormChange} placeholder="https://x.com/..." className="rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900" required />
             <input name="rewardAmount" value={campaignForm.rewardAmount} onChange={handleCampaignFormChange} placeholder="100000" className="rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900" required />
             <input name="expiresAt" type="datetime-local" value={campaignForm.expiresAt} onChange={handleCampaignFormChange} className="rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900" />
+            <div className="text-xs text-gray-500">Leave expiry empty if this campaign should stay active until you disable it manually.</div>
             <button type="submit" disabled={campaignSaving} className="rounded-xl bg-cyan-600 px-4 py-3 text-sm font-bold text-white hover:bg-cyan-700 disabled:opacity-50">
               {campaignSaving ? "Creating..." : "Create Campaign"}
             </button>
@@ -254,19 +259,34 @@ export default function AdminTwitterClaimsPage() {
             {campaigns.length === 0 ? <div className="text-sm text-gray-600">No campaigns yet.</div> : null}
             {campaigns.map(campaign => (
               <div key={campaign.id} className="rounded-2xl border border-gray-200 p-4">
+                {(() => {
+                  const expired = isCampaignExpired(campaign.expiresAt);
+                  const statusLabel = !campaign.isActive ? 'Inactive' : expired ? 'Expired' : 'Active';
+                  const statusClass = !campaign.isActive
+                    ? 'bg-gray-200 text-gray-700'
+                    : expired
+                      ? 'bg-amber-100 text-amber-700'
+                      : 'bg-emerald-100 text-emerald-700';
+
+                  return (
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <div className="text-base font-bold text-gray-900">{campaign.title}</div>
                     <div className="text-sm text-gray-600">Code: {campaign.code}</div>
                     <div className="text-sm text-gray-600">Reward: {Number(campaign.rewardAmount || '100000').toLocaleString()} EPWX</div>
+                    {campaign.expiresAt ? (
+                      <div className="text-sm text-gray-600">Expires: {new Date(campaign.expiresAt).toLocaleString()}</div>
+                    ) : (
+                      <div className="text-sm text-gray-600">Expires: Never</div>
+                    )}
                     <a href={campaign.tweetUrl} target="_blank" rel="noopener noreferrer" className="mt-1 block text-sm text-cyan-700 underline">
                       View post
                     </a>
                     <div className="mt-2 break-all text-xs text-gray-500">{getCampaignClaimUrl(campaign.id)}</div>
                   </div>
                   <div className="flex flex-col items-end gap-2">
-                    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${campaign.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-200 text-gray-700'}`}>
-                      {campaign.isActive ? 'Active' : 'Inactive'}
+                    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusClass}`}>
+                      {statusLabel}
                     </span>
                     <button onClick={() => navigator.clipboard.writeText(getCampaignClaimUrl(campaign.id))} className="rounded-lg border border-gray-300 px-3 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-50">
                       Copy Link
@@ -276,6 +296,8 @@ export default function AdminTwitterClaimsPage() {
                     </button>
                   </div>
                 </div>
+                  );
+                })()}
               </div>
             ))}
           </div>
