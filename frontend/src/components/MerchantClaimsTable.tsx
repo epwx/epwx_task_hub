@@ -128,7 +128,7 @@ const MerchantClaimsTable: React.FC<MerchantClaimsTableProps> = ({ claims, isAdm
                       {rejectingId === claim.id && (
                         <div className="mt-2 flex flex-col gap-1">
                           <textarea
-                            className="border rounded p-1 text-xs"
+                            className="rounded border border-gray-300 bg-white p-1 text-xs text-gray-900 placeholder-gray-500"
                             rows={2}
                             placeholder="Enter rejection reason..."
                             value={rejectionComment}
