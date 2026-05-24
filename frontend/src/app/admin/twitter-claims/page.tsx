@@ -38,6 +38,15 @@ function isCampaignExpired(expiresAt?: string | null) {
   return !!expiresAt && new Date(expiresAt).getTime() < Date.now();
 }
 
+function toDateTimeLocalValue(value?: string | null) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const offset = date.getTimezoneOffset();
+  const localDate = new Date(date.getTime() - offset * 60 * 1000);
+  return localDate.toISOString().slice(0, 16);
+}
+
 export default function AdminTwitterClaimsPage() {
   const { address } = useAccount();
   const { writeContractAsync } = useWriteContract();
@@ -55,6 +64,15 @@ export default function AdminTwitterClaimsPage() {
     expiresAt: "",
   });
   const [campaignSaving, setCampaignSaving] = useState(false);
+  const [editingCampaignId, setEditingCampaignId] = useState<number | null>(null);
+  const [editCampaignForm, setEditCampaignForm] = useState({
+    code: "",
+    title: "",
+    tweetUrl: "",
+    rewardAmount: "100000",
+    expiresAt: "",
+  });
+  const [campaignUpdating, setCampaignUpdating] = useState(false);
 
   const EPWX_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_EPWX_TOKEN as `0x${string}`) || "0x0000000000000000000000000000000000000000";
   const EPWX_TOKEN_ABI = [
@@ -121,6 +139,10 @@ export default function AdminTwitterClaimsPage() {
     setCampaignForm(current => ({ ...current, [event.target.name]: event.target.value }));
   };
 
+  const handleEditCampaignFormChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setEditCampaignForm(current => ({ ...current, [event.target.name]: event.target.value }));
+  };
+
   const addCampaign = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setCampaignSaving(true);
@@ -166,6 +188,47 @@ export default function AdminTwitterClaimsPage() {
     } catch (updateError: any) {
       setError(updateError?.message || "Failed to update campaign");
     }
+  };
+
+  const startEditingCampaign = (campaign: TwitterCampaign) => {
+    setEditingCampaignId(campaign.id);
+    setEditCampaignForm({
+      code: campaign.code,
+      title: campaign.title,
+      tweetUrl: campaign.tweetUrl,
+      rewardAmount: campaign.rewardAmount || "100000",
+      expiresAt: toDateTimeLocalValue(campaign.expiresAt),
+    });
+  };
+
+  const cancelEditingCampaign = () => {
+    setEditingCampaignId(null);
+    setEditCampaignForm({ code: "", title: "", tweetUrl: "", rewardAmount: "100000", expiresAt: "" });
+  };
+
+  const saveCampaignEdit = async (campaignId: number) => {
+    setCampaignUpdating(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/twitter-campaigns/${campaignId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...editCampaignForm, admin: address, expiresAt: editCampaignForm.expiresAt || null }),
+      });
+      const data = await response.json();
+
+      if (!data.success) {
+        setError(data.error || "Failed to save campaign changes");
+      } else {
+        await fetchCampaigns();
+        cancelEditingCampaign();
+      }
+    } catch (updateError: any) {
+      setError(updateError?.message || "Failed to save campaign changes");
+    }
+
+    setCampaignUpdating(false);
   };
 
   const rejectClaim = async (claim: TwitterClaim, rejectionComment: string) => {
@@ -271,18 +334,38 @@ export default function AdminTwitterClaimsPage() {
                   return (
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <div className="text-base font-bold text-gray-900">{campaign.title}</div>
-                    <div className="text-sm text-gray-600">Code: {campaign.code}</div>
-                    <div className="text-sm text-gray-600">Reward: {Number(campaign.rewardAmount || '100000').toLocaleString()} EPWX</div>
-                    {campaign.expiresAt ? (
-                      <div className="text-sm text-gray-600">Expires: {new Date(campaign.expiresAt).toLocaleString()}</div>
+                    {editingCampaignId === campaign.id ? (
+                      <div className="grid gap-3">
+                        <input name="code" value={editCampaignForm.code} onChange={handleEditCampaignFormChange} className="rounded-xl border border-gray-300 px-3 py-2 text-sm text-gray-900" />
+                        <input name="title" value={editCampaignForm.title} onChange={handleEditCampaignFormChange} className="rounded-xl border border-gray-300 px-3 py-2 text-sm text-gray-900" />
+                        <input name="tweetUrl" value={editCampaignForm.tweetUrl} onChange={handleEditCampaignFormChange} className="rounded-xl border border-gray-300 px-3 py-2 text-sm text-gray-900" />
+                        <input name="rewardAmount" value={editCampaignForm.rewardAmount} onChange={handleEditCampaignFormChange} className="rounded-xl border border-gray-300 px-3 py-2 text-sm text-gray-900" />
+                        <input name="expiresAt" type="datetime-local" value={editCampaignForm.expiresAt} onChange={handleEditCampaignFormChange} className="rounded-xl border border-gray-300 px-3 py-2 text-sm text-gray-900" />
+                        <div className="flex gap-2">
+                          <button type="button" onClick={() => saveCampaignEdit(campaign.id)} disabled={campaignUpdating} className="rounded-lg bg-cyan-600 px-3 py-2 text-xs font-semibold text-white hover:bg-cyan-700 disabled:opacity-50">
+                            {campaignUpdating ? 'Saving...' : 'Save'}
+                          </button>
+                          <button type="button" onClick={cancelEditingCampaign} className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50">
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
                     ) : (
-                      <div className="text-sm text-gray-600">Expires: Never</div>
+                      <>
+                        <div className="text-base font-bold text-gray-900">{campaign.title}</div>
+                        <div className="text-sm text-gray-600">Code: {campaign.code}</div>
+                        <div className="text-sm text-gray-600">Reward: {Number(campaign.rewardAmount || '100000').toLocaleString()} EPWX</div>
+                        {campaign.expiresAt ? (
+                          <div className="text-sm text-gray-600">Expires: {new Date(campaign.expiresAt).toLocaleString()}</div>
+                        ) : (
+                          <div className="text-sm text-gray-600">Expires: Never</div>
+                        )}
+                        <a href={campaign.tweetUrl} target="_blank" rel="noopener noreferrer" className="mt-1 block text-sm text-cyan-700 underline">
+                          View post
+                        </a>
+                        <div className="mt-2 break-all text-xs text-gray-500">{getCampaignClaimUrl(campaign.id)}</div>
+                      </>
                     )}
-                    <a href={campaign.tweetUrl} target="_blank" rel="noopener noreferrer" className="mt-1 block text-sm text-cyan-700 underline">
-                      View post
-                    </a>
-                    <div className="mt-2 break-all text-xs text-gray-500">{getCampaignClaimUrl(campaign.id)}</div>
                   </div>
                   <div className="flex flex-col items-end gap-2">
                     <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusClass}`}>
@@ -290,6 +373,9 @@ export default function AdminTwitterClaimsPage() {
                     </span>
                     <button onClick={() => navigator.clipboard.writeText(getCampaignClaimUrl(campaign.id))} className="rounded-lg border border-gray-300 px-3 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-50">
                       Copy Link
+                    </button>
+                    <button type="button" onClick={() => startEditingCampaign(campaign)} className="rounded-lg border border-gray-300 px-3 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-50">
+                      Edit
                     </button>
                     <button onClick={() => toggleCampaign(campaign)} className="rounded-lg border border-gray-300 px-3 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-50">
                       {campaign.isActive ? 'Disable' : 'Enable'}
