@@ -47,6 +47,13 @@ function toDateTimeLocalValue(value?: string | null) {
   return localDate.toISOString().slice(0, 16);
 }
 
+function toIsoDateTime(value?: string | null) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toISOString();
+}
+
 export default function AdminTwitterClaimsPage() {
   const TWITTER_CLAIMS_PAGE_SIZE = 5;
   const { address } = useAccount();
@@ -168,7 +175,7 @@ export default function AdminTwitterClaimsPage() {
       const response = await fetch("/api/twitter-campaigns/add", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...campaignForm, admin: address, expiresAt: campaignForm.expiresAt || null }),
+        body: JSON.stringify({ ...campaignForm, admin: address, expiresAt: toIsoDateTime(campaignForm.expiresAt) }),
       });
       const data = await response.json();
 
@@ -230,7 +237,7 @@ export default function AdminTwitterClaimsPage() {
       const response = await fetch(`/api/twitter-campaigns/${campaignId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...editCampaignForm, admin: address, expiresAt: editCampaignForm.expiresAt || null }),
+        body: JSON.stringify({ ...editCampaignForm, admin: address, expiresAt: toIsoDateTime(editCampaignForm.expiresAt) }),
       });
       const data = await response.json();
 

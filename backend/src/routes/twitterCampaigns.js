@@ -22,6 +22,17 @@ function isCampaignExpired(campaign) {
   return !!campaign.expiresAt && new Date(campaign.expiresAt) < new Date();
 }
 
+function normalizeExpiresAt(expiresAt) {
+  if (!expiresAt) return null;
+
+  const parsed = new Date(expiresAt);
+  if (Number.isNaN(parsed.getTime())) {
+    return undefined;
+  }
+
+  return parsed;
+}
+
 router.post('/add', requireAdmin, async (req, res) => {
   const { code, title, tweetUrl, rewardAmount, expiresAt } = req.body;
 
@@ -30,12 +41,17 @@ router.post('/add', requireAdmin, async (req, res) => {
   }
 
   try {
+    const normalizedExpiresAt = normalizeExpiresAt(expiresAt);
+    if (normalizedExpiresAt === undefined) {
+      return res.status(400).json({ error: 'Invalid expiry date.' });
+    }
+
     const campaign = await TwitterCampaign.create({
       code: String(code).trim().toLowerCase(),
       title: String(title).trim(),
       tweetUrl: String(tweetUrl).trim(),
       rewardAmount: rewardAmount ? String(rewardAmount).trim() : '100000',
-      expiresAt: expiresAt || null,
+      expiresAt: normalizedExpiresAt,
       isActive: true,
     });
 
@@ -62,12 +78,17 @@ router.put('/:id', requireAdmin, async (req, res) => {
     }
 
     const { code, title, tweetUrl, rewardAmount, expiresAt, isActive } = req.body;
+    const normalizedExpiresAt = expiresAt !== undefined ? normalizeExpiresAt(expiresAt) : campaign.expiresAt;
+
+    if (normalizedExpiresAt === undefined) {
+      return res.status(400).json({ error: 'Invalid expiry date.' });
+    }
 
     if (code !== undefined) campaign.code = String(code).trim().toLowerCase();
     if (title !== undefined) campaign.title = String(title).trim();
     if (tweetUrl !== undefined) campaign.tweetUrl = String(tweetUrl).trim();
     if (rewardAmount !== undefined) campaign.rewardAmount = String(rewardAmount).trim();
-    if (expiresAt !== undefined) campaign.expiresAt = expiresAt || null;
+    if (expiresAt !== undefined) campaign.expiresAt = normalizedExpiresAt;
     if (isActive !== undefined) campaign.isActive = Boolean(isActive);
 
     await campaign.save();
