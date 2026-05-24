@@ -135,6 +135,20 @@ router.post('/twitter-retweet', upload.single('receiptImage'), async (req, res) 
       return res.status(409).json({ error: 'A Twitter retweet claim for this campaign is already pending or paid for this wallet.' });
     }
 
+    const existingIpClaim = await Claim.findOne({
+      where: {
+        ip,
+        claimType: 'twitter_retweet',
+        twitterCampaignId: campaign.id,
+        status: { [Op.in]: ['pending', 'paid'] },
+      },
+      order: [['createdAt', 'DESC']],
+    });
+
+    if (existingIpClaim) {
+      return res.status(409).json({ error: 'A Twitter retweet claim for this campaign is already pending or paid from this IP address.' });
+    }
+
     const claim = await Claim.create({
       merchantId: null,
       customer: normalizedCustomer,
