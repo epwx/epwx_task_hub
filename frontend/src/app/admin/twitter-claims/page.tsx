@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ConnectKitButton } from "connectkit";
-import { useAccount, useWriteContract } from "wagmi";
+import { useAccount, usePublicClient, useWriteContract } from "wagmi";
 import { ethers } from "ethers";
 import MerchantClaimsTable from "@/components/MerchantClaimsTable";
 
@@ -49,6 +49,7 @@ function toDateTimeLocalValue(value?: string | null) {
 
 export default function AdminTwitterClaimsPage() {
   const { address } = useAccount();
+  const publicClient = usePublicClient();
   const { writeContractAsync } = useWriteContract();
   const [claims, setClaims] = useState<TwitterClaim[]>([]);
   const [campaigns, setCampaigns] = useState<TwitterCampaign[]>([]);
@@ -268,6 +269,19 @@ export default function AdminTwitterClaimsPage() {
         functionName: "transfer",
         args: [claim.customer as `0x${string}`, amount],
       });
+
+      if (!publicClient) {
+        setError("Public client not available");
+        setMarking(null);
+        return;
+      }
+
+      const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
+      if (receipt.status !== "success") {
+        setError("Token transfer failed or was reverted");
+        setMarking(null);
+        return;
+      }
 
       const response = await fetch("/api/epwx/claims/mark-paid", {
         method: "POST",

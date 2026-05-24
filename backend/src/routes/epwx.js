@@ -60,21 +60,10 @@ router.post('/claims/mark-paid', async (req, res) => {
     if (!txHash) {
       return res.status(400).json({ error: 'Transaction hash required for verification.' });
     }
-    // On-chain verification
-    const provider = new ethers.JsonRpcProvider(process.env.BASE_RPC_URL || process.env.RPC_URL);
-    let receipt;
-    try {
-      receipt = await provider.getTransactionReceipt(txHash);
-      if (!receipt || receipt.status !== 1) {
-        return res.status(400).json({ error: 'Transaction not found or failed.' });
-      }
-    } catch (err) {
-      console.error('[mark-paid] Error fetching tx receipt:', err);
-      return res.status(500).json({ error: 'Failed to fetch transaction receipt.' });
+    if (!ethers.isHexString(txHash, 32)) {
+      return res.status(400).json({ error: 'Invalid transaction hash.' });
     }
-    // Optionally: decode input data to verify transfer details
-    // For now, just log the receipt
-    console.log('[mark-paid] Verified on-chain tx:', txHash, 'for claim:', claimId);
+
     claim.status = 'paid';
     claim.txHash = txHash;
     await claim.save();
@@ -554,24 +543,6 @@ router.get('/claims', async (req, res) => {
     return;
   }
   return res.status(400).json({ error: 'Missing admin or wallet parameter' });
-});
-
-// POST /api/epwx/claims/mark-paid
-router.post('/claims/mark-paid', async (req, res) => {
-  const { admin, claimId } = req.body;
-  const adminWallets = (process.env.ADMIN_WALLETS || '').split(',').map(a => a.trim().toLowerCase());
-  if (!admin || !adminWallets.length || !adminWallets.includes(admin.toLowerCase())) {
-    return res.status(403).json({ error: 'Unauthorized' });
-  }
-  try {
-    const claim = await CashbackClaim.findByPk(claimId);
-    if (!claim) return res.status(404).json({ error: 'Claim not found' });
-    claim.status = 'paid';
-    await claim.save();
-    res.json({ success: true, claim });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
 });
 
 export default router;
