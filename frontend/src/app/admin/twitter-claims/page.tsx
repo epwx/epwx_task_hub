@@ -48,11 +48,13 @@ function toDateTimeLocalValue(value?: string | null) {
 }
 
 export default function AdminTwitterClaimsPage() {
+  const TWITTER_CLAIMS_PAGE_SIZE = 5;
   const { address } = useAccount();
   const publicClient = usePublicClient();
   const { writeContractAsync } = useWriteContract();
   const [claims, setClaims] = useState<TwitterClaim[]>([]);
   const [campaigns, setCampaigns] = useState<TwitterCampaign[]>([]);
+  const [claimsPage, setClaimsPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState("pending");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -135,6 +137,19 @@ export default function AdminTwitterClaimsPage() {
     fetchClaims();
     fetchCampaigns();
   }, [address, statusFilter]);
+
+  useEffect(() => {
+    setClaimsPage(1);
+  }, [statusFilter]);
+
+  const totalClaimsPages = Math.max(1, Math.ceil(claims.length / TWITTER_CLAIMS_PAGE_SIZE));
+  const paginatedClaims = claims.slice((claimsPage - 1) * TWITTER_CLAIMS_PAGE_SIZE, claimsPage * TWITTER_CLAIMS_PAGE_SIZE);
+
+  useEffect(() => {
+    if (claimsPage > totalClaimsPages) {
+      setClaimsPage(totalClaimsPages);
+    }
+  }, [claimsPage, totalClaimsPages]);
 
   const handleCampaignFormChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setCampaignForm(current => ({ ...current, [event.target.name]: event.target.value }));
@@ -432,13 +447,33 @@ export default function AdminTwitterClaimsPage() {
 
       {!loading && claims.length > 0 ? (
         <MerchantClaimsTable
-          claims={claims}
+          claims={paginatedClaims}
           isAdmin
           onDistribute={distributeClaim}
           onReject={rejectClaim}
           marking={marking}
           context="twitter"
         />
+      ) : null}
+
+      {!loading && claims.length > 0 ? (
+        <div className="bg-gray-50 px-2 py-2 text-center">
+          <button
+            className="mr-2 rounded border bg-blue-100 px-2 py-1 font-bold text-blue-900 hover:bg-blue-200"
+            disabled={claimsPage === 1}
+            onClick={() => setClaimsPage(page => Math.max(1, page - 1))}
+          >
+            Prev
+          </button>
+          <span>Page {claimsPage} of {totalClaimsPages}</span>
+          <button
+            className="ml-2 rounded border bg-blue-100 px-2 py-1 font-bold text-blue-900 hover:bg-blue-200"
+            disabled={claimsPage >= totalClaimsPages}
+            onClick={() => setClaimsPage(page => Math.min(totalClaimsPages, page + 1))}
+          >
+            Next
+          </button>
+        </div>
       ) : null}
     </div>
   );
