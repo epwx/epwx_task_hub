@@ -373,7 +373,7 @@ export default function AdminPage() {
                 disabled={specialClaimsPage === 1}
                 onClick={() => setSpecialClaimsPage(p => Math.max(1, p - 1))}
               >Prev</button>
-              <span>Page {specialClaimsPage}</span>
+              <span className="font-semibold text-gray-700">Page {specialClaimsPage}</span>
               <button
                 className="px-2 py-1 ml-2 border rounded bg-blue-100 text-blue-900 font-bold hover:bg-blue-200"
                 disabled={specialClaimsPage * SPECIAL_CLAIMS_PAGE_SIZE >= specialClaims.filter((claim: any) =>
@@ -466,7 +466,7 @@ export default function AdminPage() {
                     disabled={claimsPage === 1}
                     onClick={() => setClaimsPage(p => Math.max(1, p - 1))}
                   >Prev</button>
-                  <span>Page {claimsPage}</span>
+                  <span className="font-semibold text-gray-700">Page {claimsPage}</span>
                   <button
                     className="px-2 py-1 ml-2 border rounded bg-blue-100 text-blue-900 font-bold hover:bg-blue-200"
                     disabled={claimsPage * CLAIMS_PAGE_SIZE >= claims.filter((claim: any) =>
@@ -523,7 +523,7 @@ export default function AdminPage() {
               disabled={dailyClaimsPage === 1}
               onClick={() => setDailyClaimsPage(p => Math.max(1, p - 1))}
             >Prev</button>
-            <span>Page {dailyClaimsPage}</span>
+            <span className="font-semibold text-gray-700">Page {dailyClaimsPage}</span>
             <button
               className="px-2 py-1 ml-2 border rounded bg-blue-100 text-blue-900 font-bold hover:bg-blue-200"
               disabled={dailyClaimsPage * DAILY_CLAIMS_PAGE_SIZE >= dailyClaims.filter((claim: any) =>
