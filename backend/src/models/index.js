@@ -9,6 +9,7 @@ import DailyClaim from './DailyClaim.js';
 import SpecialClaim from './SpecialClaim.js';
 import Merchant from './Merchant.js';
 import Claim from './Claim.js';
+import TwitterCampaign from './TwitterCampaign.js';
 import RewardDistributionLedgerDef from './RewardDistributionLedger.js';
 
 const RewardDistributionLedger = RewardDistributionLedgerDef(sequelize, DataTypes);
@@ -22,4 +23,4 @@ TaskSubmission.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 Campaign.hasMany(TaskSubmission, { foreignKey: 'campaignId', as: 'submissions' });
 User.hasMany(TaskSubmission, { foreignKey: 'userId', as: 'submissions' });
 
-export { User, Campaign, TaskSubmission, CashbackClaim, DailyClaim, SpecialClaim, Merchant, Claim, RewardDistributionLedger };
+export { User, Campaign, TaskSubmission, CashbackClaim, DailyClaim, SpecialClaim, Merchant, Claim, TwitterCampaign, RewardDistributionLedger };

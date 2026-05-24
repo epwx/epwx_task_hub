@@ -10,6 +10,7 @@ const Claim = sequelize.define('Claim', {
   lng: { type: DataTypes.FLOAT, allowNull: true },
   claimType: { type: DataTypes.STRING, allowNull: false, defaultValue: 'merchant' },
   campaignCode: { type: DataTypes.STRING, allowNull: true },
+  twitterCampaignId: { type: DataTypes.INTEGER, allowNull: true },
   twitterUsername: { type: DataTypes.STRING, allowNull: true },
   status: { type: DataTypes.STRING, allowNull: false, defaultValue: 'pending' },
   ip: { type: DataTypes.STRING, allowNull: false },

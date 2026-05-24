@@ -3,7 +3,7 @@ console.log('BACKEND ENV ADMIN_WALLETS:', process.env.ADMIN_WALLETS);
 
 
 import express from 'express';
-import { Claim, Merchant } from '../models/index.js';
+import { Claim, Merchant, TwitterCampaign } from '../models/index.js';
 import { Op } from 'sequelize';
 import multer from 'multer';
 import path from 'path';
@@ -55,6 +55,10 @@ function haversineDistance(lat1, lon1, lat2, lon2) {
   return R * c;
 }
 
+function isCampaignExpired(campaign) {
+  return !!campaign.expiresAt && new Date(campaign.expiresAt) < new Date();
+}
+
 // POST /api/claims/add - Add a new customer claim with receipt image upload
 router.post('/add', upload.single('receiptImage'), async (req, res) => {
   const { merchantId, customer, bill, lat, lng } = req.body;
@@ -91,7 +95,7 @@ router.post('/add', upload.single('receiptImage'), async (req, res) => {
 
 // POST /api/claims/twitter-retweet - Add a new Twitter retweet screenshot claim
 router.post('/twitter-retweet', upload.single('receiptImage'), async (req, res) => {
-  const { customer, campaignCode, twitterUsername } = req.body;
+  const { customer, twitterCampaignId, twitterUsername } = req.body;
   let receiptImagePath = null;
 
   if (req.file) {
@@ -103,15 +107,25 @@ router.post('/twitter-retweet', upload.single('receiptImage'), async (req, res) 
   }
 
   const normalizedCustomer = customer.toLowerCase();
-  const normalizedCampaign = (campaignCode || 'twitter-retweet').trim().toLowerCase();
+  const campaignId = Number(twitterCampaignId);
   const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.connection?.remoteAddress || req.socket?.remoteAddress;
 
+  if (!Number.isInteger(campaignId) || campaignId <= 0) {
+    return res.status(400).json({ error: 'A valid Twitter campaign is required.' });
+  }
+
   try {
+    const campaign = await TwitterCampaign.findByPk(campaignId);
+
+    if (!campaign || !campaign.isActive || isCampaignExpired(campaign)) {
+      return res.status(404).json({ error: 'Twitter campaign not found or inactive.' });
+    }
+
     const existing = await Claim.findOne({
       where: {
         customer: normalizedCustomer,
         claimType: 'twitter_retweet',
-        campaignCode: normalizedCampaign,
+        twitterCampaignId: campaign.id,
         status: { [Op.in]: ['pending', 'paid'] },
       },
       order: [['createdAt', 'DESC']],
@@ -124,11 +138,12 @@ router.post('/twitter-retweet', upload.single('receiptImage'), async (req, res) 
     const claim = await Claim.create({
       merchantId: null,
       customer: normalizedCustomer,
-      bill: null,
+      bill: String(campaign.rewardAmount || '100000'),
       lat: null,
       lng: null,
       claimType: 'twitter_retweet',
-      campaignCode: normalizedCampaign,
+      campaignCode: campaign.code,
+      twitterCampaignId: campaign.id,
       twitterUsername: twitterUsername ? twitterUsername.trim().replace(/^@/, '') : null,
       status: 'pending',
       ip,

@@ -72,6 +72,7 @@ import epwxRouter from './routes/epwx.js';
 
 import merchantsRouter from './routes/merchants.js';
 import claimsRouter from './routes/claims.js';
+import twitterCampaignsRouter from './routes/twitterCampaigns.js';
 import rewardLedgerRouter from './routes/rewardLedger.js';
 
 app.use('/api/auth', authRouter);
@@ -90,6 +91,7 @@ app.use('/api/epwx', epwxRouter);
 // Customer claim routes
 app.use('/api/claims', claimsRouter);
 app.use('/api/merchants', merchantsRouter);
+app.use('/api/twitter-campaigns', twitterCampaignsRouter);
 app.use('/api/reward-ledger', rewardLedgerRouter);
 
 // Error handler

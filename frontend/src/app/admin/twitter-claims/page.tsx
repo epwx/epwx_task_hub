@@ -18,6 +18,17 @@ type TwitterClaim = {
   twitterUsername?: string;
 };
 
+type TwitterCampaign = {
+  id: number;
+  code: string;
+  title: string;
+  tweetUrl: string;
+  rewardAmount: string;
+  isActive: boolean;
+  expiresAt?: string | null;
+  createdAt: string;
+};
+
 const ADMIN_WALLETS = (process.env.NEXT_PUBLIC_ADMIN_WALLETS || "")
   .split(",")
   .map(wallet => wallet.trim().toLowerCase())
@@ -27,10 +38,19 @@ export default function AdminTwitterClaimsPage() {
   const { address } = useAccount();
   const { writeContractAsync } = useWriteContract();
   const [claims, setClaims] = useState<TwitterClaim[]>([]);
+  const [campaigns, setCampaigns] = useState<TwitterCampaign[]>([]);
   const [statusFilter, setStatusFilter] = useState("pending");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [marking, setMarking] = useState<number | string | null>(null);
+  const [campaignForm, setCampaignForm] = useState({
+    code: "",
+    title: "",
+    tweetUrl: "",
+    rewardAmount: "100000",
+    expiresAt: "",
+  });
+  const [campaignSaving, setCampaignSaving] = useState(false);
 
   const EPWX_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_EPWX_TOKEN as `0x${string}`) || "0x0000000000000000000000000000000000000000";
   const EPWX_TOKEN_ABI = [
@@ -47,6 +67,13 @@ export default function AdminTwitterClaimsPage() {
   ];
 
   const isAdmin = !!address && ADMIN_WALLETS.includes(address.toLowerCase());
+
+  const getCampaignClaimUrl = (campaignId: number) => {
+    if (typeof window !== "undefined") {
+      return `${window.location.origin}/claim/twitter-retweet?campaignId=${campaignId}`;
+    }
+    return `/claim/twitter-retweet?campaignId=${campaignId}`;
+  };
 
   const fetchClaims = async () => {
     if (!address || !isAdmin) {
@@ -67,9 +94,75 @@ export default function AdminTwitterClaimsPage() {
     setLoading(false);
   };
 
+  const fetchCampaigns = async () => {
+    if (!address || !isAdmin) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/twitter-campaigns/list?admin=${address}`);
+      const data = await response.json();
+      setCampaigns(data.campaigns || []);
+    } catch (fetchError: any) {
+      setError(fetchError?.message || "Failed to fetch Twitter campaigns");
+    }
+  };
+
   useEffect(() => {
     fetchClaims();
+    fetchCampaigns();
   }, [address, statusFilter]);
+
+  const handleCampaignFormChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setCampaignForm(current => ({ ...current, [event.target.name]: event.target.value }));
+  };
+
+  const addCampaign = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setCampaignSaving(true);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/twitter-campaigns/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...campaignForm, admin: address, expiresAt: campaignForm.expiresAt || null }),
+      });
+      const data = await response.json();
+
+      if (!data.success) {
+        setError(data.error || "Failed to create campaign");
+      } else {
+        setCampaignForm({ code: "", title: "", tweetUrl: "", rewardAmount: "100000", expiresAt: "" });
+        await fetchCampaigns();
+      }
+    } catch (saveError: any) {
+      setError(saveError?.message || "Failed to create campaign");
+    }
+
+    setCampaignSaving(false);
+  };
+
+  const toggleCampaign = async (campaign: TwitterCampaign) => {
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/twitter-campaigns/${campaign.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ admin: address, isActive: !campaign.isActive }),
+      });
+      const data = await response.json();
+
+      if (!data.success) {
+        setError(data.error || "Failed to update campaign");
+      } else {
+        await fetchCampaigns();
+      }
+    } catch (updateError: any) {
+      setError(updateError?.message || "Failed to update campaign");
+    }
+  };
 
   const rejectClaim = async (claim: TwitterClaim, rejectionComment: string) => {
     setMarking(claim.id);
@@ -100,7 +193,8 @@ export default function AdminTwitterClaimsPage() {
     setError(null);
 
     try {
-      const amount = ethers.parseUnits("100000", 9).toString();
+      const rewardAmount = claim.bill || "100000";
+      const amount = ethers.parseUnits(String(rewardAmount), 9).toString();
       const txHash = await writeContractAsync({
         address: EPWX_TOKEN_ADDRESS,
         abi: EPWX_TOKEN_ABI,
@@ -138,6 +232,56 @@ export default function AdminTwitterClaimsPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
+      <div className="mb-8 grid gap-6 lg:grid-cols-[1.2fr_1fr]">
+        <form onSubmit={addCampaign} className="rounded-2xl bg-white p-6 shadow">
+          <h2 className="text-2xl font-black text-gray-900">Create Twitter Campaign</h2>
+          <p className="mt-2 text-sm text-gray-600">Create the trusted campaign record first, then share the generated claim URL.</p>
+          <div className="mt-5 grid gap-4">
+            <input name="code" value={campaignForm.code} onChange={handleCampaignFormChange} placeholder="campaign code" className="rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900" required />
+            <input name="title" value={campaignForm.title} onChange={handleCampaignFormChange} placeholder="campaign title" className="rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900" required />
+            <input name="tweetUrl" value={campaignForm.tweetUrl} onChange={handleCampaignFormChange} placeholder="https://x.com/..." className="rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900" required />
+            <input name="rewardAmount" value={campaignForm.rewardAmount} onChange={handleCampaignFormChange} placeholder="100000" className="rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900" required />
+            <input name="expiresAt" type="datetime-local" value={campaignForm.expiresAt} onChange={handleCampaignFormChange} className="rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900" />
+            <button type="submit" disabled={campaignSaving} className="rounded-xl bg-cyan-600 px-4 py-3 text-sm font-bold text-white hover:bg-cyan-700 disabled:opacity-50">
+              {campaignSaving ? "Creating..." : "Create Campaign"}
+            </button>
+          </div>
+        </form>
+
+        <div className="rounded-2xl bg-white p-6 shadow">
+          <h2 className="text-2xl font-black text-gray-900">Saved Campaigns</h2>
+          <div className="mt-4 space-y-4">
+            {campaigns.length === 0 ? <div className="text-sm text-gray-600">No campaigns yet.</div> : null}
+            {campaigns.map(campaign => (
+              <div key={campaign.id} className="rounded-2xl border border-gray-200 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="text-base font-bold text-gray-900">{campaign.title}</div>
+                    <div className="text-sm text-gray-600">Code: {campaign.code}</div>
+                    <div className="text-sm text-gray-600">Reward: {Number(campaign.rewardAmount || '100000').toLocaleString()} EPWX</div>
+                    <a href={campaign.tweetUrl} target="_blank" rel="noopener noreferrer" className="mt-1 block text-sm text-cyan-700 underline">
+                      View post
+                    </a>
+                    <div className="mt-2 break-all text-xs text-gray-500">{getCampaignClaimUrl(campaign.id)}</div>
+                  </div>
+                  <div className="flex flex-col items-end gap-2">
+                    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${campaign.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-200 text-gray-700'}`}>
+                      {campaign.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                    <button onClick={() => navigator.clipboard.writeText(getCampaignClaimUrl(campaign.id))} className="rounded-lg border border-gray-300 px-3 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-50">
+                      Copy Link
+                    </button>
+                    <button onClick={() => toggleCampaign(campaign)} className="rounded-lg border border-gray-300 px-3 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-50">
+                      {campaign.isActive ? 'Disable' : 'Enable'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
       <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <h1 className="text-3xl font-black text-gray-900">Twitter Retweet Claims</h1>

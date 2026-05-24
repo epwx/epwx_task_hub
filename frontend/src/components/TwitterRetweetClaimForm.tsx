@@ -3,11 +3,13 @@ import imageCompression from 'browser-image-compression';
 
 interface TwitterRetweetClaimFormProps {
   wallet?: string;
-  campaignCode?: string | null;
-  title?: string | null;
+  twitterCampaignId: number;
+  campaignCode: string;
+  title: string;
+  rewardAmount?: string | null;
 }
 
-const TwitterRetweetClaimForm: React.FC<TwitterRetweetClaimFormProps> = ({ wallet, campaignCode, title }) => {
+const TwitterRetweetClaimForm: React.FC<TwitterRetweetClaimFormProps> = ({ wallet, twitterCampaignId, campaignCode, title, rewardAmount }) => {
   const [file, setFile] = useState<File | null>(null);
   const [twitterUsername, setTwitterUsername] = useState('');
   const [agreed, setAgreed] = useState(false);
@@ -56,7 +58,7 @@ const TwitterRetweetClaimForm: React.FC<TwitterRetweetClaimFormProps> = ({ walle
 
     const formData = new FormData();
     formData.append('customer', wallet);
-    formData.append('campaignCode', campaignCode || 'twitter-retweet');
+    formData.append('twitterCampaignId', String(twitterCampaignId));
     if (twitterUsername.trim()) {
       formData.append('twitterUsername', twitterUsername.trim().replace(/^@/, ''));
     }
@@ -91,7 +93,8 @@ const TwitterRetweetClaimForm: React.FC<TwitterRetweetClaimFormProps> = ({ walle
         <p className="mt-2 text-sm text-white/75">
           After you retweet the post, upload a clear screenshot here. Admin will review it and either distribute EPWX or reject it with a reason.
         </p>
-        <div className="mt-3 text-sm text-white/70">Campaign: {campaignCode || 'twitter-retweet'}</div>
+        <div className="mt-3 text-sm text-white/70">Campaign: {campaignCode}</div>
+        <div className="mt-1 text-sm text-white/70">Reward: {Number(rewardAmount || '100000').toLocaleString()} EPWX</div>
       </div>
 
       <label className="mb-2 block text-sm font-semibold text-white/85">Twitter username (optional)</label>
