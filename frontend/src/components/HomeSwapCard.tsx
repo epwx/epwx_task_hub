@@ -101,20 +101,20 @@ export function HomeSwapCard() {
   };
 
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-sky-700 via-cyan-700 to-emerald-700 p-8 shadow-2xl">
+    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 p-8 shadow-2xl">
       <div className="absolute left-0 top-0 h-48 w-48 rounded-full bg-white/10 blur-3xl" />
       <div className="absolute bottom-0 right-0 h-56 w-56 rounded-full bg-white/10 blur-3xl" />
 
       <div className="relative z-10">
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-100/80">Base Swap</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-white/70">Base Swap</p>
             <h2 className="mt-2 text-3xl font-black text-white">Swap ETH to EPWX</h2>
             <p className="mt-2 max-w-2xl text-sm text-white/80">
               This swap uses the same EPWX token, pair, router, and market feed surfaced on the platform stats page.
             </p>
           </div>
-          <Link href="/platform-stats" className="text-sm font-semibold text-emerald-100 underline-offset-4 hover:underline">
+          <Link href="/platform-stats" className="text-sm font-semibold text-emerald-200 underline-offset-4 hover:text-white hover:underline">
             View full platform stats
           </Link>
         </div>
@@ -124,7 +124,7 @@ export function HomeSwapCard() {
             <label className="block text-sm font-semibold text-white/80" htmlFor="home-epwx-swap-amount">
               ETH amount on Base
             </label>
-            <div className="mt-3 flex items-center gap-3 rounded-2xl border border-white/15 bg-slate-950/20 px-4 py-3">
+            <div className="mt-3 flex items-center gap-3 rounded-2xl border border-white/15 bg-white/10 px-4 py-3">
               <input
                 id="home-epwx-swap-amount"
                 type="number"
@@ -170,7 +170,7 @@ export function HomeSwapCard() {
               type="button"
               onClick={handleSwap}
               disabled={swapLoading || quoteLoading || !quoteOut || !!quoteError}
-              className="mt-6 inline-flex w-full items-center justify-center rounded-2xl bg-white px-5 py-3 text-base font-bold text-sky-800 transition hover:bg-cyan-50 disabled:cursor-not-allowed disabled:opacity-50"
+              className="mt-6 inline-flex w-full items-center justify-center rounded-2xl bg-green-600 px-5 py-3 text-base font-bold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {swapLoading ? 'Submitting swap...' : `Swap ${amountEth || '0'} ETH for EPWX`}
             </button>
