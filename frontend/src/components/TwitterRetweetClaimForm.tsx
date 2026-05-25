@@ -103,7 +103,7 @@ const TwitterRetweetClaimForm: React.FC<TwitterRetweetClaimFormProps> = ({ walle
         value={twitterUsername}
         onChange={(event) => setTwitterUsername(event.target.value)}
         placeholder="@yourhandle"
-        className="mb-4 w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-white placeholder:text-white/45 focus:border-cyan-300 focus:outline-none"
+        className="mb-4 w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-white placeholder:text-white/45 focus:border-emerald-300 focus:outline-none"
       />
 
       <label className="mb-2 block text-sm font-semibold text-white/85">Retweet screenshot</label>
@@ -128,7 +128,7 @@ const TwitterRetweetClaimForm: React.FC<TwitterRetweetClaimFormProps> = ({ walle
       <button
         type="submit"
         disabled={loading || !agreed}
-        className={`w-full rounded-2xl border border-cyan-200/40 px-4 py-3 font-bold text-white ${loading || !agreed ? 'cursor-not-allowed bg-white/10 opacity-50' : 'bg-cyan-500/30 hover:bg-cyan-500/40'}`}
+        className={`w-full rounded-2xl px-4 py-3 font-bold text-white ${loading || !agreed ? 'cursor-not-allowed bg-white/10 opacity-50' : 'bg-green-600 hover:bg-green-700'}`}
       >
         {loading ? 'Submitting...' : 'Submit Twitter Claim'}
       </button>

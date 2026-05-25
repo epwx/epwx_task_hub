@@ -54,6 +54,9 @@ function toIsoDateTime(value?: string | null) {
   return date.toISOString();
 }
 
+const themedSectionClass = "relative overflow-hidden bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-3xl shadow-2xl p-8";
+const glassPanelClass = "bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl";
+
 export default function AdminTwitterClaimsPage() {
   const TWITTER_CLAIMS_PAGE_SIZE = 5;
   const { address } = useAccount();
@@ -326,9 +329,14 @@ export default function AdminTwitterClaimsPage() {
 
   if (!isAdmin) {
     return (
-      <div className="mx-auto flex max-w-xl flex-col items-center justify-center py-16 text-center">
-        <div className="mb-4 text-lg font-semibold text-gray-700">Connect an admin wallet to review Twitter screenshot claims.</div>
-        <ConnectKitButton />
+      <div className="mx-auto max-w-xl px-4 py-16 text-center">
+        <div className={themedSectionClass}>
+          <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
+          <div className="relative z-10 flex flex-col items-center">
+            <div className="mb-4 text-lg font-semibold text-white">Connect an admin wallet to review Twitter screenshot claims.</div>
+            <ConnectKitButton />
+          </div>
+        </div>
       </div>
     );
   }
@@ -336,28 +344,33 @@ export default function AdminTwitterClaimsPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
       <div className="mb-8 grid gap-6 lg:grid-cols-[1.2fr_1fr]">
-        <form onSubmit={addCampaign} className="rounded-2xl bg-white p-6 shadow">
-          <h2 className="text-2xl font-black text-gray-900">Create Twitter Campaign</h2>
-          <p className="mt-2 text-sm text-gray-600">Create the trusted campaign record first, then share the generated claim URL.</p>
+        <form onSubmit={addCampaign} className={themedSectionClass}>
+          <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
+          <div className="relative z-10">
+          <h2 className="text-2xl font-black text-white">Create Twitter Campaign</h2>
+          <p className="mt-2 text-sm text-white/75">Create the trusted campaign record first, then share the generated claim URL.</p>
           <div className="mt-5 grid gap-4">
-            <input name="code" value={campaignForm.code} onChange={handleCampaignFormChange} placeholder="campaign code" className="rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900" required />
-            <input name="title" value={campaignForm.title} onChange={handleCampaignFormChange} placeholder="campaign title" className="rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900" required />
-            <input name="tweetUrl" value={campaignForm.tweetUrl} onChange={handleCampaignFormChange} placeholder="https://x.com/..." className="rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900" required />
-            <input name="rewardAmount" value={campaignForm.rewardAmount} onChange={handleCampaignFormChange} placeholder="100000" className="rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900" required />
-            <input name="expiresAt" type="datetime-local" value={campaignForm.expiresAt} onChange={handleCampaignFormChange} className="rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900" />
-            <div className="text-xs text-gray-500">Leave expiry empty if this campaign should stay active until you disable it manually.</div>
-            <button type="submit" disabled={campaignSaving} className="rounded-xl bg-cyan-600 px-4 py-3 text-sm font-bold text-white hover:bg-cyan-700 disabled:opacity-50">
+            <input name="code" value={campaignForm.code} onChange={handleCampaignFormChange} placeholder="campaign code" className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/50" required />
+            <input name="title" value={campaignForm.title} onChange={handleCampaignFormChange} placeholder="campaign title" className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/50" required />
+            <input name="tweetUrl" value={campaignForm.tweetUrl} onChange={handleCampaignFormChange} placeholder="https://x.com/..." className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/50" required />
+            <input name="rewardAmount" value={campaignForm.rewardAmount} onChange={handleCampaignFormChange} placeholder="100000" className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/50" required />
+            <input name="expiresAt" type="datetime-local" value={campaignForm.expiresAt} onChange={handleCampaignFormChange} className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white" />
+            <div className="text-xs text-white/65">Leave expiry empty if this campaign should stay active until you disable it manually.</div>
+            <button type="submit" disabled={campaignSaving} className="rounded-xl bg-green-600 px-4 py-3 text-sm font-bold text-white hover:bg-green-700 disabled:opacity-50">
               {campaignSaving ? "Creating..." : "Create Campaign"}
             </button>
           </div>
+          </div>
         </form>
 
-        <div className="rounded-2xl bg-white p-6 shadow">
-          <h2 className="text-2xl font-black text-gray-900">Saved Campaigns</h2>
+        <div className={themedSectionClass}>
+          <div className="absolute bottom-0 left-0 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
+          <div className="relative z-10">
+          <h2 className="text-2xl font-black text-white">Saved Campaigns</h2>
           <div className="mt-4 space-y-4">
-            {campaigns.length === 0 ? <div className="text-sm text-gray-600">No campaigns yet.</div> : null}
+            {campaigns.length === 0 ? <div className="text-sm text-white/75">No campaigns yet.</div> : null}
             {campaigns.map(campaign => (
-              <div key={campaign.id} className="rounded-2xl border border-gray-200 p-4">
+              <div key={campaign.id} className={`${glassPanelClass} p-4`}>
                 {(() => {
                   const expired = isCampaignExpired(campaign.expiresAt);
                   const statusLabel = !campaign.isActive ? 'Inactive' : expired ? 'Expired' : 'Active';
@@ -372,34 +385,34 @@ export default function AdminTwitterClaimsPage() {
                   <div>
                     {editingCampaignId === campaign.id ? (
                       <div className="grid gap-3">
-                        <input name="code" value={editCampaignForm.code} onChange={handleEditCampaignFormChange} className="rounded-xl border border-gray-300 px-3 py-2 text-sm text-gray-900" />
-                        <input name="title" value={editCampaignForm.title} onChange={handleEditCampaignFormChange} className="rounded-xl border border-gray-300 px-3 py-2 text-sm text-gray-900" />
-                        <input name="tweetUrl" value={editCampaignForm.tweetUrl} onChange={handleEditCampaignFormChange} className="rounded-xl border border-gray-300 px-3 py-2 text-sm text-gray-900" />
-                        <input name="rewardAmount" value={editCampaignForm.rewardAmount} onChange={handleEditCampaignFormChange} className="rounded-xl border border-gray-300 px-3 py-2 text-sm text-gray-900" />
-                        <input name="expiresAt" type="datetime-local" value={editCampaignForm.expiresAt} onChange={handleEditCampaignFormChange} className="rounded-xl border border-gray-300 px-3 py-2 text-sm text-gray-900" />
+                        <input name="code" value={editCampaignForm.code} onChange={handleEditCampaignFormChange} className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm text-white" />
+                        <input name="title" value={editCampaignForm.title} onChange={handleEditCampaignFormChange} className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm text-white" />
+                        <input name="tweetUrl" value={editCampaignForm.tweetUrl} onChange={handleEditCampaignFormChange} className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm text-white" />
+                        <input name="rewardAmount" value={editCampaignForm.rewardAmount} onChange={handleEditCampaignFormChange} className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm text-white" />
+                        <input name="expiresAt" type="datetime-local" value={editCampaignForm.expiresAt} onChange={handleEditCampaignFormChange} className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm text-white" />
                         <div className="flex gap-2">
-                          <button type="button" onClick={() => saveCampaignEdit(campaign.id)} disabled={campaignUpdating} className="rounded-lg bg-cyan-600 px-3 py-2 text-xs font-semibold text-white hover:bg-cyan-700 disabled:opacity-50">
+                          <button type="button" onClick={() => saveCampaignEdit(campaign.id)} disabled={campaignUpdating} className="rounded-lg bg-green-600 px-3 py-2 text-xs font-semibold text-white hover:bg-green-700 disabled:opacity-50">
                             {campaignUpdating ? 'Saving...' : 'Save'}
                           </button>
-                          <button type="button" onClick={cancelEditingCampaign} className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50">
+                          <button type="button" onClick={cancelEditingCampaign} className="rounded-lg border border-white/20 px-3 py-2 text-xs font-semibold text-white/85 hover:bg-white/10">
                             Cancel
                           </button>
                         </div>
                       </div>
                     ) : (
                       <>
-                        <div className="text-base font-bold text-gray-900">{campaign.title}</div>
-                        <div className="text-sm text-gray-600">Code: {campaign.code}</div>
-                        <div className="text-sm text-gray-600">Reward: {Number(campaign.rewardAmount || '100000').toLocaleString()} EPWX</div>
+                        <div className="text-base font-bold text-white">{campaign.title}</div>
+                        <div className="text-sm text-white/75">Code: {campaign.code}</div>
+                        <div className="text-sm text-white/75">Reward: {Number(campaign.rewardAmount || '100000').toLocaleString()} EPWX</div>
                         {campaign.expiresAt ? (
-                          <div className="text-sm text-gray-600">Expires: {new Date(campaign.expiresAt).toLocaleString()}</div>
+                          <div className="text-sm text-white/75">Expires: {new Date(campaign.expiresAt).toLocaleString()}</div>
                         ) : (
-                          <div className="text-sm text-gray-600">Expires: Never</div>
+                          <div className="text-sm text-white/75">Expires: Never</div>
                         )}
-                        <a href={campaign.tweetUrl} target="_blank" rel="noopener noreferrer" className="mt-1 block text-sm text-cyan-700 underline">
+                        <a href={campaign.tweetUrl} target="_blank" rel="noopener noreferrer" className="mt-1 block text-sm text-emerald-200 underline hover:text-white">
                           View post
                         </a>
-                        <div className="mt-2 break-all text-xs text-gray-500">{getCampaignClaimUrl(campaign.id)}</div>
+                        <div className="mt-2 break-all text-xs text-white/55">{getCampaignClaimUrl(campaign.id)}</div>
                       </>
                     )}
                   </div>
@@ -407,13 +420,13 @@ export default function AdminTwitterClaimsPage() {
                     <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusClass}`}>
                       {statusLabel}
                     </span>
-                    <button onClick={() => navigator.clipboard.writeText(getCampaignClaimUrl(campaign.id))} className="rounded-lg border border-gray-300 px-3 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-50">
+                    <button onClick={() => navigator.clipboard.writeText(getCampaignClaimUrl(campaign.id))} className="rounded-lg border border-white/20 px-3 py-1 text-xs font-semibold text-white/85 hover:bg-white/10">
                       Copy Link
                     </button>
-                    <button type="button" onClick={() => startEditingCampaign(campaign)} className="rounded-lg border border-gray-300 px-3 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-50">
+                    <button type="button" onClick={() => startEditingCampaign(campaign)} className="rounded-lg border border-white/20 px-3 py-1 text-xs font-semibold text-white/85 hover:bg-white/10">
                       Edit
                     </button>
-                    <button onClick={() => toggleCampaign(campaign)} className="rounded-lg border border-gray-300 px-3 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-50">
+                    <button onClick={() => toggleCampaign(campaign)} className="rounded-lg border border-white/20 px-3 py-1 text-xs font-semibold text-white/85 hover:bg-white/10">
                       {campaign.isActive ? 'Disable' : 'Enable'}
                     </button>
                   </div>
@@ -423,33 +436,37 @@ export default function AdminTwitterClaimsPage() {
               </div>
             ))}
           </div>
+          </div>
         </div>
       </div>
 
-      <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+      <div className={`${themedSectionClass} mb-6`}>
+        <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
+        <div className="relative z-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <h1 className="text-3xl font-black text-gray-900">Twitter Retweet Claims</h1>
-          <p className="mt-2 text-sm text-gray-600">Review uploaded retweet screenshots, then distribute EPWX or reject with a reason.</p>
+          <h1 className="text-3xl font-black text-white">Twitter Retweet Claims</h1>
+          <p className="mt-2 text-sm text-white/75">Review uploaded retweet screenshots, then distribute EPWX or reject with a reason.</p>
         </div>
         <div>
-          <label className="mb-2 block text-sm font-semibold text-gray-700">Status</label>
+          <label className="mb-2 block text-sm font-semibold text-white/85">Status</label>
           <select
             value={statusFilter}
             onChange={(event) => setStatusFilter(event.target.value)}
-            className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900"
+            className="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm text-white"
           >
             <option value="pending">Pending</option>
             <option value="paid">Paid</option>
             <option value="rejected">Rejected</option>
           </select>
         </div>
+        </div>
       </div>
 
-      {error ? <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div> : null}
-      {loading ? <div className="rounded-2xl bg-white p-6 shadow">Loading claims...</div> : null}
+      {error ? <div className="mb-4 rounded-2xl border border-red-200/20 bg-red-400/10 px-4 py-3 text-sm text-red-100">{error}</div> : null}
+      {loading ? <div className={`${glassPanelClass} p-6 text-white/80`}>Loading claims...</div> : null}
 
       {!loading && claims.length === 0 ? (
-        <div className="rounded-2xl bg-white p-6 text-sm text-gray-600 shadow">No Twitter retweet claims match the current filter.</div>
+        <div className={`${glassPanelClass} p-6 text-sm text-white/75`}>No Twitter retweet claims match the current filter.</div>
       ) : null}
 
       {!loading && claims.length > 0 ? (
@@ -464,9 +481,9 @@ export default function AdminTwitterClaimsPage() {
       ) : null}
 
       {!loading && claims.length > 0 ? (
-        <div className="bg-gray-50 px-2 py-2 text-center">
+        <div className="mt-4 text-center text-white/85">
           <button
-            className="mr-2 rounded border bg-blue-100 px-2 py-1 font-bold text-blue-900 hover:bg-blue-200"
+            className="mr-2 rounded border border-white/20 bg-white/10 px-2 py-1 font-bold text-white hover:bg-white/20"
             disabled={claimsPage === 1}
             onClick={() => setClaimsPage(page => Math.max(1, page - 1))}
           >
@@ -474,7 +491,7 @@ export default function AdminTwitterClaimsPage() {
           </button>
           <span>Page {claimsPage} of {totalClaimsPages}</span>
           <button
-            className="ml-2 rounded border bg-blue-100 px-2 py-1 font-bold text-blue-900 hover:bg-blue-200"
+            className="ml-2 rounded border border-white/20 bg-white/10 px-2 py-1 font-bold text-white hover:bg-white/20"
             disabled={claimsPage >= totalClaimsPages}
             onClick={() => setClaimsPage(page => Math.min(totalClaimsPages, page + 1))}
           >
