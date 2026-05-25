@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { ethers } from 'ethers';
 import { useAccount } from 'wagmi';
@@ -106,17 +105,9 @@ export function HomeSwapCard() {
       <div className="absolute bottom-0 right-0 h-56 w-56 rounded-full bg-white/10 blur-3xl" />
 
       <div className="relative z-10">
-        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-white/70">Base Swap</p>
-            <h2 className="mt-2 text-3xl font-black text-white">Swap ETH to EPWX</h2>
-            <p className="mt-2 max-w-2xl text-sm text-white/80">
-              This swap uses the same EPWX token, pair, router, and market feed surfaced on the platform stats page.
-            </p>
-          </div>
-          <Link href="/platform-stats" className="text-sm font-semibold text-emerald-200 underline-offset-4 hover:text-white hover:underline">
-            View full platform stats
-          </Link>
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-white/70">Base Swap</p>
+          <h2 className="mt-2 text-3xl font-black text-white">Swap ETH to EPWX</h2>
         </div>
 
         <div className="mt-6">
