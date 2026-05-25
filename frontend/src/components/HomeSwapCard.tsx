@@ -196,8 +196,10 @@ export function HomeSwapCard() {
             </div>
 
             <div className="mt-4 rounded-2xl border border-emerald-200/20 bg-emerald-400/10 p-4 text-sm text-emerald-50">
-              <p className="font-semibold">Slippage tolerance: {EPWX_SWAP_SLIPPAGE_PERCENT}%</p>
-              <p className="mt-1 text-emerald-100/80">The transaction reverts if the output falls below the protected minimum shown above.</p>
+              <p className="font-semibold">Price protection enabled</p>
+              <p className="mt-1 text-emerald-100/80">
+                If the rate moves too much before confirmation, the swap will not go through. The protected minimum shown above includes a {EPWX_SWAP_SLIPPAGE_PERCENT}% price movement allowance.
+              </p>
             </div>
 
             {quoteError && (
