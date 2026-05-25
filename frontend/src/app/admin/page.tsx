@@ -235,12 +235,12 @@ export default function AdminPage() {
       const res = await fetch("/api/epwx/claims/mark-paid", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ admin: address, claimId: claim.id }),
+        body: JSON.stringify({ admin: address, claimId: claim.id, txHash: tx }),
       });
       const data = await res.json();
       if (data.success) {
         setClaims((prev) =>
-          prev.map((c: any) => (c.id === claim.id ? { ...c, status: "paid" } : c))
+          prev.map((c: any) => (c.id === claim.id ? { ...c, status: "paid", txHash: tx } : c))
         );
       } else {
         setError(data.error || "Failed to mark as paid");

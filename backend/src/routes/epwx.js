@@ -51,7 +51,7 @@ router.post('/claims/mark-paid', async (req, res) => {
     return res.status(403).json({ error: 'Unauthorized' });
   }
   try {
-    const claim = await Claim.findByPk(claimId);
+    const claim = await CashbackClaim.findByPk(claimId);
     if (!claim) {
       console.log('[mark-paid] Claim not found for id:', claimId);
       return res.status(404).json({ error: 'Claim not found' });
@@ -75,9 +75,9 @@ router.post('/claims/mark-paid', async (req, res) => {
       const merchant = await Merchant.findByPk(claim.merchantId);
       console.log('[RewardLedger] Attempting insert:', {
         date: new Date(),
-        merchant_id: claim.merchantId,
+        merchant_id: '',
         merchant_name: merchant ? merchant.name : '',
-        customer_id: claim.customer,
+        customer_id: claim.wallet,
         receipt_id: claim.id.toString(),
         epwx_amount: claim.cashbackAmount || '',
         fiat_value: null,
@@ -90,9 +90,9 @@ router.post('/claims/mark-paid', async (req, res) => {
       const epwxAmount = (claim.cashbackAmount && !isNaN(Number(claim.cashbackAmount))) ? String(claim.cashbackAmount) : DEFAULT_CASHBACK;
       const ledgerEntry = await RewardDistributionLedger.create({
         date: new Date(),
-        merchant_id: claim.merchantId,
+        merchant_id: '',
         merchant_name: merchant ? merchant.name : '',
-        customer_id: claim.customer,
+        customer_id: claim.wallet,
         receipt_id: claim.id.toString(),
         epwx_amount: epwxAmount,
         fiat_value: null,
