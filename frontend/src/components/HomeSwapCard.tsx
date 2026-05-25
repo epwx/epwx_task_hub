@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { ethers } from 'ethers';
-import { useAccount } from 'wagmi';
+import { useAccount, useBalance } from 'wagmi';
+import { base } from 'wagmi/chains';
 
 import {
   EPWX_SWAP_SLIPPAGE_PERCENT,
@@ -11,9 +12,36 @@ import { getEpwxSwapQuote, swapEthToEpwx } from '@/utils/swapEthToEpwx';
 
 const DEFAULT_SWAP_AMOUNT = '0.001';
 const BASE_RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || 'https://mainnet.base.org';
+const MAX_GAS_BUFFER_ETH = 0.00005;
+
+function formatEthBalance(balance?: string) {
+  const numericBalance = Number(balance || 0);
+
+  if (!Number.isFinite(numericBalance) || numericBalance <= 0) {
+    return '0';
+  }
+
+  if (numericBalance >= 1) {
+    return numericBalance.toLocaleString(undefined, { maximumFractionDigits: 4 });
+  }
+
+  return numericBalance.toLocaleString(undefined, { maximumFractionDigits: 6 });
+}
+
+function formatAmountInput(value: number) {
+  if (!Number.isFinite(value) || value <= 0) {
+    return '0';
+  }
+
+  return value.toFixed(6).replace(/\.?0+$/, '');
+}
 
 export function HomeSwapCard() {
   const { address } = useAccount();
+  const { data: baseEthBalance } = useBalance({
+    address,
+    chainId: base.id,
+  });
   const [amountEth, setAmountEth] = useState(DEFAULT_SWAP_AMOUNT);
   const [quoteOut, setQuoteOut] = useState<string>('');
   const [minimumOut, setMinimumOut] = useState<string>('');
@@ -21,6 +49,22 @@ export function HomeSwapCard() {
   const [swapLoading, setSwapLoading] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [quoteError, setQuoteError] = useState<string | null>(null);
+  const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
+
+  const availableBaseEth = Number(baseEthBalance?.formatted || 0);
+  const maxSwapEth = Math.max(0, availableBaseEth - MAX_GAS_BUFFER_ETH);
+
+  const setPercentAmount = (percent: number) => {
+    if (!availableBaseEth || availableBaseEth <= 0) {
+      setAmountEth('0');
+      setSelectedPreset(null);
+      return;
+    }
+
+    const value = percent === 100 ? maxSwapEth : availableBaseEth * percent;
+    setAmountEth(formatAmountInput(value));
+    setSelectedPreset(percent === 100 ? 'max' : String(percent));
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -115,6 +159,36 @@ export function HomeSwapCard() {
             <label className="block text-sm font-semibold text-white/80" htmlFor="home-epwx-swap-amount">
               ETH amount on Base
             </label>
+            <div className="mt-2 flex flex-col gap-2 text-sm text-white/75 sm:flex-row sm:items-center sm:justify-between">
+              <span>
+                Available Base ETH: <span className="font-semibold text-white">{formatEthBalance(baseEthBalance?.formatted)}</span>
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {[10, 25, 50, 75].map((percent) => (
+                  <button
+                    key={percent}
+                    type="button"
+                    onClick={() => setPercentAmount(percent / 100)}
+                    disabled={!availableBaseEth}
+                    className={`rounded-full border px-3 py-1 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${selectedPreset === String(percent / 100)
+                      ? 'border-emerald-200 bg-emerald-400/20 text-white'
+                      : 'border-white/20 bg-white/10 text-white hover:bg-white/20'}`}
+                  >
+                    {percent}%
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setPercentAmount(100)}
+                  disabled={!availableBaseEth}
+                  className={`rounded-full border px-3 py-1 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${selectedPreset === 'max'
+                    ? 'border-emerald-200 bg-emerald-400/20 text-white'
+                    : 'border-white/20 bg-white/10 text-white hover:bg-white/20'}`}
+                >
+                  Max
+                </button>
+              </div>
+            </div>
             <div className="mt-3 flex items-center gap-3 rounded-2xl border border-white/15 bg-white/10 px-4 py-3">
               <input
                 id="home-epwx-swap-amount"
@@ -122,12 +196,16 @@ export function HomeSwapCard() {
                 min="0"
                 step="0.0001"
                 value={amountEth}
-                onChange={(event) => setAmountEth(event.target.value)}
+                onChange={(event) => {
+                  setAmountEth(event.target.value);
+                  setSelectedPreset(null);
+                }}
                 className="w-full bg-transparent text-lg font-semibold text-white outline-none placeholder:text-white/35"
                 placeholder="0.001"
               />
               <span className="rounded-full bg-white/10 px-3 py-1 text-sm font-bold text-white">ETH</span>
             </div>
+            <p className="mt-2 text-xs text-white/65">Max keeps a small amount of ETH available for Base network gas.</p>
 
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
