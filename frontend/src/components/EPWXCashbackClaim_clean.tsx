@@ -17,6 +17,9 @@ export function EPWXCashbackClaim() {
   const [agreed, setAgreed] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
 
+  const cashbackRewardLabel = '1,000,000,000 EPWX';
+  const cashbackThresholdLabel = '100,000,000,000 EPWX';
+
   // Fetch claimed transactions for this wallet
   useEffect(() => {
     if (!address) {
@@ -129,12 +132,12 @@ export function EPWXCashbackClaim() {
     <div className="bg-gradient-to-br from-white to-gray-100 rounded-xl shadow-lg p-4 mb-8 max-w-lg mx-auto">
       <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">EPWX Cashback Rewards</h2>
       <p className="mb-4 rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
-        Earn 3% cashback on EPWX purchases of 100,000,000,000 or more made within the last 3 hours.
+        Earn {cashbackRewardLabel} cashback on EPWX purchases above {cashbackThresholdLabel} made within the last 3 hours.
       </p>
       {loading ? (
         <div className="text-center py-8 text-gray-500">Loading eligible transactions...</div>
       ) : unclaimedTxs.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">No unclaimed EPWX purchases of 100,000,000,000+ in the last 3 hours.</div>
+        <div className="text-center py-8 text-gray-500">No unclaimed EPWX purchases above {cashbackThresholdLabel} in the last 3 hours.</div>
       ) : (
         <div className="overflow-x-auto">
           <table className="min-w-full text-left border rounded-lg">
@@ -243,7 +246,7 @@ export function EPWXCashbackClaim() {
                             onClick={() => handleClaim(tx)}
                             disabled={claiming === tx.txHash || !agreed}
                           >
-                            {claiming === tx.txHash ? "Claiming..." : "Claim 3% Cashback"}
+                            {claiming === tx.txHash ? "Claiming..." : `Claim ${cashbackRewardLabel}`}
                           </button>
                         </div>
                       ) : (

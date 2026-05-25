@@ -22,6 +22,7 @@ describe('EPWX Cashback API', () => {
   const testWallet = '0xTestWallet123';
   const testTxHash = '0xTestTxHash123';
   const testAmount = '1000';
+  const fixedCashbackAmount = '1000000000';
 
   beforeAll(async () => {
     // Clean up any test data
@@ -48,7 +49,7 @@ describe('EPWX Cashback API', () => {
     expect(res.body.claim.wallet).toBe(testWallet);
     expect(res.body.claim.txHash).toBe(testTxHash);
     expect(res.body.claim.amount).toBe(testAmount);
-    expect(res.body.claim.cashbackAmount).toBe((parseFloat(testAmount) * 0.03).toString());
+    expect(res.body.claim.cashbackAmount).toBe(fixedCashbackAmount);
   });
 
   it('should not allow duplicate claims', async () => {
@@ -69,7 +70,7 @@ describe('EPWX Cashback API', () => {
   });
 
   it('should allow admin to mark claim as paid', async () => {
-    const claim = await CashbackClaim.create({ wallet: testWallet, txHash: '0xTestTxHashMarkPaid', amount: testAmount, cashbackAmount: (parseFloat(testAmount) * 0.03).toString(), status: 'pending' });
+    const claim = await CashbackClaim.create({ wallet: testWallet, txHash: '0xTestTxHashMarkPaid', amount: testAmount, cashbackAmount: fixedCashbackAmount, status: 'pending' });
     const res = await request(app)
       .post('/api/epwx/claims/mark-paid')
       .send({ admin: '0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735', claimId: claim.id })

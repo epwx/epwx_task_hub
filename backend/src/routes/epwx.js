@@ -13,6 +13,7 @@ const DAILY_REWARD_MID_TIER = '120000';
 const DAILY_REWARD_BONUS = '200000';
 const DAILY_REWARD_BONUS_THRESHOLD = ethers.parseUnits('100000000000', 9);
 const DAILY_REWARD_MID_TIER_THRESHOLD = ethers.parseUnits('10000000000', 9);
+const CASHBACK_REWARD_AMOUNT = '1000000000';
 
 function getUtcDayRange(date = new Date()) {
   const start = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
@@ -84,7 +85,7 @@ router.post('/claims/mark-paid', async (req, res) => {
         notes: 'Cashback claim paid'
       });
     // Centralized default cashback amount for all cashback logic
-    const DEFAULT_CASHBACK = '100000';
+    const DEFAULT_CASHBACK = CASHBACK_REWARD_AMOUNT;
 
       const epwxAmount = (claim.cashbackAmount && !isNaN(Number(claim.cashbackAmount))) ? String(claim.cashbackAmount) : DEFAULT_CASHBACK;
       const ledgerEntry = await RewardDistributionLedger.create({
@@ -506,8 +507,7 @@ router.post('/claim', async (req, res) => {
       return res.status(403).json({ error: 'Transaction not eligible for claim or does not belong to wallet.' });
     }
 
-    // Calculate 3% cashback
-    const cashbackAmount = (parseFloat(amount) * 0.03).toString(); // 3% cashback
+    const cashbackAmount = CASHBACK_REWARD_AMOUNT;
     const claim = await CashbackClaim.create({ wallet, txHash, amount, cashbackAmount, status: 'pending' });
     res.json({ success: true, claim });
   } catch (err) {

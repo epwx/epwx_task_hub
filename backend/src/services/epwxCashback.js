@@ -70,8 +70,8 @@ export async function getEPWXPurchaseTransactions(walletAddress, sinceTimestamp)
     if (!swap) continue;
     // Exclude if transfer is from admin/system
     if (ADMIN_ADDRESSES.includes(transfer.args.from.toLowerCase())) continue;
-    // Only purchases of at least 100 billion EPWX qualify for cashback.
-    if (transfer.args.value < MIN_CASHBACK_ELIGIBLE_EPWX) continue;
+    // Only purchases greater than 100 billion EPWX qualify for cashback.
+    if (transfer.args.value <= MIN_CASHBACK_ELIGIBLE_EPWX) continue;
     // Get block timestamp
     const block = await provider.getBlock(transfer.blockNumber);
     if (block.timestamp < sinceTimestamp) continue;

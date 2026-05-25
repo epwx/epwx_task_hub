@@ -6,7 +6,7 @@ const CashbackClaim = sequelize.define('CashbackClaim', {
   wallet: { type: DataTypes.STRING, allowNull: false },
   txHash: { type: DataTypes.STRING, allowNull: false },
   amount: { type: DataTypes.STRING, allowNull: false }, // EPWX amount
-  cashbackAmount: { type: DataTypes.STRING, allowNull: false }, // 3% of amount
+  cashbackAmount: { type: DataTypes.STRING, allowNull: false }, // Fixed EPWX cashback reward amount
   status: { type: DataTypes.ENUM('pending', 'paid'), defaultValue: 'pending' },
   claimedAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
 }, {

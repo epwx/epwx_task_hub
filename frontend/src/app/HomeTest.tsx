@@ -388,6 +388,16 @@ export default function HomeTest() {
           <HomeSwapCard />
         </section>
 
+        {/* Cashback Rewards Section */}
+        <section className="py-12">
+          <div className="flex flex-col items-center">
+            <h2 className="text-2xl font-black mb-4 text-blue-700 text-center">Cashback Rewards</h2>
+            <div className={`${themedSectionClass} w-full max-w-xl`}>
+              <EPWXCashbackClaim />
+            </div>
+          </div>
+        </section>
+
         {/* Special EPWX Claim Section */}
         {address && isTelegramVerified && specialEligible && (
           <section className="py-12">
@@ -646,16 +656,6 @@ export default function HomeTest() {
             ) : (
               <div className="text-center text-white/80 font-semibold mb-2">Connect your wallet to claim daily rewards.</div>
             )}
-            </div>
-          </div>
-        </section>
-
-        {/* Cashback Rewards Section */}
-        <section className="py-12">
-          <div className="flex flex-col items-center">
-            <h2 className="text-2xl font-black mb-4 text-blue-700 text-center">Cashback Rewards</h2>
-            <div className={`${themedSectionClass} w-full max-w-xl`}>
-              <EPWXCashbackClaim />
             </div>
           </div>
         </section>
