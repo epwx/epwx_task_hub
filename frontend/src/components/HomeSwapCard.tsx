@@ -154,6 +154,22 @@ export function HomeSwapCard() {
           <h2 className="mt-2 text-3xl font-black text-white">Swap ETH to EPWX</h2>
         </div>
 
+        <div className="mt-5 flex max-w-3xl flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="flex-1 rounded-2xl border border-white/20 bg-white/10 px-4 py-3 backdrop-blur-lg">
+            <div className="text-xs font-semibold uppercase tracking-[0.25em] text-white/60">From</div>
+            <div className="mt-1 text-xl font-black text-white">ETH</div>
+            <div className="text-sm text-white/70">Base network</div>
+          </div>
+          <div className="flex h-10 w-10 items-center justify-center self-center rounded-full border border-white/20 bg-white/10 text-lg text-white backdrop-blur-lg">
+            ↓
+          </div>
+          <div className="flex-1 rounded-2xl border border-white/20 bg-white/10 px-4 py-3 backdrop-blur-lg">
+            <div className="text-xs font-semibold uppercase tracking-[0.25em] text-white/60">To</div>
+            <div className="mt-1 text-xl font-black text-white">EPWX</div>
+            <div className="text-sm text-white/70">Received in wallet</div>
+          </div>
+        </div>
+
         <div className="mt-6">
           <div className="rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-lg max-w-3xl">
             <label className="block text-sm font-semibold text-white/80" htmlFor="home-epwx-swap-amount">
@@ -207,25 +223,17 @@ export function HomeSwapCard() {
             </div>
             <p className="mt-2 text-xs text-white/65">Max keeps a small amount of ETH available for Base network gas.</p>
 
-            <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Estimated EPWX</p>
-                <p className="mt-2 text-2xl font-black text-white">
-                  {quoteLoading ? 'Loading...' : quoteOut ? Number(quoteOut).toLocaleString(undefined, { maximumFractionDigits: 4 }) : '--'}
-                </p>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Minimum Received</p>
-                <p className="mt-2 text-2xl font-black text-emerald-200">
-                  {quoteLoading ? 'Loading...' : minimumOut ? Number(minimumOut).toLocaleString(undefined, { maximumFractionDigits: 4 }) : '--'}
-                </p>
-              </div>
+            <div className="mt-5 rounded-2xl border border-white/10 bg-white/5 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Estimated EPWX</p>
+              <p className="mt-2 text-2xl font-black text-white">
+                {quoteLoading ? 'Loading...' : quoteOut ? Number(quoteOut).toLocaleString(undefined, { maximumFractionDigits: 4 }) : '--'}
+              </p>
             </div>
 
             <div className="mt-4 rounded-2xl border border-emerald-200/20 bg-emerald-400/10 p-4 text-sm text-emerald-50">
               <p className="font-semibold">Price protection enabled</p>
               <p className="mt-1 text-emerald-100/80">
-                If the rate moves too much before confirmation, the swap will not go through. The protected minimum shown above includes a {EPWX_SWAP_SLIPPAGE_PERCENT}% price movement allowance.
+                If the rate moves too much before confirmation, the swap will not go through. Your protected minimum still includes a {EPWX_SWAP_SLIPPAGE_PERCENT}% price movement allowance.
               </p>
             </div>
 
