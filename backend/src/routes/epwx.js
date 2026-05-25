@@ -474,10 +474,7 @@ router.post('/daily-claim', async (req, res) => {
   });
 });
 
-
-
-// GET /api/epwx/purchases?wallet=0x...&hours=3
-router.get('/purchases', async (req, res) => {
+async function sendEligiblePurchases(req, res) {
   const { wallet, hours } = req.query;
   if (!wallet) return res.status(400).json({ error: 'wallet is required' });
   const sinceTimestamp = Math.floor(Date.now() / 1000) - ((parseInt(hours) || 3) * 3600);
@@ -487,7 +484,13 @@ router.get('/purchases', async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-});
+}
+
+// GET /api/epwx/eligible?wallet=0x...&hours=3
+router.get('/eligible', sendEligiblePurchases);
+
+// GET /api/epwx/purchases?wallet=0x...&hours=3
+router.get('/purchases', sendEligiblePurchases);
 
 // POST /api/epwx/claim
 router.post('/claim', async (req, res) => {
