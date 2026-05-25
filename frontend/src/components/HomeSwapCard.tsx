@@ -154,7 +154,7 @@ export function HomeSwapCard() {
           <h2 className="mt-2 text-3xl font-black text-white">Swap ETH to EPWX</h2>
         </div>
 
-        <div className="mt-5 flex max-w-3xl flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="mt-5 flex w-full flex-col gap-3 sm:flex-row sm:items-center">
           <div className="flex-1 rounded-2xl border border-white/20 bg-white/10 px-4 py-3 backdrop-blur-lg">
             <div className="text-xs font-semibold uppercase tracking-[0.25em] text-white/60">From</div>
             <div className="mt-1 text-xl font-black text-white">ETH</div>
@@ -171,7 +171,7 @@ export function HomeSwapCard() {
         </div>
 
         <div className="mt-6">
-          <div className="rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-lg max-w-3xl">
+          <div className="w-full rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-lg">
             <label className="block text-sm font-semibold text-white/80" htmlFor="home-epwx-swap-amount">
               ETH amount on Base
             </label>
