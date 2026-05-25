@@ -17,8 +17,8 @@ export function EPWXCashbackClaim() {
   const [agreed, setAgreed] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
 
-  const cashbackRewardLabel = '1,000,000 EPWX';
-  const cashbackThresholdLabel = '1,000,000,000 EPWX';
+  const cashbackRewardLabel = '1,000,000,000 EPWX';
+  const cashbackThresholdLabel = '100,000,000,000 EPWX';
 
   // Fetch claimed transactions for this wallet
   useEffect(() => {

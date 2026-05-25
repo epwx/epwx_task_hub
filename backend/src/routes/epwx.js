@@ -13,7 +13,7 @@ const DAILY_REWARD_MID_TIER = '120000';
 const DAILY_REWARD_BONUS = '200000';
 const DAILY_REWARD_BONUS_THRESHOLD = ethers.parseUnits('100000000000', 9);
 const DAILY_REWARD_MID_TIER_THRESHOLD = ethers.parseUnits('10000000000', 9);
-const CASHBACK_REWARD_AMOUNT = '1000000';
+const CASHBACK_REWARD_AMOUNT = '1000000000';
 
 function getUtcDayRange(date = new Date()) {
   const start = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));

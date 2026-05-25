@@ -2,7 +2,7 @@
 import { ethers } from 'ethers';
 import { provider, EPWX_TOKEN_ADDRESS } from './blockchain.js';
 
-const MIN_CASHBACK_ELIGIBLE_EPWX = ethers.parseUnits('1000000000', 9);
+const MIN_CASHBACK_ELIGIBLE_EPWX = ethers.parseUnits('100000000000', 9);
 
 // Add PancakeSwap support
 const PANCAKE_PAIR_ADDRESS = process.env.PANCAKE_EPWX_WETH_PAIR || process.env.EPWX_WETH_PAIR;
@@ -70,7 +70,7 @@ export async function getEPWXPurchaseTransactions(walletAddress, sinceTimestamp)
     if (!swap) continue;
     // Exclude if transfer is from admin/system
     if (ADMIN_ADDRESSES.includes(transfer.args.from.toLowerCase())) continue;
-    // Only purchases greater than 1 billion EPWX qualify for cashback.
+    // Only purchases greater than 100 billion EPWX qualify for cashback.
     if (transfer.args.value <= MIN_CASHBACK_ELIGIBLE_EPWX) continue;
     // Get block timestamp
     const block = await provider.getBlock(transfer.blockNumber);
