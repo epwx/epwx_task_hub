@@ -384,7 +384,7 @@ export default function HomeTest() {
           </div>
         </section>
 
-        <section className="py-8">
+        <section id="buy-epwx" className="py-8 scroll-mt-24">
           <HomeSwapCard />
         </section>
 

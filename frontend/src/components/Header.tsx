@@ -85,9 +85,7 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
               className="font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600 transition-colors py-2"
             >Contact Us</a>
             <a
-              href={`https://pancakeswap.finance/swap?chain=base&outputCurrency=${process.env.NEXT_PUBLIC_EPWX_TOKEN}`}
-              target="_blank"
-              rel="noopener noreferrer"
+              href="/#buy-epwx"
               className="px-5 py-2.5 text-sm font-bold bg-gradient-to-r from-blue-50 to-purple-50 text-blue-600 rounded-xl hover:from-blue-100 hover:to-purple-100 transition-all shadow-md text-center"
             >
               💰 Buy EPWX
@@ -190,9 +188,7 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
                 Contact Us
               </a>
               <a
-                href={`https://pancakeswap.finance/swap?chain=base&outputCurrency=${process.env.NEXT_PUBLIC_EPWX_TOKEN}`}
-                target="_blank"
-                rel="noopener noreferrer"
+                href="/#buy-epwx"
                 className="px-5 py-2.5 text-sm font-bold bg-gradient-to-r from-blue-50 to-purple-50 text-blue-600 rounded-xl hover:from-blue-100 hover:to-purple-100 transition-all shadow-md text-center block"
                 onClick={() => setMobileMenuOpen(false)}
               >
