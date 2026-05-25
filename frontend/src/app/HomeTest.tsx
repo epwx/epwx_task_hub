@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { EPWXCashbackClaim } from "@/components/EPWXCashbackClaim_clean";
+import { HomeSwapCard } from "@/components/HomeSwapCard";
 import { useState, useEffect } from "react";
 import DailyClaimsTable from "@/components/DailyClaimsTable";
 import { useAccount, useBalance, useSignMessage } from "wagmi";
@@ -381,6 +382,10 @@ export default function HomeTest() {
             )}
             </div>
           </div>
+        </section>
+
+        <section className="py-8">
+          <HomeSwapCard />
         </section>
 
         {/* Special EPWX Claim Section */}
