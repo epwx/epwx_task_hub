@@ -1,69 +1,27 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { ethers } from 'ethers';
 import { useAccount } from 'wagmi';
 
 import {
   EPWX_SWAP_SLIPPAGE_PERCENT,
-  EPWX_TOKEN_ADDRESS,
-  EPWX_USDT_PAIR_ADDRESS,
-  PANCAKESWAP_ROUTER_ADDRESS,
-  fetchEpwxPriceData,
-  type EpwxPriceData,
 } from '@/utils/epwxMarket';
 import { getEpwxSwapQuote, swapEthToEpwx } from '@/utils/swapEthToEpwx';
 
 const DEFAULT_SWAP_AMOUNT = '0.001';
 const BASE_RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || 'https://mainnet.base.org';
 
-function formatUsd(value: number, maximumFractionDigits = 0) {
-  return value.toLocaleString(undefined, {
-    maximumFractionDigits,
-  });
-}
-
 export function HomeSwapCard() {
   const { address } = useAccount();
   const [amountEth, setAmountEth] = useState(DEFAULT_SWAP_AMOUNT);
-  const [priceData, setPriceData] = useState<EpwxPriceData | null>(null);
   const [quoteOut, setQuoteOut] = useState<string>('');
   const [minimumOut, setMinimumOut] = useState<string>('');
-  const [marketLoading, setMarketLoading] = useState(true);
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [swapLoading, setSwapLoading] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [quoteError, setQuoteError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const loadMarket = async () => {
-      try {
-        const data = await fetchEpwxPriceData();
-        if (!cancelled) {
-          setPriceData(data);
-        }
-      } catch {
-        if (!cancelled) {
-          setPriceData(null);
-        }
-      } finally {
-        if (!cancelled) {
-          setMarketLoading(false);
-        }
-      }
-    };
-
-    loadMarket();
-    const intervalId = window.setInterval(loadMarket, 30000);
-
-    return () => {
-      cancelled = true;
-      window.clearInterval(intervalId);
-    };
-  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -161,8 +119,8 @@ export function HomeSwapCard() {
           </Link>
         </div>
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-[1.3fr_0.9fr]">
-          <div className="rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-lg">
+        <div className="mt-6">
+          <div className="rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-lg max-w-3xl">
             <label className="block text-sm font-semibold text-white/80" htmlFor="home-epwx-swap-amount">
               ETH amount on Base
             </label>
@@ -226,44 +184,6 @@ export function HomeSwapCard() {
                 {status}
               </div>
             )}
-          </div>
-
-          <div className="rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-lg">
-            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-100/80">Live Market Snapshot</p>
-            <div className="mt-5 grid gap-3">
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">EPWX Price</p>
-                <p className="mt-2 text-2xl font-black text-white">
-                  {marketLoading || !priceData ? 'Loading...' : `$${priceData.priceUSD.toFixed(12)}`}
-                </p>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Liquidity</p>
-                  <p className="mt-2 text-xl font-black text-white">
-                    {marketLoading || !priceData ? 'Loading...' : `$${formatUsd(priceData.liquidityUSD)}`}
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Market Cap</p>
-                  <p className="mt-2 text-xl font-black text-white">
-                    {marketLoading || !priceData ? 'Loading...' : `$${formatUsd(priceData.marketCap)}`}
-                  </p>
-                </div>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/85">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Token</p>
-                <p className="mt-2 break-all font-mono text-xs text-white">{EPWX_TOKEN_ADDRESS}</p>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/85">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Pair</p>
-                <p className="mt-2 break-all font-mono text-xs text-white">{EPWX_USDT_PAIR_ADDRESS}</p>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/85">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Router</p>
-                <p className="mt-2 break-all font-mono text-xs text-white">{PANCAKESWAP_ROUTER_ADDRESS}</p>
-              </div>
-            </div>
           </div>
         </div>
       </div>
