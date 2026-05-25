@@ -22,7 +22,7 @@ describe('EPWX Cashback API', () => {
   const testWallet = '0xTestWallet123';
   const testTxHash = '0xTestTxHash123';
   const testAmount = '1000';
-  const fixedCashbackAmount = '1000000000';
+  const fixedCashbackAmount = '1000000';
 
   beforeAll(async () => {
     // Clean up any test data
