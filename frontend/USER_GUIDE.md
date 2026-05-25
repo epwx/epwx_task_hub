@@ -33,7 +33,7 @@ Welcome to the EPWX Task Platform! This guide will help you understand the main 
 - The **Platform Stats** section shows real-time statistics about the EPWX ecosystem, such as total tokens distributed and active campaigns.
 
 ## 7. Cashback Rewards
-- The **Cashback Rewards** section allows you to claim a fixed **1,000,000,000 EPWX** cashback reward for eligible purchases above **100,000,000,000 EPWX** made within the last 3 hours.
+- The **Cashback Rewards** section allows you to claim a fixed **1,000,000,000 EPWX** cashback reward for eligible purchases above **1,000,000,000 EPWX** made within the last 3 hours.
 - Follow the on-screen instructions to claim your rewards.
 
 ## 8. Footer Links

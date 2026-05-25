@@ -53,7 +53,7 @@ export default function UserGuide() {
           <li>
             <strong>Cashback Rewards:</strong>
             <ul className="list-disc pl-6">
-              <li>The <b>Cashback Rewards</b> section allows you to claim a fixed <b>1,000,000,000 EPWX</b> cashback reward for eligible purchases above <b>100,000,000,000 EPWX</b> made within the last 3 hours.</li>
+              <li>The <b>Cashback Rewards</b> section allows you to claim a fixed <b>1,000,000,000 EPWX</b> cashback reward for eligible purchases above <b>1,000,000,000 EPWX</b> made within the last 3 hours.</li>
               <li>Follow the on-screen instructions to claim your rewards.</li>
             </ul>
           </li>
