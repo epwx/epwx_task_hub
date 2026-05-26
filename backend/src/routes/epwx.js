@@ -15,6 +15,41 @@ const DAILY_REWARD_BONUS_THRESHOLD = ethers.parseUnits('100000000000', 9);
 const DAILY_REWARD_MID_TIER_THRESHOLD = ethers.parseUnits('10000000000', 9);
 const CASHBACK_REWARD_AMOUNT = '1000000000';
 
+function getSharedClaimLedgerData(claim, merchant) {
+  const notes = claim.claimType === 'twitter_retweet'
+    ? 'Twitter retweet claim paid'
+    : 'Merchant claim paid';
+  const epwxAmount = claim.bill && !Number.isNaN(Number(claim.bill))
+    ? String(claim.bill)
+    : CASHBACK_REWARD_AMOUNT;
+
+  return {
+    merchant_id: claim.merchantId ? String(claim.merchantId) : '',
+    merchant_name: merchant ? merchant.name : '',
+    customer_id: claim.customer,
+    receipt_id: claim.id.toString(),
+    epwx_amount: epwxAmount,
+    fiat_value: null,
+    notes,
+  };
+}
+
+function getCashbackClaimLedgerData(claim, merchant) {
+  const epwxAmount = claim.cashbackAmount && !Number.isNaN(Number(claim.cashbackAmount))
+    ? String(claim.cashbackAmount)
+    : CASHBACK_REWARD_AMOUNT;
+
+  return {
+    merchant_id: '',
+    merchant_name: merchant ? merchant.name : '',
+    customer_id: claim.wallet,
+    receipt_id: claim.id.toString(),
+    epwx_amount: epwxAmount,
+    fiat_value: null,
+    notes: 'Cashback claim paid',
+  };
+}
+
 function getUtcDayRange(date = new Date()) {
   const start = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
   const end = new Date(start);
@@ -44,16 +79,29 @@ router.post('/claims/mark-paid', async (req, res) => {
   // DEBUG: Log route hit and admin values for troubleshooting
   console.log('--- mark-paid route HIT ---');
   console.log('admin:', req.body.admin, 'ADMIN_WALLETS:', process.env.ADMIN_WALLETS);
-  const { admin, claimId, txHash } = req.body;
+  const { admin, claimId, txHash, claimSource } = req.body;
   // Support multiple admin wallets (comma-separated, case-insensitive)
   const adminWallets = (process.env.ADMIN_WALLETS || '').split(',').map(a => a.trim().toLowerCase());
   if (!admin || !adminWallets.length || !adminWallets.includes(admin.toLowerCase())) {
     return res.status(403).json({ error: 'Unauthorized' });
   }
   try {
-    const claim = await CashbackClaim.findByPk(claimId);
+    let claim = null;
+    let claimKind = claimSource;
+
+    if (claimSource === 'claim') {
+      claim = await Claim.findByPk(claimId);
+    } else if (claimSource === 'cashback' || !claimSource) {
+      claim = await CashbackClaim.findByPk(claimId);
+      claimKind = claim ? 'cashback' : claimSource;
+      if (!claim && !claimSource) {
+        claim = await Claim.findByPk(claimId);
+        claimKind = claim ? 'claim' : claimKind;
+      }
+    }
+
     if (!claim) {
-      console.log('[mark-paid] Claim not found for id:', claimId);
+      console.log('[mark-paid] Claim not found for id:', claimId, 'source:', claimSource);
       return res.status(404).json({ error: 'Claim not found' });
     }
     // Debug: log claim object to inspect wallet field
@@ -66,38 +114,31 @@ router.post('/claims/mark-paid', async (req, res) => {
     }
 
     claim.status = 'paid';
-    claim.txHash = txHash;
+    if (claimKind === 'cashback' && Object.hasOwn(claim.dataValues, 'txHash')) {
+      claim.txHash = txHash;
+    }
     await claim.save();
     console.log('[mark-paid] Updated claim:', claim.id, 'status:', claim.status);
 
     // Insert into RewardDistributionLedger with detailed logging
     try {
-      const merchant = await Merchant.findByPk(claim.merchantId);
+      const merchantId = claimKind === 'claim' ? claim.merchantId : null;
+      const merchant = merchantId ? await Merchant.findByPk(merchantId) : null;
+      const ledgerData = claimKind === 'claim'
+        ? getSharedClaimLedgerData(claim, merchant)
+        : getCashbackClaimLedgerData(claim, merchant);
+
       console.log('[RewardLedger] Attempting insert:', {
         date: new Date(),
-        merchant_id: '',
-        merchant_name: merchant ? merchant.name : '',
-        customer_id: claim.wallet,
-        receipt_id: claim.id.toString(),
-        epwx_amount: claim.cashbackAmount || '',
-        fiat_value: null,
+        ...ledgerData,
         transaction_hash: txHash,
-        notes: 'Cashback claim paid'
+        notes: ledgerData.notes,
       });
-    // Centralized default cashback amount for all cashback logic
-    const DEFAULT_CASHBACK = CASHBACK_REWARD_AMOUNT;
-
-      const epwxAmount = (claim.cashbackAmount && !isNaN(Number(claim.cashbackAmount))) ? String(claim.cashbackAmount) : DEFAULT_CASHBACK;
       const ledgerEntry = await RewardDistributionLedger.create({
         date: new Date(),
-        merchant_id: '',
-        merchant_name: merchant ? merchant.name : '',
-        customer_id: claim.wallet,
-        receipt_id: claim.id.toString(),
-        epwx_amount: epwxAmount,
-        fiat_value: null,
+        ...ledgerData,
         transaction_hash: txHash,
-        notes: 'Cashback claim paid'
+        notes: ledgerData.notes,
       });
       console.log('[RewardLedger] Insert successful, entry id:', ledgerEntry.id);
     } catch (ledgerErr) {

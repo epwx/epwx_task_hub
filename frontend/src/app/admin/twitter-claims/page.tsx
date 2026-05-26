@@ -311,7 +311,7 @@ export default function AdminTwitterClaimsPage() {
       const response = await fetch("/api/epwx/claims/mark-paid", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ admin: address, claimId: claim.id, txHash }),
+        body: JSON.stringify({ admin: address, claimId: claim.id, txHash, claimSource: "claim" }),
       });
       const data = await response.json();
 

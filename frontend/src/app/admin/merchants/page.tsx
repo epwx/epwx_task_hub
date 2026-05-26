@@ -266,7 +266,7 @@ export default function MerchantAdminPage() {
       const res = await fetch("/api/epwx/claims/mark-paid", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ admin: address, claimId: claim.id, txHash: tx }),
+        body: JSON.stringify({ admin: address, claimId: claim.id, txHash: tx, claimSource: "claim" }),
       });
       const data = await res.json();
       if (data.success) {
