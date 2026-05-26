@@ -41,7 +41,7 @@ export default function UserGuide() {
               <li>After verifying your Telegram membership, you can claim a daily reward from the homepage.</li>
               <li>Click <b>Claim Daily Reward</b> in the Daily Claim section.</li>
               <li>You will receive a status message about your claim.</li>
-              <li>You can claim once per day. Wallets with at least <b>100,000,000,000 EPWX</b> can claim <b>1,000,000 EPWX</b>, wallets with at least <b>10,000,000,000 EPWX</b> can claim <b>120,000 EPWX</b>, and other wallets can claim <b>100,000 EPWX</b>.</li>
+              <li>You can claim once per day. Wallets with at least <b>100,000,000,000 EPWX</b> can claim <b>5,000,000 EPWX</b>, wallets with at least <b>10,000,000,000 EPWX</b> can claim <b>2,000,000 EPWX</b>, and other wallets can claim <b>1,000,000 EPWX</b>.</li>
             </ul>
           </li>
           <li>
