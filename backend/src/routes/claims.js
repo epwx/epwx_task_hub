@@ -152,7 +152,7 @@ router.post('/twitter-retweet', upload.single('receiptImage'), async (req, res) 
     const claim = await Claim.create({
       merchantId: null,
       customer: normalizedCustomer,
-      bill: String(campaign.rewardAmount || '100000'),
+      bill: String(campaign.rewardAmount || '1000000'),
       lat: null,
       lng: null,
       claimType: 'twitter_retweet',

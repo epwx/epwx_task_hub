@@ -73,7 +73,7 @@ export default function AdminTwitterClaimsPage() {
     code: "",
     title: "",
     tweetUrl: "",
-    rewardAmount: "100000",
+    rewardAmount: "1000000",
     expiresAt: "",
   });
   const [campaignSaving, setCampaignSaving] = useState(false);
@@ -82,7 +82,7 @@ export default function AdminTwitterClaimsPage() {
     code: "",
     title: "",
     tweetUrl: "",
-    rewardAmount: "100000",
+    rewardAmount: "1000000",
     expiresAt: "",
   });
   const [campaignUpdating, setCampaignUpdating] = useState(false);
@@ -185,7 +185,7 @@ export default function AdminTwitterClaimsPage() {
       if (!data.success) {
         setError(data.error || "Failed to create campaign");
       } else {
-        setCampaignForm({ code: "", title: "", tweetUrl: "", rewardAmount: "100000", expiresAt: "" });
+        setCampaignForm({ code: "", title: "", tweetUrl: "", rewardAmount: "1000000", expiresAt: "" });
         await fetchCampaigns();
       }
     } catch (saveError: any) {
@@ -222,14 +222,14 @@ export default function AdminTwitterClaimsPage() {
       code: campaign.code,
       title: campaign.title,
       tweetUrl: campaign.tweetUrl,
-      rewardAmount: campaign.rewardAmount || "100000",
+      rewardAmount: campaign.rewardAmount || "1000000",
       expiresAt: toDateTimeLocalValue(campaign.expiresAt),
     });
   };
 
   const cancelEditingCampaign = () => {
     setEditingCampaignId(null);
-    setEditCampaignForm({ code: "", title: "", tweetUrl: "", rewardAmount: "100000", expiresAt: "" });
+    setEditCampaignForm({ code: "", title: "", tweetUrl: "", rewardAmount: "1000000", expiresAt: "" });
   };
 
   const saveCampaignEdit = async (campaignId: number) => {
@@ -286,7 +286,7 @@ export default function AdminTwitterClaimsPage() {
     setError(null);
 
     try {
-      const rewardAmount = claim.bill || "100000";
+      const rewardAmount = claim.bill || "1000000";
       const amount = ethers.parseUnits(String(rewardAmount), 9).toString();
       const txHash = await writeContractAsync({
         address: EPWX_TOKEN_ADDRESS,
@@ -353,7 +353,7 @@ export default function AdminTwitterClaimsPage() {
             <input name="code" value={campaignForm.code} onChange={handleCampaignFormChange} placeholder="campaign code" className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/50" required />
             <input name="title" value={campaignForm.title} onChange={handleCampaignFormChange} placeholder="campaign title" className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/50" required />
             <input name="tweetUrl" value={campaignForm.tweetUrl} onChange={handleCampaignFormChange} placeholder="https://x.com/..." className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/50" required />
-            <input name="rewardAmount" value={campaignForm.rewardAmount} onChange={handleCampaignFormChange} placeholder="100000" className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/50" required />
+            <input name="rewardAmount" value={campaignForm.rewardAmount} onChange={handleCampaignFormChange} placeholder="1000000" className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/50" required />
             <input name="expiresAt" type="datetime-local" value={campaignForm.expiresAt} onChange={handleCampaignFormChange} className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white" />
             <div className="text-xs text-white/65">Leave expiry empty if this campaign should stay active until you disable it manually.</div>
             <button type="submit" disabled={campaignSaving} className="rounded-xl bg-green-600 px-4 py-3 text-sm font-bold text-white hover:bg-green-700 disabled:opacity-50">
@@ -403,7 +403,7 @@ export default function AdminTwitterClaimsPage() {
                       <>
                         <div className="text-base font-bold text-white">{campaign.title}</div>
                         <div className="text-sm text-white/75">Code: {campaign.code}</div>
-                        <div className="text-sm text-white/75">Reward: {Number(campaign.rewardAmount || '100000').toLocaleString()} EPWX</div>
+                        <div className="text-sm text-white/75">Reward: {Number(campaign.rewardAmount || '1000000').toLocaleString()} EPWX</div>
                         {campaign.expiresAt ? (
                           <div className="text-sm text-white/75">Expires: {new Date(campaign.expiresAt).toLocaleString()}</div>
                         ) : (
