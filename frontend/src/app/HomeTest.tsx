@@ -61,6 +61,15 @@ interface DailyClaimsSummary {
   totalPaidToday: number;
 }
 
+interface TwitterCampaign {
+  id: number;
+  code: string;
+  title: string;
+  tweetUrl: string;
+  rewardAmount?: string | null;
+  expiresAt?: string | null;
+}
+
 function formatDuration(msLeft: number) {
   if (msLeft <= 0) return "0m 0s";
 
@@ -94,6 +103,110 @@ function formatEpwxBalance(normalized: number) {
   }
 
   return "<0.00000001";
+}
+
+function formatCampaignExpiry(expiresAt?: string | null) {
+  if (!expiresAt) {
+    return "No expiry set";
+  }
+
+  const parsed = new Date(expiresAt);
+  if (Number.isNaN(parsed.getTime())) {
+    return "Expiry unavailable";
+  }
+
+  return parsed.toLocaleString();
+}
+
+function TwitterCampaignBoard() {
+  const [campaigns, setCampaigns] = useState<TwitterCampaign[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchCampaigns = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await fetch('/api/twitter-campaigns/active', { cache: 'no-store' });
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to load Twitter campaigns.');
+        }
+
+        setCampaigns(Array.isArray(data.campaigns) ? data.campaigns : []);
+      } catch (fetchError: any) {
+        setCampaigns([]);
+        setError(fetchError?.message || 'Failed to load Twitter campaigns.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCampaigns();
+  }, []);
+
+  return (
+    <section className="py-12">
+      <div className="flex flex-col items-center">
+        <h2 className="text-2xl font-black mb-4 text-blue-700 text-center">Twitter Campaigns</h2>
+        <div className={`${themedSectionClass} w-full max-w-5xl`}>
+          <div className="absolute top-0 left-0 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
+          <div className="relative z-10">
+            <div className="mb-6 text-center text-white">
+              <p className="text-sm uppercase tracking-[0.3em] text-white/65">Social rewards</p>
+              <h3 className="mt-2 text-3xl font-black">View post, retweet, then upload your screenshot</h3>
+              <p className="mt-3 text-sm text-white/80">Open any active campaign below. Each campaign card gives you a direct post link and a campaign URL where you can submit the screenshot after retweeting.</p>
+            </div>
+
+            {loading ? <div className="text-center text-white/80">Loading Twitter campaigns...</div> : null}
+            {!loading && error ? <div className="text-center text-red-200">{error}</div> : null}
+            {!loading && !error && campaigns.length === 0 ? <div className="text-center text-white/80">No active Twitter campaigns are available right now.</div> : null}
+
+            {!loading && !error && campaigns.length > 0 ? (
+              <div className="grid gap-4 md:grid-cols-2">
+                {campaigns.map(campaign => (
+                  <div key={campaign.id} className="rounded-3xl border border-white/20 bg-white/10 p-6 text-white backdrop-blur-xl shadow-xl">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="text-xs uppercase tracking-[0.25em] text-white/60">{campaign.code}</div>
+                        <h4 className="mt-2 text-2xl font-black">{campaign.title}</h4>
+                      </div>
+                      <div className="rounded-full border border-emerald-300/30 bg-emerald-400/20 px-3 py-1 text-xs font-bold text-emerald-100">Active</div>
+                    </div>
+
+                    <div className="mt-4 grid gap-2 text-sm text-white/75">
+                      <div>Reward: {Number(campaign.rewardAmount || '100000').toLocaleString()} EPWX</div>
+                      <div>Expires: {formatCampaignExpiry(campaign.expiresAt)}</div>
+                    </div>
+
+                    <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                      <a
+                        href={campaign.tweetUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center rounded-2xl border border-white/20 bg-white/15 px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-white/25"
+                      >
+                        View Post
+                      </a>
+                      <Link
+                        href={`/claim/twitter-retweet?campaignId=${campaign.id}`}
+                        className="inline-flex items-center justify-center rounded-2xl bg-green-600 px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-green-700"
+                      >
+                        Retweet & Upload Screenshot
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
 }
 
 export default function HomeTest() {
@@ -387,6 +500,8 @@ export default function HomeTest() {
         <section id="buy-epwx" className="py-8 scroll-mt-24">
           <HomeSwapCard />
         </section>
+
+        <TwitterCampaignBoard />
 
         {/* Cashback Rewards Section */}
         <section className="py-12">

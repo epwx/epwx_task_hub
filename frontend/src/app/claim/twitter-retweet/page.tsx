@@ -15,6 +15,16 @@ type TwitterCampaign = {
   expiresAt?: string | null;
 };
 
+function getRetweetIntentUrl(tweetUrl: string) {
+  const match = tweetUrl.match(/status\/(\d+)/i);
+
+  if (match?.[1]) {
+    return `https://twitter.com/intent/retweet?tweet_id=${match[1]}`;
+  }
+
+  return tweetUrl;
+}
+
 function TwitterRetweetClaimPage() {
   const { address } = useAccount();
   const searchParams = useSearchParams();
@@ -73,18 +83,29 @@ function TwitterRetweetClaimPage() {
             <div className="text-xs uppercase tracking-[0.35em] text-white/70">EPWX social rewards</div>
             <h1 className="mt-3 text-4xl font-black">{campaign.title}</h1>
             <p className="mt-3 text-sm text-white/80">
-              Upload a screenshot that clearly shows your retweet. The admin team will review the image before approving the reward.
+              Complete the three steps below: open the campaign post, retweet it on X, then upload a screenshot that clearly shows your retweet. The admin team will review the image before approving the reward.
             </p>
             {campaign.tweetUrl ? (
-              <a
-                href={campaign.tweetUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-4 inline-flex rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/20"
-              >
-                View the original post
-              </a>
+              <div className="mt-5 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                <a
+                  href={campaign.tweetUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/20"
+                >
+                  1. View Post
+                </a>
+                <a
+                  href={getRetweetIntentUrl(campaign.tweetUrl)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex rounded-full bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700"
+                >
+                  2. Retweet on X
+                </a>
+              </div>
             ) : null}
+            <div className="mt-4 text-xs uppercase tracking-[0.3em] text-white/60">3. Upload screenshot below</div>
           </div>
 
           {!address ? (

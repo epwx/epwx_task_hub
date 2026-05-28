@@ -70,6 +70,30 @@ router.get('/list', requireAdmin, async (req, res) => {
   }
 });
 
+router.get('/active', async (req, res) => {
+  try {
+    const campaigns = await TwitterCampaign.findAll({
+      where: { isActive: true },
+      order: [['createdAt', 'DESC']],
+    });
+
+    const activeCampaigns = campaigns
+      .filter(campaign => !isCampaignExpired(campaign))
+      .map(campaign => ({
+        id: campaign.id,
+        code: campaign.code,
+        title: campaign.title,
+        tweetUrl: campaign.tweetUrl,
+        rewardAmount: campaign.rewardAmount,
+        expiresAt: campaign.expiresAt,
+      }));
+
+    res.json({ campaigns: activeCampaigns });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.put('/:id', requireAdmin, async (req, res) => {
   try {
     const campaign = await TwitterCampaign.findByPk(req.params.id);
