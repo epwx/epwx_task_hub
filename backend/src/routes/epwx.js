@@ -8,7 +8,7 @@ import { ethers } from 'ethers';
 import { epwxTokenContract, epwxTokenWithSigner } from '../services/blockchain.js';
 const router = express.Router();
 
-const DAILY_REWARD_DEFAULT = '1000000';
+const DAILY_REWARD_DEFAULT = '100000';
 const DAILY_REWARD_MID_TIER = '2000000';
 const DAILY_REWARD_BONUS = '5000000';
 const DAILY_REWARD_BONUS_THRESHOLD = ethers.parseUnits('100000000000', 9);
