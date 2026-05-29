@@ -54,6 +54,20 @@ const BONUS_DAILY_REWARD = 5_000_000;
 const MID_TIER_DAILY_REWARD_THRESHOLD = 10_000_000_000;
 const BONUS_DAILY_REWARD_THRESHOLD = 100_000_000_000;
 const TELEGRAM_VERIFICATION_RECHECK_INTERVAL_MS = 60_000;
+const DAILY_REWARD_TIERS = [
+  {
+    walletBalanceLabel: `At least ${BONUS_DAILY_REWARD_THRESHOLD.toLocaleString()} EPWX`,
+    rewardLabel: `${BONUS_DAILY_REWARD.toLocaleString()} EPWX`,
+  },
+  {
+    walletBalanceLabel: `At least ${MID_TIER_DAILY_REWARD_THRESHOLD.toLocaleString()} EPWX`,
+    rewardLabel: `${MID_TIER_DAILY_REWARD.toLocaleString()} EPWX`,
+  },
+  {
+    walletBalanceLabel: "Below 10,000,000,000 EPWX",
+    rewardLabel: `${DEFAULT_DAILY_REWARD.toLocaleString()} EPWX`,
+  },
+];
 
 interface DailyClaimsSummary {
   todayUtc: string;
@@ -639,13 +653,33 @@ export default function HomeTest() {
             {address ? (
               isTelegramVerified ? (
                 <>
-                  <div className="w-full text-center text-sm text-white/85 mb-4 space-y-1">
-                    <div>One daily reward claim per 24 hours.</div>
-                    <div>Wallets with at least {BONUS_DAILY_REWARD_THRESHOLD.toLocaleString()} EPWX can claim {BONUS_DAILY_REWARD.toLocaleString()} EPWX.</div>
-                    <div>Wallets with at least {MID_TIER_DAILY_REWARD_THRESHOLD.toLocaleString()} EPWX can claim {MID_TIER_DAILY_REWARD.toLocaleString()} EPWX.</div>
-                    <div>Other wallets claim the default {DEFAULT_DAILY_REWARD.toLocaleString()} EPWX.</div>
+                  <div className={`${glassPanelClass} mb-5 w-full overflow-hidden text-sm text-white/90`}>
+                    <div className="border-b border-white/15 bg-white/5 px-4 py-3 text-center sm:text-left">
+                      <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Claim Rules</div>
+                      <div className="mt-1 text-base font-semibold text-white">One daily reward claim every 24 hours</div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-px bg-white/10">
+                      <div className="bg-slate-950/20 px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.16em] text-white/60">
+                        Wallet Balance
+                      </div>
+                      <div className="bg-slate-950/20 px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.16em] text-white/60">
+                        Daily Reward
+                      </div>
+                      {DAILY_REWARD_TIERS.map((tier) => (
+                        <React.Fragment key={tier.walletBalanceLabel}>
+                          <div className="bg-white/5 px-4 py-3 leading-6 text-white/85">
+                            {tier.walletBalanceLabel}
+                          </div>
+                          <div className="bg-white/5 px-4 py-3 font-semibold leading-6 text-emerald-100">
+                            {tier.rewardLabel}
+                          </div>
+                        </React.Fragment>
+                      ))}
+                    </div>
                     {address && !balanceLoading && (
-                      <div className="font-semibold text-emerald-100">Your current daily reward tier: {currentDailyReward.toLocaleString()} EPWX</div>
+                      <div className="border-t border-white/15 bg-emerald-400/10 px-4 py-3 text-center font-semibold text-emerald-100 sm:text-left">
+                        Your current daily reward tier: {currentDailyReward.toLocaleString()} EPWX
+                      </div>
                     )}
                   </div>
                   <div className="flex items-center mb-4">
