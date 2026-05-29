@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { EPWXCashbackClaim } from "@/components/EPWXCashbackClaim_clean";
 import { HomeSwapCard } from "@/components/HomeSwapCard";
-import { useState, useEffect } from "react";
+import { Fragment, useState, useEffect } from "react";
 import DailyClaimsTable from "@/components/DailyClaimsTable";
 import { useAccount, useBalance, useSignMessage } from "wagmi";
 import { base } from "wagmi/chains";
@@ -666,14 +666,14 @@ export default function HomeTest() {
                         Daily Reward
                       </div>
                       {DAILY_REWARD_TIERS.map((tier) => (
-                        <React.Fragment key={tier.walletBalanceLabel}>
+                        <Fragment key={tier.walletBalanceLabel}>
                           <div className="bg-white/5 px-4 py-3 leading-6 text-white/85">
                             {tier.walletBalanceLabel}
                           </div>
                           <div className="bg-white/5 px-4 py-3 font-semibold leading-6 text-emerald-100">
                             {tier.rewardLabel}
                           </div>
-                        </React.Fragment>
+                        </Fragment>
                       ))}
                     </div>
                     {address && !balanceLoading && (
