@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   EPWX_TOKEN_ADDRESS,
-  EPWX_USDT_PAIR_ADDRESS,
+  EPWX_WETH_PAIR_ADDRESS,
   PANCAKESWAP_ROUTER_ADDRESS,
+  WETH_TOKEN_ADDRESS,
   fetchEpwxPriceData,
   type EpwxPriceData,
 } from '@/utils/epwxMarket';
@@ -225,8 +226,12 @@ export function WhitepaperTokenSnapshot() {
             <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Trading Infrastructure</div>
             <div className="mt-3 space-y-2 text-sm text-slate-600 dark:text-slate-300">
               <div>
+                <span className="font-semibold text-slate-950 dark:text-white">WETH:</span>{' '}
+                <span className="break-all">{WETH_TOKEN_ADDRESS}</span>
+              </div>
+              <div>
                 <span className="font-semibold text-slate-950 dark:text-white">Pair:</span>{' '}
-                <span className="break-all">{EPWX_USDT_PAIR_ADDRESS}</span>
+                <span className="break-all">{EPWX_WETH_PAIR_ADDRESS}</span>
               </div>
               <div>
                 <span className="font-semibold text-slate-950 dark:text-white">Router:</span>{' '}

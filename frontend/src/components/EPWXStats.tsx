@@ -5,8 +5,8 @@ import { useAccount, useBalance } from 'wagmi';
 import { base } from 'wagmi/chains';
 import {
   EPWX_TOKEN_ADDRESS,
-  USDT_TOKEN_ADDRESS,
-  EPWX_USDT_PAIR_ADDRESS,
+  WETH_TOKEN_ADDRESS,
+  EPWX_WETH_PAIR_ADDRESS,
   PANCAKESWAP_ROUTER_ADDRESS,
   fetchEpwxPriceData,
   formatEpwxBalance,
@@ -189,19 +189,19 @@ export function EPWXStats() {
 
         <div className="mt-6">
           <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6">
-            <p className="text-white/70 text-sm font-semibold mb-4 uppercase tracking-wider">EPWX / USDT Pair Details</p>
+            <p className="text-white/70 text-sm font-semibold mb-4 uppercase tracking-wider">EPWX / WETH Pair Details</p>
             <div className="space-y-4 text-sm text-white/85">
               <div>
                 <p className="text-white/60 mb-1">EPWX token</p>
                 <p className="font-mono break-all text-white">{EPWX_TOKEN_ADDRESS}</p>
               </div>
               <div>
-                <p className="text-white/60 mb-1">USDT token</p>
-                <p className="font-mono break-all text-white">{USDT_TOKEN_ADDRESS}</p>
+                <p className="text-white/60 mb-1">WETH token</p>
+                <p className="font-mono break-all text-white">{WETH_TOKEN_ADDRESS}</p>
               </div>
               <div>
                 <p className="text-white/60 mb-1">Pair contract</p>
-                <p className="font-mono break-all text-white">{EPWX_USDT_PAIR_ADDRESS}</p>
+                <p className="font-mono break-all text-white">{EPWX_WETH_PAIR_ADDRESS}</p>
               </div>
               <div>
                 <p className="text-white/60 mb-1">Router</p>
