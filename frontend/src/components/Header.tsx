@@ -77,6 +77,7 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
               rel="noopener noreferrer"
               className="font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600 transition-colors py-2"
             >Main Site</a>
+            <Link href="/whitepaper" className={pathname === "/whitepaper" ? "font-bold text-blue-600" : "font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600 transition-colors py-2"}>Whitepaper</Link>
             <a href="/platform-stats" className={pathname === "/platform-stats" ? "font-bold text-blue-600" : ""}>Platform Stats</a>
             <a 
               href="https://t.me/ePowerX_On_Base" 
@@ -177,6 +178,7 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
               >
                 Main Site
               </a>
+              <Link href="/whitepaper" className="text-gray-700 dark:text-gray-200 hover:text-blue-600 font-medium transition-colors py-2" onClick={() => setMobileMenuOpen(false)}>Whitepaper</Link>
               <Link href="/platform-stats" className="text-gray-700 dark:text-gray-200 hover:text-blue-600 font-medium transition-colors py-2" onClick={() => setMobileMenuOpen(false)}>Platform Stats</Link>
               <a
                 href="https://t.me/ePowerX_On_Base"

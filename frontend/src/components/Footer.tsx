@@ -7,6 +7,8 @@ export default function Footer() {
       <div className="flex flex-col md:flex-row justify-center items-center gap-6 mb-2">
         <a href="https://epowex.com" target="_blank" rel="noopener noreferrer" className="hover:text-blue-400 transition-colors">Main Site</a>
         <span className="hidden md:block text-gray-600 dark:text-gray-400">•</span>
+        <a href="/whitepaper" className="hover:text-blue-400 transition-colors">Whitepaper</a>
+        <span className="hidden md:block text-gray-600 dark:text-gray-400">•</span>
         <a href="/terms" className="hover:text-blue-400 transition-colors">Terms of Service</a>
         <span className="hidden md:block text-gray-600 dark:text-gray-400">•</span>
         <a href="/privacy" className="hover:text-blue-400 transition-colors">Privacy Policy</a>
