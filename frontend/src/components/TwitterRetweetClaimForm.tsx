@@ -94,7 +94,7 @@ const TwitterRetweetClaimForm: React.FC<TwitterRetweetClaimFormProps> = ({ walle
           After you retweet the post, upload a clear screenshot here. Admin will review it and either distribute EPWX or reject it with a reason.
         </p>
         <div className="mt-3 text-sm text-white/70">Campaign: {campaignCode}</div>
-        <div className="mt-1 text-sm text-white/70">Reward: {Number(rewardAmount || '1000000').toLocaleString()} EPWX</div>
+        <div className="mt-1 text-sm text-white/70">Reward: {Number(rewardAmount || '100000').toLocaleString()} EPWX</div>
       </div>
 
       <label className="mb-2 block text-sm font-semibold text-white/85">Twitter username (optional)</label>

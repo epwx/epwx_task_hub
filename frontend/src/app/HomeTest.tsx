@@ -192,7 +192,7 @@ function TwitterCampaignBoard() {
                     </div>
 
                     <div className="mt-4 grid gap-2 text-sm text-white/75">
-                      <div>Reward: {Number(campaign.rewardAmount || '1000000').toLocaleString()} EPWX</div>
+                      <div>Reward: {Number(campaign.rewardAmount || '100000').toLocaleString()} EPWX</div>
                       <div>Expires: {formatCampaignExpiry(campaign.expiresAt)}</div>
                     </div>
 

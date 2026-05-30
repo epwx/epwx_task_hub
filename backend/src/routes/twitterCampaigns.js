@@ -50,7 +50,7 @@ router.post('/add', requireAdmin, async (req, res) => {
       code: String(code).trim().toLowerCase(),
       title: String(title).trim(),
       tweetUrl: String(tweetUrl).trim(),
-      rewardAmount: rewardAmount ? String(rewardAmount).trim() : '1000000',
+      rewardAmount: rewardAmount ? String(rewardAmount).trim() : '100000',
       expiresAt: normalizedExpiresAt,
       isActive: true,
     });
