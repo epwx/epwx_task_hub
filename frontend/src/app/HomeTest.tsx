@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { EPWXCashbackClaim } from "@/components/EPWXCashbackClaim_clean";
 import { HomeSwapCard } from "@/components/HomeSwapCard";
+import { TokenSupplyPieChart } from "@/components/TokenSupplyPieChart";
 import { Fragment, useState, useEffect } from "react";
 import DailyClaimsTable from "@/components/DailyClaimsTable";
 import { useAccount, useBalance, useSignMessage } from "wagmi";
@@ -514,6 +515,8 @@ export default function HomeTest() {
         <section id="buy-epwx" className="py-8 scroll-mt-24">
           <HomeSwapCard />
         </section>
+
+        <TokenSupplyPieChart />
 
         <TwitterCampaignBoard />
 
