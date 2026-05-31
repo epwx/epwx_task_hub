@@ -15,6 +15,7 @@ type SupplySlice = {
 };
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.epowex.com';
+const REFRESH_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
 function polarToCartesian(cx: number, cy: number, radius: number, angle: number) {
   const radians = (angle - 90) * (Math.PI / 180);
@@ -91,7 +92,7 @@ export function TokenSupplyPieChart() {
     };
 
     loadSupply();
-    const intervalId = window.setInterval(loadSupply, 60000);
+    const intervalId = window.setInterval(loadSupply, REFRESH_INTERVAL_MS);
 
     return () => {
       cancelled = true;
@@ -181,7 +182,7 @@ export function TokenSupplyPieChart() {
 
               {!loading && !error ? (
                 <div className="mt-4 text-xs font-medium uppercase tracking-[0.18em] text-white/60">
-                  Auto-refreshes every 60 seconds
+                  Auto-refreshes every 24 hours
                 </div>
               ) : null}
             </div>
