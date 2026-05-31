@@ -47,6 +47,7 @@ export function TokenSupplyPieChart() {
   const [snapshot, setSnapshot] = useState<SupplySnapshot | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedSliceLabel, setSelectedSliceLabel] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -118,6 +119,14 @@ export function TokenSupplyPieChart() {
     return { slices: nextSlices, totalSupply: snapshot.totalSupply };
   }, [snapshot]);
 
+  const selectedSlice = useMemo(() => {
+    if (!slices.length) {
+      return null;
+    }
+
+    return slices.find((slice) => slice.label === selectedSliceLabel) || slices[0];
+  }, [selectedSliceLabel, slices]);
+
   let currentAngle = 0;
 
   return (
@@ -143,8 +152,19 @@ export function TokenSupplyPieChart() {
                   {slices.map((slice) => {
                     const angle = totalSupply > 0 ? (slice.value / totalSupply) * 360 : 0;
                     const path = describeArc(120, 120, 94, currentAngle, currentAngle + angle);
+                    const isSelected = selectedSlice?.label === slice.label;
                     currentAngle += angle;
-                    return <path key={slice.label} d={path} fill={slice.color} stroke="rgba(15,23,42,0.25)" strokeWidth="2" />;
+                    return (
+                      <path
+                        key={slice.label}
+                        d={path}
+                        fill={slice.color}
+                        stroke={isSelected ? 'rgba(255,255,255,0.95)' : 'rgba(15,23,42,0.25)'}
+                        strokeWidth={isSelected ? '4' : '2'}
+                        className="cursor-pointer transition-opacity hover:opacity-85"
+                        onClick={() => setSelectedSliceLabel(slice.label)}
+                      />
+                    );
                   })}
                   <circle cx="120" cy="120" r="52" fill="#0f172a" fillOpacity="0.9" />
                   <text x="120" y="110" textAnchor="middle" className="fill-white text-[10px] uppercase tracking-[0.28em]">Total Supply</text>
@@ -160,13 +180,37 @@ export function TokenSupplyPieChart() {
                 <p className="mt-3 text-sm leading-7 text-white/80">
                   This chart uses the live total, circulating, and burned supply endpoints. Any remaining balance is shown as non-circulating supply.
                 </p>
+                <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-white/55">
+                  Click a pie slice or color row to display its numbers
+                </p>
               </div>
+
+              {selectedSlice ? (
+                <div className="mb-4 rounded-2xl border border-white/25 bg-slate-950/35 p-4 text-white">
+                  <div className="flex items-center gap-3">
+                    <span className="h-3 w-3 rounded-full" style={{ backgroundColor: selectedSlice.color }} />
+                    <span className="text-sm font-semibold uppercase tracking-[0.18em] text-white/70">{selectedSlice.label}</span>
+                  </div>
+                  <div className="mt-3 text-3xl font-black text-white">{formatWhole(selectedSlice.value)} EPWX</div>
+                  <div className="mt-1 text-sm font-semibold text-white/75">
+                    {totalSupply > 0 ? ((selectedSlice.value / totalSupply) * 100).toFixed(2) : '0.00'}% of total supply
+                  </div>
+                </div>
+              ) : null}
 
               <div className="grid gap-3">
                 {slices.map((slice) => {
                   const percentage = totalSupply > 0 ? (slice.value / totalSupply) * 100 : 0;
+                  const isSelected = selectedSlice?.label === slice.label;
                   return (
-                    <div key={slice.label} className="rounded-2xl border border-white/20 bg-white/10 p-4 text-white backdrop-blur-lg">
+                    <button
+                      key={slice.label}
+                      type="button"
+                      onClick={() => setSelectedSliceLabel(slice.label)}
+                      className={`rounded-2xl border bg-white/10 p-4 text-left text-white backdrop-blur-lg transition hover:bg-white/15 ${
+                        isSelected ? 'border-white/70 ring-2 ring-white/30' : 'border-white/20'
+                      }`}
+                    >
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3">
                           <span className="h-3 w-3 rounded-full" style={{ backgroundColor: slice.color }} />
@@ -175,7 +219,7 @@ export function TokenSupplyPieChart() {
                         <span className="text-sm font-bold text-white/85">{percentage.toFixed(2)}%</span>
                       </div>
                       <div className="mt-2 text-2xl font-black text-white">{formatWhole(slice.value)} EPWX</div>
-                    </div>
+                    </button>
                   );
                 })}
               </div>
