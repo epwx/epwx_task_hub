@@ -181,8 +181,18 @@ export function TokenSupplyPieChart() {
               </div>
 
               {!loading && !error ? (
-                <div className="mt-4 text-xs font-medium uppercase tracking-[0.18em] text-white/60">
-                  Auto-refreshes every 24 hours
+                <div className="mt-4 space-y-3">
+                  <div className="text-xs font-medium uppercase tracking-[0.18em] text-white/60">
+                    Auto-refreshes every 24 hours
+                  </div>
+                  <a
+                    href="https://basescan.org/token/0xef5f5751cf3eca6cc3572768298b7783d33d60eb?a=0x000000000000000000000000000000000000dead#transactions"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex text-sm font-semibold text-white underline decoration-white/50 underline-offset-4 transition hover:text-slate-200"
+                  >
+                    View burned supply in the dead address on Basescan
+                  </a>
                 </div>
               ) : null}
             </div>
