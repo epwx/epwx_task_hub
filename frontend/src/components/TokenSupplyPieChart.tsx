@@ -133,11 +133,11 @@ export function TokenSupplyPieChart() {
     <section className="py-12">
       <div className="flex flex-col items-center">
         <h2 className="text-2xl font-black mb-4 text-blue-700 text-center">Token Supply Breakdown</h2>
-        <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-3xl shadow-2xl p-8 w-full max-w-4xl">
+        <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-3xl shadow-2xl p-5 sm:p-8 w-full max-w-4xl">
           <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 left-0 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
           <div className="relative z-10 grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
-            <div className="flex flex-col items-center">
+            <div className="min-w-0 flex flex-col items-center">
               {loading ? (
                 <div className="flex h-[260px] w-[260px] items-center justify-center rounded-full border border-white/15 bg-white/10 text-white/80">
                   Loading chart...
@@ -173,7 +173,7 @@ export function TokenSupplyPieChart() {
               )}
             </div>
 
-            <div>
+            <div className="min-w-0">
               <div className="mb-5 text-center lg:text-left">
                 <div className="text-sm uppercase tracking-[0.3em] text-white/65">Live Token Stats</div>
                 <h3 className="mt-2 text-3xl font-black text-white">How EPWX supply is distributed</h3>
@@ -186,12 +186,12 @@ export function TokenSupplyPieChart() {
               </div>
 
               {selectedSlice ? (
-                <div className="mb-4 rounded-2xl border border-white/25 bg-slate-950/35 p-4 text-white">
+                <div className="mb-4 min-w-0 rounded-2xl border border-white/25 bg-slate-950/35 p-4 text-white">
                   <div className="flex items-center gap-3">
                     <span className="h-3 w-3 rounded-full" style={{ backgroundColor: selectedSlice.color }} />
                     <span className="text-sm font-semibold uppercase tracking-[0.18em] text-white/70">{selectedSlice.label}</span>
                   </div>
-                  <div className="mt-3 text-3xl font-black text-white">{formatWhole(selectedSlice.value)} EPWX</div>
+                  <div className="mt-3 break-words text-3xl font-black text-white">{formatWhole(selectedSlice.value)} EPWX</div>
                   <div className="mt-1 text-sm font-semibold text-white/75">
                     {totalSupply > 0 ? ((selectedSlice.value / totalSupply) * 100).toFixed(2) : '0.00'}% of total supply
                   </div>
@@ -218,7 +218,7 @@ export function TokenSupplyPieChart() {
                         </div>
                         <span className="text-sm font-bold text-white/85">{percentage.toFixed(2)}%</span>
                       </div>
-                      <div className="mt-2 text-2xl font-black text-white">{formatWhole(slice.value)} EPWX</div>
+                      <div className="mt-2 break-words text-2xl font-black text-white">{formatWhole(slice.value)} EPWX</div>
                     </button>
                   );
                 })}
