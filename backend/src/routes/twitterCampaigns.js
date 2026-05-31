@@ -2,6 +2,7 @@ import express from 'express';
 import { TwitterCampaign } from '../models/index.js';
 
 const router = express.Router();
+const FIXED_TWITTER_REWARD_AMOUNT = '100000';
 
 function getAdminWallets() {
   return (process.env.ADMIN_WALLETS || '').split(',').map(wallet => wallet.trim().toLowerCase()).filter(Boolean);
@@ -34,7 +35,7 @@ function normalizeExpiresAt(expiresAt) {
 }
 
 router.post('/add', requireAdmin, async (req, res) => {
-  const { code, title, tweetUrl, rewardAmount, expiresAt } = req.body;
+  const { code, title, tweetUrl, expiresAt } = req.body;
 
   if (!code || !title || !tweetUrl) {
     return res.status(400).json({ error: 'Code, title, and tweet URL are required.' });
@@ -50,7 +51,7 @@ router.post('/add', requireAdmin, async (req, res) => {
       code: String(code).trim().toLowerCase(),
       title: String(title).trim(),
       tweetUrl: String(tweetUrl).trim(),
-      rewardAmount: rewardAmount ? String(rewardAmount).trim() : '100000',
+      rewardAmount: FIXED_TWITTER_REWARD_AMOUNT,
       expiresAt: normalizedExpiresAt,
       isActive: true,
     });
@@ -101,7 +102,7 @@ router.put('/:id', requireAdmin, async (req, res) => {
       return res.status(404).json({ error: 'Campaign not found' });
     }
 
-    const { code, title, tweetUrl, rewardAmount, expiresAt, isActive } = req.body;
+    const { code, title, tweetUrl, expiresAt, isActive } = req.body;
     const normalizedExpiresAt = expiresAt !== undefined ? normalizeExpiresAt(expiresAt) : campaign.expiresAt;
 
     if (normalizedExpiresAt === undefined) {
@@ -111,7 +112,7 @@ router.put('/:id', requireAdmin, async (req, res) => {
     if (code !== undefined) campaign.code = String(code).trim().toLowerCase();
     if (title !== undefined) campaign.title = String(title).trim();
     if (tweetUrl !== undefined) campaign.tweetUrl = String(tweetUrl).trim();
-    if (rewardAmount !== undefined) campaign.rewardAmount = String(rewardAmount).trim();
+    campaign.rewardAmount = FIXED_TWITTER_REWARD_AMOUNT;
     if (expiresAt !== undefined) campaign.expiresAt = normalizedExpiresAt;
     if (isActive !== undefined) campaign.isActive = Boolean(isActive);
 

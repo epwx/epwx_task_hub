@@ -354,7 +354,9 @@ export default function AdminTwitterClaimsPage() {
             <input name="code" value={campaignForm.code} onChange={handleCampaignFormChange} placeholder="campaign code" className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/50" required />
             <input name="title" value={campaignForm.title} onChange={handleCampaignFormChange} placeholder="campaign title" className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/50" required />
             <input name="tweetUrl" value={campaignForm.tweetUrl} onChange={handleCampaignFormChange} placeholder="https://x.com/..." className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/50" required />
-            <input name="rewardAmount" value={campaignForm.rewardAmount} onChange={handleCampaignFormChange} placeholder={DEFAULT_TWITTER_REWARD_AMOUNT} className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/50" required />
+            <div className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white/85">
+              Fixed reward: {Number(DEFAULT_TWITTER_REWARD_AMOUNT).toLocaleString()} EPWX
+            </div>
             <input name="expiresAt" type="datetime-local" value={campaignForm.expiresAt} onChange={handleCampaignFormChange} className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white" />
             <div className="text-xs text-white/65">Leave expiry empty if this campaign should stay active until you disable it manually.</div>
             <button type="submit" disabled={campaignSaving} className="rounded-xl bg-green-600 px-4 py-3 text-sm font-bold text-white hover:bg-green-700 disabled:opacity-50">
@@ -389,7 +391,9 @@ export default function AdminTwitterClaimsPage() {
                         <input name="code" value={editCampaignForm.code} onChange={handleEditCampaignFormChange} className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm text-white" />
                         <input name="title" value={editCampaignForm.title} onChange={handleEditCampaignFormChange} className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm text-white" />
                         <input name="tweetUrl" value={editCampaignForm.tweetUrl} onChange={handleEditCampaignFormChange} className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm text-white" />
-                        <input name="rewardAmount" value={editCampaignForm.rewardAmount} onChange={handleEditCampaignFormChange} className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm text-white" />
+                        <div className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm text-white/85">
+                          Fixed reward: {Number(DEFAULT_TWITTER_REWARD_AMOUNT).toLocaleString()} EPWX
+                        </div>
                         <input name="expiresAt" type="datetime-local" value={editCampaignForm.expiresAt} onChange={handleEditCampaignFormChange} className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm text-white" />
                         <div className="flex gap-2">
                           <button type="button" onClick={() => saveCampaignEdit(campaign.id)} disabled={campaignUpdating} className="rounded-lg bg-green-600 px-3 py-2 text-xs font-semibold text-white hover:bg-green-700 disabled:opacity-50">
