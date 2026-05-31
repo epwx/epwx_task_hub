@@ -108,7 +108,7 @@ export function TokenSupplyPieChart() {
     const lockedSupply = Math.max(snapshot.totalSupply - snapshot.circulatingSupply - snapshot.burnedSupply, 0);
     const nextSlices: SupplySlice[] = [
       { label: 'Circulating', value: Math.max(snapshot.circulatingSupply, 0), color: '#22c55e' },
-      { label: 'Burned', value: Math.max(snapshot.burnedSupply, 0), color: '#ef4444' },
+      { label: 'Burned', value: Math.max(snapshot.burnedSupply, 0), color: '#9ca3af' },
     ];
 
     if (lockedSupply > 0) {
