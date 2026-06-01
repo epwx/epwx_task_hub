@@ -133,7 +133,7 @@ function formatCampaignExpiry(expiresAt?: string | null) {
   return parsed.toLocaleString();
 }
 
-function TwitterCampaignBoard() {
+function TwitterCampaignBoard({ address }: { address?: string }) {
   const [campaigns, setCampaigns] = useState<TwitterCampaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -144,7 +144,14 @@ function TwitterCampaignBoard() {
       setError(null);
 
       try {
-        const response = await fetch('/api/twitter-campaigns/active', { cache: 'no-store' });
+        const params = new URLSearchParams();
+
+        if (address) {
+          params.set('wallet', address);
+        }
+
+        const query = params.toString();
+        const response = await fetch(`/api/twitter-campaigns/active${query ? `?${query}` : ''}`, { cache: 'no-store' });
         const data = await response.json();
 
         if (!response.ok) {
@@ -161,7 +168,7 @@ function TwitterCampaignBoard() {
     };
 
     fetchCampaigns();
-  }, []);
+  }, [address]);
 
   return (
     <section className="py-12">
@@ -518,7 +525,7 @@ export default function HomeTest() {
 
         <TokenSupplyPieChart />
 
-        <TwitterCampaignBoard />
+        <TwitterCampaignBoard address={address} />
 
         {/* Cashback Rewards Section */}
         <section className="py-12">

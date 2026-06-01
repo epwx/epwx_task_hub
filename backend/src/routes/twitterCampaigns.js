@@ -1,5 +1,6 @@
 import express from 'express';
-import { TwitterCampaign } from '../models/index.js';
+import { Op } from 'sequelize';
+import { Claim, TwitterCampaign } from '../models/index.js';
 
 const router = express.Router();
 const FIXED_TWITTER_REWARD_AMOUNT = '100000';
@@ -73,13 +74,34 @@ router.get('/list', requireAdmin, async (req, res) => {
 
 router.get('/active', async (req, res) => {
   try {
+    const wallet = typeof req.query.wallet === 'string' ? req.query.wallet.trim().toLowerCase() : '';
     const campaigns = await TwitterCampaign.findAll({
       where: { isActive: true },
       order: [['createdAt', 'DESC']],
     });
 
+    let claimedCampaignIds = new Set();
+
+    if (wallet) {
+      const claimedCampaigns = await Claim.findAll({
+        attributes: ['twitterCampaignId'],
+        where: {
+          customer: wallet,
+          claimType: 'twitter_retweet',
+          twitterCampaignId: { [Op.ne]: null },
+          status: { [Op.in]: ['pending', 'paid'] },
+        },
+      });
+
+      claimedCampaignIds = new Set(
+        claimedCampaigns
+          .map(claim => claim.twitterCampaignId)
+          .filter(campaignId => Number.isInteger(campaignId))
+      );
+    }
+
     const activeCampaigns = campaigns
-      .filter(campaign => !isCampaignExpired(campaign))
+      .filter(campaign => !isCampaignExpired(campaign) && !claimedCampaignIds.has(campaign.id))
       .map(campaign => ({
         id: campaign.id,
         code: campaign.code,
