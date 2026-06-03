@@ -9,6 +9,11 @@ import { epwxTokenContract, epwxTokenWithSigner } from '../services/blockchain.j
 const router = express.Router();
 
 const REFERRAL_REWARD_AMOUNT = '1000000';
+const DEFAULT_DAILY_REWARD_AMOUNT = '100000';
+const MID_TIER_DAILY_REWARD_AMOUNT = '2000000';
+const BONUS_TIER_DAILY_REWARD_AMOUNT = '5000000';
+const MID_TIER_DAILY_REWARD_THRESHOLD = 10_000_000_000;
+const BONUS_TIER_DAILY_REWARD_THRESHOLD = 100_000_000_000;
 const EPWX_TOKEN_DECIMALS = 9;
 
 function normalizeWallet(wallet) {
@@ -35,6 +40,29 @@ async function distributeReferralReward(wallet) {
     paid: receipt?.status === 1,
     txHash: tx.hash,
   };
+}
+
+async function getDailyRewardAmount(wallet) {
+  if (!epwxTokenContract) {
+    return DEFAULT_DAILY_REWARD_AMOUNT;
+  }
+
+  try {
+    const balance = await epwxTokenContract.balanceOf(wallet);
+    const normalizedBalance = Number(ethers.formatUnits(balance, EPWX_TOKEN_DECIMALS));
+
+    if (normalizedBalance >= BONUS_TIER_DAILY_REWARD_THRESHOLD) {
+      return BONUS_TIER_DAILY_REWARD_AMOUNT;
+    }
+
+    if (normalizedBalance >= MID_TIER_DAILY_REWARD_THRESHOLD) {
+      return MID_TIER_DAILY_REWARD_AMOUNT;
+    }
+  } catch (error) {
+    console.error('Failed to determine daily reward tier:', error);
+  }
+
+  return DEFAULT_DAILY_REWARD_AMOUNT;
 }
 
 async function qualifyReferralReward({ referral, claim, ip, now }) {
@@ -538,7 +566,7 @@ router.get('/daily-claims/summary', async (req, res) => {
 
 // POST /api/epwx/daily-claims/mark-paid
 router.post('/daily-claims/mark-paid', async (req, res) => {
-  const { admin, claimId, txHash } = req.body;
+  const { admin, claimId, txHash, amount } = req.body;
   const ADMIN_WALLETS = (process.env.ADMIN_WALLETS || '').split(',').map(w => w.trim().toLowerCase()).filter(Boolean);
   if (!ADMIN_WALLETS.includes(admin.toLowerCase())) {
     return res.status(403).json({ error: 'Unauthorized' });
@@ -546,6 +574,9 @@ router.post('/daily-claims/mark-paid', async (req, res) => {
   try {
     const claim = await DailyClaim.findByPk(claimId);
     if (!claim) return res.status(404).json({ error: 'Claim not found' });
+    if (amount) {
+      claim.amount = String(amount);
+    }
     claim.status = 'paid';
     claim.txHash = txHash;
     await claim.save();
@@ -628,7 +659,8 @@ router.post('/daily-claim', async (req, res) => {
 
   // TODO: Send EPWX to wallet here (call contract or queue for admin)
   // For now, just record the claim
-  const claim = await DailyClaim.create({ wallet: normalizedWallet, ip, claimedAt: now });
+  const amount = await getDailyRewardAmount(normalizedWallet);
+  const claim = await DailyClaim.create({ wallet: normalizedWallet, ip, claimedAt: now, amount });
 
   let referralReward = null;
   if (!historicalClaim) {

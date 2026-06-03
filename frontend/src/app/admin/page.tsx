@@ -8,6 +8,26 @@ import { ConnectKitButton } from "connectkit";
 import { ethers } from "ethers";
 import { usePublicClient } from "wagmi";
 
+const DEFAULT_DAILY_REWARD = "100000";
+const MID_TIER_DAILY_REWARD = "2000000";
+const BONUS_TIER_DAILY_REWARD = "5000000";
+const MID_TIER_DAILY_REWARD_THRESHOLD = 10_000_000_000;
+const BONUS_TIER_DAILY_REWARD_THRESHOLD = 100_000_000_000;
+
+function getDailyRewardAmountFromBalance(balance: bigint) {
+  const normalizedBalance = Number(ethers.formatUnits(balance, 9));
+
+  if (normalizedBalance >= BONUS_TIER_DAILY_REWARD_THRESHOLD) {
+    return BONUS_TIER_DAILY_REWARD;
+  }
+
+  if (normalizedBalance >= MID_TIER_DAILY_REWARD_THRESHOLD) {
+    return MID_TIER_DAILY_REWARD;
+  }
+
+  return DEFAULT_DAILY_REWARD;
+}
+
 const getAdminWallets = () => {
   if (typeof window !== "undefined") {
     const env = process.env.NEXT_PUBLIC_ADMIN_WALLETS || "";
@@ -28,7 +48,6 @@ export default function AdminPage() {
   const [specialWallet, setSpecialWallet] = useState("");
   const [specialLoading, setSpecialLoading] = useState(false);
   const [specialError, setSpecialError] = useState<string | null>(null);
-  const [specialResult, setSpecialResult] = useState<any[] | null>(null);
   // Pagination and filter state
   const [claimsPage, setClaimsPage] = useState(1);
   const [dailyClaimsPage, setDailyClaimsPage] = useState(1);
@@ -47,6 +66,17 @@ export default function AdminPage() {
   // Use the existing NEXT_PUBLIC_EPWX_TOKEN env property for contract address
   const EPWX_TOKEN_ADDRESS = process.env.NEXT_PUBLIC_EPWX_TOKEN || "0xYourTokenAddressHere";
   const EPWX_TOKEN_ABI = [
+    {
+      "inputs": [
+        { "internalType": "address", "name": "account", "type": "address" }
+      ],
+      "name": "balanceOf",
+      "outputs": [
+        { "internalType": "uint256", "name": "", "type": "uint256" }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
     {
       "inputs": [
         { "internalType": "address", "name": "to", "type": "address" },
@@ -82,7 +112,6 @@ export default function AdminPage() {
     const handleAddSpecialWallet = async () => {
       setSpecialLoading(true);
       setSpecialError(null);
-      setSpecialResult(null);
       try {
         const res = await fetch("/api/epwx/special-claim/add", {
           method: "POST",
@@ -94,14 +123,14 @@ export default function AdminPage() {
         });
         const data = await res.json();
         if (data.success) {
-          setSpecialResult(data.results);
-          // Optionally, refresh the special claims list here if needed
+          // Add new wallet to the top and sort by createdAt descending
+          setSpecialClaims((prev) => [{ wallet: specialWallet, status: "pending", createdAt: new Date().toISOString() }, ...prev].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
           setSpecialWallet("");
         } else {
-          setSpecialError(data.error || "Failed to add wallet(s)");
+          setSpecialError(data.error || "Failed to add wallet");
         }
       } catch (e: any) {
-        setSpecialError(e?.message || "Failed to add wallet(s)");
+        setSpecialError(e?.message || "Failed to add wallet");
       }
       setSpecialLoading(false);
     };
@@ -153,8 +182,17 @@ export default function AdminPage() {
         setMarking(null);
         return;
       }
-      const rewardAmount = claim.amount || "100000";
-      const dailyAmount = ethers.parseUnits(rewardAmount, 9).toString();
+      let claimAmount = String(claim.amount || DEFAULT_DAILY_REWARD);
+      if (claimAmount === DEFAULT_DAILY_REWARD && publicClient) {
+        const balance = await publicClient.readContract({
+          address: EPWX_TOKEN_ADDRESS as `0x${string}`,
+          abi: EPWX_TOKEN_ABI,
+          functionName: "balanceOf",
+          args: [claim.wallet as `0x${string}`],
+        });
+        claimAmount = getDailyRewardAmountFromBalance(balance as bigint);
+      }
+      const dailyAmount = ethers.parseUnits(claimAmount, 9).toString();
       const tx = await writeContractAsync({
         address: EPWX_TOKEN_ADDRESS as `0x${string}`,
         abi: EPWX_TOKEN_ABI,
@@ -176,12 +214,12 @@ export default function AdminPage() {
       const res = await fetch("/api/epwx/daily-claims/mark-paid", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ admin: address, claimId: claim.id, txHash: tx }),
+        body: JSON.stringify({ admin: address, claimId: claim.id, txHash: tx, amount: claimAmount }),
       });
       const data = await res.json();
       if (data.success) {
         setDailyClaims((prev) =>
-          prev.map((c: any) => (c.id === claim.id ? { ...c, status: "paid", txHash: tx } : c))
+          prev.map((c: any) => (c.id === claim.id ? { ...c, status: "paid", amount: claimAmount } : c))
         );
       } else {
         setError(data.error || "Failed to mark as paid");
@@ -235,12 +273,12 @@ export default function AdminPage() {
       const res = await fetch("/api/epwx/claims/mark-paid", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ admin: address, claimId: claim.id, txHash: tx, claimSource: "cashback" }),
+        body: JSON.stringify({ admin: address, claimId: claim.id }),
       });
       const data = await res.json();
       if (data.success) {
         setClaims((prev) =>
-          prev.map((c: any) => (c.id === claim.id ? { ...c, status: "paid", txHash: tx } : c))
+          prev.map((c: any) => (c.id === claim.id ? { ...c, status: "paid" } : c))
         );
       } else {
         setError(data.error || "Failed to mark as paid");
@@ -275,30 +313,19 @@ export default function AdminPage() {
           </div>
         ) : (
           <>
-            <div className="flex flex-col gap-2 mb-4">
-              <textarea
-                placeholder="Enter wallet addresses, comma separated (e.g. 0x123..., 0x456..., ...)"
-                className="border rounded px-2 py-1 bg-gray-100 text-gray-900 min-h-[60px]"
+            <div className="flex gap-2 mb-4">
+              <input
+                type="text"
+                placeholder="Wallet address"
+                className="border rounded px-2 py-1 bg-gray-100 text-gray-900"
                 value={specialWallet}
                 onChange={e => setSpecialWallet(e.target.value)}
               />
               <button
-                className="px-4 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 w-fit"
+                className="px-4 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
                 disabled={specialLoading || !specialWallet}
                 onClick={handleAddSpecialWallet}
-              >{specialLoading ? "Adding..." : "Add Wallets"}</button>
-              {specialResult && (
-                <div className="mt-2">
-                  <div className="font-semibold mb-1">Bulk Add Results:</div>
-                  <ul className="list-disc ml-6 text-sm">
-                    {specialResult.map((r, i) => (
-                      <li key={i} className={r.error ? "text-red-600" : r.updated ? "text-yellow-700" : "text-green-700"}>
-                        {r.wallet}: {r.created ? "Created" : r.updated ? "Updated" : r.error}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+              >{specialLoading ? "Adding..." : "Add Wallet"}</button>
             </div>
             {/* Special Claims Filter Controls */}
             <div className="mb-2 flex gap-2 items-center">
@@ -373,7 +400,7 @@ export default function AdminPage() {
                 disabled={specialClaimsPage === 1}
                 onClick={() => setSpecialClaimsPage(p => Math.max(1, p - 1))}
               >Prev</button>
-              <span className="font-semibold text-gray-700">Page {specialClaimsPage}</span>
+              <span>Page {specialClaimsPage}</span>
               <button
                 className="px-2 py-1 ml-2 border rounded bg-blue-100 text-blue-900 font-bold hover:bg-blue-200"
                 disabled={specialClaimsPage * SPECIAL_CLAIMS_PAGE_SIZE >= specialClaims.filter((claim: any) =>
@@ -466,7 +493,7 @@ export default function AdminPage() {
                     disabled={claimsPage === 1}
                     onClick={() => setClaimsPage(p => Math.max(1, p - 1))}
                   >Prev</button>
-                  <span className="font-semibold text-gray-700">Page {claimsPage}</span>
+                  <span>Page {claimsPage}</span>
                   <button
                     className="px-2 py-1 ml-2 border rounded bg-blue-100 text-blue-900 font-bold hover:bg-blue-200"
                     disabled={claimsPage * CLAIMS_PAGE_SIZE >= claims.filter((claim: any) =>
@@ -523,7 +550,7 @@ export default function AdminPage() {
               disabled={dailyClaimsPage === 1}
               onClick={() => setDailyClaimsPage(p => Math.max(1, p - 1))}
             >Prev</button>
-            <span className="font-semibold text-gray-700">Page {dailyClaimsPage}</span>
+            <span>Page {dailyClaimsPage}</span>
             <button
               className="px-2 py-1 ml-2 border rounded bg-blue-100 text-blue-900 font-bold hover:bg-blue-200"
               disabled={dailyClaimsPage * DAILY_CLAIMS_PAGE_SIZE >= dailyClaims.filter((claim: any) =>
