@@ -6,6 +6,7 @@ const EPWX_TOKEN_ADDRESS = process.env.EPWX_TOKEN_ADDRESS || '0x0000000000000000
 const TASK_MANAGER = process.env.TASK_MANAGER_CONTRACT || '0x000000000000000000000000000000000000dEaD';
 const PANCAKE_EPWX_WETH_PAIR = process.env.PANCAKE_EPWX_WETH_PAIR || '0x9793d47dd47024ac4e1f17988d2e92da53a94541';
 const EPWX_WETH_PAIR = process.env.EPWX_WETH_PAIR || '0x000000000000000000000000000000000000dEaD';
+const TOKEN_SIGNER_PRIVATE_KEY = process.env.ADMIN_PRIVATE_KEY || process.env.VERIFIER_PRIVATE_KEY;
 
 // ABIs
 const TASK_MANAGER_ABI = [
@@ -42,9 +43,9 @@ const epwxTokenContract = EPWX_TOKEN_ADDRESS ? new ethers.Contract(EPWX_TOKEN_AD
 
 // Token contract with signer for sending transactions
 let epwxTokenWithSigner = null;
-if (process.env.ADMIN_PRIVATE_KEY && epwxTokenContract) {
-  const adminWallet = new ethers.Wallet(process.env.ADMIN_PRIVATE_KEY, provider);
-  epwxTokenWithSigner = epwxTokenContract.connect(adminWallet);
+if (TOKEN_SIGNER_PRIVATE_KEY && epwxTokenContract) {
+  const tokenSignerWallet = new ethers.Wallet(TOKEN_SIGNER_PRIVATE_KEY, provider);
+  epwxTokenWithSigner = epwxTokenContract.connect(tokenSignerWallet);
 }
 // Always use PancakeSwap pair for price display
 const pairContract = PANCAKE_EPWX_WETH_PAIR ? new ethers.Contract(PANCAKE_EPWX_WETH_PAIR, PAIR_ABI, provider) : null;

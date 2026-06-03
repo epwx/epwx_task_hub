@@ -55,6 +55,7 @@ const BONUS_DAILY_REWARD = 5_000_000;
 const MID_TIER_DAILY_REWARD_THRESHOLD = 10_000_000_000;
 const BONUS_DAILY_REWARD_THRESHOLD = 100_000_000_000;
 const TELEGRAM_VERIFICATION_RECHECK_INTERVAL_MS = 60_000;
+const PENDING_REFERRAL_STORAGE_KEY = "epwx-pending-referrer";
 const DAILY_REWARD_TIERS = [
   {
     walletBalanceLabel: `At least ${BONUS_DAILY_REWARD_THRESHOLD.toLocaleString()} EPWX`,
@@ -83,6 +84,62 @@ interface TwitterCampaign {
   tweetUrl: string;
   rewardAmount?: string | null;
   expiresAt?: string | null;
+}
+
+interface ReferralRewardStatus {
+  status: string;
+  rewardAmount?: string;
+  reason?: string;
+  referrerRewardStatus?: string;
+  referredRewardStatus?: string;
+}
+
+interface ReferralStatsResponse {
+  stats?: {
+    totalRegistered?: number;
+    pending?: number;
+    qualified?: number;
+    blocked?: number;
+    referrerRewardsPaid?: number;
+  };
+  sentReferrals?: Array<{
+    id: number;
+    referredWallet: string;
+    status: string;
+    rewardAmount: string;
+    referrerRewardStatus: string;
+    referredRewardStatus: string;
+    qualifiedAt?: string | null;
+    createdAt?: string | null;
+    disqualificationReason?: string | null;
+  }>;
+  referredBy?: {
+    id: number;
+    referrerWallet: string;
+    status: string;
+    rewardAmount: string;
+    referrerRewardStatus: string;
+    referredRewardStatus: string;
+    qualifiedAt?: string | null;
+    disqualificationReason?: string | null;
+  } | null;
+}
+
+function formatReferralRewardMessage(reward?: ReferralRewardStatus | null) {
+  if (!reward) {
+    return null;
+  }
+
+  if (reward.status === "blocked") {
+    return reward.reason || "Referral reward was blocked because both wallets used the same IP address.";
+  }
+
+  const amount = Number(reward.rewardAmount || "1000000").toLocaleString();
+  if (reward.referrerRewardStatus === "paid" && reward.referredRewardStatus === "paid") {
+    return `Referral bonus complete. Both wallets received ${amount} EPWX.`;
+  }
+
+  return `Referral bonus qualified for ${amount} EPWX per wallet. Distribution status: referrer ${reward.referrerRewardStatus || "pending"}, referred ${reward.referredRewardStatus || "pending"}.`;
 }
 
 function formatDuration(msLeft: number) {
@@ -233,6 +290,7 @@ function TwitterCampaignBoard({ address }: { address?: string }) {
 
 export default function HomeTest() {
   const { address, isConnected } = useAccount();
+  const [incomingReferralWallet, setIncomingReferralWallet] = useState<string | null>(null);
   const { data: epwxBalance, isLoading: balanceLoading } = useBalance({
     address,
     token: EPWX_TOKEN_ADDRESS,
@@ -248,6 +306,9 @@ export default function HomeTest() {
   const [specialEligible, setSpecialEligible] = useState(false);
   const [specialClaiming, setSpecialClaiming] = useState(false);
   const [specialClaimStatus, setSpecialClaimStatus] = useState<string | null>(null);
+  const [referralStats, setReferralStats] = useState<ReferralStatsResponse | null>(null);
+  const [referralStatus, setReferralStatus] = useState<string | null>(null);
+  const [referralLink, setReferralLink] = useState("");
   useEffect(() => {
     const checkSpecialClaim = async () => {
       if (!address) {
@@ -308,6 +369,40 @@ export default function HomeTest() {
   const [showSpecialTerms, setShowSpecialTerms] = useState(false);
   const [checkingVerification, setCheckingVerification] = useState(false);
 
+  const fetchReferralStats = async (wallet: string) => {
+    try {
+      const res = await fetch(`/api/epwx/wallet-referrals/stats?wallet=${wallet}`, { cache: "no-store" });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to load referral stats");
+      }
+      setReferralStats(data);
+      if (typeof window !== "undefined") {
+        setReferralLink(`${window.location.origin}/?ref=${wallet.toLowerCase()}`);
+      }
+    } catch (error: any) {
+      setReferralStats(null);
+      setReferralStatus((currentValue) => currentValue || error?.message || "Failed to load referral data.");
+      if (typeof window !== "undefined") {
+        setReferralLink(`${window.location.origin}/?ref=${wallet.toLowerCase()}`);
+      }
+    }
+  };
+
+  const handleCopyReferralLink = async () => {
+    if (!referralLink) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(referralLink);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setReferralStatus("Unable to copy the referral link. Please copy it manually.");
+    }
+  };
+
   const fetchDailyClaimsSummary = async () => {
     setDailyClaimsSummaryLoading(true);
     try {
@@ -333,6 +428,104 @@ export default function HomeTest() {
   useEffect(() => {
     fetchDailyClaimsSummary();
   }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const referralWallet = params.get("ref");
+    setIncomingReferralWallet(referralWallet ? referralWallet.toLowerCase() : null);
+  }, []);
+
+  useEffect(() => {
+    if (!incomingReferralWallet || typeof window === "undefined") {
+      return;
+    }
+
+    localStorage.setItem(PENDING_REFERRAL_STORAGE_KEY, incomingReferralWallet);
+    if (!address) {
+      setReferralStatus("Referral saved. Connect your wallet, then complete your first daily claim to qualify both wallets for 1,000,000 EPWX.");
+    }
+  }, [incomingReferralWallet, address]);
+
+  useEffect(() => {
+    if (!address) {
+      setReferralStats(null);
+      setReferralLink("");
+      return;
+    }
+
+    let cancelled = false;
+
+    const syncReferralState = async () => {
+      const normalizedWallet = address.toLowerCase();
+      if (typeof window !== "undefined") {
+        setReferralLink(`${window.location.origin}/?ref=${normalizedWallet}`);
+      }
+
+      const pendingReferralWallet = typeof window !== "undefined"
+        ? localStorage.getItem(PENDING_REFERRAL_STORAGE_KEY)
+        : null;
+
+      if (pendingReferralWallet) {
+        if (pendingReferralWallet === normalizedWallet) {
+          localStorage.removeItem(PENDING_REFERRAL_STORAGE_KEY);
+          if (!cancelled) {
+            setReferralStatus("Self-referral is not allowed.");
+          }
+        } else {
+          try {
+            const res = await fetch("/api/epwx/wallet-referrals/register", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                referrerWallet: pendingReferralWallet,
+                referredWallet: normalizedWallet,
+              }),
+            });
+            const data = await res.json();
+            if (!cancelled) {
+              setReferralStatus(
+                res.ok
+                  ? "Referral linked. Complete your first daily claim to unlock the 1,000,000 EPWX reward for both wallets."
+                  : (data.error || "Unable to register referral.")
+              );
+            }
+          } catch {
+            if (!cancelled) {
+              setReferralStatus("Unable to register referral right now. Try reconnecting and claiming again.");
+            }
+          } finally {
+            localStorage.removeItem(PENDING_REFERRAL_STORAGE_KEY);
+          }
+        }
+      }
+
+      try {
+        const res = await fetch(`/api/epwx/wallet-referrals/stats?wallet=${normalizedWallet}`, { cache: "no-store" });
+        const data = await res.json();
+        if (!cancelled) {
+          if (res.ok) {
+            setReferralStats(data);
+          } else {
+            setReferralStats(null);
+          }
+        }
+      } catch {
+        if (!cancelled) {
+          setReferralStats(null);
+        }
+      }
+    };
+
+    syncReferralState();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [address, claimStatus]);
 
   useEffect(() => {
     const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
@@ -449,8 +642,16 @@ export default function HomeTest() {
       const data = await res.json();
       if (data.success) {
         const claimedAmount = Number(data.amount || DEFAULT_DAILY_REWARD).toLocaleString();
-        setClaimStatus(`Successfully claimed ${claimedAmount} EPWX! Your reward will be sent soon.`);
+        const referralMessage = formatReferralRewardMessage(data.referralReward);
+        setClaimStatus(
+          referralMessage
+            ? `Successfully claimed ${claimedAmount} EPWX! Your reward will be sent soon. ${referralMessage}`
+            : `Successfully claimed ${claimedAmount} EPWX! Your reward will be sent soon.`
+        );
         fetchDailyClaimsSummary();
+        if (address) {
+          fetchReferralStats(address);
+        }
       } else {
         setClaimStatus(data.error || "Claim failed");
       }
@@ -497,6 +698,59 @@ export default function HomeTest() {
                     <span className="text-lg font-bold text-emerald-300">
                       {balanceLoading ? "Loading..." : `${formattedBalance} EPWX`}
                     </span>
+                  </div>
+                </div>
+                <div className={`mb-3 w-full p-4 ${glassPanelClass}`}>
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Referral</div>
+                        <div className="mt-1 text-sm font-semibold text-white">Share your wallet link after connecting</div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleCopyReferralLink}
+                        disabled={!referralLink}
+                        className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {copied ? "Copied" : "Copy Link"}
+                      </button>
+                    </div>
+                    <div className="rounded-2xl border border-white/15 bg-slate-950/20 px-3 py-3 text-xs text-white/85 break-all">
+                      {referralLink || "Referral link will appear after wallet connection."}
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                      <div className="rounded-2xl bg-white/5 px-3 py-3 text-center">
+                        <div className="text-xs uppercase tracking-[0.16em] text-white/55">Registered</div>
+                        <div className="mt-2 text-xl font-black text-white">{referralStats?.stats?.totalRegistered ?? 0}</div>
+                      </div>
+                      <div className="rounded-2xl bg-white/5 px-3 py-3 text-center">
+                        <div className="text-xs uppercase tracking-[0.16em] text-white/55">Qualified</div>
+                        <div className="mt-2 text-xl font-black text-emerald-200">{referralStats?.stats?.qualified ?? 0}</div>
+                      </div>
+                      <div className="rounded-2xl bg-white/5 px-3 py-3 text-center">
+                        <div className="text-xs uppercase tracking-[0.16em] text-white/55">Paid</div>
+                        <div className="mt-2 text-xl font-black text-cyan-200">{referralStats?.stats?.referrerRewardsPaid ?? 0}</div>
+                      </div>
+                      <div className="rounded-2xl bg-white/5 px-3 py-3 text-center">
+                        <div className="text-xs uppercase tracking-[0.16em] text-white/55">Blocked</div>
+                        <div className="mt-2 text-xl font-black text-rose-200">{referralStats?.stats?.blocked ?? 0}</div>
+                      </div>
+                    </div>
+                    {referralStats?.referredBy ? (
+                      <div className="rounded-2xl border border-emerald-300/20 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-50">
+                        Referred by {referralStats.referredBy.referrerWallet}. Status: {referralStats.referredBy.status}. Your reward status: {referralStats.referredBy.referredRewardStatus}.
+                      </div>
+                    ) : null}
+                    {referralStatus ? (
+                      <div className="rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-white/85">
+                        {referralStatus}
+                      </div>
+                    ) : (
+                      <div className="rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-white/85">
+                        Share this link with a new wallet. If that wallet completes its first successful daily claim from a different IP, both wallets qualify for 1,000,000 EPWX.
+                      </div>
+                    )}
                   </div>
                 </div>
                 {checkingVerification ? (
