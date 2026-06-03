@@ -62,6 +62,8 @@ export default function AdminPage() {
   const { data: walletClient } = useWalletClient();
   const { writeContractAsync } = useWriteContract();
   const publicClient = usePublicClient();
+  const adminWallets = getAdminWallets();
+  const isAdmin = !!address && adminWallets.includes(address.toLowerCase());
 
   // Use the existing NEXT_PUBLIC_EPWX_TOKEN env property for contract address
   const EPWX_TOKEN_ADDRESS = process.env.NEXT_PUBLIC_EPWX_TOKEN || "0xYourTokenAddressHere";
@@ -92,13 +94,19 @@ export default function AdminPage() {
   ];
 
   useEffect(() => {
+    if (!address || !isAdmin) {
+      setClaims([]);
+      setDailyClaims([]);
+      setSpecialClaims([]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
-    const adminWallets = getAdminWallets();
-    const admin = adminWallets[0] || "";
     Promise.all([
-      fetch(`/api/epwx/claims?admin=${admin}`).then((res) => res.json()),
-      fetch(`/api/epwx/daily-claims?admin=${admin}`).then((res) => res.json()),
-      fetch(`/api/epwx/special-claim/list?admin=${admin}`).then((res) => res.json()),
+      fetch(`/api/epwx/claims?admin=${address}`).then((res) => res.json()),
+      fetch(`/api/epwx/daily-claims?admin=${address}`).then((res) => res.json()),
+      fetch(`/api/epwx/special-claim/list?admin=${address}`).then((res) => res.json()),
     ])
       .then(([claimsData, dailyClaimsData, specialClaimsData]) => {
         setClaims(claimsData.claims || []);
@@ -107,7 +115,7 @@ export default function AdminPage() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, []);
+  }, [address, isAdmin]);
     // Add wallet to special claim list
     const handleAddSpecialWallet = async () => {
       setSpecialLoading(true);
@@ -290,8 +298,18 @@ export default function AdminPage() {
   };
 
   // Show wallet connect prompt if not connected or not admin wallet
-  const adminWallets = getAdminWallets();
-  const notAdmin = !address || !adminWallets.includes(address.toLowerCase());
+  const notAdmin = !address || !isAdmin;
+  if (notAdmin) {
+    return (
+      <div className="min-h-screen bg-gray-100 p-2 sm:p-8">
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="mb-4 text-lg text-gray-700 font-semibold">Please connect the admin wallet to access this page.</div>
+          <ConnectKitButton />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
 
