@@ -576,7 +576,7 @@ router.post('/daily-claim', async (req, res) => {
   const since = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
   // 1. Verify signature
-  const message = `EPWX Daily Claim for ${normalizedWallet} on ${todayUtc}`;
+  const message = `EPWX Daily Claim for ${wallet} on ${todayUtc}`;
   let recovered;
   try {
     recovered = ethers.verifyMessage(message, signature);
