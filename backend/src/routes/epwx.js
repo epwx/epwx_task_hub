@@ -509,6 +509,33 @@ router.get('/daily-claims', async (req, res) => {
   return res.status(400).json({ error: 'Missing admin, wallet, or required parameters' });
 });
 
+// GET /api/epwx/daily-claims/summary
+router.get('/daily-claims/summary', async (req, res) => {
+  try {
+    const now = new Date();
+    const startOfTodayUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    const todayUtc = startOfTodayUtc.toISOString().slice(0, 10);
+
+    const [totalClaimsToday, totalPaidToday] = await Promise.all([
+      DailyClaim.count({
+        where: {
+          claimedAt: { [Op.gte]: startOfTodayUtc },
+        },
+      }),
+      DailyClaim.count({
+        where: {
+          status: 'paid',
+          claimedAt: { [Op.gte]: startOfTodayUtc },
+        },
+      }),
+    ]);
+
+    res.json({ todayUtc, totalClaimsToday, totalPaidToday });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // POST /api/epwx/daily-claims/mark-paid
 router.post('/daily-claims/mark-paid', async (req, res) => {
   const { admin, claimId, txHash } = req.body;
@@ -627,6 +654,19 @@ router.get('/purchases', async (req, res) => {
   try {
     const txs = await getEPWXPurchaseTransactions(wallet, sinceTimestamp);
     res.json({ transactions: txs });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/epwx/eligible?wallet=0x...&hours=3
+router.get('/eligible', async (req, res) => {
+  const { wallet, hours } = req.query;
+  if (!wallet) return res.status(400).json({ error: 'wallet is required' });
+  const sinceTimestamp = Math.floor(Date.now() / 1000) - ((parseInt(hours) || 3) * 3600);
+  try {
+    const transactions = await getEPWXPurchaseTransactions(wallet, sinceTimestamp);
+    res.json({ transactions });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
