@@ -1,16 +1,45 @@
 import dotenv from 'dotenv';
 dotenv.config();
 // Simple Node.js Telegram bot for group membership verification
+import fs from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import TelegramBot from 'node-telegram-bot-api';
 import axios from 'axios';
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '<YOUR_BOT_TOKEN_HERE>';
-console.log('BOT_TOKEN:', BOT_TOKEN); // Debug: print the bot token
 const GROUP_ID = process.env.TELEGRAM_GROUP_ID || '-1001970739822'; // Replace with your group ID
 const bot = new TelegramBot(BOT_TOKEN, { polling: true });
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const walletRequestsFile = path.join(__dirname, '.telegram-wallet-requests.json');
 
-// Store wallet verification requests in memory (use DB for production)
+// Keep a persisted copy so /verify still works after PM2 restarts.
 const walletRequests = {};
+
+async function loadWalletRequests() {
+  try {
+    const raw = await fs.readFile(walletRequestsFile, 'utf8');
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object') {
+      Object.assign(walletRequests, parsed);
+    }
+  } catch (error) {
+    if (error.code !== 'ENOENT') {
+      console.error('[BOT] Failed to load wallet requests cache:', error);
+    }
+  }
+}
+
+async function saveWalletRequests() {
+  try {
+    await fs.writeFile(walletRequestsFile, JSON.stringify(walletRequests, null, 2), 'utf8');
+  } catch (error) {
+    console.error('[BOT] Failed to persist wallet requests cache:', error);
+  }
+}
+
+await loadWalletRequests();
 
 bot.onText(/\/start (.+)/, async (msg, match) => {
   const param = match[1];
@@ -41,10 +70,18 @@ bot.onText(/\/start (.+)/, async (msg, match) => {
   const wallet = param;
   console.log(`[BOT] Received /start with wallet: ${wallet} from user: ${userId}`);
   walletRequests[userId] = wallet;
+  await saveWalletRequests();
   bot.sendMessage(msg.chat.id,
     'To verify your Telegram membership:\n' +
     'Step 1: Join our group: https://t.me/ePowerX_On_Base\n\n' +
     'Step 2: Click /verify below in this chat.'
+  );
+});
+
+bot.onText(/\/start$/, async (msg) => {
+  bot.sendMessage(
+    msg.chat.id,
+    'Open the verification link from the EPWX Task Hub after connecting your wallet. That link passes your wallet address to the bot before you tap /verify.'
   );
 });
 
@@ -77,6 +114,8 @@ bot.onText(/\/verify/, async (msg) => {
         }
         await axios.post(backendUrl, { wallet: wallet.toLowerCase() });
         console.log(`[BOT] Notified backend to set telegramVerified for wallet: ${wallet.toLowerCase()}`);
+        delete walletRequests[userId];
+        await saveWalletRequests();
       } catch (notifyErr) {
         console.error('[BOT] Failed to notify backend for telegram verification:', notifyErr?.response?.data || notifyErr);
       }

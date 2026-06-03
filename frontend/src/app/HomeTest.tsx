@@ -55,6 +55,7 @@ const BONUS_DAILY_REWARD = 5_000_000;
 const MID_TIER_DAILY_REWARD_THRESHOLD = 10_000_000_000;
 const BONUS_DAILY_REWARD_THRESHOLD = 100_000_000_000;
 const TELEGRAM_VERIFICATION_RECHECK_INTERVAL_MS = 60_000;
+const TELEGRAM_BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "epwx_bot";
 const PENDING_REFERRAL_STORAGE_KEY = "epwx-pending-referrer";
 const DAILY_REWARD_TIERS = [
   {
@@ -761,7 +762,7 @@ export default function HomeTest() {
                   <span className="bg-white/10 border border-white/20 text-white/80 font-medium py-3 px-4 rounded-xl mb-2 w-full text-center block">Unable to confirm Telegram verification right now. Refresh or try again in a moment.</span>
                 ) : (
                   <a
-                    href={`https://t.me/epwx_bot?start=${address}`}
+                    href={`https://t.me/${TELEGRAM_BOT_USERNAME}?start=${address}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="bg-white/15 hover:bg-white/20 border border-white/20 text-white font-bold py-3 px-4 rounded-xl mb-2 w-full text-center transition-colors"
