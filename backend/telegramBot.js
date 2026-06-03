@@ -117,7 +117,12 @@ bot.onText(/\/verify/, async (msg) => {
         delete walletRequests[userId];
         await saveWalletRequests();
       } catch (notifyErr) {
-        console.error('[BOT] Failed to notify backend for telegram verification:', notifyErr?.response?.data || notifyErr);
+        console.error('[BOT] Failed to notify backend for telegram verification:', {
+          backendUrl: process.env.API_URL || 'http://localhost:4000',
+          status: notifyErr?.response?.status || null,
+          data: notifyErr?.response?.data || null,
+          message: notifyErr?.message || 'Unknown error',
+        });
       }
     } else {
       bot.sendMessage(msg.chat.id, '❌ You are not a member of the EPWX group. Please join at https://t.me/ePowerX_On_Base and try again.');
