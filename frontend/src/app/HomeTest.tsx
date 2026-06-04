@@ -155,6 +155,14 @@ function isWalletInAppBrowser() {
   return /(MetaMask|Trust|TokenPocket|CoinbaseWallet|BitKeep|OKApp|imToken|SafePal)/i.test(navigator.userAgent);
 }
 
+function isMobileBrowser() {
+  if (typeof navigator === "undefined") {
+    return false;
+  }
+
+  return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+}
+
 function getReferralShareLinks(referralLink: string) {
   const shareText = buildReferralShareText(referralLink);
   const encodedLink = encodeURIComponent(referralLink);
@@ -454,6 +462,8 @@ export default function HomeTest() {
     const shareLinks = getReferralShareLinks(referralLink);
 
     if (platform === "whatsapp") {
+      const shouldAvoidWhatsAppWeb = isWalletInAppBrowser() || isMobileBrowser();
+
       if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
         navigator.share({
           title: "EPWX Task Hub referral",
@@ -464,7 +474,7 @@ export default function HomeTest() {
             return;
           }
 
-          if (isWalletInAppBrowser() && typeof navigator.clipboard !== "undefined") {
+          if (shouldAvoidWhatsAppWeb && typeof navigator.clipboard !== "undefined") {
             try {
               await navigator.clipboard.writeText(buildReferralShareText(referralLink));
               setReferralStatus("Referral message copied. Open WhatsApp and paste it into your chat.");
@@ -480,8 +490,19 @@ export default function HomeTest() {
         return;
       }
 
-      if (isWalletInAppBrowser()) {
-        setReferralStatus("This wallet browser blocks direct WhatsApp handoff. Copy the referral link and paste it into WhatsApp.");
+      if (shouldAvoidWhatsAppWeb) {
+        if (typeof navigator !== "undefined" && typeof navigator.clipboard !== "undefined") {
+          navigator.clipboard.writeText(buildReferralShareText(referralLink))
+            .then(() => {
+              setReferralStatus("Referral message copied. Open WhatsApp and paste it into your chat.");
+            })
+            .catch(() => {
+              setReferralStatus("Direct WhatsApp handoff is blocked here. Copy the referral link and share it manually.");
+            });
+          return;
+        }
+
+        setReferralStatus("Direct WhatsApp handoff is blocked here. Copy the referral link and share it manually.");
         return;
       }
 
