@@ -163,7 +163,6 @@ function getReferralShareLinks(referralLink: string) {
   return {
     x: `https://twitter.com/intent/tweet?text=${encodedShareText}`,
     telegram: `https://t.me/share/url?url=${encodedLink}&text=${encodedShareText}`,
-    whatsappApp: `whatsapp://send?text=${encodedShareText}`,
     whatsappWeb: `https://api.whatsapp.com/send?text=${encodedShareText}`,
   };
 }
@@ -455,29 +454,38 @@ export default function HomeTest() {
     const shareLinks = getReferralShareLinks(referralLink);
 
     if (platform === "whatsapp") {
-      if (isWalletInAppBrowser()) {
-        if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
-          navigator.share({
-            title: "EPWX Task Hub referral",
-            text: buildReferralShareText(referralLink),
-            url: referralLink,
-          }).catch(() => {
-            window.open(shareLinks.whatsappWeb, "_blank", "noopener,noreferrer");
-          });
-          return;
-        }
+      if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
+        navigator.share({
+          title: "EPWX Task Hub referral",
+          text: buildReferralShareText(referralLink),
+          url: referralLink,
+        }).catch(async (error: any) => {
+          if (error?.name === "AbortError") {
+            return;
+          }
 
-        window.open(shareLinks.whatsappWeb, "_blank", "noopener,noreferrer");
+          if (isWalletInAppBrowser() && typeof navigator.clipboard !== "undefined") {
+            try {
+              await navigator.clipboard.writeText(buildReferralShareText(referralLink));
+              setReferralStatus("Referral message copied. Open WhatsApp and paste it into your chat.");
+              return;
+            } catch {
+              setReferralStatus("Unable to open WhatsApp directly in this wallet browser. Copy the referral link and share it manually.");
+              return;
+            }
+          }
+
+          window.open(shareLinks.whatsappWeb, "_blank", "noopener,noreferrer");
+        });
         return;
       }
 
-      const fallbackStartedAt = Date.now();
-      window.location.href = shareLinks.whatsappApp;
-      window.setTimeout(() => {
-        if (document.visibilityState === "visible" && Date.now() - fallbackStartedAt < 2200) {
-          window.location.href = shareLinks.whatsappWeb;
-        }
-      }, 1200);
+      if (isWalletInAppBrowser()) {
+        setReferralStatus("This wallet browser blocks direct WhatsApp handoff. Copy the referral link and paste it into WhatsApp.");
+        return;
+      }
+
+      window.open(shareLinks.whatsappWeb, "_blank", "noopener,noreferrer");
       return;
     }
 
