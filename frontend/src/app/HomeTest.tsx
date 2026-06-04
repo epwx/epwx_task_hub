@@ -155,7 +155,7 @@ function getReferralShareLinks(referralLink: string) {
   return {
     x: `https://twitter.com/intent/tweet?text=${encodedShareText}`,
     telegram: `https://t.me/share/url?url=${encodedLink}&text=${encodedShareText}`,
-    whatsapp: `https://wa.me/?text=${encodedShareText}`,
+    whatsapp: `https://api.whatsapp.com/send?text=${encodedShareText}`,
   };
 }
 
@@ -444,6 +444,12 @@ export default function HomeTest() {
     }
 
     const shareLinks = getReferralShareLinks(referralLink);
+
+    if (platform === "whatsapp") {
+      window.location.href = shareLinks.whatsapp;
+      return;
+    }
+
     window.open(shareLinks[platform], "_blank", "noopener,noreferrer");
   };
 
