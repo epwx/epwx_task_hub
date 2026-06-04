@@ -147,6 +147,14 @@ function buildReferralShareText(referralLink: string) {
   return `Join me on EPWX Task Hub and use my referral link to qualify for EPWX rewards: ${referralLink}`;
 }
 
+function isWalletInAppBrowser() {
+  if (typeof navigator === "undefined") {
+    return false;
+  }
+
+  return /(MetaMask|Trust|TokenPocket|CoinbaseWallet|BitKeep|OKApp|imToken|SafePal)/i.test(navigator.userAgent);
+}
+
 function getReferralShareLinks(referralLink: string) {
   const shareText = buildReferralShareText(referralLink);
   const encodedLink = encodeURIComponent(referralLink);
@@ -447,6 +455,22 @@ export default function HomeTest() {
     const shareLinks = getReferralShareLinks(referralLink);
 
     if (platform === "whatsapp") {
+      if (isWalletInAppBrowser()) {
+        if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
+          navigator.share({
+            title: "EPWX Task Hub referral",
+            text: buildReferralShareText(referralLink),
+            url: referralLink,
+          }).catch(() => {
+            window.open(shareLinks.whatsappWeb, "_blank", "noopener,noreferrer");
+          });
+          return;
+        }
+
+        window.open(shareLinks.whatsappWeb, "_blank", "noopener,noreferrer");
+        return;
+      }
+
       const fallbackStartedAt = Date.now();
       window.location.href = shareLinks.whatsappApp;
       window.setTimeout(() => {
