@@ -175,6 +175,10 @@ function getReferralShareLinks(referralLink: string) {
   };
 }
 
+function shouldUseWhatsAppCopyFallback() {
+  return isWalletInAppBrowser() || isMobileBrowser();
+}
+
 function formatDuration(msLeft: number) {
   if (msLeft <= 0) return "0m 0s";
 
@@ -462,7 +466,7 @@ export default function HomeTest() {
     const shareLinks = getReferralShareLinks(referralLink);
 
     if (platform === "whatsapp") {
-      const shouldAvoidWhatsAppWeb = isWalletInAppBrowser() || isMobileBrowser();
+      const shouldAvoidWhatsAppWeb = shouldUseWhatsAppCopyFallback();
 
       if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
         navigator.share({
@@ -862,9 +866,14 @@ export default function HomeTest() {
                         disabled={!referralLink}
                         className="rounded-full border border-white/20 bg-white/5 px-3 py-2 text-xs font-bold text-white transition-colors hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50"
                       >
-                        WhatsApp
+                        {shouldUseWhatsAppCopyFallback() ? "Copy for WhatsApp" : "WhatsApp"}
                       </button>
                     </div>
+                    {shouldUseWhatsAppCopyFallback() ? (
+                      <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-xs text-white/75">
+                        Wallet and mobile browsers usually block direct WhatsApp handoff. This button copies a ready-to-send message for manual paste.
+                      </div>
+                    ) : null}
                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                       <div className="rounded-2xl bg-white/5 px-3 py-3 text-center">
                         <div className="text-xs uppercase tracking-[0.16em] text-white/55">Registered</div>
