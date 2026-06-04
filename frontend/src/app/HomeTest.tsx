@@ -441,14 +441,32 @@ export default function HomeTest() {
   };
 
   const handleShareReferralLink = async () => {
-    if (!referralLink || typeof navigator === "undefined" || typeof navigator.share !== "function") {
+    if (!referralLink || typeof navigator === "undefined") {
+      return;
+    }
+
+    const shareMessage = buildReferralShareText(referralLink);
+
+    if (typeof navigator.share !== "function") {
+      if (typeof navigator.clipboard !== "undefined") {
+        try {
+          await navigator.clipboard.writeText(shareMessage);
+          setReferralStatus("Referral message copied. Paste it into any app to share your link.");
+          return;
+        } catch {
+          setReferralStatus("Unable to open the share sheet here. Copy the referral link and share it manually.");
+          return;
+        }
+      }
+
+      setReferralStatus("Unable to open the share sheet here. Copy the referral link and share it manually.");
       return;
     }
 
     try {
       await navigator.share({
         title: "EPWX Task Hub referral",
-        text: buildReferralShareText(referralLink),
+        text: shareMessage,
         url: referralLink,
       });
     } catch (error: any) {
@@ -834,16 +852,14 @@ export default function HomeTest() {
                       {referralLink || "Referral link will appear after wallet connection."}
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      {typeof navigator !== "undefined" && typeof navigator.share === "function" ? (
-                        <button
-                          type="button"
-                          onClick={handleShareReferralLink}
-                          disabled={!referralLink}
-                          className="rounded-full border border-emerald-300/30 bg-emerald-400/10 px-3 py-2 text-xs font-bold text-emerald-50 transition-colors hover:bg-emerald-400/20 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          Share
-                        </button>
-                      ) : null}
+                      <button
+                        type="button"
+                        onClick={handleShareReferralLink}
+                        disabled={!referralLink}
+                        className="rounded-full border border-emerald-300/30 bg-emerald-400/10 px-3 py-2 text-xs font-bold text-emerald-50 transition-colors hover:bg-emerald-400/20 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {typeof navigator !== "undefined" && typeof navigator.share === "function" ? "Share" : "Copy Share Message"}
+                      </button>
                       <button
                         type="button"
                         onClick={() => handleOpenShareLink("x")}
