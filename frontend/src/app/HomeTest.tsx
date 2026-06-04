@@ -143,6 +143,22 @@ function formatReferralRewardMessage(reward?: ReferralRewardStatus | null) {
   return `Referral bonus qualified for ${amount} EPWX per wallet. Distribution status: referrer ${reward.referrerRewardStatus || "pending"}, referred ${reward.referredRewardStatus || "pending"}.`;
 }
 
+function buildReferralShareText(referralLink: string) {
+  return `Join me on EPWX Task Hub and use my referral link to qualify for EPWX rewards: ${referralLink}`;
+}
+
+function getReferralShareLinks(referralLink: string) {
+  const shareText = buildReferralShareText(referralLink);
+  const encodedLink = encodeURIComponent(referralLink);
+  const encodedShareText = encodeURIComponent(shareText);
+
+  return {
+    x: `https://twitter.com/intent/tweet?text=${encodedShareText}`,
+    telegram: `https://t.me/share/url?url=${encodedLink}&text=${encodedShareText}`,
+    whatsapp: `https://wa.me/?text=${encodedShareText}`,
+  };
+}
+
 function formatDuration(msLeft: number) {
   if (msLeft <= 0) return "0m 0s";
 
@@ -402,6 +418,33 @@ export default function HomeTest() {
     } catch {
       setReferralStatus("Unable to copy the referral link. Please copy it manually.");
     }
+  };
+
+  const handleShareReferralLink = async () => {
+    if (!referralLink || typeof navigator === "undefined" || typeof navigator.share !== "function") {
+      return;
+    }
+
+    try {
+      await navigator.share({
+        title: "EPWX Task Hub referral",
+        text: buildReferralShareText(referralLink),
+        url: referralLink,
+      });
+    } catch (error: any) {
+      if (error?.name !== "AbortError") {
+        toast.error("Unable to open the share dialog right now.");
+      }
+    }
+  };
+
+  const handleOpenShareLink = (platform: "x" | "telegram" | "whatsapp") => {
+    if (!referralLink || typeof window === "undefined") {
+      return;
+    }
+
+    const shareLinks = getReferralShareLinks(referralLink);
+    window.open(shareLinks[platform], "_blank", "noopener,noreferrer");
   };
 
   const fetchDailyClaimsSummary = async () => {
@@ -719,6 +762,42 @@ export default function HomeTest() {
                     </div>
                     <div className="rounded-2xl border border-white/15 bg-slate-950/20 px-3 py-3 text-xs text-white/85 break-all">
                       {referralLink || "Referral link will appear after wallet connection."}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {typeof navigator !== "undefined" && typeof navigator.share === "function" ? (
+                        <button
+                          type="button"
+                          onClick={handleShareReferralLink}
+                          disabled={!referralLink}
+                          className="rounded-full border border-emerald-300/30 bg-emerald-400/10 px-3 py-2 text-xs font-bold text-emerald-50 transition-colors hover:bg-emerald-400/20 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          Share
+                        </button>
+                      ) : null}
+                      <button
+                        type="button"
+                        onClick={() => handleOpenShareLink("x")}
+                        disabled={!referralLink}
+                        className="rounded-full border border-white/20 bg-white/5 px-3 py-2 text-xs font-bold text-white transition-colors hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Share on X
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenShareLink("telegram")}
+                        disabled={!referralLink}
+                        className="rounded-full border border-white/20 bg-white/5 px-3 py-2 text-xs font-bold text-white transition-colors hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Telegram
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenShareLink("whatsapp")}
+                        disabled={!referralLink}
+                        className="rounded-full border border-white/20 bg-white/5 px-3 py-2 text-xs font-bold text-white transition-colors hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        WhatsApp
+                      </button>
                     </div>
                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                       <div className="rounded-2xl bg-white/5 px-3 py-3 text-center">
