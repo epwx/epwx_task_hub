@@ -15,6 +15,7 @@ const BONUS_TIER_DAILY_REWARD_AMOUNT = '5000000';
 const MID_TIER_DAILY_REWARD_THRESHOLD = 10_000_000_000;
 const BONUS_TIER_DAILY_REWARD_THRESHOLD = 100_000_000_000;
 const EPWX_TOKEN_DECIMALS = 9;
+const EPWX_REWARD_TRANSFER_FEE_BPS = Number(process.env.EPWX_REWARD_TRANSFER_FEE_BPS || '600');
 
 function normalizeWallet(wallet) {
   if (typeof wallet !== 'string') {
@@ -28,13 +29,29 @@ function getRequestIp(req) {
   return req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.connection.remoteAddress || req.socket?.remoteAddress || null;
 }
 
+function getGrossRewardAmount(amount) {
+  const normalizedAmount = BigInt(String(amount));
+
+  if (!Number.isFinite(EPWX_REWARD_TRANSFER_FEE_BPS) || EPWX_REWARD_TRANSFER_FEE_BPS <= 0) {
+    return normalizedAmount;
+  }
+
+  if (EPWX_REWARD_TRANSFER_FEE_BPS >= 10_000) {
+    throw new Error('EPWX_REWARD_TRANSFER_FEE_BPS must be less than 10000.');
+  }
+
+  const denominator = 10_000n - BigInt(EPWX_REWARD_TRANSFER_FEE_BPS);
+  return (normalizedAmount * 10_000n + denominator - 1n) / denominator;
+}
+
 async function distributeEpwxReward(wallet, amount) {
   if (!epwxTokenWithSigner) {
     console.error('[epwx-payout] Token signer is unavailable. Check blockchain environment configuration.');
     return { paid: false, txHash: null };
   }
 
-  const tx = await epwxTokenWithSigner.transfer(wallet, ethers.parseUnits(String(amount), EPWX_TOKEN_DECIMALS));
+  const grossAmount = getGrossRewardAmount(amount);
+  const tx = await epwxTokenWithSigner.transfer(wallet, ethers.parseUnits(grossAmount.toString(), EPWX_TOKEN_DECIMALS));
   const receipt = await tx.wait();
 
   return {
