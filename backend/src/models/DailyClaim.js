@@ -24,6 +24,10 @@ const DailyClaim = sequelize.define('DailyClaim', {
     allowNull: false,
     defaultValue: '100000',
   },
+  txHash: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
   status: {
     type: DataTypes.STRING,
     allowNull: false,

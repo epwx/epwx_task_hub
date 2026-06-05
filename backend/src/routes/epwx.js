@@ -28,18 +28,23 @@ function getRequestIp(req) {
   return req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.connection.remoteAddress || req.socket?.remoteAddress || null;
 }
 
-async function distributeReferralReward(wallet) {
+async function distributeEpwxReward(wallet, amount) {
   if (!epwxTokenWithSigner) {
+    console.error('[epwx-payout] Token signer is unavailable. Check blockchain environment configuration.');
     return { paid: false, txHash: null };
   }
 
-  const tx = await epwxTokenWithSigner.transfer(wallet, ethers.parseUnits(REFERRAL_REWARD_AMOUNT, EPWX_TOKEN_DECIMALS));
+  const tx = await epwxTokenWithSigner.transfer(wallet, ethers.parseUnits(String(amount), EPWX_TOKEN_DECIMALS));
   const receipt = await tx.wait();
 
   return {
     paid: receipt?.status === 1,
     txHash: tx.hash,
   };
+}
+
+async function distributeReferralReward(wallet) {
+  return distributeEpwxReward(wallet, REFERRAL_REWARD_AMOUNT);
 }
 
 async function getDailyRewardAmount(wallet) {
@@ -658,9 +663,19 @@ router.post('/daily-claim', async (req, res) => {
   }
 
   // TODO: Send EPWX to wallet here (call contract or queue for admin)
-  // For now, just record the claim
   const amount = await getDailyRewardAmount(normalizedWallet);
   const claim = await DailyClaim.create({ wallet: normalizedWallet, ip, claimedAt: now, amount });
+
+  try {
+    const payout = await distributeEpwxReward(normalizedWallet, amount);
+    if (payout.paid) {
+      claim.status = 'paid';
+      claim.txHash = payout.txHash;
+      await claim.save();
+    }
+  } catch (error) {
+    console.error('[daily-claim] Automatic daily payout failed:', error);
+  }
 
   let referralReward = null;
   if (!historicalClaim) {
@@ -670,8 +685,10 @@ router.post('/daily-claim', async (req, res) => {
 
   res.json({
     success: true,
-    message: 'Daily claim successful!',
+    message: claim.status === 'paid' ? 'Daily claim successful and paid!' : 'Daily claim successful and queued for payout.',
     amount: claim.amount,
+    status: claim.status,
+    txHash: claim.txHash || null,
     referralReward,
   });
 });
