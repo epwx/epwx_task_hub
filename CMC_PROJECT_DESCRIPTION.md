@@ -1,5 +1,7 @@
 **Project Description**
 
+**Social Presence:** [X] Twitter/X campaigns | [TG] Telegram-gated community access | [SHARE] Social reward participation
+
 EPWX is the native utility token of the ePowerX ecosystem, built on Base to support reward distribution, community participation, social engagement campaigns, merchant incentives, and future payment infrastructure. The EPWX Task Hub is the first live utility layer in the ecosystem, allowing users to connect wallets, verify community participation, complete campaigns, and earn EPWX through structured reward flows.
 
 The platform combines wallet-based verification, Telegram-gated access, Twitter/X-linked campaign participation, merchant reward logic, cashback incentives, and transparent token statistics. By using Base, EPWX benefits from low fees, fast transactions, and EVM compatibility, making it suitable for both user-facing rewards and broader ecosystem expansion.
@@ -28,8 +30,8 @@ The platform combines wallet-based verification, Telegram-gated access, Twitter/
 **Current Platform Features**
 
 1. Daily EPWX claims with wallet-signature verification.
-2. Twitter/X campaign rewards with admin-managed campaign controls.
-3. Telegram verification for gated reward eligibility.
+2. [X] Twitter/X campaign rewards with admin-managed campaign controls.
+3. [TG] Telegram verification for gated reward eligibility.
 4. Cashback rewards tied to qualifying EPWX purchase activity.
 5. Public token data endpoints for total, circulating, and burned supply transparency.
 
