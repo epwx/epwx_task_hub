@@ -78,6 +78,38 @@ interface DailyClaimsSummary {
   totalPaidToday: number;
 }
 
+function ShareIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5 fill-none stroke-current" strokeWidth="1.8">
+      <path d="M15 8a3 3 0 1 0-2.82-4H12a3 3 0 0 0 .18 1.01L7.91 7.25A3 3 0 0 0 6 6.5a3 3 0 1 0 1.91 5.32l4.27 2.24A3 3 0 0 0 12 15a3 3 0 1 0 .18 1.01l-4.27 2.24A3 3 0 1 0 6 17.5a3 3 0 0 0 1.91-.75l4.27-2.24A3 3 0 0 0 15 15a3 3 0 1 0 0-6Z" />
+    </svg>
+  );
+}
+
+function XIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5 fill-current">
+      <path d="M18.9 2H22l-6.77 7.74L23.2 22h-6.24l-4.89-7.39L5.6 22H2.48l7.24-8.28L1.7 2h6.39l4.42 6.76L18.9 2Zm-1.09 18h1.73L7.13 3.9H5.27L17.81 20Z" />
+    </svg>
+  );
+}
+
+function TelegramIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5 fill-current">
+      <path d="M21.94 4.66a1.5 1.5 0 0 0-1.72-.23L3.05 12.47a1.5 1.5 0 0 0 .15 2.77l4.05 1.52 1.52 4.05a1.5 1.5 0 0 0 2.77.15l8.04-17.17a1.5 1.5 0 0 0-.64-.63ZM9.04 15.39l-.55 3.2-1.06-2.81 8.66-7.53-7.05 7.14Z" />
+    </svg>
+  );
+}
+
+function WhatsAppIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5 fill-current">
+      <path d="M12 2a10 10 0 0 0-8.67 14.99L2 22l5.18-1.28A10 10 0 1 0 12 2Zm0 18.18a8.15 8.15 0 0 1-4.16-1.14l-.3-.18-3.07.76.82-2.99-.2-.31A8.18 8.18 0 1 1 12 20.18Zm4.49-6.07c-.25-.12-1.47-.73-1.7-.82-.23-.08-.4-.12-.57.13-.16.25-.65.82-.79.99-.15.17-.29.19-.54.06-.25-.12-1.05-.39-2-1.23-.74-.66-1.24-1.48-1.39-1.73-.14-.25-.01-.39.11-.51.11-.11.25-.29.37-.44.12-.15.17-.25.25-.42.08-.17.04-.31-.02-.44-.06-.12-.57-1.37-.78-1.88-.2-.48-.41-.42-.57-.43h-.48c-.17 0-.44.06-.67.31-.23.25-.88.86-.88 2.09 0 1.24.9 2.43 1.02 2.6.12.17 1.76 2.69 4.25 3.77.59.25 1.04.39 1.4.5.59.19 1.12.16 1.54.1.47-.07 1.47-.6 1.68-1.17.21-.58.21-1.07.15-1.17-.06-.09-.23-.15-.48-.27Z" />
+    </svg>
+  );
+}
+
 interface TwitterCampaign {
   id: number;
   code: string;
@@ -802,6 +834,30 @@ export default function HomeTest() {
     }
   }
 
+  const shareOptions = [
+    {
+      key: "x" as const,
+      label: "X",
+      title: "Share on X",
+      icon: <XIcon />,
+      buttonClassName: "border-sky-200/25 bg-sky-400/10 text-sky-50 hover:bg-sky-400/20",
+    },
+    {
+      key: "telegram" as const,
+      label: "Telegram",
+      title: "Share on Telegram",
+      icon: <TelegramIcon />,
+      buttonClassName: "border-cyan-200/25 bg-cyan-400/10 text-cyan-50 hover:bg-cyan-400/20",
+    },
+    {
+      key: "whatsapp" as const,
+      label: shouldUseWhatsAppCopyFallback() ? "Copy for WhatsApp" : "WhatsApp",
+      title: shouldUseWhatsAppCopyFallback() ? "Copy for WhatsApp" : "Share on WhatsApp",
+      icon: <WhatsAppIcon />,
+      buttonClassName: "border-emerald-200/25 bg-emerald-400/10 text-emerald-50 hover:bg-emerald-400/20",
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:bg-gray-950 dark:bg-none flex flex-col">
       <main className="container mx-auto px-4 py-12 flex-1">
@@ -856,34 +912,27 @@ export default function HomeTest() {
                         type="button"
                         onClick={handleShareReferralLink}
                         disabled={!referralLink}
-                        className="rounded-full border border-emerald-300/30 bg-emerald-400/10 px-3 py-2 text-xs font-bold text-emerald-50 transition-colors hover:bg-emerald-400/20 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="inline-flex items-center gap-2 rounded-full border border-emerald-300/30 bg-emerald-400/10 px-3 py-2 text-xs font-bold text-emerald-50 transition-colors hover:bg-emerald-400/20 disabled:cursor-not-allowed disabled:opacity-50"
                       >
+                        <ShareIcon />
                         {typeof navigator !== "undefined" && typeof navigator.share === "function" ? "Share" : "Copy Share Message"}
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => handleOpenShareLink("x")}
-                        disabled={!referralLink}
-                        className="rounded-full border border-white/20 bg-white/5 px-3 py-2 text-xs font-bold text-white transition-colors hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        Share on X
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleOpenShareLink("telegram")}
-                        disabled={!referralLink}
-                        className="rounded-full border border-white/20 bg-white/5 px-3 py-2 text-xs font-bold text-white transition-colors hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        Telegram
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleOpenShareLink("whatsapp")}
-                        disabled={!referralLink}
-                        className="rounded-full border border-white/20 bg-white/5 px-3 py-2 text-xs font-bold text-white transition-colors hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        {shouldUseWhatsAppCopyFallback() ? "Copy for WhatsApp" : "WhatsApp"}
-                      </button>
+                      {shareOptions.map((option) => (
+                        <button
+                          key={option.key}
+                          type="button"
+                          onClick={() => handleOpenShareLink(option.key)}
+                          disabled={!referralLink}
+                          aria-label={option.title}
+                          title={option.title}
+                          className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${option.buttonClassName}`}
+                        >
+                          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/12">
+                            {option.icon}
+                          </span>
+                          <span>{option.label}</span>
+                        </button>
+                      ))}
                     </div>
                     {shouldUseWhatsAppCopyFallback() ? (
                       <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-xs text-white/75">
