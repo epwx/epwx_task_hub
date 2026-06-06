@@ -987,12 +987,6 @@ export default function HomeTest() {
                     className="bg-white/15 hover:bg-white/20 border border-white/20 text-white font-bold py-3 px-4 rounded-xl mb-2 w-full text-center transition-colors"
                   >Verify Telegram Membership</a>
                 )}
-                <a
-                  href="#daily-claim"
-                  className="mt-2 inline-flex w-full items-center justify-center rounded-xl border border-white/20 bg-slate-950/20 px-4 py-3 text-center text-sm font-bold text-white transition-colors hover:bg-slate-950/35"
-                >
-                  Jump to Daily Claim
-                </a>
               </div>
             )}
             </div>
@@ -1345,6 +1339,13 @@ export default function HomeTest() {
           </div>
         </div>
       </footer>
+      <a
+        href="#daily-claim"
+        className="fixed right-4 top-1/2 z-40 hidden -translate-y-1/2 rounded-full border border-white/15 bg-slate-950/85 px-3 py-4 text-xs font-black uppercase tracking-[0.2em] text-white shadow-[0_18px_40px_rgba(15,23,42,0.35)] backdrop-blur-md transition-all hover:right-3 hover:bg-slate-900 lg:flex dark:border-white/10 dark:bg-slate-900/85"
+        style={{ writingMode: 'vertical-rl' }}
+      >
+        Daily Claim
+      </a>
     </div>
   );
 }
