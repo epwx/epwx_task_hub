@@ -1342,15 +1342,29 @@ export default function HomeTest() {
         </div>
       </footer>
       <a
+        href="#buy-epwx"
+        className="fixed left-2 top-[34%] z-40 -translate-y-1/2 rounded-full border border-white/15 bg-slate-950/85 px-2 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-white shadow-[0_18px_40px_rgba(15,23,42,0.35)] backdrop-blur-md transition-all hover:bg-slate-900 dark:border-white/10 dark:bg-slate-900/85 lg:hidden"
+        style={{ writingMode: 'vertical-rl' }}
+      >
+        Buy EPWX
+      </a>
+      <a
+        href="#buy-epwx"
+        className="fixed left-4 top-[34%] z-40 hidden -translate-y-1/2 rounded-full border border-white/15 bg-slate-950/85 px-3 py-4 text-xs font-black uppercase tracking-[0.2em] text-white shadow-[0_18px_40px_rgba(15,23,42,0.35)] backdrop-blur-md transition-all hover:left-3 hover:bg-slate-900 dark:border-white/10 dark:bg-slate-900/85 lg:flex"
+        style={{ writingMode: 'vertical-rl' }}
+      >
+        Buy EPWX
+      </a>
+      <a
         href="#burnt-supply"
-        className="fixed left-2 top-1/2 z-40 -translate-y-1/2 rounded-full border border-white/15 bg-slate-950/85 px-2 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-white shadow-[0_18px_40px_rgba(15,23,42,0.35)] backdrop-blur-md transition-all hover:bg-slate-900 dark:border-white/10 dark:bg-slate-900/85 lg:hidden"
+        className="fixed left-2 top-[66%] z-40 -translate-y-1/2 rounded-full border border-white/15 bg-slate-950/85 px-2 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-white shadow-[0_18px_40px_rgba(15,23,42,0.35)] backdrop-blur-md transition-all hover:bg-slate-900 dark:border-white/10 dark:bg-slate-900/85 lg:hidden"
         style={{ writingMode: 'vertical-rl' }}
       >
         90% Burnt
       </a>
       <a
         href="#burnt-supply"
-        className="fixed left-4 top-1/2 z-40 hidden -translate-y-1/2 rounded-full border border-white/15 bg-slate-950/85 px-3 py-4 text-xs font-black uppercase tracking-[0.2em] text-white shadow-[0_18px_40px_rgba(15,23,42,0.35)] backdrop-blur-md transition-all hover:left-3 hover:bg-slate-900 dark:border-white/10 dark:bg-slate-900/85 lg:flex"
+        className="fixed left-4 top-[66%] z-40 hidden -translate-y-1/2 rounded-full border border-white/15 bg-slate-950/85 px-3 py-4 text-xs font-black uppercase tracking-[0.2em] text-white shadow-[0_18px_40px_rgba(15,23,42,0.35)] backdrop-blur-md transition-all hover:left-3 hover:bg-slate-900 dark:border-white/10 dark:bg-slate-900/85 lg:flex"
         style={{ writingMode: 'vertical-rl' }}
       >
         90% Burnt
