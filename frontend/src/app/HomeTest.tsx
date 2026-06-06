@@ -987,6 +987,12 @@ export default function HomeTest() {
                     className="bg-white/15 hover:bg-white/20 border border-white/20 text-white font-bold py-3 px-4 rounded-xl mb-2 w-full text-center transition-colors"
                   >Verify Telegram Membership</a>
                 )}
+                <a
+                  href="#daily-claim"
+                  className="mt-2 inline-flex w-full items-center justify-center rounded-xl border border-white/20 bg-slate-950/20 px-4 py-3 text-center text-sm font-bold text-white transition-colors hover:bg-slate-950/35"
+                >
+                  Jump to Daily Claim
+                </a>
               </div>
             )}
             </div>
@@ -1113,7 +1119,7 @@ export default function HomeTest() {
         )}
 
         {/* Daily Claim Section */}
-        <section className="py-12">
+        <section id="daily-claim" className="py-12 scroll-mt-24">
           <div className={`${themedSectionClass} w-full max-w-lg mx-auto`}>
             <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
             <div className={themedInnerClass}>
