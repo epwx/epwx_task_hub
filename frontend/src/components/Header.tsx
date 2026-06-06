@@ -43,6 +43,7 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
 
   const isAdmin = address && adminWallets.includes(address.toLowerCase());
   const isMerchant = address && merchantWallets.includes(address.toLowerCase());
+  const isHomePage = pathname === '/';
   const desktopLinks = [
     {
       href: 'https://epowex.com',
@@ -88,7 +89,9 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
   const desktopActionClass =
     'rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:-translate-y-0.5 hover:border-slate-300 hover:text-slate-950 hover:shadow-md dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-slate-500 dark:hover:text-white';
   const buyLinkClass =
-    'rounded-full bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_25px_rgba(15,23,42,0.18)] transition-all hover:-translate-y-0.5 hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-100';
+    isHomePage
+      ? 'rounded-full bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_25px_rgba(15,23,42,0.18)] transition-all hover:-translate-y-0.5 hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-100'
+      : desktopActionClass;
 
   // Debug logs for troubleshooting
   useEffect(() => {
