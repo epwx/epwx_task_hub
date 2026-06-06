@@ -58,35 +58,35 @@ const MerchantClaimsTable: React.FC<MerchantClaimsTableProps> = ({ claims, isAdm
 
   return (
     <div className="overflow-x-auto w-full">
-      <table className="min-w-full bg-white rounded shadow text-xs sm:text-sm">
-        <thead className="bg-gray-200">
+      <table className="min-w-full rounded border border-slate-200 bg-white text-xs shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:text-sm">
+        <thead className="bg-slate-200 dark:bg-slate-800">
           <tr>
-            <th className="py-2 px-2 sm:px-4 text-gray-700">ID</th>
-            <th className="py-2 px-2 sm:px-4 text-gray-700">Customer</th>
-            <th className="py-2 px-2 sm:px-4 text-gray-700">{context === 'twitter' ? 'Campaign' : 'Bill'}</th>
-            <th className="py-2 px-2 sm:px-4 text-gray-700">EPWX</th>
-            <th className="py-2 px-2 sm:px-4 text-gray-700">Status</th>
-            <th className="py-2 px-2 sm:px-4 text-gray-700">Date</th>
-            <th className="py-2 px-2 sm:px-4 text-gray-700">{context === 'twitter' ? 'Screenshot' : 'Receipt'}</th>
-            {isAdmin && <th className="py-2 px-2 sm:px-4 text-gray-700">Action</th>}
+            <th className="py-2 px-2 text-slate-700 dark:text-slate-200 sm:px-4">ID</th>
+            <th className="py-2 px-2 text-slate-700 dark:text-slate-200 sm:px-4">Customer</th>
+            <th className="py-2 px-2 text-slate-700 dark:text-slate-200 sm:px-4">{context === 'twitter' ? 'Campaign' : 'Bill'}</th>
+            <th className="py-2 px-2 text-slate-700 dark:text-slate-200 sm:px-4">EPWX</th>
+            <th className="py-2 px-2 text-slate-700 dark:text-slate-200 sm:px-4">Status</th>
+            <th className="py-2 px-2 text-slate-700 dark:text-slate-200 sm:px-4">Date</th>
+            <th className="py-2 px-2 text-slate-700 dark:text-slate-200 sm:px-4">{context === 'twitter' ? 'Screenshot' : 'Receipt'}</th>
+            {isAdmin && <th className="py-2 px-2 text-slate-700 dark:text-slate-200 sm:px-4">Action</th>}
           </tr>
         </thead>
         <tbody>
           {claims.map((claim) => (
-            <tr key={claim.id} className="border-b last:border-none">
-              <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{claim.id}</td>
-              <td className="py-2 px-2 sm:px-4 break-all bg-white text-gray-900">{claim.customer}</td>
-              <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">
+            <tr key={claim.id} className="border-b border-slate-200 last:border-none dark:border-slate-800">
+              <td className="bg-white py-2 px-2 text-slate-900 dark:bg-slate-900 dark:text-slate-100 sm:px-4">{claim.id}</td>
+              <td className="break-all bg-white py-2 px-2 text-slate-900 dark:bg-slate-900 dark:text-slate-100 sm:px-4">{claim.customer}</td>
+              <td className="bg-white py-2 px-2 text-slate-900 dark:bg-slate-900 dark:text-slate-100 sm:px-4">
                 {context === 'twitter' ? (
                   <div>
                     <div className="font-medium">{claim.campaignCode || 'twitter-retweet'}</div>
-                    {claim.twitterUsername ? <div className="text-xs text-gray-500">@{claim.twitterUsername}</div> : null}
+                    {claim.twitterUsername ? <div className="text-xs text-slate-500 dark:text-slate-400">@{claim.twitterUsername}</div> : null}
                   </div>
                 ) : (
                   claim.bill
                 )}
               </td>
-              <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">
+              <td className="bg-white py-2 px-2 text-slate-900 dark:bg-slate-900 dark:text-slate-100 sm:px-4">
                 {/* Show the EPWX amount to be distributed */}
                 {(() => {
                   let val = claim.cashbackAmount || claim.amount || claim.bill;
@@ -94,22 +94,22 @@ const MerchantClaimsTable: React.FC<MerchantClaimsTableProps> = ({ claims, isAdm
                   return Number(val).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 9 });
                 })()}
               </td>
-              <td className="py-2 px-2 sm:px-4 bg-white text-gray-900 capitalize">
+              <td className="bg-white py-2 px-2 capitalize text-slate-900 dark:bg-slate-900 dark:text-slate-100 sm:px-4">
                 {claim.status}
                 {claim.status === "rejected" && claim.rejectionComment && (
                   <div className="text-xs text-red-600 mt-1">Reason: {claim.rejectionComment}</div>
                 )}
               </td>
-              <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{new Date(claim.createdAt).toLocaleString()}</td>
-              <td className="py-2 px-2 sm:px-4 bg-white text-blue-700 underline cursor-pointer">
+              <td className="bg-white py-2 px-2 text-slate-900 dark:bg-slate-900 dark:text-slate-100 sm:px-4">{new Date(claim.createdAt).toLocaleString()}</td>
+              <td className="cursor-pointer bg-white py-2 px-2 text-blue-700 underline dark:bg-slate-900 dark:text-blue-300 sm:px-4">
                 {claim.receiptImage ? (
                   <button onClick={() => setViewImage(getImageUrl(claim.receiptImage))}>{context === 'twitter' ? 'View Screenshot' : 'View Receipt'}</button>
                 ) : (
-                  <span className="text-gray-400">No Image</span>
+                  <span className="text-slate-400 dark:text-slate-500">No Image</span>
                 )}
               </td>
               {isAdmin && (
-                <td className="py-2 px-2 sm:px-4 bg-white">
+                <td className="bg-white py-2 px-2 dark:bg-slate-900 sm:px-4">
                   {claim.status === "pending" ? (
                     <div className="flex flex-col gap-2">
                       <button
@@ -128,7 +128,7 @@ const MerchantClaimsTable: React.FC<MerchantClaimsTableProps> = ({ claims, isAdm
                       {rejectingId === claim.id && (
                         <div className="mt-2 flex flex-col gap-1">
                           <textarea
-                            className="rounded border border-gray-300 bg-white p-1 text-xs text-gray-900 placeholder-gray-500"
+                            className="rounded border border-slate-300 bg-white p-1 text-xs text-slate-900 placeholder-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder-slate-500"
                             rows={2}
                             placeholder="Enter rejection reason..."
                             value={rejectionComment}
@@ -143,7 +143,7 @@ const MerchantClaimsTable: React.FC<MerchantClaimsTableProps> = ({ claims, isAdm
                               Confirm Reject
                             </button>
                             <button
-                              className="bg-gray-300 text-gray-800 px-2 py-1 rounded text-xs"
+                              className="rounded bg-slate-300 px-2 py-1 text-xs text-slate-800 dark:bg-slate-700 dark:text-slate-100"
                               onClick={() => { setRejectingId(null); setRejectionComment(""); }}
                             >
                               Cancel
@@ -166,8 +166,8 @@ const MerchantClaimsTable: React.FC<MerchantClaimsTableProps> = ({ claims, isAdm
       {/* Modal for viewing receipt image */}
       {viewImage && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded shadow-lg p-4 relative max-w-lg w-full">
-            <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-700" onClick={() => setViewImage(null)}>&times;</button>
+          <div className="relative w-full max-w-lg rounded bg-white p-4 shadow-lg dark:bg-slate-900">
+            <button className="absolute top-2 right-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200" onClick={() => setViewImage(null)}>&times;</button>
             <img
               src={viewImage}
               alt="Receipt"
