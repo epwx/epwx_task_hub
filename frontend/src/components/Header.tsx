@@ -43,6 +43,52 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
 
   const isAdmin = address && adminWallets.includes(address.toLowerCase());
   const isMerchant = address && merchantWallets.includes(address.toLowerCase());
+  const desktopLinks = [
+    {
+      href: 'https://epowex.com',
+      label: 'Main Site',
+      external: true,
+      active: false,
+    },
+    {
+      href: '/whitepaper',
+      label: 'Whitepaper',
+      external: false,
+      active: pathname === '/whitepaper',
+    },
+    {
+      href: '/platform-stats',
+      label: 'Platform Stats',
+      external: false,
+      active: pathname === '/platform-stats',
+    },
+    {
+      href: 'https://t.me/ePowerX_On_Base',
+      label: 'Contact Us',
+      external: true,
+      active: false,
+    },
+  ];
+  const dashboardLinks = isAdmin
+    ? [
+        { href: '/admin', label: 'Admin Dashboard' },
+        { href: '/admin/merchants', label: 'Merchant Admin' },
+        { href: '/admin/twitter-claims', label: 'Twitter Claims' },
+        { href: '/admin/reward-ledger', label: 'Reward Ledger' },
+      ]
+    : isMerchant
+      ? [{ href: '/admin/reward-ledger', label: 'Reward Ledger' }]
+      : [];
+  const desktopNavLinkClass = (active: boolean) =>
+    `rounded-full px-4 py-2 text-sm font-semibold tracking-[0.01em] transition-all ${
+      active
+        ? 'bg-slate-900 text-white shadow-sm dark:bg-white dark:text-slate-900'
+        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-white'
+    }`;
+  const desktopActionClass =
+    'rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:-translate-y-0.5 hover:border-slate-300 hover:text-slate-950 hover:shadow-md dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-slate-500 dark:hover:text-white';
+  const buyLinkClass =
+    'rounded-full bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_25px_rgba(15,23,42,0.18)] transition-all hover:-translate-y-0.5 hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-100';
 
   // Debug logs for troubleshooting
   useEffect(() => {
@@ -54,9 +100,9 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
   }, [address, merchantWallets, isMerchant]);
 
   return (
-    <header className="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl shadow-lg border-b border-gray-100 dark:border-gray-800">
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
+    <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/88 shadow-[0_10px_35px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/85">
+      <div className="container mx-auto px-4 py-3">
+        <div className="flex items-center justify-between gap-4">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 group">
             <Image 
@@ -70,80 +116,52 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-8">
-            <a 
-              href="https://epowex.com" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600 transition-colors py-2"
-            >Main Site</a>
-            <Link href="/whitepaper" className={pathname === "/whitepaper" ? "font-bold text-blue-600" : "font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600 transition-colors py-2"}>Whitepaper</Link>
-            <a href="/platform-stats" className={pathname === "/platform-stats" ? "font-bold text-blue-600" : ""}>Platform Stats</a>
-            <a 
-              href="https://t.me/ePowerX_On_Base" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600 transition-colors py-2"
-            >Contact Us</a>
-            <a
-              href="/#buy-epwx"
-              className="px-5 py-2.5 text-sm font-bold bg-gradient-to-r from-blue-50 to-purple-50 text-blue-600 rounded-xl hover:from-blue-100 hover:to-purple-100 transition-all shadow-md text-center"
-            >
-              💰 Buy EPWX
-            </a>
-            {isAdmin && (
-              <>
-                <a
-                  href="/admin"
-                  className="px-5 py-2.5 text-sm font-bold bg-gradient-to-r from-green-50 to-green-100 text-green-700 rounded-xl hover:from-green-100 hover:to-green-200 transition-all shadow-md text-center"
-                >
-                  🛡️ Admin Dashboard
-                </a>
-                <a
-                  href="/admin/merchants"
-                  className="px-5 py-2.5 text-sm font-bold bg-gradient-to-r from-yellow-50 to-yellow-100 text-yellow-700 rounded-xl hover:from-yellow-100 hover:to-yellow-200 transition-all shadow-md text-center"
-                >
-                  🏪 Merchant Admin
-                </a>
-                <a
-                  href="/admin/twitter-claims"
-                  className="px-5 py-2.5 text-sm font-bold bg-gradient-to-r from-cyan-50 to-cyan-100 text-cyan-700 rounded-xl hover:from-cyan-100 hover:to-cyan-200 transition-all shadow-md text-center"
-                >
-                  🐦 Twitter Claims
-                </a>
-                <a
-                  href="/admin/reward-ledger"
-                  className="px-5 py-2.5 text-sm font-bold bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 rounded-xl hover:from-blue-100 hover:to-blue-200 transition-all shadow-md text-center"
-                >
-                  📒 Reward Ledger
-                </a>
-              </>
-            )}
-            {/* Show Reward Ledger for admin or merchant wallets */}
-            {(isAdmin || isMerchant) && (
-              <a
-                href="/admin/reward-ledger"
-                className="px-5 py-2.5 text-sm font-bold bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 rounded-xl hover:from-blue-100 hover:to-blue-200 transition-all shadow-md text-center"
-              >
-                📒 Reward Ledger
-              </a>
-            )}
-          </nav>
+          <div className="hidden md:flex flex-1 items-center justify-end gap-3">
+            <nav className="flex items-center gap-1 rounded-full border border-slate-200 bg-white/70 p-1 shadow-sm dark:border-slate-800 dark:bg-slate-900/80">
+              {desktopLinks.map((link) =>
+                link.external ? (
+                  <a
+                    key={link.label}
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={desktopNavLinkClass(link.active)}
+                  >
+                    {link.label}
+                  </a>
+                ) : (
+                  <Link key={link.label} href={link.href} className={desktopNavLinkClass(link.active)}>
+                    {link.label}
+                  </Link>
+                )
+              )}
+            </nav>
+            <div className="flex items-center gap-2">
+              <Link href="/#buy-epwx" className={buyLinkClass}>
+                Buy EPWX
+              </Link>
+              {dashboardLinks.map((link) => (
+                <Link key={link.href} href={link.href} className={desktopActionClass}>
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          </div>
 
           {/* Action Buttons */}
           <div className="hidden md:flex items-center gap-4">
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl blur opacity-50"></div>
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-slate-400/40 to-slate-700/30 blur"></div>
               <div className="relative">
                 <ConnectKitButton />
               </div>
             </div>
             <button
               onClick={() => setDarkMode(!darkMode)}
-              className="px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-bold shadow hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
               aria-label="Toggle dark mode"
             >
-              {darkMode ? '🌙 Dark' : '☀️ Light'}
+              {darkMode ? 'Dark' : 'Light'}
             </button>
           </div>
 
@@ -196,39 +214,16 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
               >
                 💰 Buy EPWX
               </a>
-              {/* Show Admin Dashboard link if admin wallet is connected */}
-              {isAdmin ? (
-                <>
-                  <a
-                    href="/admin"
-                    className="px-5 py-2.5 text-sm font-bold bg-gradient-to-r from-green-50 to-green-100 text-green-700 rounded-xl hover:from-green-100 hover:to-green-200 transition-all shadow-md text-center block mt-2"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    🛡️ Admin Dashboard
-                  </a>
-                  <a
-                    href="/admin/merchants"
-                    className="px-5 py-2.5 text-sm font-bold bg-gradient-to-r from-yellow-50 to-yellow-100 text-yellow-700 rounded-xl hover:from-yellow-100 hover:to-yellow-200 transition-all shadow-md text-center block mt-2"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    🏪 Merchant Admin
-                  </a>
-                  <a
-                    href="/admin/twitter-claims"
-                    className="px-5 py-2.5 text-sm font-bold bg-gradient-to-r from-cyan-50 to-cyan-100 text-cyan-700 rounded-xl hover:from-cyan-100 hover:to-cyan-200 transition-all shadow-md text-center block mt-2"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    🐦 Twitter Claims
-                  </a>
-                  <a
-                    href="/admin/reward-ledger"
-                    className="px-5 py-2.5 text-sm font-bold bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 rounded-xl hover:from-blue-100 hover:to-blue-200 transition-all shadow-md text-center block mt-2"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    📒 Reward Ledger
-                  </a>
-                </>
-              ) : null}
+              {dashboardLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="mt-2 block rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-center text-sm font-bold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {link.label}
+                </Link>
+              ))}
               <button
                 onClick={() => {
                   setDarkMode(!darkMode);
