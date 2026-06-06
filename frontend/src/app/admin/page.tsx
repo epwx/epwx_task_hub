@@ -301,9 +301,9 @@ export default function AdminPage() {
   const notAdmin = !address || !isAdmin;
   if (notAdmin) {
     return (
-      <div className="min-h-screen bg-gray-100 p-2 sm:p-8">
+      <div className="min-h-screen bg-slate-100 p-2 text-slate-950 dark:bg-slate-950 dark:text-slate-100 sm:p-8">
         <div className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="mb-4 text-lg text-gray-700 font-semibold">Please connect the admin wallet to access this page.</div>
+          <div className="mb-4 text-lg font-semibold text-slate-700 dark:text-slate-200">Please connect the admin wallet to access this page.</div>
           <ConnectKitButton />
         </div>
       </div>
@@ -311,22 +311,20 @@ export default function AdminPage() {
   }
 
   return (
-    <>
-
-      <div className="min-h-screen bg-gray-100 p-2 sm:p-8">
+      <div className="min-h-screen bg-slate-100 p-2 text-slate-950 dark:bg-slate-950 dark:text-slate-100 sm:p-8">
       {/* Show ConnectKitButton globally if not connected */}
       {!address && (
         <div className="flex flex-col items-center justify-center py-8">
-          <div className="mb-2 text-lg text-gray-700 font-semibold">Please connect your wallet to access admin features.</div>
+          <div className="mb-2 text-lg font-semibold text-slate-700 dark:text-slate-200">Please connect your wallet to access admin features.</div>
           <ConnectKitButton />
         </div>
       )}
       {/* Special Claim Section */}
       <div className="mb-12">
-        <h2 className="text-xl font-bold mb-4 text-gray-900">Admin: Special EPWX Claims</h2>
+        <h2 className="mb-4 text-xl font-bold text-slate-950 dark:text-white">Admin: Special EPWX Claims</h2>
         {!address ? (
           <div className="mb-4 flex flex-col items-center">
-            <div className="mb-2 text-gray-700">Please connect your wallet to manage special claims.</div>
+            <div className="mb-2 text-slate-700 dark:text-slate-300">Please connect your wallet to manage special claims.</div>
             <ConnectKitButton />
           </div>
         ) : (
@@ -335,7 +333,7 @@ export default function AdminPage() {
               <input
                 type="text"
                 placeholder="Wallet address"
-                className="border rounded px-2 py-1 bg-gray-100 text-gray-900"
+                className="rounded border border-slate-300 bg-white px-2 py-1 text-slate-900 placeholder:text-slate-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
                 value={specialWallet}
                 onChange={e => setSpecialWallet(e.target.value)}
               />
@@ -350,12 +348,12 @@ export default function AdminPage() {
               <input
                 type="text"
                 placeholder="Filter by wallet"
-                className="border rounded px-2 py-1 bg-gray-100 text-gray-900"
+                className="rounded border border-slate-300 bg-white px-2 py-1 text-slate-900 placeholder:text-slate-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
                 value={specialClaimsFilter.wallet}
                 onChange={e => setSpecialClaimsFilter(f => ({ ...f, wallet: e.target.value }))}
               />
               <select
-                className="border rounded px-2 py-1 bg-white text-gray-900"
+                className="rounded border border-slate-300 bg-white px-2 py-1 text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                 value={specialClaimsFilter.status}
                 onChange={e => setSpecialClaimsFilter(f => ({ ...f, status: e.target.value }))}
               >
@@ -365,13 +363,13 @@ export default function AdminPage() {
               </select>
             </div>
             {specialError && <div className="text-red-600 mb-2">{specialError}</div>}
-            <table className="min-w-full bg-white rounded shadow text-xs sm:text-sm">
-              <thead className="bg-gray-200">
+            <table className="min-w-full rounded border border-slate-200 bg-white text-xs shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:text-sm">
+              <thead className="bg-slate-200 dark:bg-slate-800">
                 <tr>
-                  <th className="py-2 px-2 sm:px-4 text-gray-700">Wallet</th>
-                  <th className="py-2 px-2 sm:px-4 text-gray-700">Eligible</th>
-                  <th className="py-2 px-2 sm:px-4 text-gray-700">Claimed</th>
-                  <th className="py-2 px-2 sm:px-4 text-gray-700">Action</th>
+                  <th className="py-2 px-2 text-slate-700 dark:text-slate-200 sm:px-4">Wallet</th>
+                  <th className="py-2 px-2 text-slate-700 dark:text-slate-200 sm:px-4">Eligible</th>
+                  <th className="py-2 px-2 text-slate-700 dark:text-slate-200 sm:px-4">Claimed</th>
+                  <th className="py-2 px-2 text-slate-700 dark:text-slate-200 sm:px-4">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -391,11 +389,11 @@ export default function AdminPage() {
                     // Format createdAt in EST
                     const estDate = new Date(claim.createdAt).toLocaleString('en-US', { timeZone: 'America/New_York' });
                     return (
-                      <tr key={idx} className="border-b last:border-none">
-                        <td className="py-2 px-2 sm:px-4 break-all bg-white text-gray-900">{claim.wallet}<br /><span className="text-xs text-gray-500">{estDate} EST</span></td>
-                        <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{eligible ? "Yes" : "No"}</td>
-                        <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{claimed ? "Yes" : "No"}</td>
-                        <td className="py-2 px-2 sm:px-4 bg-white">
+                      <tr key={idx} className="border-b border-slate-200 last:border-none dark:border-slate-800">
+                        <td className="break-all bg-white py-2 px-2 text-slate-900 dark:bg-slate-900 dark:text-slate-100 sm:px-4">{claim.wallet}<br /><span className="text-xs text-slate-500 dark:text-slate-400">{estDate} EST</span></td>
+                        <td className="bg-white py-2 px-2 text-slate-900 dark:bg-slate-900 dark:text-slate-100 sm:px-4">{eligible ? "Yes" : "No"}</td>
+                        <td className="bg-white py-2 px-2 text-slate-900 dark:bg-slate-900 dark:text-slate-100 sm:px-4">{claimed ? "Yes" : "No"}</td>
+                        <td className="bg-white py-2 px-2 dark:bg-slate-900 sm:px-4">
                           {!claimed && eligible ? (
                             <button
                               className="px-2 sm:px-4 py-1 sm:py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 text-xs sm:text-sm"
@@ -411,8 +409,7 @@ export default function AdminPage() {
                   })}
               </tbody>
             </table>
-            {/* Pagination controls for special claims */}
-            <div className="py-2 px-2 bg-gray-50 text-center">
+            <div className="bg-slate-50 py-2 px-2 text-center text-slate-700 dark:bg-slate-900/70 dark:text-slate-200">
               <button
                 className="px-2 py-1 mr-2 border rounded bg-blue-100 text-blue-900 font-bold hover:bg-blue-200"
                 disabled={specialClaimsPage === 1}
@@ -434,37 +431,37 @@ export default function AdminPage() {
       {/* Telegram Referral Rewards Section */}
       {notAdmin ? (
         <div className="flex flex-col items-center justify-center py-16">
-          <div className="mb-4 text-lg text-gray-700 font-semibold">Please connect the admin wallet to access this page.</div>
+          <div className="mb-4 text-lg font-semibold text-slate-700 dark:text-slate-200">Please connect the admin wallet to access this page.</div>
           <ConnectKitButton />
         </div>
       ) : loading ? (
-        <div>Loading claims...</div>
+        <div className="text-slate-700 dark:text-slate-200">Loading claims...</div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="min-w-full bg-white rounded shadow text-xs sm:text-sm">
-            <thead className="bg-gray-200">
+          <table className="min-w-full rounded border border-slate-200 bg-white text-xs shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:text-sm">
+            <thead className="bg-slate-200 dark:bg-slate-800">
               <tr>
-                <th className="py-2 px-2 sm:px-4 text-gray-700">Wallet</th>
-                <th className="py-2 px-2 sm:px-4 text-gray-700">Tx Hash</th>
-                <th className="py-2 px-2 sm:px-4 text-gray-700">Amount</th>
-                <th className="py-2 px-2 sm:px-4 text-gray-700">Cashback</th>
-                <th className="py-2 px-2 sm:px-4 text-gray-700">Status</th>
-                <th className="py-2 px-2 sm:px-4 text-gray-700">Action</th>
+                <th className="py-2 px-2 text-slate-700 dark:text-slate-200 sm:px-4">Wallet</th>
+                <th className="py-2 px-2 text-slate-700 dark:text-slate-200 sm:px-4">Tx Hash</th>
+                <th className="py-2 px-2 text-slate-700 dark:text-slate-200 sm:px-4">Amount</th>
+                <th className="py-2 px-2 text-slate-700 dark:text-slate-200 sm:px-4">Cashback</th>
+                <th className="py-2 px-2 text-slate-700 dark:text-slate-200 sm:px-4">Status</th>
+                <th className="py-2 px-2 text-slate-700 dark:text-slate-200 sm:px-4">Action</th>
               </tr>
             </thead>
             <tbody>
               {/* Filter controls for cashback claims */}
               <tr>
-                <td colSpan={6} className="py-2 px-2 bg-gray-50">
+                <td colSpan={6} className="bg-slate-50 py-2 px-2 dark:bg-slate-900/70">
                   <input
                     type="text"
                     placeholder="Filter by wallet"
-                    className="border rounded px-2 py-1 mr-2 bg-gray-100 text-gray-900"
+                    className="mr-2 rounded border border-slate-300 bg-white px-2 py-1 text-slate-900 placeholder:text-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500"
                     value={claimsFilter.wallet}
                     onChange={e => setClaimsFilter(f => ({ ...f, wallet: e.target.value }))}
                   />
                   <select
-                    className="border rounded px-2 py-1 bg-white text-gray-900"
+                    className="rounded border border-slate-300 bg-white px-2 py-1 text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
                     value={claimsFilter.status}
                     onChange={e => setClaimsFilter(f => ({ ...f, status: e.target.value }))}
                   >
@@ -482,13 +479,13 @@ export default function AdminPage() {
                 )
                 .slice((claimsPage - 1) * CLAIMS_PAGE_SIZE, claimsPage * CLAIMS_PAGE_SIZE)
                 .map((claim: any) => (
-                  <tr key={claim.id} className="border-b last:border-none">
-                    <td className="py-2 px-2 sm:px-4 break-all bg-white text-gray-900">{claim.wallet}</td>
-                    <td className="py-2 px-2 sm:px-4 break-all bg-white text-gray-900">{claim.txHash}</td>
-                    <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{claim.amount}</td>
-                    <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{claim.cashbackAmount}</td>
-                    <td className="py-2 px-2 sm:px-4 bg-white text-gray-900 capitalize">{claim.status}</td>
-                    <td className="py-2 px-2 sm:px-4 bg-white">
+                  <tr key={claim.id} className="border-b border-slate-200 last:border-none dark:border-slate-800">
+                    <td className="break-all bg-white py-2 px-2 text-slate-900 dark:bg-slate-900 dark:text-slate-100 sm:px-4">{claim.wallet}</td>
+                    <td className="break-all bg-white py-2 px-2 text-slate-900 dark:bg-slate-900 dark:text-slate-100 sm:px-4">{claim.txHash}</td>
+                    <td className="bg-white py-2 px-2 text-slate-900 dark:bg-slate-900 dark:text-slate-100 sm:px-4">{claim.amount}</td>
+                    <td className="bg-white py-2 px-2 text-slate-900 dark:bg-slate-900 dark:text-slate-100 sm:px-4">{claim.cashbackAmount}</td>
+                    <td className="bg-white py-2 px-2 capitalize text-slate-900 dark:bg-slate-900 dark:text-slate-100 sm:px-4">{claim.status}</td>
+                    <td className="bg-white py-2 px-2 dark:bg-slate-900 sm:px-4">
                       {claim.status === "pending" ? (
                         <button
                           className="px-2 sm:px-4 py-1 sm:py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 text-xs sm:text-sm"
@@ -505,7 +502,7 @@ export default function AdminPage() {
                 ))}
               {/* Pagination controls for cashback claims */}
               <tr>
-                <td colSpan={6} className="py-2 px-2 bg-gray-50 text-center">
+                <td colSpan={6} className="bg-slate-50 py-2 px-2 text-center text-slate-700 dark:bg-slate-900/70 dark:text-slate-200">
                   <button
                     className="px-2 py-1 mr-2 border rounded bg-blue-100 text-blue-900 font-bold hover:bg-blue-200"
                     disabled={claimsPage === 1}
@@ -528,19 +525,19 @@ export default function AdminPage() {
       )}
       {/* Daily Claims Section */}
       <div className="mt-12">
-        <h2 className="text-xl font-bold mb-4 text-gray-900">Admin: Daily EPWX Claims</h2>
+        <h2 className="mb-4 text-xl font-bold text-slate-950 dark:text-white">Admin: Daily EPWX Claims</h2>
         <div className="overflow-x-auto">
           {/* Daily Claims Filter Controls */}
           <div className="mb-2 flex gap-2 items-center">
             <input
               type="text"
               placeholder="Filter by wallet"
-              className="border rounded px-2 py-1 bg-gray-100 text-gray-900"
+              className="rounded border border-slate-300 bg-white px-2 py-1 text-slate-900 placeholder:text-slate-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
               value={dailyClaimsFilter.wallet}
               onChange={e => setDailyClaimsFilter(f => ({ ...f, wallet: e.target.value }))}
             />
             <select
-              className="border rounded px-2 py-1 bg-white text-gray-900"
+              className="rounded border border-slate-300 bg-white px-2 py-1 text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
               value={dailyClaimsFilter.status}
               onChange={e => setDailyClaimsFilter(f => ({ ...f, status: e.target.value }))}
             >
@@ -562,7 +559,7 @@ export default function AdminPage() {
             marking={marking}
           />
           {/* Pagination controls for daily claims */}
-          <div className="py-2 px-2 bg-gray-50 text-center">
+          <div className="bg-slate-50 py-2 px-2 text-center text-slate-700 dark:bg-slate-900/70 dark:text-slate-200">
             <button
               className="px-2 py-1 mr-2 border rounded bg-blue-100 text-blue-900 font-bold hover:bg-blue-200"
               disabled={dailyClaimsPage === 1}
@@ -582,6 +579,5 @@ export default function AdminPage() {
       </div>
       {error && <div className="text-red-600 mt-2">{error}</div>}
       </div>
-    </>
   );
 }

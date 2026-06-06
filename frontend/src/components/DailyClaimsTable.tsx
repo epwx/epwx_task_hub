@@ -17,28 +17,28 @@ interface DailyClaimsTableProps {
 }
 
 const DailyClaimsTable: React.FC<DailyClaimsTableProps> = ({ claims, isAdmin = false, onDistribute, marking }) => (
-  <div className="w-full overflow-x-auto rounded shadow">
-    <table className="min-w-[760px] w-full bg-white text-xs sm:text-sm">
-      <thead className="bg-gray-200">
+  <div className="w-full overflow-x-auto rounded border border-slate-200 shadow-sm dark:border-slate-800">
+    <table className="min-w-[760px] w-full bg-white text-xs dark:bg-slate-900 sm:text-sm">
+      <thead className="bg-slate-200 dark:bg-slate-800">
         <tr>
-          <th className="py-2 px-2 sm:px-4 text-left text-gray-700 min-w-[220px]">Wallet</th>
-          <th className="py-2 px-2 sm:px-4 text-left text-gray-700 min-w-[140px]">IP</th>
-          <th className="py-2 px-2 sm:px-4 text-left text-gray-700 min-w-[190px]">Claimed At</th>
-          <th className="py-2 px-2 sm:px-4 text-left text-gray-700 min-w-[140px]">Amount</th>
-          <th className="py-2 px-2 sm:px-4 text-left text-gray-700 min-w-[100px]">Status</th>
-          {isAdmin && <th className="py-2 px-2 sm:px-4 text-left text-gray-700 min-w-[180px]">Action</th>}
+          <th className="min-w-[220px] py-2 px-2 text-left text-slate-700 dark:text-slate-200 sm:px-4">Wallet</th>
+          <th className="min-w-[140px] py-2 px-2 text-left text-slate-700 dark:text-slate-200 sm:px-4">IP</th>
+          <th className="min-w-[190px] py-2 px-2 text-left text-slate-700 dark:text-slate-200 sm:px-4">Claimed At</th>
+          <th className="min-w-[140px] py-2 px-2 text-left text-slate-700 dark:text-slate-200 sm:px-4">Amount</th>
+          <th className="min-w-[100px] py-2 px-2 text-left text-slate-700 dark:text-slate-200 sm:px-4">Status</th>
+          {isAdmin && <th className="min-w-[180px] py-2 px-2 text-left text-slate-700 dark:text-slate-200 sm:px-4">Action</th>}
         </tr>
       </thead>
       <tbody>
         {claims.map((claim) => (
-          <tr key={claim.id} className="border-b last:border-none align-top">
-            <td className="py-2 px-2 sm:px-4 bg-white text-gray-900 font-mono break-all">{claim.wallet}</td>
-            <td className="py-2 px-2 sm:px-4 bg-white text-gray-900 whitespace-nowrap">{claim.ip}</td>
-            <td className="py-2 px-2 sm:px-4 bg-white text-gray-900 whitespace-nowrap">{new Date(claim.claimedAt).toLocaleString()}</td>
-            <td className="py-2 px-2 sm:px-4 bg-white text-gray-900 whitespace-nowrap">{Number(claim.amount || "100000").toLocaleString()} EPWX</td>
-            <td className="py-2 px-2 sm:px-4 bg-white text-gray-900 capitalize whitespace-nowrap">{claim.status}</td>
+          <tr key={claim.id} className="align-top border-b border-slate-200 last:border-none dark:border-slate-800">
+            <td className="break-all bg-white py-2 px-2 font-mono text-slate-900 dark:bg-slate-900 dark:text-slate-100 sm:px-4">{claim.wallet}</td>
+            <td className="whitespace-nowrap bg-white py-2 px-2 text-slate-900 dark:bg-slate-900 dark:text-slate-100 sm:px-4">{claim.ip}</td>
+            <td className="whitespace-nowrap bg-white py-2 px-2 text-slate-900 dark:bg-slate-900 dark:text-slate-100 sm:px-4">{new Date(claim.claimedAt).toLocaleString()}</td>
+            <td className="whitespace-nowrap bg-white py-2 px-2 text-slate-900 dark:bg-slate-900 dark:text-slate-100 sm:px-4">{Number(claim.amount || "100000").toLocaleString()} EPWX</td>
+            <td className="whitespace-nowrap bg-white py-2 px-2 capitalize text-slate-900 dark:bg-slate-900 dark:text-slate-100 sm:px-4">{claim.status}</td>
             {isAdmin && (
-              <td className="py-2 px-2 sm:px-4 bg-white whitespace-nowrap">
+              <td className="whitespace-nowrap bg-white py-2 px-2 dark:bg-slate-900 sm:px-4">
                 {claim.status === "pending" ? (
                   <div className="flex flex-col items-start">
                     <button
