@@ -1341,7 +1341,8 @@ export default function HomeTest() {
       </footer>
       <a
         href="#daily-claim"
-        className="fixed bottom-5 right-4 z-40 rounded-full border border-white/15 bg-slate-950/85 px-4 py-3 text-xs font-black uppercase tracking-[0.18em] text-white shadow-[0_18px_40px_rgba(15,23,42,0.35)] backdrop-blur-md transition-all hover:bg-slate-900 dark:border-white/10 dark:bg-slate-900/85 lg:hidden"
+        className="fixed right-2 top-1/2 z-40 -translate-y-1/2 rounded-full border border-white/15 bg-slate-950/85 px-2 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-white shadow-[0_18px_40px_rgba(15,23,42,0.35)] backdrop-blur-md transition-all hover:bg-slate-900 dark:border-white/10 dark:bg-slate-900/85 lg:hidden"
+        style={{ writingMode: 'vertical-rl' }}
       >
         Daily Claim
       </a>
