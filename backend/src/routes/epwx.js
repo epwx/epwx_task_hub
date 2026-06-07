@@ -4,6 +4,7 @@ import { User, DailyClaim, CashbackClaim, SpecialClaim, Claim, RewardDistributio
 import { Op } from 'sequelize';
 // import { ethers } from 'ethers'; // Removed duplicate import
 import { getEPWXPurchaseTransactions } from '../services/epwxCashback.js';
+import { notifyDailyClaimPaid } from '../services/telegramNotifications.js';
 import { ethers } from 'ethers';
 import { epwxTokenContract, epwxTokenWithSigner } from '../services/blockchain.js';
 const router = express.Router();
@@ -602,7 +603,20 @@ router.post('/daily-claims/mark-paid', async (req, res) => {
     claim.status = 'paid';
     claim.txHash = txHash;
     await claim.save();
-    res.json({ success: true, claim });
+
+    const notificationResult = await notifyDailyClaimPaid({
+      wallet: claim.wallet,
+      amount: claim.amount,
+      claimedAt: claim.claimedAt,
+      txHash: claim.txHash,
+    });
+
+    res.json({
+      success: true,
+      claim,
+      telegramNotified: notificationResult.sent,
+      telegramReason: notificationResult.reason,
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
