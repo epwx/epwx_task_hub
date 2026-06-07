@@ -41,7 +41,7 @@ function formatClaimTimestamp(claimedAt) {
     return 'Unknown';
   }
 
-  return `${date.toISOString().replace('T', ' ').replace('.000Z', '').replace('Z', '')} UTC`;
+  return `${date.toISOString().slice(0, 16).replace('T', ' ')} UTC`;
 }
 
 export function buildDailyClaimPaidMessage({ wallet, amount, claimedAt, txHash }) {
@@ -52,16 +52,17 @@ export function buildDailyClaimPaidMessage({ wallet, amount, claimedAt, txHash }
 
   const lines = [
     '<b>EPWX Daily Reward Sent</b>',
+    'Reward sent on Base',
     '',
     `<b>Wallet</b>  <code>${safeShortWallet}</code>`,
     `<b>Amount</b>: ${safeAmount} EPWX`,
     `<b>Claimed At</b>: ${safeClaimedAt}`,
     '',
-    '<a href="https://tasks.epowex.com">Task Hub</a> | <a href="https://tasks.epowex.com/#buy-epwx">Buy EPWX</a>',
+    '<a href="https://tasks.epowex.com">Open Task Hub</a> • <a href="https://tasks.epowex.com/#buy-epwx">Buy EPWX</a>',
   ];
 
   if (txHash && txLink) {
-    lines.push(`<b>Transaction</b>: <code>${escapeHtml(shortenHex(txHash))}</code>`);
+    lines.push(`<b>Tx</b>: <code>${escapeHtml(shortenHex(txHash))}</code>`);
     lines.push(`<a href="${txLink}">View on Basescan</a>`);
   }
 
