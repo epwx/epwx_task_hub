@@ -703,6 +703,17 @@ router.post('/daily-claim', async (req, res) => {
       claim.status = 'paid';
       claim.txHash = payout.txHash;
       await claim.save();
+
+      const notificationResult = await notifyDailyClaimPaid({
+        wallet: claim.wallet,
+        amount: claim.amount,
+        claimedAt: claim.claimedAt,
+        txHash: claim.txHash,
+      });
+
+      if (!notificationResult.sent) {
+        console.error('[daily-claim] Telegram notification failed:', notificationResult.error || notificationResult.reason);
+      }
     }
   } catch (error) {
     console.error('[daily-claim] Automatic daily payout failed:', error);
