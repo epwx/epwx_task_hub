@@ -52,11 +52,11 @@ export function buildDailyClaimPaidMessage({ wallet, amount, claimedAt, txHash }
 
   const lines = [
     '<b>EPWX Daily Reward Sent</b>',
-    'Reward sent on Base',
+    'Sent on Base',
     '',
     `<b>Wallet</b>  <code>${safeShortWallet}</code>`,
     `<b>Amount</b>: ${safeAmount} EPWX`,
-    `<b>Claimed At</b>: ${safeClaimedAt}`,
+    `<b>Time</b>: ${safeClaimedAt}`,
     '',
     '<a href="https://tasks.epowex.com">Open Task Hub</a> • <a href="https://tasks.epowex.com/#buy-epwx">Buy EPWX</a>',
   ];
