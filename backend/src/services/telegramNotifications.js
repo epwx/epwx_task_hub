@@ -45,28 +45,24 @@ function formatClaimTimestamp(claimedAt) {
 }
 
 export function buildDailyClaimPaidMessage({ wallet, amount, claimedAt, txHash }) {
-  const safeWallet = escapeHtml(wallet || 'Unknown');
   const safeShortWallet = escapeHtml(shortenHex(wallet));
   const safeAmount = escapeHtml(formatEpwxAmount(amount));
   const safeClaimedAt = escapeHtml(formatClaimTimestamp(claimedAt));
-  const safeTxHash = txHash ? escapeHtml(txHash) : null;
   const txLink = txHash ? `https://basescan.org/tx/${encodeURIComponent(txHash)}` : null;
 
   const lines = [
     '<b>EPWX Daily Reward Sent</b>',
     '',
-    `<b>Wallet</b>: <code>${safeShortWallet}</code>`,
-    `<blockquote expandable>${safeWallet}</blockquote>`,
+    `<b>Wallet</b>  <code>${safeShortWallet}</code>`,
     `<b>Amount</b>: ${safeAmount} EPWX`,
     `<b>Claimed At</b>: ${safeClaimedAt}`,
-    '<a href="https://tasks.epowex.com">Open EPWX Task Hub</a>',
-    '<a href="https://tasks.epowex.com/#buy-epwx">Buy EPWX</a>',
+    '',
+    '<a href="https://tasks.epowex.com">Task Hub</a> | <a href="https://tasks.epowex.com/#buy-epwx">Buy EPWX</a>',
   ];
 
-  if (safeTxHash && txLink) {
+  if (txHash && txLink) {
     lines.push(`<b>Transaction</b>: <code>${escapeHtml(shortenHex(txHash))}</code>`);
     lines.push(`<a href="${txLink}">View on Basescan</a>`);
-    lines.push(`<blockquote expandable>${safeTxHash}</blockquote>`);
   }
 
   return lines.join('\n');
