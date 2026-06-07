@@ -58,7 +58,7 @@ export function buildDailyClaimPaidMessage({ wallet, amount, claimedAt, txHash }
     `<b>Amount</b>: ${safeAmount} EPWX`,
     `<b>Time</b>: ${safeClaimedAt}`,
     '',
-    '<a href="https://tasks.epowex.com">Open Task Hub</a> • <a href="https://tasks.epowex.com/#buy-epwx">Buy EPWX</a>',
+    '<a href="https://tasks.epowex.com">Open Task Hub</a> • <a href="https://tasks.epowex.com/#buy-epwx">Buy EPWX</a> • <a href="https://coinmarketcap.com/currencies/epowerx-on-base/">CMC Watchlist</a>',
   ];
 
   if (txHash && txLink) {
