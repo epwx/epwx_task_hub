@@ -60,6 +60,7 @@ export function buildDailyClaimPaidMessage({ wallet, amount, claimedAt, txHash }
     `<b>Amount</b>: ${safeAmount} EPWX`,
     `<b>Claimed At</b>: ${safeClaimedAt}`,
     '<a href="https://tasks.epowex.com">Open EPWX Task Hub</a>',
+    '<a href="https://tasks.epowex.com/#buy-epwx">Buy EPWX</a>',
   ];
 
   if (safeTxHash && txLink) {
