@@ -35,6 +35,15 @@ function normalizeExpiresAt(expiresAt) {
   return parsed;
 }
 
+function parsePositiveInteger(value, fallback) {
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    return fallback;
+  }
+
+  return parsed;
+}
+
 router.post('/add', requireAdmin, async (req, res) => {
   const { code, title, tweetUrl, expiresAt } = req.body;
 
@@ -65,8 +74,28 @@ router.post('/add', requireAdmin, async (req, res) => {
 
 router.get('/list', requireAdmin, async (req, res) => {
   try {
-    const campaigns = await TwitterCampaign.findAll({ order: [['createdAt', 'DESC']] });
-    res.json({ campaigns });
+    const requestedPage = parsePositiveInteger(req.query.page, 1);
+    const limit = Math.min(parsePositiveInteger(req.query.limit, 10), 100);
+    const total = await TwitterCampaign.count();
+    const totalPages = Math.max(1, Math.ceil(total / limit));
+    const page = Math.min(requestedPage, totalPages);
+    const offset = (page - 1) * limit;
+
+    const campaigns = await TwitterCampaign.findAll({
+      order: [['createdAt', 'DESC']],
+      limit,
+      offset,
+    });
+
+    res.json({
+      campaigns,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+      },
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
