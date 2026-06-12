@@ -49,6 +49,7 @@ const currentParameters = [
   { label: "Base daily reward", value: "100,000 EPWX" },
   { label: "Mid-tier daily reward", value: "2,000,000 EPWX" },
   { label: "Bonus daily reward", value: "5,000,000 EPWX" },
+  { label: "Mega-tier daily reward", value: "10,000,000 EPWX" },
   { label: "Twitter retweet default", value: "100,000 EPWX" },
   { label: "Special claim admin distribution", value: "1,000,000 EPWX" },
   { label: "Cashback reward", value: "1,000,000,000 EPWX" },

@@ -60,6 +60,7 @@ Users can submit one daily claim per 24-hour period, subject to wallet-signature
 - Base daily reward: 100,000 EPWX
 - Mid-tier daily reward: 2,000,000 EPWX
 - Bonus daily reward: 5,000,000 EPWX
+- Mega-tier daily reward: 10,000,000 EPWX
 
 This creates a retention loop while also rewarding wallets with deeper EPWX alignment.
 

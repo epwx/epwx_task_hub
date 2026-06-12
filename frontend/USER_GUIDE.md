@@ -22,7 +22,7 @@ Welcome to the EPWX Task Platform! This guide will help you understand the main 
 - After verifying your Telegram membership, you can claim a daily reward from the homepage.
 - Click **Claim Daily Reward** in the Daily Claim section.
 - You will receive a status message about your claim.
-- You can claim once per day, and the reward is 100,000 EPWX.
+- You can claim once per day. Wallets with at least 1,000,000,000,000 EPWX can claim 10,000,000 EPWX, wallets with at least 100,000,000,000 EPWX can claim 5,000,000 EPWX, wallets with at least 10,000,000,000 EPWX can claim 2,000,000 EPWX, and other wallets can claim 100,000 EPWX.
 
 ## 5. Referrals
 - Share your referral link from the homepage to invite new users.

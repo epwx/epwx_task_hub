@@ -52,12 +52,18 @@ const EPWX_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_EPWX_TOKEN as `0x${string}`)
 const DEFAULT_DAILY_REWARD = 100_000;
 const MID_TIER_DAILY_REWARD = 2_000_000;
 const BONUS_DAILY_REWARD = 5_000_000;
+const MEGA_DAILY_REWARD = 10_000_000;
 const MID_TIER_DAILY_REWARD_THRESHOLD = 10_000_000_000;
 const BONUS_DAILY_REWARD_THRESHOLD = 100_000_000_000;
+const MEGA_DAILY_REWARD_THRESHOLD = 1_000_000_000_000;
 const TELEGRAM_VERIFICATION_RECHECK_INTERVAL_MS = 60_000;
 const TELEGRAM_BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "epwx_bot";
 const PENDING_REFERRAL_STORAGE_KEY = "epwx-pending-referrer";
 const DAILY_REWARD_TIERS = [
+  {
+    walletBalanceLabel: `At least ${MEGA_DAILY_REWARD_THRESHOLD.toLocaleString()} EPWX`,
+    rewardLabel: `${MEGA_DAILY_REWARD.toLocaleString()} EPWX`,
+  },
   {
     walletBalanceLabel: `At least ${BONUS_DAILY_REWARD_THRESHOLD.toLocaleString()} EPWX`,
     rewardLabel: `${BONUS_DAILY_REWARD.toLocaleString()} EPWX`,
@@ -366,17 +372,23 @@ export default function HomeTest() {
     chainId: base.id,
   });
   const normalizedEpwxBalance = Number(epwxBalance?.formatted || 0);
-  const currentDailyReward = normalizedEpwxBalance >= BONUS_DAILY_REWARD_THRESHOLD
+  const currentDailyReward = normalizedEpwxBalance >= MEGA_DAILY_REWARD_THRESHOLD
+    ? MEGA_DAILY_REWARD
+    : normalizedEpwxBalance >= BONUS_DAILY_REWARD_THRESHOLD
     ? BONUS_DAILY_REWARD
     : normalizedEpwxBalance >= MID_TIER_DAILY_REWARD_THRESHOLD
       ? MID_TIER_DAILY_REWARD
       : DEFAULT_DAILY_REWARD;
-  const nextTierTarget = normalizedEpwxBalance >= BONUS_DAILY_REWARD_THRESHOLD
+  const nextTierTarget = normalizedEpwxBalance >= MEGA_DAILY_REWARD_THRESHOLD
     ? null
+    : normalizedEpwxBalance >= BONUS_DAILY_REWARD_THRESHOLD
+      ? MEGA_DAILY_REWARD_THRESHOLD
     : normalizedEpwxBalance >= MID_TIER_DAILY_REWARD_THRESHOLD
       ? BONUS_DAILY_REWARD_THRESHOLD
       : MID_TIER_DAILY_REWARD_THRESHOLD;
-  const nextTierReward = nextTierTarget === BONUS_DAILY_REWARD_THRESHOLD
+  const nextTierReward = nextTierTarget === MEGA_DAILY_REWARD_THRESHOLD
+    ? MEGA_DAILY_REWARD
+    : nextTierTarget === BONUS_DAILY_REWARD_THRESHOLD
     ? BONUS_DAILY_REWARD
     : nextTierTarget === MID_TIER_DAILY_REWARD_THRESHOLD
       ? MID_TIER_DAILY_REWARD
@@ -1214,7 +1226,7 @@ export default function HomeTest() {
                           <>
                             <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Top tier active</div>
                             <div className="mt-2 text-base font-semibold text-emerald-100">
-                              You are already on the highest daily reward tier at {BONUS_DAILY_REWARD.toLocaleString()} EPWX per claim.
+                              You are already on the highest daily reward tier at {MEGA_DAILY_REWARD.toLocaleString()} EPWX per claim.
                             </div>
                             <div className="mt-2 text-white/70">
                               Keep compounding with cashback, referrals, and social campaigns to strengthen your position.

@@ -13,8 +13,10 @@ const REFERRAL_REWARD_AMOUNT = '1000000';
 const DEFAULT_DAILY_REWARD_AMOUNT = '100000';
 const MID_TIER_DAILY_REWARD_AMOUNT = '2000000';
 const BONUS_TIER_DAILY_REWARD_AMOUNT = '5000000';
+const MEGA_TIER_DAILY_REWARD_AMOUNT = '10000000';
 const MID_TIER_DAILY_REWARD_THRESHOLD = 10_000_000_000;
 const BONUS_TIER_DAILY_REWARD_THRESHOLD = 100_000_000_000;
+const MEGA_TIER_DAILY_REWARD_THRESHOLD = 1_000_000_000_000;
 const EPWX_TOKEN_DECIMALS = 9;
 const EPWX_REWARD_TRANSFER_FEE_BPS = Number(process.env.EPWX_REWARD_TRANSFER_FEE_BPS || '600');
 
@@ -73,6 +75,10 @@ async function getDailyRewardAmount(wallet) {
   try {
     const balance = await epwxTokenContract.balanceOf(wallet);
     const normalizedBalance = Number(ethers.formatUnits(balance, EPWX_TOKEN_DECIMALS));
+
+    if (normalizedBalance >= MEGA_TIER_DAILY_REWARD_THRESHOLD) {
+      return MEGA_TIER_DAILY_REWARD_AMOUNT;
+    }
 
     if (normalizedBalance >= BONUS_TIER_DAILY_REWARD_THRESHOLD) {
       return BONUS_TIER_DAILY_REWARD_AMOUNT;
