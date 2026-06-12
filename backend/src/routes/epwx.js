@@ -654,6 +654,11 @@ router.post('/daily-claim', async (req, res) => {
     return res.status(401).json({ error: 'Signature does not match wallet' });
   }
 
+  const user = await User.findOne({ where: { walletAddress: normalizedWallet } });
+  if (!user || !user.telegramVerified) {
+    return res.status(403).json({ error: 'Telegram not verified' });
+  }
+
   const historicalClaim = await DailyClaim.findOne({
     where: { wallet: normalizedWallet },
     order: [['claimedAt', 'ASC']],

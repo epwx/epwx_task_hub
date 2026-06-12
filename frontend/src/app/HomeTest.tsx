@@ -432,7 +432,6 @@ export default function HomeTest() {
   const [dailyClaimsSummaryLoading, setDailyClaimsSummaryLoading] = useState(true);
   const [isTelegramVerified, setIsTelegramVerified] = useState<boolean | null>(null);
   const [agreed, setAgreed] = useState(false);
-  const [cmcChecked, setCmcChecked] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
   const [specialAgreed, setSpecialAgreed] = useState(false);
   const [showSpecialTerms, setShowSpecialTerms] = useState(false);
@@ -1187,23 +1186,15 @@ export default function HomeTest() {
                       </button>
                     </label>
                   </div>
-                  <div className="flex items-center mb-4">
-                    <input
-                      id="cmc-watchlist-checkbox"
-                      type="checkbox"
-                      checked={cmcChecked}
-                      onChange={e => setCmcChecked(e.target.checked)}
-                      className="mr-2"
-                    />
-                    <label htmlFor="cmc-watchlist-checkbox" className="text-sm text-white/85">
-                      I have added EPWX to my
-                      <a href="https://coinmarketcap.com/currencies/epowerx-on-base/" target="_blank" rel="noopener noreferrer" className="text-emerald-200 underline ml-1 hover:text-white">CoinMarketCap watchlist</a>
-                    </label>
+                  <div className="mb-4 text-center text-sm text-white/80">
+                    Track EPWX on the
+                    <a href="https://coinmarketcap.com/currencies/epowerx-on-base/" target="_blank" rel="noopener noreferrer" className="ml-1 text-emerald-200 underline hover:text-white">CoinMarketCap watchlist</a>
+                    if you want price and community updates.
                   </div>
                   <button
                     onClick={handleDailyClaim}
-                    disabled={claiming || !agreed || !cmcChecked || !!remainingClaimTime}
-                    className={`px-6 py-3 rounded-lg font-bold text-white bg-green-600 hover:bg-green-700 transition-colors mb-4 ${claiming || !agreed || !cmcChecked || !!remainingClaimTime ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    disabled={claiming || !agreed || !!remainingClaimTime}
+                    className={`px-6 py-3 rounded-lg font-bold text-white bg-green-600 hover:bg-green-700 transition-colors mb-4 ${claiming || !agreed || !!remainingClaimTime ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     {claiming ? 'Claiming...' : 'Claim Daily Reward'}
                   </button>
