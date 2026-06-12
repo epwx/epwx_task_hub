@@ -371,6 +371,19 @@ export default function HomeTest() {
     : normalizedEpwxBalance >= MID_TIER_DAILY_REWARD_THRESHOLD
       ? MID_TIER_DAILY_REWARD
       : DEFAULT_DAILY_REWARD;
+  const nextTierTarget = normalizedEpwxBalance >= BONUS_DAILY_REWARD_THRESHOLD
+    ? null
+    : normalizedEpwxBalance >= MID_TIER_DAILY_REWARD_THRESHOLD
+      ? BONUS_TIER_DAILY_REWARD_THRESHOLD
+      : MID_TIER_DAILY_REWARD_THRESHOLD;
+  const nextTierReward = nextTierTarget === BONUS_TIER_DAILY_REWARD_THRESHOLD
+    ? BONUS_DAILY_REWARD
+    : nextTierTarget === MID_TIER_DAILY_REWARD_THRESHOLD
+      ? MID_TIER_DAILY_REWARD
+      : null;
+  const tokensToNextTier = nextTierTarget === null
+    ? 0
+    : Math.max(nextTierTarget - normalizedEpwxBalance, 0);
 
   const [specialEligible, setSpecialEligible] = useState(false);
   const [specialClaiming, setSpecialClaiming] = useState(false);
@@ -425,6 +438,7 @@ export default function HomeTest() {
   const { signMessageAsync } = useSignMessage();
   const [claiming, setClaiming] = useState(false);
   const [claimStatus, setClaimStatus] = useState<string | null>(null);
+  const [showClaimUpgradePrompt, setShowClaimUpgradePrompt] = useState(false);
   const [nextDailyClaimAt, setNextDailyClaimAt] = useState<number | null>(null);
   const [remainingClaimTime, setRemainingClaimTime] = useState<string | null>(null);
   const [hasDailyClaimHistory, setHasDailyClaimHistory] = useState(false);
@@ -793,6 +807,7 @@ export default function HomeTest() {
   const handleDailyClaim = async () => {
     setClaiming(true);
     setClaimStatus(null);
+    setShowClaimUpgradePrompt(false);
     try {
       const todayUtc = new Date(Date.now()).toISOString().slice(0, 10);
       const message = `EPWX Daily Claim for ${address} on ${todayUtc}`;
@@ -811,6 +826,9 @@ export default function HomeTest() {
             ? `Successfully claimed ${claimedAmount} EPWX! Your reward will be sent soon. ${referralMessage}`
             : `Successfully claimed ${claimedAmount} EPWX! Your reward will be sent soon.`
         );
+        if (nextTierTarget) {
+          setShowClaimUpgradePrompt(true);
+        }
         fetchDailyClaimsSummary();
         if (address) {
           fetchReferralStats(address);
@@ -1003,7 +1021,7 @@ export default function HomeTest() {
         <TwitterCampaignBoard address={address} />
 
         {/* Cashback Rewards Section */}
-        <section className="py-12">
+        <section id="cashback-rewards" className="py-12 scroll-mt-24">
           <div className="flex flex-col items-center">
             <h2 className="text-2xl font-black mb-4 text-blue-700 text-center">Cashback Rewards</h2>
             <div className={`${themedSectionClass} w-full max-w-xl`}>
@@ -1166,6 +1184,45 @@ export default function HomeTest() {
                         Your current daily reward tier: {currentDailyReward.toLocaleString()} EPWX
                       </div>
                     )}
+                    {address && !balanceLoading && (
+                      <div className="border-t border-white/15 bg-white/5 px-4 py-4 text-sm text-white/85">
+                        {nextTierTarget ? (
+                          <>
+                            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Next unlock</div>
+                            <div className="mt-2 text-base font-semibold text-white">
+                              Buy or hold {formatEpwxBalance(tokensToNextTier)} more EPWX to unlock {nextTierReward?.toLocaleString()} EPWX per daily claim.
+                            </div>
+                            <div className="mt-2 text-white/70">
+                              Target balance: {nextTierTarget.toLocaleString()} EPWX. Bigger balances make the daily claim materially more valuable.
+                            </div>
+                            <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+                              <a
+                                href="#buy-epwx"
+                                className="inline-flex items-center justify-center rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-bold text-slate-950 transition-colors hover:bg-emerald-400"
+                              >
+                                Buy EPWX To Reach Next Tier
+                              </a>
+                              <a
+                                href="#cashback-rewards"
+                                className="inline-flex items-center justify-center rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-white/20"
+                              >
+                                Check Buyer Cashback
+                              </a>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Top tier active</div>
+                            <div className="mt-2 text-base font-semibold text-emerald-100">
+                              You are already on the highest daily reward tier at {BONUS_DAILY_REWARD.toLocaleString()} EPWX per claim.
+                            </div>
+                            <div className="mt-2 text-white/70">
+                              Keep compounding with cashback, referrals, and social campaigns to strengthen your position.
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center mb-4">
                     <input
@@ -1274,6 +1331,44 @@ export default function HomeTest() {
                   )}
                   {claimStatus && (
                     <div className="text-center text-lg font-semibold text-white mb-2">{claimStatus}</div>
+                  )}
+                  {showClaimUpgradePrompt && nextTierTarget && nextTierReward && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 px-4">
+                      <div className="relative w-full max-w-lg rounded-2xl border border-emerald-200/20 bg-slate-950/95 p-6 text-white shadow-2xl">
+                        <button
+                          type="button"
+                          className="absolute right-3 top-2 text-2xl font-bold text-white/60 hover:text-white"
+                          onClick={() => setShowClaimUpgradePrompt(false)}
+                          aria-label="Close"
+                        >
+                          &times;
+                        </button>
+                        <div className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200/80">Next tier unlocked by buying</div>
+                        <h3 className="mt-3 text-2xl font-black text-white">Turn today&apos;s claim into a bigger claim tomorrow</h3>
+                        <p className="mt-3 text-sm leading-7 text-white/80">
+                          You claimed your daily reward. Buy or hold {formatEpwxBalance(tokensToNextTier)} more EPWX to move this wallet to the next tier and unlock {nextTierReward.toLocaleString()} EPWX per daily claim.
+                        </p>
+                        <p className="mt-2 text-sm leading-7 text-emerald-100/90">
+                          Target balance: {nextTierTarget.toLocaleString()} EPWX.
+                        </p>
+                        <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+                          <a
+                            href="#buy-epwx"
+                            onClick={() => setShowClaimUpgradePrompt(false)}
+                            className="inline-flex items-center justify-center rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-bold text-slate-950 transition-colors hover:bg-emerald-400"
+                          >
+                            Buy EPWX Now
+                          </a>
+                          <a
+                            href="#cashback-rewards"
+                            onClick={() => setShowClaimUpgradePrompt(false)}
+                            className="inline-flex items-center justify-center rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-white/20"
+                          >
+                            View Cashback Rewards
+                          </a>
+                        </div>
+                      </div>
+                    </div>
                   )}
                 </>
               ) : (
