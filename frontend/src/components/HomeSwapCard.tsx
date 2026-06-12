@@ -13,6 +13,29 @@ import { getEpwxSwapQuote, swapEthToEpwx } from '@/utils/swapEthToEpwx';
 const DEFAULT_SWAP_AMOUNT = '0.001';
 const BASE_RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || 'https://mainnet.base.org';
 const MAX_GAS_BUFFER_ETH = 0.00005;
+const EPWX_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_EPWX_TOKEN as `0x${string}`) || '0xef5f5751cf3eca6cc3572768298b7783d33d60eb';
+const DEFAULT_DAILY_REWARD = 100_000;
+const MID_TIER_DAILY_REWARD = 2_000_000;
+const BONUS_DAILY_REWARD = 5_000_000;
+const MEGA_DAILY_REWARD = 10_000_000;
+const MID_TIER_DAILY_REWARD_THRESHOLD = 10_000_000_000;
+const BONUS_DAILY_REWARD_THRESHOLD = 100_000_000_000;
+const MEGA_DAILY_REWARD_THRESHOLD = 1_000_000_000_000;
+const CASHBACK_THRESHOLD = 100_000_000_000;
+
+function formatEpwxBalance(balance?: number) {
+  const numericBalance = Number(balance || 0);
+
+  if (!Number.isFinite(numericBalance) || numericBalance <= 0) {
+    return '0';
+  }
+
+  if (numericBalance >= 1) {
+    return numericBalance.toLocaleString(undefined, { maximumFractionDigits: 4 });
+  }
+
+  return numericBalance.toLocaleString(undefined, { maximumFractionDigits: 8 });
+}
 
 function formatEthBalance(balance?: string) {
   const numericBalance = Number(balance || 0);
@@ -42,6 +65,11 @@ export function HomeSwapCard() {
     address,
     chainId: base.id,
   });
+  const { data: epwxBalance } = useBalance({
+    address,
+    token: EPWX_TOKEN_ADDRESS,
+    chainId: base.id,
+  });
   const [amountEth, setAmountEth] = useState(DEFAULT_SWAP_AMOUNT);
   const [quoteOut, setQuoteOut] = useState<string>('');
   const [minimumOut, setMinimumOut] = useState<string>('');
@@ -53,6 +81,31 @@ export function HomeSwapCard() {
 
   const availableBaseEth = Number(baseEthBalance?.formatted || 0);
   const maxSwapEth = Math.max(0, availableBaseEth - MAX_GAS_BUFFER_ETH);
+  const normalizedEpwxBalance = Number(epwxBalance?.formatted || 0);
+  const currentDailyReward = normalizedEpwxBalance >= MEGA_DAILY_REWARD_THRESHOLD
+    ? MEGA_DAILY_REWARD
+    : normalizedEpwxBalance >= BONUS_DAILY_REWARD_THRESHOLD
+      ? BONUS_DAILY_REWARD
+      : normalizedEpwxBalance >= MID_TIER_DAILY_REWARD_THRESHOLD
+        ? MID_TIER_DAILY_REWARD
+        : DEFAULT_DAILY_REWARD;
+  const nextTierTarget = normalizedEpwxBalance >= MEGA_DAILY_REWARD_THRESHOLD
+    ? null
+    : normalizedEpwxBalance >= BONUS_DAILY_REWARD_THRESHOLD
+      ? MEGA_DAILY_REWARD_THRESHOLD
+      : normalizedEpwxBalance >= MID_TIER_DAILY_REWARD_THRESHOLD
+        ? BONUS_DAILY_REWARD_THRESHOLD
+        : MID_TIER_DAILY_REWARD_THRESHOLD;
+  const nextTierReward = nextTierTarget === MEGA_DAILY_REWARD_THRESHOLD
+    ? MEGA_DAILY_REWARD
+    : nextTierTarget === BONUS_DAILY_REWARD_THRESHOLD
+      ? BONUS_DAILY_REWARD
+      : nextTierTarget === MID_TIER_DAILY_REWARD_THRESHOLD
+        ? MID_TIER_DAILY_REWARD
+        : null;
+  const tokensToNextTier = nextTierTarget === null
+    ? 0
+    : Math.max(nextTierTarget - normalizedEpwxBalance, 0);
 
   const setPercentAmount = (percent: number) => {
     if (!availableBaseEth || availableBaseEth <= 0) {
@@ -152,6 +205,37 @@ export function HomeSwapCard() {
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-white/70">Base Swap</p>
           <h2 className="mt-2 text-3xl font-black text-white">Swap ETH to EPWX</h2>
+          <p className="mt-3 max-w-2xl text-sm leading-7 text-white/80">
+            Buying EPWX does more than add tokens to your wallet. It can upgrade your daily claim tier immediately and purchases above {CASHBACK_THRESHOLD.toLocaleString()} EPWX within 3 hours can unlock cashback.
+          </p>
+        </div>
+
+        <div className="mt-5 grid gap-3 lg:grid-cols-3">
+          <div className="rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur-lg">
+            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Current daily tier</div>
+            <div className="mt-2 text-2xl font-black text-white">{currentDailyReward.toLocaleString()} EPWX</div>
+            <div className="mt-1 text-sm text-white/75">Current wallet balance: {formatEpwxBalance(normalizedEpwxBalance)} EPWX</div>
+          </div>
+          <div className="rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur-lg">
+            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Next unlock</div>
+            {nextTierTarget && nextTierReward ? (
+              <>
+                <div className="mt-2 text-2xl font-black text-emerald-100">{nextTierReward.toLocaleString()} EPWX</div>
+                <div className="mt-1 text-sm text-white/75">Buy or hold {formatEpwxBalance(tokensToNextTier)} more EPWX to reach {nextTierTarget.toLocaleString()}.</div>
+              </>
+            ) : (
+              <>
+                <div className="mt-2 text-2xl font-black text-emerald-100">Top tier active</div>
+                <div className="mt-1 text-sm text-white/75">This wallet already qualifies for the maximum daily claim reward.</div>
+              </>
+            )}
+          </div>
+          <div className="rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur-lg">
+            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Buyer cashback</div>
+            <div className="mt-2 text-2xl font-black text-white">100B+ EPWX buy</div>
+            <div className="mt-1 text-sm text-white/75">Qualifying purchases in the last 3 hours can be claimed in the cashback section.</div>
+            <a href="#cashback-rewards" className="mt-3 inline-flex text-sm font-semibold text-emerald-100 underline underline-offset-4 hover:text-white">Jump to cashback rewards</a>
+          </div>
         </div>
 
         <div className="mt-5 flex w-full flex-col gap-3 sm:flex-row sm:items-center">
@@ -254,6 +338,9 @@ export function HomeSwapCard() {
 
             <p className="mt-3 text-xs text-white/70">
               {address ? 'Your connected wallet will receive EPWX directly on Base.' : 'Connect your wallet above, then confirm the swap in your wallet.'}
+            </p>
+            <p className="mt-2 text-xs text-emerald-100/80">
+              After your swap settles, return to the daily claim card to see your upgraded reward tier. If your purchase crosses 100,000,000,000 EPWX, check cashback right away.
             </p>
 
             {status && (

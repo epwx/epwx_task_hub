@@ -134,6 +134,23 @@ export function EPWXCashbackClaim() {
       <p className="mb-4 rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
         Earn {cashbackRewardLabel} cashback on EPWX purchases above {cashbackThresholdLabel} made within the last 3 hours.
       </p>
+      <div className="mb-4 grid gap-3 sm:grid-cols-3">
+        <div className="rounded-lg border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+          <div className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">Step 1</div>
+          <div className="mt-1 font-semibold">Buy EPWX</div>
+          <div className="mt-1 text-emerald-800/80">Make a qualifying EPWX purchase on Base.</div>
+        </div>
+        <div className="rounded-lg border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+          <div className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">Step 2</div>
+          <div className="mt-1 font-semibold">Claim cashback</div>
+          <div className="mt-1 text-emerald-800/80">Eligible transactions appear here for the next 3 hours.</div>
+        </div>
+        <div className="rounded-lg border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+          <div className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">Step 3</div>
+          <div className="mt-1 font-semibold">Upgrade claims</div>
+          <div className="mt-1 text-emerald-800/80">Holding more EPWX can move your wallet into a higher daily reward tier.</div>
+        </div>
+      </div>
       {loading ? (
         <div className="text-center py-8 text-gray-500">Loading eligible transactions...</div>
       ) : unclaimedTxs.length === 0 ? (
