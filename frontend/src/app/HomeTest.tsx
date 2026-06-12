@@ -374,9 +374,9 @@ export default function HomeTest() {
   const nextTierTarget = normalizedEpwxBalance >= BONUS_DAILY_REWARD_THRESHOLD
     ? null
     : normalizedEpwxBalance >= MID_TIER_DAILY_REWARD_THRESHOLD
-      ? BONUS_TIER_DAILY_REWARD_THRESHOLD
+      ? BONUS_DAILY_REWARD_THRESHOLD
       : MID_TIER_DAILY_REWARD_THRESHOLD;
-  const nextTierReward = nextTierTarget === BONUS_TIER_DAILY_REWARD_THRESHOLD
+  const nextTierReward = nextTierTarget === BONUS_DAILY_REWARD_THRESHOLD
     ? BONUS_DAILY_REWARD
     : nextTierTarget === MID_TIER_DAILY_REWARD_THRESHOLD
       ? MID_TIER_DAILY_REWARD
