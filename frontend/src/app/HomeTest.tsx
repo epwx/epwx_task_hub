@@ -84,6 +84,13 @@ interface DailyClaimsSummary {
   totalPaidToday: number;
 }
 
+interface BuyerBadge {
+  label: string;
+  accentClassName: string;
+  description: string;
+  benefit: string;
+}
+
 function ShareIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5 fill-none stroke-current" strokeWidth="1.8">
@@ -454,6 +461,7 @@ export default function HomeTest() {
   const [nextDailyClaimAt, setNextDailyClaimAt] = useState<number | null>(null);
   const [remainingClaimTime, setRemainingClaimTime] = useState<string | null>(null);
   const [hasDailyClaimHistory, setHasDailyClaimHistory] = useState(false);
+  const [hasRecentQualifyingPurchase, setHasRecentQualifyingPurchase] = useState(false);
   const [dailyClaimsSummary, setDailyClaimsSummary] = useState<DailyClaimsSummary | null>(null);
   const [dailyClaimsSummaryLoading, setDailyClaimsSummaryLoading] = useState(true);
   const [isTelegramVerified, setIsTelegramVerified] = useState<boolean | null>(null);
@@ -482,6 +490,58 @@ export default function HomeTest() {
       }
     }
   };
+
+  const buyerBadge: BuyerBadge | null = normalizedEpwxBalance >= MEGA_DAILY_REWARD_THRESHOLD
+    ? {
+        label: 'Whale Buyer',
+        accentClassName: 'border-amber-300/40 bg-amber-400/20 text-amber-50',
+        description: 'Top-tier buyer status for wallets holding at least 1,000,000,000,000 EPWX.',
+        benefit: 'Unlocks the highest daily claim tier at 10,000,000 EPWX per claim.',
+      }
+    : normalizedEpwxBalance >= BONUS_DAILY_REWARD_THRESHOLD
+      ? {
+          label: 'Tier Buyer',
+          accentClassName: 'border-emerald-300/40 bg-emerald-400/20 text-emerald-50',
+          description: 'Committed buyer status for wallets holding at least 100,000,000,000 EPWX.',
+          benefit: 'Qualifies the wallet for stronger daily reward progression and buyer positioning.',
+        }
+      : hasRecentQualifyingPurchase
+        ? {
+            label: 'Buyer',
+            accentClassName: 'border-sky-300/40 bg-sky-400/20 text-sky-50',
+            description: 'Verified buyer status for wallets with a recent qualifying EPWX purchase.',
+            benefit: 'Signals purchase activity and points the wallet toward cashback and higher reward tiers.',
+          }
+        : null;
+
+  useEffect(() => {
+    if (!address) {
+      setHasRecentQualifyingPurchase(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadRecentPurchaseStatus = async () => {
+      try {
+        const res = await fetch(`/api/epwx/eligible?wallet=${address}&hours=3`, { cache: 'no-store' });
+        const data = await res.json();
+        if (!cancelled) {
+          setHasRecentQualifyingPurchase(Array.isArray(data.transactions) && data.transactions.length > 0);
+        }
+      } catch {
+        if (!cancelled) {
+          setHasRecentQualifyingPurchase(false);
+        }
+      }
+    };
+
+    loadRecentPurchaseStatus();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [address]);
 
   const handleCopyReferralLink = async () => {
     if (!referralLink) {
@@ -918,6 +978,32 @@ export default function HomeTest() {
                   </div>
                 </div>
                 <div className={`mb-3 w-full p-4 ${glassPanelClass}`}>
+                  {buyerBadge ? (
+                    <div className="flex flex-col gap-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Buyer Badge</div>
+                          <div className="mt-1 text-sm font-semibold text-white">{buyerBadge.description}</div>
+                        </div>
+                        <span className={`rounded-full border px-3 py-1 text-xs font-black uppercase tracking-[0.16em] ${buyerBadge.accentClassName}`}>
+                          {buyerBadge.label}
+                        </span>
+                      </div>
+                      <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/80">
+                        {buyerBadge.benefit}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-2">
+                      <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Buyer Badge</div>
+                      <div className="text-sm font-semibold text-white">No buyer badge unlocked yet.</div>
+                      <div className="text-sm text-white/75">
+                        Complete a qualifying EPWX purchase or build your balance toward 100,000,000,000 EPWX to activate buyer status.
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className={`mb-3 w-full p-4 ${glassPanelClass}`}>
                   <div className="flex flex-col gap-3">
                     <div className="flex items-center justify-between gap-3">
                       <div>
@@ -1194,6 +1280,11 @@ export default function HomeTest() {
                     {address && !balanceLoading && (
                       <div className="border-t border-white/15 bg-emerald-400/10 px-4 py-3 text-center font-semibold text-emerald-100 sm:text-left">
                         Your current daily reward tier: {currentDailyReward.toLocaleString()} EPWX
+                      </div>
+                    )}
+                    {buyerBadge && (
+                      <div className="border-t border-white/15 bg-white/5 px-4 py-3 text-sm text-white/80">
+                        <span className="font-bold text-white">{buyerBadge.label} active.</span> {buyerBadge.benefit}
                       </div>
                     )}
                     {address && !balanceLoading && (
