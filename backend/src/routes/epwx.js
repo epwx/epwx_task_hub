@@ -19,6 +19,26 @@ const BONUS_TIER_DAILY_REWARD_THRESHOLD = 100_000_000_000;
 const MEGA_TIER_DAILY_REWARD_THRESHOLD = 1_000_000_000_000;
 const EPWX_TOKEN_DECIMALS = 9;
 const EPWX_REWARD_TRANSFER_FEE_BPS = Number(process.env.EPWX_REWARD_TRANSFER_FEE_BPS || '600');
+const DAILY_REWARD_TIERS = [
+  {
+    minimumBalance: MEGA_TIER_DAILY_REWARD_THRESHOLD,
+    amount: MEGA_TIER_DAILY_REWARD_AMOUNT,
+    badgeLabel: 'Whale Buyer',
+    badgeBenefit: 'Unlocks the highest daily claim tier at 10,000,000 EPWX per claim.',
+  },
+  {
+    minimumBalance: BONUS_TIER_DAILY_REWARD_THRESHOLD,
+    amount: BONUS_TIER_DAILY_REWARD_AMOUNT,
+    badgeLabel: 'Tier Buyer',
+    badgeBenefit: 'Qualifies the wallet for stronger daily reward progression and buyer positioning.',
+  },
+  {
+    minimumBalance: MID_TIER_DAILY_REWARD_THRESHOLD,
+    amount: MID_TIER_DAILY_REWARD_AMOUNT,
+    badgeLabel: null,
+    badgeBenefit: null,
+  },
+];
 
 function normalizeWallet(wallet) {
   if (typeof wallet !== 'string') {
@@ -67,31 +87,38 @@ async function distributeReferralReward(wallet) {
   return distributeEpwxReward(wallet, REFERRAL_REWARD_AMOUNT);
 }
 
-async function getDailyRewardAmount(wallet) {
+function findDailyRewardTierByAmount(amount) {
+  const normalizedAmount = String(amount || '');
+  return DAILY_REWARD_TIERS.find((entry) => entry.amount === normalizedAmount) || null;
+}
+
+function getDefaultDailyRewardDetails() {
+  return {
+    minimumBalance: 0,
+    amount: DEFAULT_DAILY_REWARD_AMOUNT,
+    badgeLabel: null,
+    badgeBenefit: null,
+  };
+}
+
+async function getDailyRewardDetails(wallet) {
   if (!epwxTokenContract) {
-    return DEFAULT_DAILY_REWARD_AMOUNT;
+    return getDefaultDailyRewardDetails();
   }
 
   try {
     const balance = await epwxTokenContract.balanceOf(wallet);
     const normalizedBalance = Number(ethers.formatUnits(balance, EPWX_TOKEN_DECIMALS));
+    const matchedTier = DAILY_REWARD_TIERS.find((entry) => normalizedBalance >= entry.minimumBalance);
 
-    if (normalizedBalance >= MEGA_TIER_DAILY_REWARD_THRESHOLD) {
-      return MEGA_TIER_DAILY_REWARD_AMOUNT;
-    }
-
-    if (normalizedBalance >= BONUS_TIER_DAILY_REWARD_THRESHOLD) {
-      return BONUS_TIER_DAILY_REWARD_AMOUNT;
-    }
-
-    if (normalizedBalance >= MID_TIER_DAILY_REWARD_THRESHOLD) {
-      return MID_TIER_DAILY_REWARD_AMOUNT;
+    if (matchedTier) {
+      return matchedTier;
     }
   } catch (error) {
     console.error('Failed to determine daily reward tier:', error);
   }
 
-  return DEFAULT_DAILY_REWARD_AMOUNT;
+  return getDefaultDailyRewardDetails();
 }
 
 async function qualifyReferralReward({ referral, claim, ip, now }) {
@@ -610,11 +637,14 @@ router.post('/daily-claims/mark-paid', async (req, res) => {
     claim.txHash = txHash;
     await claim.save();
 
+    const rewardDetails = findDailyRewardTierByAmount(claim.amount) || await getDailyRewardDetails(claim.wallet);
     const notificationResult = await notifyDailyClaimPaid({
       wallet: claim.wallet,
       amount: claim.amount,
       claimedAt: claim.claimedAt,
       txHash: claim.txHash,
+      badgeLabel: rewardDetails.badgeLabel,
+      badgeBenefit: rewardDetails.badgeBenefit,
     });
 
     res.json({
@@ -705,7 +735,8 @@ router.post('/daily-claim', async (req, res) => {
   }
 
   // TODO: Send EPWX to wallet here (call contract or queue for admin)
-  const amount = await getDailyRewardAmount(normalizedWallet);
+  const rewardDetails = await getDailyRewardDetails(normalizedWallet);
+  const amount = rewardDetails.amount;
   const claim = await DailyClaim.create({ wallet: normalizedWallet, ip, claimedAt: now, amount });
 
   try {
@@ -720,6 +751,8 @@ router.post('/daily-claim', async (req, res) => {
         amount: claim.amount,
         claimedAt: claim.claimedAt,
         txHash: claim.txHash,
+        badgeLabel: rewardDetails.badgeLabel,
+        badgeBenefit: rewardDetails.badgeBenefit,
       });
 
       if (!notificationResult.sent) {
