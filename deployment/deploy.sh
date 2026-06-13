@@ -5,7 +5,34 @@
 
 set -e
 
+APP_ROOT="$(pwd)"
+FRONTEND_DIR="$APP_ROOT/frontend"
+MAINTENANCE_FLAG="$FRONTEND_DIR/.maintenance"
+
+enable_maintenance_mode() {
+	touch "$MAINTENANCE_FLAG"
+	echo "🛠️  Maintenance mode enabled"
+}
+
+disable_maintenance_mode() {
+	rm -f "$MAINTENANCE_FLAG"
+	echo "✅ Maintenance mode disabled"
+}
+
+handle_deploy_exit() {
+	exit_code=$?
+
+	if [ $exit_code -ne 0 ]; then
+		echo "❌ Deployment failed. Maintenance mode is still enabled."
+		exit $exit_code
+	fi
+}
+
+trap handle_deploy_exit EXIT
+
 echo "🚀 Deploying EPWX Task Platform..."
+
+enable_maintenance_mode
 
 # Pull latest code
 echo "📥 Pulling latest code from repository..."
@@ -44,6 +71,9 @@ cd ..
 
 # Save PM2 configuration
 pm2 save
+
+disable_maintenance_mode
+trap - EXIT
 
 echo "✅ Deployment complete!"
 echo "Backend: http://localhost:4000"
