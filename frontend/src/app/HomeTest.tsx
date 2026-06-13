@@ -3,6 +3,7 @@ import Link from "next/link";
 import { EPWXCashbackClaim } from "@/components/EPWXCashbackClaim_clean";
 import { HomeSwapCard } from "@/components/HomeSwapCard";
 import { TokenSupplyPieChart } from "@/components/TokenSupplyPieChart";
+import { parseJsonResponse } from "@/utils/apiErrors";
 import { Fragment, useState, useEffect } from "react";
 import DailyClaimsTable from "@/components/DailyClaimsTable";
 import { useAccount, useBalance, useSignMessage } from "wagmi";
@@ -338,11 +339,7 @@ function TwitterCampaignBoard({ address }: { address?: string }) {
 
         const query = params.toString();
         const response = await fetch(`/api/twitter-campaigns/active${query ? `?${query}` : ''}`, { cache: 'no-store' });
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || 'Failed to load Twitter campaigns.');
-        }
+        const data = await parseJsonResponse<{ campaigns?: TwitterCampaign[]; error?: string }>(response, 'Failed to load Twitter campaigns.');
 
         setCampaigns(Array.isArray(data.campaigns) ? data.campaigns : []);
       } catch (fetchError: any) {

@@ -1,3 +1,5 @@
+import { parseJsonResponse } from '@/utils/apiErrors';
+
 export interface EpwxPriceData {
   priceUSD: number;
   liquidityUSD: number;
@@ -37,7 +39,7 @@ export function getEpwxPriceApiUrl() {
 
 export async function fetchEpwxPriceData(): Promise<EpwxPriceData> {
   const response = await fetch(getEpwxPriceApiUrl(), { cache: "no-store" });
-  const payload = await response.json();
+  const payload = await parseJsonResponse<{ data?: EpwxPriceData; error?: string }>(response, "Failed to fetch EPWX market data");
 
   if (!response.ok || !payload?.data) {
     throw new Error(payload?.error || "Failed to fetch EPWX market data");

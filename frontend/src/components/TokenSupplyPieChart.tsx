@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { parseJsonResponse } from '@/utils/apiErrors';
 
 type SupplySnapshot = {
   totalSupply: number;
@@ -62,16 +63,10 @@ export function TokenSupplyPieChart() {
         ]);
 
         const [totalPayload, circulatingPayload, burnedPayload] = await Promise.all([
-          totalResponse.json(),
-          circulatingResponse.json(),
-          burnedResponse.json(),
+          parseJsonResponse<{ totalSupply?: number; error?: string }>(totalResponse, 'Failed to fetch token supply data.'),
+          parseJsonResponse<{ circulatingSupply?: number; error?: string }>(circulatingResponse, 'Failed to fetch token supply data.'),
+          parseJsonResponse<{ burnedSupply?: number; error?: string }>(burnedResponse, 'Failed to fetch token supply data.'),
         ]);
-
-        if (!totalResponse.ok || !circulatingResponse.ok || !burnedResponse.ok) {
-          throw new Error(
-            totalPayload?.error || circulatingPayload?.error || burnedPayload?.error || 'Failed to fetch token supply data.'
-          );
-        }
 
         if (cancelled) return;
 

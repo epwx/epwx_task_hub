@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { parseJsonResponse } from '@/utils/apiErrors';
 import {
   EPWX_TOKEN_ADDRESS,
   EPWX_WETH_PAIR_ADDRESS,
@@ -34,22 +35,10 @@ async function fetchSupplySnapshot(): Promise<SupplySnapshot> {
   ]);
 
   const [totalPayload, circulatingPayload, burnedPayload] = await Promise.all([
-    totalResponse.json(),
-    circulatingResponse.json(),
-    burnedResponse.json(),
+    parseJsonResponse<{ totalSupply?: string; error?: string }>(totalResponse, 'Failed to fetch total supply'),
+    parseJsonResponse<{ circulatingSupply?: string; error?: string }>(circulatingResponse, 'Failed to fetch circulating supply'),
+    parseJsonResponse<{ burnedSupply?: string; error?: string }>(burnedResponse, 'Failed to fetch burned supply'),
   ]);
-
-  if (!totalResponse.ok) {
-    throw new Error(totalPayload?.error || 'Failed to fetch total supply');
-  }
-
-  if (!circulatingResponse.ok) {
-    throw new Error(circulatingPayload?.error || 'Failed to fetch circulating supply');
-  }
-
-  if (!burnedResponse.ok) {
-    throw new Error(burnedPayload?.error || 'Failed to fetch burned supply');
-  }
 
   return {
     totalSupply: String(totalPayload.totalSupply || '0'),
