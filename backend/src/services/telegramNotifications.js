@@ -44,10 +44,24 @@ function formatClaimTimestamp(claimedAt) {
   return `${date.toISOString().slice(0, 16).replace('T', ' ')} UTC`;
 }
 
+function formatBadgeDisplay(badgeLabel) {
+  switch (badgeLabel) {
+    case 'Whale Buyer':
+      return '🟡 👑 Whale Buyer';
+    case 'Tier Buyer':
+      return '🟢 🛡️ Tier Buyer';
+    case 'Buyer':
+      return '🔵 🎖️ Buyer';
+    default:
+      return badgeLabel || null;
+  }
+}
+
 export function buildDailyClaimPaidMessage({ wallet, amount, claimedAt, txHash, badgeLabel, badgeBenefit }) {
   const safeShortWallet = escapeHtml(shortenHex(wallet));
   const safeAmount = escapeHtml(formatEpwxAmount(amount));
   const safeClaimedAt = escapeHtml(formatClaimTimestamp(claimedAt));
+  const safeBadgeDisplay = escapeHtml(formatBadgeDisplay(badgeLabel));
   const txLink = txHash ? `https://basescan.org/tx/${encodeURIComponent(txHash)}` : null;
 
   const lines = [
@@ -60,8 +74,8 @@ export function buildDailyClaimPaidMessage({ wallet, amount, claimedAt, txHash, 
     '',
   ];
 
-  if (badgeLabel) {
-    lines.push(`<b>Badge</b>: ${escapeHtml(badgeLabel)}`);
+  if (safeBadgeDisplay) {
+    lines.push(`<b>Badge</b>: ${safeBadgeDisplay}`);
   }
 
   if (badgeBenefit) {
