@@ -28,7 +28,7 @@ sync_nginx_config() {
 		return
 	fi
 
-	cp "$NGINX_SOURCE_CONFIG" "$NGINX_TARGET_CONFIG"
+	sed "s|__APP_ROOT__|$APP_ROOT|g" "$NGINX_SOURCE_CONFIG" > "$NGINX_TARGET_CONFIG"
 	nginx -t
 	systemctl reload nginx
 	echo "🌐 Nginx config reloaded"
