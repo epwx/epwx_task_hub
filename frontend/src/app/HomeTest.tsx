@@ -192,6 +192,10 @@ function buildReferralShareText(referralLink: string) {
   return `Join me on EPWX Task Hub and use my referral link to qualify for EPWX rewards: ${referralLink}`;
 }
 
+function buildReferralShareBody() {
+  return "Join me on EPWX Task Hub and use my referral link to qualify for EPWX rewards:";
+}
+
 function isWalletInAppBrowser() {
   if (typeof navigator === "undefined") {
     return false;
@@ -583,7 +587,7 @@ export default function HomeTest() {
     try {
       await navigator.share({
         title: "EPWX Task Hub referral",
-        text: shareMessage,
+        text: buildReferralShareBody(),
         url: referralLink,
       });
     } catch (error: any) {
@@ -606,7 +610,7 @@ export default function HomeTest() {
       if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
         navigator.share({
           title: "EPWX Task Hub referral",
-          text: buildReferralShareText(referralLink),
+          text: buildReferralShareBody(),
           url: referralLink,
         }).catch(async (error: any) => {
           if (error?.name === "AbortError") {
