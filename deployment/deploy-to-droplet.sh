@@ -77,7 +77,19 @@ server {
     listen 80;
     server_name tasks.epowex.com;
 
+    error_page 502 503 504 @frontend_maintenance;
+
+    location @frontend_maintenance {
+        root /home/deployer/epwx_task_hub/frontend/public;
+        try_files /maintenance.html =503;
+    }
+
     location / {
+        if (-f /home/deployer/epwx_task_hub/frontend/.maintenance) {
+            return 503;
+        }
+
+        proxy_intercept_errors on;
         proxy_pass http://localhost:3000;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
