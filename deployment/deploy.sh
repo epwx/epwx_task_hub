@@ -8,6 +8,8 @@ set -e
 APP_ROOT="$(pwd)"
 FRONTEND_DIR="$APP_ROOT/frontend"
 MAINTENANCE_FLAG="$FRONTEND_DIR/.maintenance"
+NGINX_SOURCE_CONFIG="$APP_ROOT/deployment/nginx.conf"
+NGINX_TARGET_CONFIG="/etc/nginx/sites-available/epwx-tasks"
 
 enable_maintenance_mode() {
 	touch "$MAINTENANCE_FLAG"
@@ -17,6 +19,18 @@ enable_maintenance_mode() {
 disable_maintenance_mode() {
 	rm -f "$MAINTENANCE_FLAG"
 	echo "✅ Maintenance mode disabled"
+}
+
+sync_nginx_config() {
+	if [ ! -f "$NGINX_SOURCE_CONFIG" ]; then
+		echo "⚠️  Skipping Nginx sync because $NGINX_SOURCE_CONFIG was not found"
+		return
+	fi
+
+	cp "$NGINX_SOURCE_CONFIG" "$NGINX_TARGET_CONFIG"
+	nginx -t
+	systemctl reload nginx
+	echo "🌐 Nginx config reloaded"
 }
 
 handle_deploy_exit() {
@@ -32,11 +46,14 @@ trap handle_deploy_exit EXIT
 
 echo "🚀 Deploying EPWX Task Platform..."
 
-enable_maintenance_mode
-
 # Pull latest code
 echo "📥 Pulling latest code from repository..."
 git pull origin main
+
+echo "🌐 Syncing Nginx configuration..."
+sync_nginx_config
+
+enable_maintenance_mode
 
 # Install dependencies
 echo "📦 Installing dependencies..."
