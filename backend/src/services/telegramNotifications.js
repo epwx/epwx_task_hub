@@ -58,6 +58,7 @@ export function buildDailyClaimPaidMessage({ wallet, amount, claimedAt, txHash, 
     `<b>Amount</b>: ${safeAmount} EPWX`,
     `<b>Time</b>: ${safeClaimedAt}`,
     '',
+  ];
 
   if (badgeLabel) {
     lines.push(`<b>Badge</b>: ${escapeHtml(badgeLabel)}`);
@@ -71,6 +72,8 @@ export function buildDailyClaimPaidMessage({ wallet, amount, claimedAt, txHash, 
     '',
     '<a href="https://tasks.epowex.com/#daily-claim">Claim Daily Free EPWX</a> • <a href="https://tasks.epowex.com/#buy-epwx">Buy EPWX</a> • <a href="https://coinmarketcap.com/currencies/epowerx-on-base/">CMC Watchlist</a>',
   );
+
+  if (txHash && txLink) {
     lines.push(`<b>Tx</b>: <code>${escapeHtml(shortenHex(txHash))}</code>`);
     lines.push(`<a href="${txLink}">View on Basescan</a>`);
   }
