@@ -5,6 +5,7 @@ import { ConnectKitButton } from "connectkit";
 import { useAccount, usePublicClient, useWriteContract } from "wagmi";
 import { ethers } from "ethers";
 import MerchantClaimsTable from "@/components/MerchantClaimsTable";
+import { parseJsonResponse } from "@/utils/apiErrors";
 
 type TwitterClaim = {
   id: number | string;
@@ -135,7 +136,7 @@ export default function AdminTwitterClaimsPage() {
 
     try {
       const response = await fetch(`/api/claims?admin=${address}&status=${statusFilter}&claimType=twitter_retweet`);
-      const data = await response.json();
+      const data = await parseJsonResponse<{ claims?: TwitterClaim[] }>(response, "Failed to fetch Twitter claims");
       setClaims(data.claims || []);
     } catch (fetchError: any) {
       setError(fetchError?.message || "Failed to fetch Twitter claims");
@@ -151,7 +152,10 @@ export default function AdminTwitterClaimsPage() {
 
     try {
       const response = await fetch(`/api/twitter-campaigns/list?admin=${address}&page=${page}&limit=${TWITTER_CAMPAIGNS_PAGE_SIZE}`);
-      const data = await response.json();
+      const data = await parseJsonResponse<{
+        campaigns?: TwitterCampaign[];
+        pagination?: CampaignPagination;
+      }>(response, "Failed to fetch Twitter campaigns");
       setCampaigns(data.campaigns || []);
       setCampaignPagination(data.pagination || {
         page,
@@ -209,7 +213,7 @@ export default function AdminTwitterClaimsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...campaignForm, admin: address, expiresAt: toIsoDateTime(campaignForm.expiresAt) }),
       });
-      const data = await response.json();
+      const data = await parseJsonResponse<{ success?: boolean; error?: string }>(response, "Failed to create campaign");
 
       if (!data.success) {
         setError(data.error || "Failed to create campaign");
@@ -233,7 +237,7 @@ export default function AdminTwitterClaimsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ admin: address, isActive: !campaign.isActive }),
       });
-      const data = await response.json();
+      const data = await parseJsonResponse<{ success?: boolean; error?: string }>(response, "Failed to update campaign");
 
       if (!data.success) {
         setError(data.error || "Failed to update campaign");
@@ -271,7 +275,7 @@ export default function AdminTwitterClaimsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...editCampaignForm, admin: address, expiresAt: toIsoDateTime(editCampaignForm.expiresAt) }),
       });
-      const data = await response.json();
+      const data = await parseJsonResponse<{ success?: boolean; error?: string }>(response, "Failed to save campaign changes");
 
       if (!data.success) {
         setError(data.error || "Failed to save campaign changes");
@@ -296,7 +300,7 @@ export default function AdminTwitterClaimsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ admin: address, status: "rejected", rejectionComment }),
       });
-      const data = await response.json();
+      const data = await parseJsonResponse<{ success?: boolean; error?: string }>(response, "Failed to reject claim");
 
       if (!data.success) {
         setError(data.error || "Failed to reject claim");
@@ -342,7 +346,7 @@ export default function AdminTwitterClaimsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ admin: address, claimId: claim.id, txHash, claimSource: "claim" }),
       });
-      const data = await response.json();
+      const data = await parseJsonResponse<{ success?: boolean; error?: string }>(response, "Failed to mark claim as paid");
 
       if (!data.success) {
         setError(data.error || "Failed to mark claim as paid");
