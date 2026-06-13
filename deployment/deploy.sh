@@ -10,6 +10,7 @@ FRONTEND_DIR="$APP_ROOT/frontend"
 MAINTENANCE_FLAG="$FRONTEND_DIR/.maintenance"
 NGINX_SOURCE_CONFIG="$APP_ROOT/deployment/nginx.conf"
 NGINX_TARGET_CONFIG="/etc/nginx/sites-available/epwx-tasks"
+FRONTEND_HEALTHCHECK_URL="http://127.0.0.1:3000/"
 
 enable_maintenance_mode() {
 	touch "$MAINTENANCE_FLAG"
@@ -31,6 +32,24 @@ sync_nginx_config() {
 	nginx -t
 	systemctl reload nginx
 	echo "🌐 Nginx config reloaded"
+}
+
+wait_for_frontend_ready() {
+	echo "⏳ Waiting for frontend to become ready..."
+
+	for attempt in $(seq 1 60); do
+		response=$(curl -fsS "$FRONTEND_HEALTHCHECK_URL" || true)
+
+		if [ -n "$response" ] && [[ "$response" != *"Warmup Page"* ]] && [[ "$response" != *"<body></body>"* ]]; then
+			echo "✅ Frontend is ready"
+			return 0
+		fi
+
+		sleep 2
+	done
+
+	echo "❌ Frontend did not become ready in time"
+	return 1
 }
 
 handle_deploy_exit() {
@@ -88,6 +107,8 @@ cd ..
 
 # Save PM2 configuration
 pm2 save
+
+wait_for_frontend_ready
 
 disable_maintenance_mode
 trap - EXIT

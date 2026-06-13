@@ -77,6 +77,27 @@ server {
     listen 80;
     server_name tasks.epowex.com;
 
+    location /_next/static/ {
+        alias /home/deployer/epwx_task_hub/frontend/.next/static/;
+        access_log off;
+        expires 1h;
+    }
+
+    location = /maintenance.html {
+        root /home/deployer/epwx_task_hub/frontend/public;
+        add_header Cache-Control "no-store, no-cache, must-revalidate" always;
+    }
+
+    location = /favicon.ico {
+        root /home/deployer/epwx_task_hub/frontend/public;
+        access_log off;
+    }
+
+    location = /logo.webp {
+        root /home/deployer/epwx_task_hub/frontend/public;
+        access_log off;
+    }
+
     error_page 502 503 504 @frontend_maintenance;
 
     location @frontend_maintenance {
