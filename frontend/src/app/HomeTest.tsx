@@ -85,10 +85,52 @@ interface DailyClaimsSummary {
 }
 
 interface BuyerBadge {
+  variant: 'whale' | 'tier' | 'buyer';
   label: string;
   accentClassName: string;
   description: string;
   benefit: string;
+}
+
+function BuyerBadgeIcon({ variant }: { variant: BuyerBadge['variant'] }) {
+  if (variant === 'whale') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 fill-current">
+        <path d="M4 18h16v2H4v-2Zm1.2-10.4 3.55 2.42L12 4.5l3.25 5.52 3.55-2.42-1.68 7.4H6.88L5.2 7.6Z" />
+      </svg>
+    );
+  }
+
+  if (variant === 'tier') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 fill-current">
+        <path d="M12 2 5 5v6c0 4.65 2.98 8.99 7 10 4.02-1.01 7-5.35 7-10V5l-7-3Zm0 4.2 3.5 1.5V11c0 2.7-1.5 5.25-3.5 6.55C10 16.25 8.5 13.7 8.5 11V7.7L12 6.2Z" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 fill-current">
+      <path d="M12 3.5 14.63 8.83l5.87.85-4.25 4.14 1 5.85L12 16.9l-5.25 2.77 1-5.85L3.5 9.68l5.87-.85L12 3.5Z" />
+    </svg>
+  );
+}
+
+function BuyerBadgeChip({ badge, compact = false }: { badge: BuyerBadge; compact?: boolean }) {
+  return (
+    <span
+      className={[
+        'inline-flex items-center gap-2 rounded-full border font-black uppercase shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_10px_30px_rgba(0,0,0,0.18)] backdrop-blur-sm',
+        compact ? 'px-3 py-1.5 text-[11px] tracking-[0.18em]' : 'px-3.5 py-2 text-xs tracking-[0.16em]',
+        badge.accentClassName,
+      ].join(' ')}
+    >
+      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-black/15 ring-1 ring-white/15">
+        <BuyerBadgeIcon variant={badge.variant} />
+      </span>
+      <span>{badge.label}</span>
+    </span>
+  );
 }
 
 function ShareIcon() {
@@ -497,22 +539,25 @@ export default function HomeTest() {
 
   const buyerBadge: BuyerBadge | null = normalizedEpwxBalance >= MEGA_DAILY_REWARD_THRESHOLD
     ? {
+        variant: 'whale',
         label: 'Whale Buyer',
-        accentClassName: 'border-amber-300/40 bg-amber-400/20 text-amber-50',
+        accentClassName: 'border-amber-200/50 bg-gradient-to-r from-amber-300/35 via-yellow-300/30 to-amber-100/25 text-amber-50',
         description: 'Top-tier buyer status for wallets holding at least 1,000,000,000,000 EPWX.',
         benefit: 'Unlocks the highest daily claim tier at 10,000,000 EPWX per claim.',
       }
     : normalizedEpwxBalance >= BONUS_DAILY_REWARD_THRESHOLD
       ? {
+          variant: 'tier',
           label: 'Tier Buyer',
-          accentClassName: 'border-emerald-300/40 bg-emerald-400/20 text-emerald-50',
+          accentClassName: 'border-emerald-200/50 bg-gradient-to-r from-emerald-300/30 via-teal-300/25 to-cyan-200/25 text-emerald-50',
           description: 'Committed buyer status for wallets holding at least 100,000,000,000 EPWX.',
           benefit: 'Qualifies the wallet for stronger daily reward progression and buyer positioning.',
         }
       : hasRecentQualifyingPurchase
         ? {
+            variant: 'buyer',
             label: 'Buyer',
-            accentClassName: 'border-sky-300/40 bg-sky-400/20 text-sky-50',
+            accentClassName: 'border-sky-200/50 bg-gradient-to-r from-sky-300/30 via-cyan-300/25 to-indigo-200/25 text-sky-50',
             description: 'Verified buyer status for wallets with a recent qualifying EPWX purchase.',
             benefit: 'Signals purchase activity and points the wallet toward cashback and higher reward tiers.',
           }
@@ -989,9 +1034,7 @@ export default function HomeTest() {
                           <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Buyer Badge</div>
                           <div className="mt-1 text-sm font-semibold text-white">{buyerBadge.description}</div>
                         </div>
-                        <span className={`rounded-full border px-3 py-1 text-xs font-black uppercase tracking-[0.16em] ${buyerBadge.accentClassName}`}>
-                          {buyerBadge.label}
-                        </span>
+                        <BuyerBadgeChip badge={buyerBadge} />
                       </div>
                       <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/80">
                         {buyerBadge.benefit}
@@ -1288,7 +1331,10 @@ export default function HomeTest() {
                     )}
                     {buyerBadge && (
                       <div className="border-t border-white/15 bg-white/5 px-4 py-3 text-sm text-white/80">
-                        <span className="font-bold text-white">{buyerBadge.label} active.</span> {buyerBadge.benefit}
+                        <div className="flex flex-wrap items-center gap-3">
+                          <BuyerBadgeChip badge={buyerBadge} compact />
+                          <span><span className="font-bold text-white">Active.</span> {buyerBadge.benefit}</span>
+                        </div>
                       </div>
                     )}
                     {address && !balanceLoading && (
