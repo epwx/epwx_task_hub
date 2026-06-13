@@ -321,6 +321,16 @@ export function HomeSwapCard() {
               </p>
             </div>
 
+            <div className="mt-4 rounded-2xl border border-white/15 bg-white/10 p-4 text-sm text-white/80">
+              <p className="font-semibold text-white">What your wallet will ask you to do</p>
+              <p className="mt-2">
+                Connecting identifies the wallet that should receive EPWX. Confirming the swap is a separate on-chain transaction that spends the ETH amount shown plus normal Base gas fees.
+              </p>
+              <p className="mt-2 text-white/70">
+                This flow does not ask for an EPWX token approval because you are swapping from Base ETH.
+              </p>
+            </div>
+
             {quoteError && (
               <div className="mt-4 rounded-2xl border border-red-200/20 bg-red-400/10 p-4 text-sm text-red-100">
                 {quoteError}
@@ -337,7 +347,7 @@ export function HomeSwapCard() {
             </button>
 
             <p className="mt-3 text-xs text-white/70">
-              {address ? 'Your connected wallet will receive EPWX directly on Base.' : 'Connect your wallet above, then confirm the swap in your wallet.'}
+              {address ? 'Your connected wallet will receive EPWX directly on Base after you approve the swap transaction.' : 'Connect your wallet first, then review and approve the swap transaction in your wallet.'}
             </p>
             <p className="mt-2 text-xs text-emerald-100/80">
               After your swap settles, return to the daily claim card to see your upgraded reward tier. If your purchase crosses 100,000,000,000 EPWX, check cashback right away.

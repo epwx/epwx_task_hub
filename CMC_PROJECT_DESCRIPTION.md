@@ -38,3 +38,17 @@ The platform combines wallet-based verification, Telegram-gated access, Twitter/
 **Why EPWX Matters**
 
 EPWX is designed to move beyond passive token branding by attaching utility to recurring user actions. The project focuses on verified rewards, transparent distribution, community growth, and merchant expansion, with the long-term goal of building a broader Base-native utility and payment ecosystem around ePowerX.
+
+**Why Some Users Hesitate to Connect Wallets**
+
+Wallet users are increasingly cautious because many reward and campaign sites in crypto have been linked to phishing attempts, malicious approvals, unclear signature prompts, and hidden transaction requests. Even legitimate users often assume that a wallet popup could expose their funds, token allowances, or on-chain identity unless the purpose is explained clearly.
+
+For that reason, trust and clarity are critical parts of the EPWX Task Hub experience. Users should understand the difference between connecting a wallet, signing a message, and approving a transaction. A wallet connection allows the platform to identify the public wallet address for reward logic and delivery. It does not by itself transfer funds or grant spending approval. Any signature or on-chain action should be presented separately and explained in plain language before the wallet prompt appears.
+
+**Wallet Trust Principles for EPWX**
+
+1. Clear permission boundaries: Wallet connect, message signing, and transactions should never be bundled together without explanation.
+2. No hidden approvals: Users should only be asked for token approvals when a feature truly requires them.
+3. Visible reward logic: Claim rules, verification steps, and reward outcomes should be understandable before a wallet prompt appears.
+4. Transparent security posture: Public token data, documented reward flows, and verifiable platform behavior help users assess legitimacy.
+5. Low-friction verification: Users should be able to inspect the platform, its features, and its utility before deciding to connect.

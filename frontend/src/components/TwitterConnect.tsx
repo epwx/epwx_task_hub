@@ -89,6 +89,9 @@ export function TwitterConnect() {
     return (
       <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
         <p className="text-gray-600">Connect your wallet to link your X/Twitter account</p>
+        <p className="mt-3 text-sm text-gray-500">
+          Connecting identifies which wallet this social account should be linked to. It does not move funds or approve token spending.
+        </p>
       </div>
     );
   }

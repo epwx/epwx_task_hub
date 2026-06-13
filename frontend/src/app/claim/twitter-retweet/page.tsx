@@ -117,6 +117,9 @@ function TwitterRetweetClaimPage() {
           {!address ? (
             <div className="rounded-3xl border border-white/20 bg-white/10 p-6 text-center text-white backdrop-blur-xl">
               <div className="mb-4 text-white/80">Connect your wallet first so approved rewards can be sent to the correct address.</div>
+              <div className="mb-4 rounded-2xl border border-white/15 bg-white/10 p-4 text-sm text-white/80">
+                Connecting identifies which wallet should receive the reward if your submission is approved. It does not move funds or grant token spending permissions.
+              </div>
               <ConnectKitButton />
             </div>
           ) : (

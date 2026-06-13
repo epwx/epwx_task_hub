@@ -1009,6 +1009,9 @@ export default function HomeTest() {
             {!address ? (
               <div className="flex flex-col items-center w-full">
                 <span className="mb-2 text-white/80 text-center">Please connect your wallet to access all features.</span>
+                <div className="mb-4 max-w-sm rounded-2xl border border-white/15 bg-white/10 p-4 text-center text-sm text-white/80">
+                  Connecting lets EPWX read your public wallet address so claims, rewards, and account-linked features can work correctly. Connecting does not move funds or approve token spending.
+                </div>
                 <ConnectKitButton />
               </div>
             ) : (
@@ -1486,6 +1489,9 @@ export default function HomeTest() {
                   {claimStatus && (
                     <div className="text-center text-lg font-semibold text-white mb-2">{claimStatus}</div>
                   )}
+                  <div className="mb-4 rounded-2xl border border-white/15 bg-white/10 p-4 text-sm text-white/80">
+                    Daily claims use a wallet signature to confirm that you control this address. Signing this message does not transfer funds and does not create a token approval.
+                  </div>
                   {showClaimUpgradePrompt && nextTierTarget && nextTierReward && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 px-4">
                       <div className="relative w-full max-w-lg rounded-2xl border border-emerald-200/20 bg-slate-950/95 p-6 text-white shadow-2xl">
@@ -1529,7 +1535,12 @@ export default function HomeTest() {
                 <div className="text-center text-red-200 font-semibold mb-2">Please verify your Telegram membership to claim daily rewards.</div>
               )
             ) : (
-              <div className="text-center text-white/80 font-semibold mb-2">Connect your wallet to claim daily rewards.</div>
+              <div className="flex flex-col items-center">
+                <div className="text-center text-white/80 font-semibold mb-2">Connect your wallet to claim daily rewards.</div>
+                <div className="max-w-sm rounded-2xl border border-white/15 bg-white/10 p-4 text-center text-sm text-white/80">
+                  Connecting identifies the wallet that will receive rewards. It does not move funds or grant token permissions.
+                </div>
+              </div>
             )}
             </div>
           </div>

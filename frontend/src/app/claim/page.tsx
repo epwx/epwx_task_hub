@@ -141,19 +141,7 @@ function ClaimPage() {
     return <div className={`${centeredMessageClass} text-white/80`}>Checking your location...</div>;
   }
   if (distance > 50) {
-    return (
-      <div className={`${centeredMessageClass}`}>
-        <div className={`${pageShellClass} text-white`}>
-          <div className="absolute top-0 right-0 h-40 w-40 rounded-full bg-white/10 blur-3xl"></div>
-          <div className="relative z-10 rounded-2xl border border-amber-200/40 bg-amber-50 px-6 py-5 text-left shadow-lg">
-            <div className="text-lg font-bold text-amber-900">Location Required</div>
-            <div className="mt-2 text-sm font-medium text-amber-950">
-              You must be at the merchant location to claim rewards.
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    return <div className={`${centeredMessageClass} text-yellow-200`}>You must be at the merchant location to claim rewards.</div>;
   }
   return (
     <div className="max-w-md mx-auto py-8">
@@ -164,6 +152,9 @@ function ClaimPage() {
       {!address ? (
         <div className="mb-4 flex flex-col items-center">
           <div className="text-white/80 mb-4">Connect your wallet to claim.</div>
+          <div className="mb-4 max-w-sm rounded-2xl border border-white/15 bg-white/10 p-4 text-center text-sm text-white/80">
+            Connecting lets EPWX read your public wallet address for eligibility and reward delivery. Connecting does not move funds or grant token spending permissions.
+          </div>
           <ConnectKitButton />
         </div>
       ) : (
