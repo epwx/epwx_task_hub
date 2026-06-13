@@ -13,6 +13,7 @@ type TwitterCampaign = {
   tweetUrl: string;
   rewardAmount: string;
   expiresAt?: string | null;
+  claimStatus?: 'pending' | 'paid' | null;
 };
 
 function getRetweetIntentUrl(tweetUrl: string) {
@@ -46,7 +47,12 @@ function TwitterRetweetClaimPage() {
     setLoading(true);
     setError(null);
 
-    fetch(`/api/twitter-campaigns/${campaignId}`)
+    const params = new URLSearchParams();
+    if (address) {
+      params.set("wallet", address);
+    }
+
+    fetch(`/api/twitter-campaigns/${campaignId}${params.toString() ? `?${params.toString()}` : ''}`)
       .then(async response => {
         const data = await response.json();
         if (!response.ok) {
@@ -63,7 +69,7 @@ function TwitterRetweetClaimPage() {
         setError(fetchError?.message || "Failed to load campaign.");
         setLoading(false);
       });
-  }, [campaignIdParam]);
+  }, [address, campaignIdParam]);
 
   if (loading) {
     return <div className="px-4 py-10 text-center text-white/80">Loading campaign...</div>;
@@ -120,6 +126,7 @@ function TwitterRetweetClaimPage() {
               campaignCode={campaign.code}
               title={campaign.title}
               rewardAmount={campaign.rewardAmount}
+              claimStatus={campaign.claimStatus}
             />
           )}
         </div>

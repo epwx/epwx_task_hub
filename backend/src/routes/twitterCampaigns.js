@@ -44,6 +44,29 @@ function parsePositiveInteger(value, fallback) {
   return parsed;
 }
 
+async function getWalletClaimStatusByCampaignId(wallet) {
+  if (!wallet) {
+    return new Map();
+  }
+
+  const claimedCampaigns = await Claim.findAll({
+    attributes: ['twitterCampaignId', 'status'],
+    where: {
+      customer: wallet,
+      claimType: 'twitter_retweet',
+      twitterCampaignId: { [Op.ne]: null },
+      status: { [Op.in]: ['pending', 'paid'] },
+    },
+    order: [['createdAt', 'DESC']],
+  });
+
+  return new Map(
+    claimedCampaigns
+      .map(claim => [claim.twitterCampaignId, claim.status])
+      .filter(([campaignId]) => Number.isInteger(campaignId))
+  );
+}
+
 router.post('/add', requireAdmin, async (req, res) => {
   const { code, title, tweetUrl, expiresAt } = req.body;
 
@@ -109,28 +132,22 @@ router.get('/active', async (req, res) => {
       order: [['createdAt', 'DESC']],
     });
 
-    let claimedCampaignIds = new Set();
-
-    if (wallet) {
-      const claimedCampaigns = await Claim.findAll({
-        attributes: ['twitterCampaignId'],
-        where: {
-          customer: wallet,
-          claimType: 'twitter_retweet',
-          twitterCampaignId: { [Op.ne]: null },
-          status: { [Op.in]: ['pending', 'paid'] },
-        },
-      });
-
-      claimedCampaignIds = new Set(
-        claimedCampaigns
-          .map(claim => claim.twitterCampaignId)
-          .filter(campaignId => Number.isInteger(campaignId))
-      );
-    }
+    const claimStatusByCampaignId = await getWalletClaimStatusByCampaignId(wallet);
 
     const activeCampaigns = campaigns
-      .filter(campaign => !isCampaignExpired(campaign) && !claimedCampaignIds.has(campaign.id))
+      .filter(campaign => {
+        const claimStatus = claimStatusByCampaignId.get(campaign.id);
+
+        if (claimStatus === 'pending') {
+          return true;
+        }
+
+        if (claimStatus === 'paid') {
+          return false;
+        }
+
+        return !isCampaignExpired(campaign);
+      })
       .map(campaign => ({
         id: campaign.id,
         code: campaign.code,
@@ -138,6 +155,7 @@ router.get('/active', async (req, res) => {
         tweetUrl: campaign.tweetUrl,
         rewardAmount: campaign.rewardAmount,
         expiresAt: campaign.expiresAt,
+        claimStatus: claimStatusByCampaignId.get(campaign.id) || null,
       }));
 
     res.json({ campaigns: activeCampaigns });
@@ -181,7 +199,11 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Campaign not found' });
     }
 
-    if (!campaign.isActive || isCampaignExpired(campaign)) {
+    const wallet = typeof req.query.wallet === 'string' ? req.query.wallet.trim().toLowerCase() : '';
+    const claimStatusByCampaignId = await getWalletClaimStatusByCampaignId(wallet);
+    const claimStatus = claimStatusByCampaignId.get(campaign.id) || null;
+
+    if ((!campaign.isActive || isCampaignExpired(campaign)) && claimStatus !== 'pending') {
       return res.status(404).json({ error: 'Campaign is inactive or expired' });
     }
 
@@ -192,6 +214,7 @@ router.get('/:id', async (req, res) => {
       tweetUrl: campaign.tweetUrl,
       rewardAmount: campaign.rewardAmount,
       expiresAt: campaign.expiresAt,
+      claimStatus,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });

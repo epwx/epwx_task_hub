@@ -172,6 +172,7 @@ interface TwitterCampaign {
   tweetUrl: string;
   rewardAmount?: string | null;
   expiresAt?: string | null;
+  claimStatus?: 'pending' | 'paid' | null;
 }
 
 interface ReferralRewardStatus {
@@ -381,12 +382,15 @@ function TwitterCampaignBoard({ address }: { address?: string }) {
                         <div className="text-xs uppercase tracking-[0.25em] text-white/60">{campaign.code}</div>
                         <h4 className="mt-2 text-2xl font-black">{campaign.title}</h4>
                       </div>
-                      <div className="rounded-full border border-emerald-300/30 bg-emerald-400/20 px-3 py-1 text-xs font-bold text-emerald-100">Active</div>
+                      <div className={`rounded-full px-3 py-1 text-xs font-bold ${campaign.claimStatus === 'pending' ? 'border border-amber-300/30 bg-amber-400/20 text-amber-100' : 'border border-emerald-300/30 bg-emerald-400/20 text-emerald-100'}`}>
+                        {campaign.claimStatus === 'pending' ? 'Pending Review' : 'Active'}
+                      </div>
                     </div>
 
                     <div className="mt-4 grid gap-2 text-sm text-white/75">
                       <div>Reward: {Number(campaign.rewardAmount || '100000').toLocaleString()} EPWX</div>
                       <div>Expires: {formatCampaignExpiry(campaign.expiresAt)}</div>
+                      {campaign.claimStatus === 'pending' ? <div className="text-amber-100">You already submitted this campaign. Your retweet claim is pending admin review.</div> : null}
                     </div>
 
                     <div className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -400,9 +404,9 @@ function TwitterCampaignBoard({ address }: { address?: string }) {
                       </a>
                       <Link
                         href={`/claim/twitter-retweet?campaignId=${campaign.id}`}
-                        className="inline-flex items-center justify-center rounded-2xl bg-green-600 px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-green-700"
+                        className={`inline-flex items-center justify-center rounded-2xl px-4 py-3 text-sm font-bold text-white transition-colors ${campaign.claimStatus === 'pending' ? 'bg-amber-600 hover:bg-amber-700' : 'bg-green-600 hover:bg-green-700'}`}
                       >
-                        Retweet & Upload Screenshot
+                        {campaign.claimStatus === 'pending' ? 'View Pending Claim' : 'Retweet & Upload Screenshot'}
                       </Link>
                     </div>
                   </div>

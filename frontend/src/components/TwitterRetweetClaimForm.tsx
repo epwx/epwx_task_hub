@@ -7,9 +7,10 @@ interface TwitterRetweetClaimFormProps {
   campaignCode: string;
   title: string;
   rewardAmount?: string | null;
+  claimStatus?: 'pending' | 'paid' | null;
 }
 
-const TwitterRetweetClaimForm: React.FC<TwitterRetweetClaimFormProps> = ({ wallet, twitterCampaignId, campaignCode, title, rewardAmount }) => {
+const TwitterRetweetClaimForm: React.FC<TwitterRetweetClaimFormProps> = ({ wallet, twitterCampaignId, campaignCode, title, rewardAmount, claimStatus }) => {
   const [file, setFile] = useState<File | null>(null);
   const [twitterUsername, setTwitterUsername] = useState('');
   const [agreed, setAgreed] = useState(false);
@@ -97,12 +98,19 @@ const TwitterRetweetClaimForm: React.FC<TwitterRetweetClaimFormProps> = ({ walle
         <div className="mt-1 text-sm text-white/70">Reward: {Number(rewardAmount || '100000').toLocaleString()} EPWX</div>
       </div>
 
+        {claimStatus === 'pending' ? (
+          <div className="mb-5 rounded-2xl border border-amber-300/30 bg-amber-400/15 p-4 text-sm text-amber-100">
+            You already submitted this retweet screenshot. Your claim is pending admin review, so no new upload is needed right now.
+          </div>
+        ) : null}
+
       <label className="mb-2 block text-sm font-semibold text-white/85">Twitter username (optional)</label>
       <input
         type="text"
         value={twitterUsername}
         onChange={(event) => setTwitterUsername(event.target.value)}
         placeholder="@yourhandle"
+          disabled={claimStatus === 'pending'}
         className="mb-4 w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-white placeholder:text-white/45 focus:border-emerald-300 focus:outline-none"
       />
 
@@ -111,6 +119,7 @@ const TwitterRetweetClaimForm: React.FC<TwitterRetweetClaimFormProps> = ({ walle
         type="file"
         accept="image/*"
         onChange={handleFileChange}
+        disabled={claimStatus === 'pending'}
         className="mb-3 block w-full text-sm text-white file:mr-4 file:rounded-xl file:border-0 file:bg-white/15 file:px-4 file:py-2 file:font-semibold file:text-white hover:file:bg-white/20"
       />
       {file ? <div className="mb-4 text-sm text-white/80">Selected file: {file.name}</div> : null}
@@ -120,6 +129,7 @@ const TwitterRetweetClaimForm: React.FC<TwitterRetweetClaimFormProps> = ({ walle
           type="checkbox"
           checked={agreed}
           onChange={(event) => setAgreed(event.target.checked)}
+          disabled={claimStatus === 'pending'}
           className="mt-1"
         />
         <span>I confirm this screenshot is from my own retweet and I understand the claim will be manually reviewed.</span>
@@ -127,10 +137,10 @@ const TwitterRetweetClaimForm: React.FC<TwitterRetweetClaimFormProps> = ({ walle
 
       <button
         type="submit"
-        disabled={loading || !agreed}
-        className={`w-full rounded-2xl px-4 py-3 font-bold text-white ${loading || !agreed ? 'cursor-not-allowed bg-white/10 opacity-50' : 'bg-green-600 hover:bg-green-700'}`}
+        disabled={claimStatus === 'pending' || loading || !agreed}
+        className={`w-full rounded-2xl px-4 py-3 font-bold text-white ${claimStatus === 'pending' || loading || !agreed ? 'cursor-not-allowed bg-white/10 opacity-50' : 'bg-green-600 hover:bg-green-700'}`}
       >
-        {loading ? 'Submitting...' : 'Submit Twitter Claim'}
+        {claimStatus === 'pending' ? 'Claim Pending Review' : loading ? 'Submitting...' : 'Submit Twitter Claim'}
       </button>
 
       {success ? <div className="mt-4 text-sm text-emerald-200">Your screenshot was submitted and is now pending admin approval.</div> : null}
