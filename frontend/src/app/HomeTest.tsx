@@ -384,7 +384,7 @@ function TwitterCampaignBoard({ address }: { address?: string }) {
   }, [address, campaignPage]);
 
   return (
-    <section className="py-12">
+    <section id="twitter-campaigns" className="py-12 scroll-mt-24">
       <div className="flex flex-col items-center">
         <h2 className="text-2xl font-black mb-4 text-blue-700 text-center">Twitter Campaigns</h2>
         <div className={`${themedSectionClass} w-full max-w-5xl`}>
@@ -1678,15 +1678,29 @@ export default function HomeTest() {
         90% Burnt
       </a>
       <a
+        href="#twitter-campaigns"
+        className="fixed right-2 top-[34%] z-40 -translate-y-1/2 rounded-full border border-white/15 bg-slate-950/85 px-2 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-white shadow-[0_18px_40px_rgba(15,23,42,0.35)] backdrop-blur-md transition-all hover:bg-slate-900 dark:border-white/10 dark:bg-slate-900/85 lg:hidden"
+        style={{ writingMode: 'vertical-rl' }}
+      >
+        X Campaigns
+      </a>
+      <a
+        href="#twitter-campaigns"
+        className="fixed right-4 top-[34%] z-40 hidden -translate-y-1/2 rounded-full border border-white/15 bg-slate-950/85 px-3 py-4 text-xs font-black uppercase tracking-[0.2em] text-white shadow-[0_18px_40px_rgba(15,23,42,0.35)] backdrop-blur-md transition-all hover:right-3 hover:bg-slate-900 dark:border-white/10 dark:bg-slate-900/85 lg:flex"
+        style={{ writingMode: 'vertical-rl' }}
+      >
+        X Campaigns
+      </a>
+      <a
         href="#daily-claim"
-        className="fixed right-2 top-1/2 z-40 -translate-y-1/2 rounded-full border border-white/15 bg-slate-950/85 px-2 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-white shadow-[0_18px_40px_rgba(15,23,42,0.35)] backdrop-blur-md transition-all hover:bg-slate-900 dark:border-white/10 dark:bg-slate-900/85 lg:hidden"
+        className="fixed right-2 top-[66%] z-40 -translate-y-1/2 rounded-full border border-white/15 bg-slate-950/85 px-2 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-white shadow-[0_18px_40px_rgba(15,23,42,0.35)] backdrop-blur-md transition-all hover:bg-slate-900 dark:border-white/10 dark:bg-slate-900/85 lg:hidden"
         style={{ writingMode: 'vertical-rl' }}
       >
         Daily Claim
       </a>
       <a
         href="#daily-claim"
-        className="fixed right-4 top-1/2 z-40 hidden -translate-y-1/2 rounded-full border border-white/15 bg-slate-950/85 px-3 py-4 text-xs font-black uppercase tracking-[0.2em] text-white shadow-[0_18px_40px_rgba(15,23,42,0.35)] backdrop-blur-md transition-all hover:right-3 hover:bg-slate-900 dark:border-white/10 dark:bg-slate-900/85 lg:flex"
+        className="fixed right-4 top-[66%] z-40 hidden -translate-y-1/2 rounded-full border border-white/15 bg-slate-950/85 px-3 py-4 text-xs font-black uppercase tracking-[0.2em] text-white shadow-[0_18px_40px_rgba(15,23,42,0.35)] backdrop-blur-md transition-all hover:right-3 hover:bg-slate-900 dark:border-white/10 dark:bg-slate-900/85 lg:flex"
         style={{ writingMode: 'vertical-rl' }}
       >
         Daily Claim
