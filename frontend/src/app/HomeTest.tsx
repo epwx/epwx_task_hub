@@ -176,6 +176,13 @@ interface TwitterCampaign {
   claimStatus?: 'pending' | 'paid' | null;
 }
 
+interface CampaignPagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
 interface ReferralRewardStatus {
   status: string;
   rewardAmount?: string;
@@ -321,7 +328,15 @@ function formatCampaignExpiry(expiresAt?: string | null) {
 }
 
 function TwitterCampaignBoard({ address }: { address?: string }) {
+  const TWITTER_CAMPAIGNS_PAGE_SIZE = 6;
   const [campaigns, setCampaigns] = useState<TwitterCampaign[]>([]);
+  const [campaignPage, setCampaignPage] = useState(1);
+  const [campaignPagination, setCampaignPagination] = useState<CampaignPagination>({
+    page: 1,
+    limit: TWITTER_CAMPAIGNS_PAGE_SIZE,
+    total: 0,
+    totalPages: 1,
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -333,17 +348,32 @@ function TwitterCampaignBoard({ address }: { address?: string }) {
       try {
         const params = new URLSearchParams();
 
+        params.set('page', String(campaignPage));
+        params.set('limit', String(TWITTER_CAMPAIGNS_PAGE_SIZE));
+
         if (address) {
           params.set('wallet', address);
         }
 
         const query = params.toString();
         const response = await fetch(`/api/twitter-campaigns/active${query ? `?${query}` : ''}`, { cache: 'no-store' });
-        const data = await parseJsonResponse<{ campaigns?: TwitterCampaign[]; error?: string }>(response, 'Failed to load Twitter campaigns.');
+        const data = await parseJsonResponse<{ campaigns?: TwitterCampaign[]; pagination?: CampaignPagination; error?: string }>(response, 'Failed to load Twitter campaigns.');
 
         setCampaigns(Array.isArray(data.campaigns) ? data.campaigns : []);
+        setCampaignPagination(data.pagination || {
+          page: campaignPage,
+          limit: TWITTER_CAMPAIGNS_PAGE_SIZE,
+          total: Array.isArray(data.campaigns) ? data.campaigns.length : 0,
+          totalPages: 1,
+        });
       } catch (fetchError: any) {
         setCampaigns([]);
+        setCampaignPagination({
+          page: 1,
+          limit: TWITTER_CAMPAIGNS_PAGE_SIZE,
+          total: 0,
+          totalPages: 1,
+        });
         setError(fetchError?.message || 'Failed to load Twitter campaigns.');
       } finally {
         setLoading(false);
@@ -351,7 +381,7 @@ function TwitterCampaignBoard({ address }: { address?: string }) {
     };
 
     fetchCampaigns();
-  }, [address]);
+  }, [address, campaignPage]);
 
   return (
     <section className="py-12">
@@ -371,44 +401,71 @@ function TwitterCampaignBoard({ address }: { address?: string }) {
             {!loading && !error && campaigns.length === 0 ? <div className="text-center text-white/80">No active Twitter campaigns are available right now.</div> : null}
 
             {!loading && !error && campaigns.length > 0 ? (
-              <div className="grid gap-4 md:grid-cols-2">
-                {campaigns.map(campaign => (
-                  <div key={campaign.id} className="rounded-3xl border border-white/20 bg-white/10 p-6 text-white backdrop-blur-xl shadow-xl">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <div className="text-xs uppercase tracking-[0.25em] text-white/60">{campaign.code}</div>
-                        <h4 className="mt-2 text-2xl font-black">{campaign.title}</h4>
+              <>
+                <div className="grid gap-4 md:grid-cols-2">
+                  {campaigns.map(campaign => (
+                    <div key={campaign.id} className="rounded-3xl border border-white/20 bg-white/10 p-6 text-white backdrop-blur-xl shadow-xl">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="text-xs uppercase tracking-[0.25em] text-white/60">{campaign.code}</div>
+                          <h4 className="mt-2 text-2xl font-black">{campaign.title}</h4>
+                        </div>
+                        <div className={`rounded-full px-3 py-1 text-xs font-bold ${campaign.claimStatus === 'pending' ? 'border border-amber-300/30 bg-amber-400/20 text-amber-100' : 'border border-emerald-300/30 bg-emerald-400/20 text-emerald-100'}`}>
+                          {campaign.claimStatus === 'pending' ? 'Pending Review' : 'Active'}
+                        </div>
                       </div>
-                      <div className={`rounded-full px-3 py-1 text-xs font-bold ${campaign.claimStatus === 'pending' ? 'border border-amber-300/30 bg-amber-400/20 text-amber-100' : 'border border-emerald-300/30 bg-emerald-400/20 text-emerald-100'}`}>
-                        {campaign.claimStatus === 'pending' ? 'Pending Review' : 'Active'}
+
+                      <div className="mt-4 grid gap-2 text-sm text-white/75">
+                        <div>Reward: {Number(campaign.rewardAmount || '100000').toLocaleString()} EPWX</div>
+                        <div>Expires: {formatCampaignExpiry(campaign.expiresAt)}</div>
+                        {campaign.claimStatus === 'pending' ? <div className="text-amber-100">You already submitted this campaign. Your retweet claim is pending admin review.</div> : null}
+                      </div>
+
+                      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                        <a
+                          href={campaign.tweetUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center rounded-2xl border border-white/20 bg-white/15 px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-white/25"
+                        >
+                          View Post
+                        </a>
+                        <Link
+                          href={`/claim/twitter-retweet?campaignId=${campaign.id}`}
+                          className={`inline-flex items-center justify-center rounded-2xl px-4 py-3 text-sm font-bold text-white transition-colors ${campaign.claimStatus === 'pending' ? 'bg-amber-600 hover:bg-amber-700' : 'bg-green-600 hover:bg-green-700'}`}
+                        >
+                          {campaign.claimStatus === 'pending' ? 'View Pending Claim' : 'Retweet & Upload Screenshot'}
+                        </Link>
                       </div>
                     </div>
-
-                    <div className="mt-4 grid gap-2 text-sm text-white/75">
-                      <div>Reward: {Number(campaign.rewardAmount || '100000').toLocaleString()} EPWX</div>
-                      <div>Expires: {formatCampaignExpiry(campaign.expiresAt)}</div>
-                      {campaign.claimStatus === 'pending' ? <div className="text-amber-100">You already submitted this campaign. Your retweet claim is pending admin review.</div> : null}
+                  ))}
+                </div>
+                {campaignPagination.totalPages > 1 ? (
+                  <div className="mt-6 flex flex-col items-center justify-between gap-3 text-white/80 sm:flex-row">
+                    <div className="text-sm">
+                      Page {campaignPagination.page} of {campaignPagination.totalPages}
                     </div>
-
-                    <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                      <a
-                        href={campaign.tweetUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center rounded-2xl border border-white/20 bg-white/15 px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-white/25"
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setCampaignPage(current => Math.max(1, current - 1))}
+                        disabled={campaignPagination.page === 1 || loading}
+                        className="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
                       >
-                        View Post
-                      </a>
-                      <Link
-                        href={`/claim/twitter-retweet?campaignId=${campaign.id}`}
-                        className={`inline-flex items-center justify-center rounded-2xl px-4 py-3 text-sm font-bold text-white transition-colors ${campaign.claimStatus === 'pending' ? 'bg-amber-600 hover:bg-amber-700' : 'bg-green-600 hover:bg-green-700'}`}
+                        Previous
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setCampaignPage(current => Math.min(campaignPagination.totalPages, current + 1))}
+                        disabled={campaignPagination.page >= campaignPagination.totalPages || loading}
+                        className="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
                       >
-                        {campaign.claimStatus === 'pending' ? 'View Pending Claim' : 'Retweet & Upload Screenshot'}
-                      </Link>
+                        Next
+                      </button>
                     </div>
                   </div>
-                ))}
-              </div>
+                ) : null}
+              </>
             ) : null}
           </div>
         </div>

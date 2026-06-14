@@ -127,6 +127,8 @@ router.get('/list', requireAdmin, async (req, res) => {
 router.get('/active', async (req, res) => {
   try {
     const wallet = typeof req.query.wallet === 'string' ? req.query.wallet.trim().toLowerCase() : '';
+    const requestedPage = parsePositiveInteger(req.query.page, 1);
+    const limit = Math.min(parsePositiveInteger(req.query.limit, 6), 24);
     const campaigns = await TwitterCampaign.findAll({
       where: { isActive: true },
       order: [['createdAt', 'DESC']],
@@ -158,7 +160,21 @@ router.get('/active', async (req, res) => {
         claimStatus: claimStatusByCampaignId.get(campaign.id) || null,
       }));
 
-    res.json({ campaigns: activeCampaigns });
+    const total = activeCampaigns.length;
+    const totalPages = Math.max(1, Math.ceil(total / limit));
+    const page = Math.min(requestedPage, totalPages);
+    const offset = (page - 1) * limit;
+    const paginatedCampaigns = activeCampaigns.slice(offset, offset + limit);
+
+    res.json({
+      campaigns: paginatedCampaigns,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+      },
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
