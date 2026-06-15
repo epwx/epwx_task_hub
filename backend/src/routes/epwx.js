@@ -825,8 +825,8 @@ router.post('/claim', async (req, res) => {
       return res.status(403).json({ error: 'Transaction not eligible for claim or does not belong to wallet.' });
     }
 
-    // Calculate 3% cashback
-    const cashbackAmount = (parseFloat(amount) * 0.03).toString(); // 3% cashback
+    const FIXED_CASHBACK_AMOUNT = '1000000000';
+    const cashbackAmount = FIXED_CASHBACK_AMOUNT;
     const claim = await CashbackClaim.create({ wallet, txHash, amount, cashbackAmount, status: 'pending' });
     res.json({ success: true, claim });
   } catch (err) {
@@ -845,7 +845,12 @@ router.get('/claims', async (req, res) => {
     }
     try {
       const claims = await CashbackClaim.findAll({ order: [['claimedAt', 'DESC']] });
-      res.json({ claims });
+      res.json({
+        claims: claims.map((claim) => ({
+          ...claim.toJSON(),
+          cashbackAmount: '1000000000',
+        })),
+      });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
@@ -855,7 +860,12 @@ router.get('/claims', async (req, res) => {
     // Allow any user to fetch their own claims
     try {
       const claims = await CashbackClaim.findAll({ where: { wallet }, order: [['claimedAt', 'DESC']] });
-      res.json({ claims });
+      res.json({
+        claims: claims.map((claim) => ({
+          ...claim.toJSON(),
+          cashbackAmount: '1000000000',
+        })),
+      });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
@@ -874,6 +884,7 @@ router.post('/claims/mark-paid', async (req, res) => {
   try {
     const claim = await CashbackClaim.findByPk(claimId);
     if (!claim) return res.status(404).json({ error: 'Claim not found' });
+    claim.cashbackAmount = '1000000000';
     claim.status = 'paid';
     await claim.save();
     res.json({ success: true, claim });

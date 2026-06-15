@@ -8,26 +8,6 @@ import { ConnectKitButton } from "connectkit";
 import { ethers } from "ethers";
 import { usePublicClient } from "wagmi";
 
-const DEFAULT_DAILY_REWARD = "100000";
-const MID_TIER_DAILY_REWARD = "2000000";
-const BONUS_TIER_DAILY_REWARD = "5000000";
-const MID_TIER_DAILY_REWARD_THRESHOLD = 10_000_000_000;
-const BONUS_TIER_DAILY_REWARD_THRESHOLD = 100_000_000_000;
-
-function getDailyRewardAmountFromBalance(balance: bigint) {
-  const normalizedBalance = Number(ethers.formatUnits(balance, 9));
-
-  if (normalizedBalance >= BONUS_TIER_DAILY_REWARD_THRESHOLD) {
-    return BONUS_TIER_DAILY_REWARD;
-  }
-
-  if (normalizedBalance >= MID_TIER_DAILY_REWARD_THRESHOLD) {
-    return MID_TIER_DAILY_REWARD;
-  }
-
-  return DEFAULT_DAILY_REWARD;
-}
-
 const getAdminWallets = () => {
   if (typeof window !== "undefined") {
     const env = process.env.NEXT_PUBLIC_ADMIN_WALLETS || "";
@@ -48,6 +28,7 @@ export default function AdminPage() {
   const [specialWallet, setSpecialWallet] = useState("");
   const [specialLoading, setSpecialLoading] = useState(false);
   const [specialError, setSpecialError] = useState<string | null>(null);
+  const [specialResult, setSpecialResult] = useState<any[] | null>(null);
   // Pagination and filter state
   const [claimsPage, setClaimsPage] = useState(1);
   const [dailyClaimsPage, setDailyClaimsPage] = useState(1);
@@ -62,23 +43,12 @@ export default function AdminPage() {
   const { data: walletClient } = useWalletClient();
   const { writeContractAsync } = useWriteContract();
   const publicClient = usePublicClient();
-  const adminWallets = getAdminWallets();
-  const isAdmin = !!address && adminWallets.includes(address.toLowerCase());
 
   // Use the existing NEXT_PUBLIC_EPWX_TOKEN env property for contract address
   const EPWX_TOKEN_ADDRESS = process.env.NEXT_PUBLIC_EPWX_TOKEN || "0xYourTokenAddressHere";
+  const FIXED_CASHBACK_AMOUNT = "1000000000";
+  const FIXED_CASHBACK_LABEL = Number(FIXED_CASHBACK_AMOUNT).toLocaleString();
   const EPWX_TOKEN_ABI = [
-    {
-      "inputs": [
-        { "internalType": "address", "name": "account", "type": "address" }
-      ],
-      "name": "balanceOf",
-      "outputs": [
-        { "internalType": "uint256", "name": "", "type": "uint256" }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
     {
       "inputs": [
         { "internalType": "address", "name": "to", "type": "address" },
@@ -94,19 +64,13 @@ export default function AdminPage() {
   ];
 
   useEffect(() => {
-    if (!address || !isAdmin) {
-      setClaims([]);
-      setDailyClaims([]);
-      setSpecialClaims([]);
-      setLoading(false);
-      return;
-    }
-
     setLoading(true);
+    const adminWallets = getAdminWallets();
+    const admin = adminWallets[0] || "";
     Promise.all([
-      fetch(`/api/epwx/claims?admin=${address}`).then((res) => res.json()),
-      fetch(`/api/epwx/daily-claims?admin=${address}`).then((res) => res.json()),
-      fetch(`/api/epwx/special-claim/list?admin=${address}`).then((res) => res.json()),
+      fetch(`/api/epwx/claims?admin=${admin}`).then((res) => res.json()),
+      fetch(`/api/epwx/daily-claims?admin=${admin}`).then((res) => res.json()),
+      fetch(`/api/epwx/special-claim/list?admin=${admin}`).then((res) => res.json()),
     ])
       .then(([claimsData, dailyClaimsData, specialClaimsData]) => {
         setClaims(claimsData.claims || []);
@@ -115,11 +79,12 @@ export default function AdminPage() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, [address, isAdmin]);
+  }, []);
     // Add wallet to special claim list
     const handleAddSpecialWallet = async () => {
       setSpecialLoading(true);
       setSpecialError(null);
+      setSpecialResult(null);
       try {
         const res = await fetch("/api/epwx/special-claim/add", {
           method: "POST",
@@ -131,14 +96,14 @@ export default function AdminPage() {
         });
         const data = await res.json();
         if (data.success) {
-          // Add new wallet to the top and sort by createdAt descending
-          setSpecialClaims((prev) => [{ wallet: specialWallet, status: "pending", createdAt: new Date().toISOString() }, ...prev].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+          setSpecialResult(data.results);
+          // Optionally, refresh the special claims list here if needed
           setSpecialWallet("");
         } else {
-          setSpecialError(data.error || "Failed to add wallet");
+          setSpecialError(data.error || "Failed to add wallet(s)");
         }
       } catch (e: any) {
-        setSpecialError(e?.message || "Failed to add wallet");
+        setSpecialError(e?.message || "Failed to add wallet(s)");
       }
       setSpecialLoading(false);
     };
@@ -190,17 +155,8 @@ export default function AdminPage() {
         setMarking(null);
         return;
       }
-      let claimAmount = String(claim.amount || DEFAULT_DAILY_REWARD);
-      if (claimAmount === DEFAULT_DAILY_REWARD && publicClient) {
-        const balance = await publicClient.readContract({
-          address: EPWX_TOKEN_ADDRESS as `0x${string}`,
-          abi: EPWX_TOKEN_ABI,
-          functionName: "balanceOf",
-          args: [claim.wallet as `0x${string}`],
-        });
-        claimAmount = getDailyRewardAmountFromBalance(balance as bigint);
-      }
-      const dailyAmount = ethers.parseUnits(claimAmount, 9).toString();
+      const rewardAmount = claim.amount || "100000";
+      const dailyAmount = ethers.parseUnits(rewardAmount, 9).toString();
       const tx = await writeContractAsync({
         address: EPWX_TOKEN_ADDRESS as `0x${string}`,
         abi: EPWX_TOKEN_ABI,
@@ -222,12 +178,12 @@ export default function AdminPage() {
       const res = await fetch("/api/epwx/daily-claims/mark-paid", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ admin: address, claimId: claim.id, txHash: tx, amount: claimAmount }),
+        body: JSON.stringify({ admin: address, claimId: claim.id, txHash: tx }),
       });
       const data = await res.json();
       if (data.success) {
         setDailyClaims((prev) =>
-          prev.map((c: any) => (c.id === claim.id ? { ...c, status: "paid", amount: claimAmount } : c))
+          prev.map((c: any) => (c.id === claim.id ? { ...c, status: "paid", txHash: tx } : c))
         );
       } else {
         setError(data.error || "Failed to mark as paid");
@@ -252,11 +208,11 @@ export default function AdminPage() {
         return;
       }
       // Convert cashbackAmount to correct decimals (EPWX uses 9 decimals)
-      const roundedAmount = Number(claim.cashbackAmount).toFixed(9);
+      const roundedAmount = Number(FIXED_CASHBACK_AMOUNT).toFixed(9);
       const amount = ethers.parseUnits(roundedAmount, 9).toString();
       // Debug output
       console.log('EPWX transfer recipient:', claim.wallet);
-      console.log('EPWX transfer amount (raw):', claim.cashbackAmount);
+      console.log('EPWX transfer amount (raw):', FIXED_CASHBACK_AMOUNT);
       console.log('EPWX transfer amount (wei):', amount);
       // Use wagmi's writeContractAsync to send the transaction
       const tx = await writeContractAsync({
@@ -281,12 +237,12 @@ export default function AdminPage() {
       const res = await fetch("/api/epwx/claims/mark-paid", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ admin: address, claimId: claim.id }),
+        body: JSON.stringify({ admin: address, claimId: claim.id, txHash: tx, claimSource: "cashback" }),
       });
       const data = await res.json();
       if (data.success) {
         setClaims((prev) =>
-          prev.map((c: any) => (c.id === claim.id ? { ...c, status: "paid" } : c))
+          prev.map((c: any) => (c.id === claim.id ? { ...c, status: "paid", txHash: tx } : c))
         );
       } else {
         setError(data.error || "Failed to mark as paid");
@@ -298,62 +254,65 @@ export default function AdminPage() {
   };
 
   // Show wallet connect prompt if not connected or not admin wallet
-  const notAdmin = !address || !isAdmin;
-  if (notAdmin) {
-    return (
-      <div className="min-h-screen bg-slate-100 p-2 text-slate-950 dark:bg-slate-950 dark:text-slate-100 sm:p-8">
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="mb-4 text-lg font-semibold text-slate-700 dark:text-slate-200">Please connect the admin wallet to access this page.</div>
-          <ConnectKitButton />
-        </div>
-      </div>
-    );
-  }
-
+  const adminWallets = getAdminWallets();
+  const notAdmin = !address || !adminWallets.includes(address.toLowerCase());
   return (
-      <div className="min-h-screen bg-slate-100 p-2 text-slate-950 dark:bg-slate-950 dark:text-slate-100 sm:p-8">
+    <>
+
+      <div className="min-h-screen bg-gray-100 p-2 sm:p-8">
       {/* Show ConnectKitButton globally if not connected */}
       {!address && (
         <div className="flex flex-col items-center justify-center py-8">
-          <div className="mb-2 text-lg font-semibold text-slate-700 dark:text-slate-200">Please connect your wallet to access admin features.</div>
+          <div className="mb-2 text-lg text-gray-700 font-semibold">Please connect your wallet to access admin features.</div>
           <ConnectKitButton />
         </div>
       )}
       {/* Special Claim Section */}
       <div className="mb-12">
-        <h2 className="mb-4 text-xl font-bold text-slate-950 dark:text-white">Admin: Special EPWX Claims</h2>
+        <h2 className="text-xl font-bold mb-4 text-gray-900">Admin: Special EPWX Claims</h2>
         {!address ? (
           <div className="mb-4 flex flex-col items-center">
-            <div className="mb-2 text-slate-700 dark:text-slate-300">Please connect your wallet to manage special claims.</div>
+            <div className="mb-2 text-gray-700">Please connect your wallet to manage special claims.</div>
             <ConnectKitButton />
           </div>
         ) : (
           <>
-            <div className="flex gap-2 mb-4">
-              <input
-                type="text"
-                placeholder="Wallet address"
-                className="rounded border border-slate-300 bg-white px-2 py-1 text-slate-900 placeholder:text-slate-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
+            <div className="flex flex-col gap-2 mb-4">
+              <textarea
+                placeholder="Enter wallet addresses, comma separated (e.g. 0x123..., 0x456..., ...)"
+                className="border rounded px-2 py-1 bg-gray-100 text-gray-900 min-h-[60px]"
                 value={specialWallet}
                 onChange={e => setSpecialWallet(e.target.value)}
               />
               <button
-                className="px-4 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                className="px-4 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 w-fit"
                 disabled={specialLoading || !specialWallet}
                 onClick={handleAddSpecialWallet}
-              >{specialLoading ? "Adding..." : "Add Wallet"}</button>
+              >{specialLoading ? "Adding..." : "Add Wallets"}</button>
+              {specialResult && (
+                <div className="mt-2">
+                  <div className="font-semibold mb-1">Bulk Add Results:</div>
+                  <ul className="list-disc ml-6 text-sm">
+                    {specialResult.map((r, i) => (
+                      <li key={i} className={r.error ? "text-red-600" : r.updated ? "text-yellow-700" : "text-green-700"}>
+                        {r.wallet}: {r.created ? "Created" : r.updated ? "Updated" : r.error}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
             {/* Special Claims Filter Controls */}
             <div className="mb-2 flex gap-2 items-center">
               <input
                 type="text"
                 placeholder="Filter by wallet"
-                className="rounded border border-slate-300 bg-white px-2 py-1 text-slate-900 placeholder:text-slate-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
+                className="border rounded px-2 py-1 bg-gray-100 text-gray-900"
                 value={specialClaimsFilter.wallet}
                 onChange={e => setSpecialClaimsFilter(f => ({ ...f, wallet: e.target.value }))}
               />
               <select
-                className="rounded border border-slate-300 bg-white px-2 py-1 text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                className="border rounded px-2 py-1 bg-white text-gray-900"
                 value={specialClaimsFilter.status}
                 onChange={e => setSpecialClaimsFilter(f => ({ ...f, status: e.target.value }))}
               >
@@ -363,13 +322,13 @@ export default function AdminPage() {
               </select>
             </div>
             {specialError && <div className="text-red-600 mb-2">{specialError}</div>}
-            <table className="min-w-full rounded border border-slate-200 bg-white text-xs shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:text-sm">
-              <thead className="bg-slate-200 dark:bg-slate-800">
+            <table className="min-w-full bg-white rounded shadow text-xs sm:text-sm">
+              <thead className="bg-gray-200">
                 <tr>
-                  <th className="py-2 px-2 text-slate-700 dark:text-slate-200 sm:px-4">Wallet</th>
-                  <th className="py-2 px-2 text-slate-700 dark:text-slate-200 sm:px-4">Eligible</th>
-                  <th className="py-2 px-2 text-slate-700 dark:text-slate-200 sm:px-4">Claimed</th>
-                  <th className="py-2 px-2 text-slate-700 dark:text-slate-200 sm:px-4">Action</th>
+                  <th className="py-2 px-2 sm:px-4 text-gray-700">Wallet</th>
+                  <th className="py-2 px-2 sm:px-4 text-gray-700">Eligible</th>
+                  <th className="py-2 px-2 sm:px-4 text-gray-700">Claimed</th>
+                  <th className="py-2 px-2 sm:px-4 text-gray-700">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -389,11 +348,11 @@ export default function AdminPage() {
                     // Format createdAt in EST
                     const estDate = new Date(claim.createdAt).toLocaleString('en-US', { timeZone: 'America/New_York' });
                     return (
-                      <tr key={idx} className="border-b border-slate-200 last:border-none dark:border-slate-800">
-                        <td className="break-all bg-white py-2 px-2 text-slate-900 dark:bg-slate-900 dark:text-slate-100 sm:px-4">{claim.wallet}<br /><span className="text-xs text-slate-500 dark:text-slate-400">{estDate} EST</span></td>
-                        <td className="bg-white py-2 px-2 text-slate-900 dark:bg-slate-900 dark:text-slate-100 sm:px-4">{eligible ? "Yes" : "No"}</td>
-                        <td className="bg-white py-2 px-2 text-slate-900 dark:bg-slate-900 dark:text-slate-100 sm:px-4">{claimed ? "Yes" : "No"}</td>
-                        <td className="bg-white py-2 px-2 dark:bg-slate-900 sm:px-4">
+                      <tr key={idx} className="border-b last:border-none">
+                        <td className="py-2 px-2 sm:px-4 break-all bg-white text-gray-900">{claim.wallet}<br /><span className="text-xs text-gray-500">{estDate} EST</span></td>
+                        <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{eligible ? "Yes" : "No"}</td>
+                        <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{claimed ? "Yes" : "No"}</td>
+                        <td className="py-2 px-2 sm:px-4 bg-white">
                           {!claimed && eligible ? (
                             <button
                               className="px-2 sm:px-4 py-1 sm:py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 text-xs sm:text-sm"
@@ -409,13 +368,14 @@ export default function AdminPage() {
                   })}
               </tbody>
             </table>
-            <div className="bg-slate-50 py-2 px-2 text-center text-slate-700 dark:bg-slate-900/70 dark:text-slate-200">
+            {/* Pagination controls for special claims */}
+            <div className="py-2 px-2 bg-gray-50 text-center">
               <button
                 className="px-2 py-1 mr-2 border rounded bg-blue-100 text-blue-900 font-bold hover:bg-blue-200"
                 disabled={specialClaimsPage === 1}
                 onClick={() => setSpecialClaimsPage(p => Math.max(1, p - 1))}
               >Prev</button>
-              <span>Page {specialClaimsPage}</span>
+              <span className="font-semibold text-gray-700">Page {specialClaimsPage}</span>
               <button
                 className="px-2 py-1 ml-2 border rounded bg-blue-100 text-blue-900 font-bold hover:bg-blue-200"
                 disabled={specialClaimsPage * SPECIAL_CLAIMS_PAGE_SIZE >= specialClaims.filter((claim: any) =>
@@ -431,37 +391,37 @@ export default function AdminPage() {
       {/* Telegram Referral Rewards Section */}
       {notAdmin ? (
         <div className="flex flex-col items-center justify-center py-16">
-          <div className="mb-4 text-lg font-semibold text-slate-700 dark:text-slate-200">Please connect the admin wallet to access this page.</div>
+          <div className="mb-4 text-lg text-gray-700 font-semibold">Please connect the admin wallet to access this page.</div>
           <ConnectKitButton />
         </div>
       ) : loading ? (
-        <div className="text-slate-700 dark:text-slate-200">Loading claims...</div>
+        <div>Loading claims...</div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="min-w-full rounded border border-slate-200 bg-white text-xs shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:text-sm">
-            <thead className="bg-slate-200 dark:bg-slate-800">
+          <table className="min-w-full bg-white rounded shadow text-xs sm:text-sm">
+            <thead className="bg-gray-200">
               <tr>
-                <th className="py-2 px-2 text-slate-700 dark:text-slate-200 sm:px-4">Wallet</th>
-                <th className="py-2 px-2 text-slate-700 dark:text-slate-200 sm:px-4">Tx Hash</th>
-                <th className="py-2 px-2 text-slate-700 dark:text-slate-200 sm:px-4">Amount</th>
-                <th className="py-2 px-2 text-slate-700 dark:text-slate-200 sm:px-4">Cashback</th>
-                <th className="py-2 px-2 text-slate-700 dark:text-slate-200 sm:px-4">Status</th>
-                <th className="py-2 px-2 text-slate-700 dark:text-slate-200 sm:px-4">Action</th>
+                <th className="py-2 px-2 sm:px-4 text-gray-700">Wallet</th>
+                <th className="py-2 px-2 sm:px-4 text-gray-700">Tx Hash</th>
+                <th className="py-2 px-2 sm:px-4 text-gray-700">Amount</th>
+                <th className="py-2 px-2 sm:px-4 text-gray-700">Cashback</th>
+                <th className="py-2 px-2 sm:px-4 text-gray-700">Status</th>
+                <th className="py-2 px-2 sm:px-4 text-gray-700">Action</th>
               </tr>
             </thead>
             <tbody>
               {/* Filter controls for cashback claims */}
               <tr>
-                <td colSpan={6} className="bg-slate-50 py-2 px-2 dark:bg-slate-900/70">
+                <td colSpan={6} className="py-2 px-2 bg-gray-50">
                   <input
                     type="text"
                     placeholder="Filter by wallet"
-                    className="mr-2 rounded border border-slate-300 bg-white px-2 py-1 text-slate-900 placeholder:text-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500"
+                    className="border rounded px-2 py-1 mr-2 bg-gray-100 text-gray-900"
                     value={claimsFilter.wallet}
                     onChange={e => setClaimsFilter(f => ({ ...f, wallet: e.target.value }))}
                   />
                   <select
-                    className="rounded border border-slate-300 bg-white px-2 py-1 text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                    className="border rounded px-2 py-1 bg-white text-gray-900"
                     value={claimsFilter.status}
                     onChange={e => setClaimsFilter(f => ({ ...f, status: e.target.value }))}
                   >
@@ -479,20 +439,20 @@ export default function AdminPage() {
                 )
                 .slice((claimsPage - 1) * CLAIMS_PAGE_SIZE, claimsPage * CLAIMS_PAGE_SIZE)
                 .map((claim: any) => (
-                  <tr key={claim.id} className="border-b border-slate-200 last:border-none dark:border-slate-800">
-                    <td className="break-all bg-white py-2 px-2 text-slate-900 dark:bg-slate-900 dark:text-slate-100 sm:px-4">{claim.wallet}</td>
-                    <td className="break-all bg-white py-2 px-2 text-slate-900 dark:bg-slate-900 dark:text-slate-100 sm:px-4">{claim.txHash}</td>
-                    <td className="bg-white py-2 px-2 text-slate-900 dark:bg-slate-900 dark:text-slate-100 sm:px-4">{claim.amount}</td>
-                    <td className="bg-white py-2 px-2 text-slate-900 dark:bg-slate-900 dark:text-slate-100 sm:px-4">{claim.cashbackAmount}</td>
-                    <td className="bg-white py-2 px-2 capitalize text-slate-900 dark:bg-slate-900 dark:text-slate-100 sm:px-4">{claim.status}</td>
-                    <td className="bg-white py-2 px-2 dark:bg-slate-900 sm:px-4">
+                  <tr key={claim.id} className="border-b last:border-none">
+                    <td className="py-2 px-2 sm:px-4 break-all bg-white text-gray-900">{claim.wallet}</td>
+                    <td className="py-2 px-2 sm:px-4 break-all bg-white text-gray-900">{claim.txHash}</td>
+                    <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{claim.amount}</td>
+                    <td className="py-2 px-2 sm:px-4 bg-white text-gray-900">{FIXED_CASHBACK_LABEL}</td>
+                    <td className="py-2 px-2 sm:px-4 bg-white text-gray-900 capitalize">{claim.status}</td>
+                    <td className="py-2 px-2 sm:px-4 bg-white">
                       {claim.status === "pending" ? (
                         <button
                           className="px-2 sm:px-4 py-1 sm:py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 text-xs sm:text-sm"
                           disabled={marking === claim.id}
                           onClick={() => distributeCashback(claim)}
                         >
-                          {marking === claim.id ? "Distributing..." : `Distribute ${claim.cashbackAmount} EPWX`}
+                          {marking === claim.id ? "Distributing..." : `Distribute ${FIXED_CASHBACK_LABEL} EPWX`}
                         </button>
                       ) : (
                         <span className="text-green-600 font-semibold">Paid</span>
@@ -502,13 +462,13 @@ export default function AdminPage() {
                 ))}
               {/* Pagination controls for cashback claims */}
               <tr>
-                <td colSpan={6} className="bg-slate-50 py-2 px-2 text-center text-slate-700 dark:bg-slate-900/70 dark:text-slate-200">
+                <td colSpan={6} className="py-2 px-2 bg-gray-50 text-center">
                   <button
                     className="px-2 py-1 mr-2 border rounded bg-blue-100 text-blue-900 font-bold hover:bg-blue-200"
                     disabled={claimsPage === 1}
                     onClick={() => setClaimsPage(p => Math.max(1, p - 1))}
                   >Prev</button>
-                  <span>Page {claimsPage}</span>
+                  <span className="font-semibold text-gray-700">Page {claimsPage}</span>
                   <button
                     className="px-2 py-1 ml-2 border rounded bg-blue-100 text-blue-900 font-bold hover:bg-blue-200"
                     disabled={claimsPage * CLAIMS_PAGE_SIZE >= claims.filter((claim: any) =>
@@ -525,19 +485,19 @@ export default function AdminPage() {
       )}
       {/* Daily Claims Section */}
       <div className="mt-12">
-        <h2 className="mb-4 text-xl font-bold text-slate-950 dark:text-white">Admin: Daily EPWX Claims</h2>
+        <h2 className="text-xl font-bold mb-4 text-gray-900">Admin: Daily EPWX Claims</h2>
         <div className="overflow-x-auto">
           {/* Daily Claims Filter Controls */}
           <div className="mb-2 flex gap-2 items-center">
             <input
               type="text"
               placeholder="Filter by wallet"
-              className="rounded border border-slate-300 bg-white px-2 py-1 text-slate-900 placeholder:text-slate-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
+              className="border rounded px-2 py-1 bg-gray-100 text-gray-900"
               value={dailyClaimsFilter.wallet}
               onChange={e => setDailyClaimsFilter(f => ({ ...f, wallet: e.target.value }))}
             />
             <select
-              className="rounded border border-slate-300 bg-white px-2 py-1 text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+              className="border rounded px-2 py-1 bg-white text-gray-900"
               value={dailyClaimsFilter.status}
               onChange={e => setDailyClaimsFilter(f => ({ ...f, status: e.target.value }))}
             >
@@ -559,13 +519,13 @@ export default function AdminPage() {
             marking={marking}
           />
           {/* Pagination controls for daily claims */}
-          <div className="bg-slate-50 py-2 px-2 text-center text-slate-700 dark:bg-slate-900/70 dark:text-slate-200">
+          <div className="py-2 px-2 bg-gray-50 text-center">
             <button
               className="px-2 py-1 mr-2 border rounded bg-blue-100 text-blue-900 font-bold hover:bg-blue-200"
               disabled={dailyClaimsPage === 1}
               onClick={() => setDailyClaimsPage(p => Math.max(1, p - 1))}
             >Prev</button>
-            <span>Page {dailyClaimsPage}</span>
+            <span className="font-semibold text-gray-700">Page {dailyClaimsPage}</span>
             <button
               className="px-2 py-1 ml-2 border rounded bg-blue-100 text-blue-900 font-bold hover:bg-blue-200"
               disabled={dailyClaimsPage * DAILY_CLAIMS_PAGE_SIZE >= dailyClaims.filter((claim: any) =>
@@ -579,5 +539,6 @@ export default function AdminPage() {
       </div>
       {error && <div className="text-red-600 mt-2">{error}</div>}
       </div>
+    </>
   );
 }
