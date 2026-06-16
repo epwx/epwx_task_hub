@@ -31,6 +31,7 @@ const router = express.Router();
 const TWITTER_TASK_TYPE_TO_CLAIM_TYPE = {
   retweet: 'twitter_retweet',
   comment: 'twitter_comment',
+  poll: 'twitter_poll',
 };
 
 function normalizeTwitterTaskType(taskType) {
@@ -223,6 +224,7 @@ async function createTwitterCampaignClaim(req, res, expectedTaskType) {
 
 router.post('/twitter-retweet', upload.single('receiptImage'), async (req, res) => createTwitterCampaignClaim(req, res, 'retweet'));
 router.post('/twitter-comment', upload.single('receiptImage'), async (req, res) => createTwitterCampaignClaim(req, res, 'comment'));
+router.post('/twitter-poll', upload.single('receiptImage'), async (req, res) => createTwitterCampaignClaim(req, res, 'poll'));
 
 // POST /api/claims/:id/mark-status - Update claim status (admin only)
 router.post('/:id/mark-status', async (req, res) => {

@@ -6,13 +6,20 @@ interface TwitterRetweetClaimFormProps {
   twitterCampaignId: number;
   campaignCode: string;
   title: string;
-  taskType: 'retweet' | 'comment';
+  taskType: 'retweet' | 'comment' | 'poll';
   rewardAmount?: string | null;
   claimStatus?: 'pending' | 'paid' | null;
 }
 
-function getTaskLabel(taskType: 'retweet' | 'comment') {
-  return taskType === 'comment' ? 'comment' : 'retweet';
+function getTaskLabel(taskType: 'retweet' | 'comment' | 'poll') {
+  switch (taskType) {
+    case 'comment':
+      return 'comment';
+    case 'poll':
+      return 'poll vote';
+    default:
+      return 'retweet';
+  }
 }
 
 const TwitterRetweetClaimForm: React.FC<TwitterRetweetClaimFormProps> = ({ wallet, twitterCampaignId, campaignCode, title, taskType, rewardAmount, claimStatus }) => {
@@ -119,7 +126,7 @@ const TwitterRetweetClaimForm: React.FC<TwitterRetweetClaimFormProps> = ({ walle
         className="mb-4 w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-white placeholder:text-white/45 focus:border-emerald-300 focus:outline-none"
       />
 
-      <label className="mb-2 block text-sm font-semibold text-white/85">{taskType === 'comment' ? 'Comment screenshot' : 'Retweet screenshot'}</label>
+      <label className="mb-2 block text-sm font-semibold text-white/85">{taskType === 'comment' ? 'Comment screenshot' : taskType === 'poll' ? 'Poll vote screenshot' : 'Retweet screenshot'}</label>
       <input
         type="file"
         accept="image/*"

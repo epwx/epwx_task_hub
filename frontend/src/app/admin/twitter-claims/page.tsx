@@ -20,7 +20,7 @@ type TwitterClaim = {
   twitterUsername?: string;
 };
 
-type TwitterTaskType = "retweet" | "comment";
+type TwitterTaskType = "retweet" | "comment" | "poll";
 
 type TwitterCampaign = {
   id: number;
@@ -49,14 +49,29 @@ const ADMIN_WALLETS = (process.env.NEXT_PUBLIC_ADMIN_WALLETS || "")
 const TASK_TYPE_TO_CLAIM_TYPE: Record<TwitterTaskType, string> = {
   retweet: "twitter_retweet",
   comment: "twitter_comment",
+  poll: "twitter_poll",
 };
 
 function getTaskLabel(taskType: TwitterTaskType) {
-  return taskType === "comment" ? "Comment" : "Retweet";
+  switch (taskType) {
+    case "comment":
+      return "Comment";
+    case "poll":
+      return "Poll";
+    default:
+      return "Retweet";
+  }
 }
 
 function getTaskInstruction(taskType: TwitterTaskType) {
-  return taskType === "comment" ? "comment on the post" : "retweet the post";
+  switch (taskType) {
+    case "comment":
+      return "comment on the post";
+    case "poll":
+      return "vote in the poll on the post";
+    default:
+      return "retweet the post";
+  }
 }
 
 function isCampaignExpired(expiresAt?: string | null) {
@@ -414,6 +429,7 @@ export default function AdminTwitterClaimsPage() {
             <select name="taskType" value={campaignForm.taskType} onChange={handleCampaignFormChange} className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white" required>
               <option value="retweet">Retweet campaign</option>
               <option value="comment">Comment campaign</option>
+              <option value="poll">Poll campaign</option>
             </select>
             <input name="tweetUrl" value={campaignForm.tweetUrl} onChange={handleCampaignFormChange} placeholder="https://x.com/..." className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/50" required />
             <input name="rewardAmount" value={campaignForm.rewardAmount} onChange={handleCampaignFormChange} placeholder="100000" className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/50" required />
@@ -453,6 +469,7 @@ export default function AdminTwitterClaimsPage() {
                         <select name="taskType" value={editCampaignForm.taskType} onChange={handleEditCampaignFormChange} className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm text-white">
                           <option value="retweet">Retweet campaign</option>
                           <option value="comment">Comment campaign</option>
+                          <option value="poll">Poll campaign</option>
                         </select>
                         <input name="tweetUrl" value={editCampaignForm.tweetUrl} onChange={handleEditCampaignFormChange} className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm text-white" />
                         <input name="rewardAmount" value={editCampaignForm.rewardAmount} onChange={handleEditCampaignFormChange} className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm text-white" />
@@ -550,6 +567,7 @@ export default function AdminTwitterClaimsPage() {
           >
             <option value="retweet">Retweet</option>
             <option value="comment">Comment</option>
+            <option value="poll">Poll</option>
           </select>
         </div>
         <div>

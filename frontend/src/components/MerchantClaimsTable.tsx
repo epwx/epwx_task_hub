@@ -21,6 +21,10 @@ function getTwitterClaimFallbackLabel(claimType?: string) {
     return 'twitter-comment';
   }
 
+  if (claimType === 'twitter_poll') {
+    return 'twitter-poll';
+  }
+
   return 'twitter-retweet';
 }
 

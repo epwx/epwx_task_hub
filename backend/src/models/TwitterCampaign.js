@@ -5,7 +5,7 @@ const TwitterCampaign = sequelize.define('TwitterCampaign', {
   id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
   code: { type: DataTypes.STRING, allowNull: false, unique: true },
   title: { type: DataTypes.STRING, allowNull: false },
-  taskType: { type: DataTypes.ENUM('retweet', 'comment'), allowNull: false, defaultValue: 'retweet' },
+  taskType: { type: DataTypes.ENUM('retweet', 'comment', 'poll'), allowNull: false, defaultValue: 'retweet' },
   tweetUrl: { type: DataTypes.STRING, allowNull: false },
   rewardAmount: { type: DataTypes.STRING, allowNull: false, defaultValue: '100000' },
   isActive: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },

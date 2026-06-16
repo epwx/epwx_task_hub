@@ -170,19 +170,33 @@ interface TwitterCampaign {
   id: number;
   code: string;
   title: string;
-  taskType: 'retweet' | 'comment';
+  taskType: 'retweet' | 'comment' | 'poll';
   tweetUrl: string;
   rewardAmount?: string | null;
   expiresAt?: string | null;
   claimStatus?: 'pending' | 'paid' | null;
 }
 
-function getTwitterTaskLabel(taskType: 'retweet' | 'comment') {
-  return taskType === 'comment' ? 'Comment' : 'Retweet';
+function getTwitterTaskLabel(taskType: 'retweet' | 'comment' | 'poll') {
+  switch (taskType) {
+    case 'comment':
+      return 'Comment';
+    case 'poll':
+      return 'Poll';
+    default:
+      return 'Retweet';
+  }
 }
 
-function getTwitterTaskAction(taskType: 'retweet' | 'comment') {
-  return taskType === 'comment' ? 'Comment & Upload Screenshot' : 'Retweet & Upload Screenshot';
+function getTwitterTaskAction(taskType: 'retweet' | 'comment' | 'poll') {
+  switch (taskType) {
+    case 'comment':
+      return 'Comment & Upload Screenshot';
+    case 'poll':
+      return 'Vote In Poll & Upload Screenshot';
+    default:
+      return 'Retweet & Upload Screenshot';
+  }
 }
 
 interface CampaignPagination {
@@ -402,7 +416,7 @@ function TwitterCampaignBoard({ address }: { address?: string }) {
             <div className="mb-6 text-center text-white">
               <p className="text-sm uppercase tracking-[0.3em] text-white/65">Social rewards</p>
               <h3 className="mt-2 text-3xl font-black">View the post, complete the task, then upload your screenshot</h3>
-              <p className="mt-3 text-sm text-white/80">Open any active campaign below. Each campaign card shows whether you need to retweet or comment before you submit a screenshot for review.</p>
+              <p className="mt-3 text-sm text-white/80">Open any active campaign below. Each campaign card shows whether you need to retweet, comment, or vote in a poll before you submit a screenshot for review.</p>
             </div>
 
             {loading ? <div className="text-center text-white/80">Loading Twitter campaigns...</div> : null}

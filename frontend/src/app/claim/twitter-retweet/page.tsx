@@ -10,19 +10,23 @@ type TwitterCampaign = {
   id: number;
   code: string;
   title: string;
-  taskType: 'retweet' | 'comment';
+  taskType: 'retweet' | 'comment' | 'poll';
   tweetUrl: string;
   rewardAmount: string;
   expiresAt?: string | null;
   claimStatus?: 'pending' | 'paid' | null;
 };
 
-function getTaskIntentUrl(tweetUrl: string, taskType: 'retweet' | 'comment') {
+function getTaskIntentUrl(tweetUrl: string, taskType: 'retweet' | 'comment' | 'poll') {
   const match = tweetUrl.match(/status\/(\d+)/i);
 
   if (match?.[1]) {
     if (taskType === 'comment') {
       return `https://twitter.com/intent/tweet?in_reply_to=${match[1]}`;
+    }
+
+    if (taskType === 'poll') {
+      return tweetUrl;
     }
 
     return `https://twitter.com/intent/retweet?tweet_id=${match[1]}`;
@@ -31,12 +35,26 @@ function getTaskIntentUrl(tweetUrl: string, taskType: 'retweet' | 'comment') {
   return tweetUrl;
 }
 
-function getTaskVerb(taskType: 'retweet' | 'comment') {
-  return taskType === 'comment' ? 'comment on it' : 'retweet it';
+function getTaskVerb(taskType: 'retweet' | 'comment' | 'poll') {
+  switch (taskType) {
+    case 'comment':
+      return 'comment on it';
+    case 'poll':
+      return 'vote in its poll';
+    default:
+      return 'retweet it';
+  }
 }
 
-function getTaskCta(taskType: 'retweet' | 'comment') {
-  return taskType === 'comment' ? '2. Comment on X' : '2. Retweet on X';
+function getTaskCta(taskType: 'retweet' | 'comment' | 'poll') {
+  switch (taskType) {
+    case 'comment':
+      return '2. Comment on X';
+    case 'poll':
+      return '2. Vote In Poll On X';
+    default:
+      return '2. Retweet on X';
+  }
 }
 
 function TwitterRetweetClaimPage() {
