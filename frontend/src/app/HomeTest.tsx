@@ -438,21 +438,21 @@ function TwitterCampaignBoard({ address }: { address?: string }) {
               <>
                 <div className="grid gap-4 md:grid-cols-2">
                   {campaigns.map(campaign => (
-                    <div key={campaign.id} className="rounded-3xl border border-white/20 bg-white/10 p-6 text-white backdrop-blur-xl shadow-xl">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
+                    <div key={campaign.id} className="overflow-hidden rounded-3xl border border-white/20 bg-white/10 p-6 text-white backdrop-blur-xl shadow-xl">
+                      <div className="flex flex-col items-start gap-3 sm:flex-row sm:justify-between">
+                        <div className="min-w-0 flex-1">
                           <div className="text-xs uppercase tracking-[0.25em] text-white/60">{campaign.code}</div>
                           <div className="mt-2 flex items-center gap-3">
                             <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-2xl">
                               <span aria-hidden="true">{getTwitterTaskIcon(campaign.taskType)}</span>
                             </div>
-                            <div>
-                              <h4 className="text-2xl font-black">{campaign.title}</h4>
+                            <div className="min-w-0 flex-1">
+                              <h4 className="break-all text-2xl font-black leading-tight">{campaign.title}</h4>
                               <div className="mt-1 text-sm text-white/70">Task: {getTwitterTaskLabel(campaign.taskType)}</div>
                             </div>
                           </div>
                         </div>
-                        <div className={`rounded-full px-3 py-1 text-xs font-bold ${campaign.claimStatus === 'pending' ? 'border border-amber-300/30 bg-amber-400/20 text-amber-100' : 'border border-emerald-300/30 bg-emerald-400/20 text-emerald-100'}`}>
+                        <div className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${campaign.claimStatus === 'pending' ? 'border border-amber-300/30 bg-amber-400/20 text-amber-100' : 'border border-emerald-300/30 bg-emerald-400/20 text-emerald-100'}`}>
                           {campaign.claimStatus === 'pending' ? 'Pending Review' : 'Active'}
                         </div>
                       </div>
@@ -468,13 +468,13 @@ function TwitterCampaignBoard({ address }: { address?: string }) {
                           href={campaign.tweetUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center justify-center rounded-2xl border border-white/20 bg-white/15 px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-white/25"
+                          className="inline-flex min-w-0 items-center justify-center rounded-2xl border border-white/20 bg-white/15 px-4 py-3 text-center text-sm font-bold leading-tight text-white transition-colors hover:bg-white/25"
                         >
                           View Post
                         </a>
                         <Link
                           href={`/claim/twitter-retweet?campaignId=${campaign.id}`}
-                          className={`inline-flex items-center justify-center rounded-2xl px-4 py-3 text-sm font-bold text-white transition-colors ${campaign.claimStatus === 'pending' ? 'bg-amber-600 hover:bg-amber-700' : 'bg-green-600 hover:bg-green-700'}`}
+                          className={`inline-flex min-w-0 items-center justify-center rounded-2xl px-4 py-3 text-center text-sm font-bold leading-tight text-white transition-colors ${campaign.claimStatus === 'pending' ? 'bg-amber-600 hover:bg-amber-700' : 'bg-green-600 hover:bg-green-700'}`}
                         >
                           {campaign.claimStatus === 'pending' ? 'View Pending Claim' : getTwitterTaskAction(campaign.taskType)}
                         </Link>
@@ -1098,7 +1098,7 @@ export default function HomeTest() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:bg-gray-950 dark:bg-none flex flex-col">
-      <main className="container mx-auto px-4 py-12 flex-1">
+      <main className="container mx-auto flex-1 px-4 py-12 pb-28 lg:pb-12">
         {/* Wallet Connection & Verification Section */}
         <section className="my-8">
           <div className={`${themedSectionClass} mb-6 w-full max-w-lg mx-auto`}>
@@ -1691,26 +1691,38 @@ export default function HomeTest() {
           </div>
         </div>
       </footer>
-      <a
-        href="#buy-epwx"
-        className="fixed left-2 top-[34%] z-40 -translate-y-1/2 rounded-full border border-white/15 bg-slate-950/85 px-2 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-white shadow-[0_18px_40px_rgba(15,23,42,0.35)] backdrop-blur-md transition-all hover:bg-slate-900 dark:border-white/10 dark:bg-slate-900/85 lg:hidden"
-        style={{ writingMode: 'vertical-rl' }}
-      >
-        Buy EPWX
-      </a>
+      <div className="fixed inset-x-3 bottom-3 z-40 flex items-center justify-between gap-2 rounded-2xl border border-white/15 bg-slate-950/88 p-2 shadow-[0_18px_40px_rgba(15,23,42,0.35)] backdrop-blur-md lg:hidden">
+        <a
+          href="#buy-epwx"
+          className="flex min-w-0 flex-1 items-center justify-center rounded-xl bg-white/8 px-3 py-2 text-center text-[11px] font-black uppercase tracking-[0.14em] text-white transition-colors hover:bg-white/14"
+        >
+          Buy EPWX
+        </a>
+        <a
+          href="#burnt-supply"
+          className="flex min-w-0 flex-1 items-center justify-center rounded-xl bg-white/8 px-3 py-2 text-center text-[11px] font-black uppercase tracking-[0.14em] text-white transition-colors hover:bg-white/14"
+        >
+          90% Burnt
+        </a>
+        <a
+          href="#twitter-campaigns"
+          className="flex min-w-0 flex-1 items-center justify-center rounded-xl bg-white/8 px-3 py-2 text-center text-[11px] font-black uppercase tracking-[0.14em] text-white transition-colors hover:bg-white/14"
+        >
+          X Campaigns
+        </a>
+        <a
+          href="#daily-claim"
+          className="flex min-w-0 flex-1 items-center justify-center rounded-xl bg-emerald-500 px-3 py-2 text-center text-[11px] font-black uppercase tracking-[0.14em] text-white transition-colors hover:bg-emerald-400"
+        >
+          Daily Claim
+        </a>
+      </div>
       <a
         href="#buy-epwx"
         className="fixed left-4 top-[34%] z-40 hidden -translate-y-1/2 rounded-full border border-white/15 bg-slate-950/85 px-3 py-4 text-xs font-black uppercase tracking-[0.2em] text-white shadow-[0_18px_40px_rgba(15,23,42,0.35)] backdrop-blur-md transition-all hover:left-3 hover:bg-slate-900 dark:border-white/10 dark:bg-slate-900/85 lg:flex"
         style={{ writingMode: 'vertical-rl' }}
       >
         Buy EPWX
-      </a>
-      <a
-        href="#burnt-supply"
-        className="fixed left-2 top-[66%] z-40 -translate-y-1/2 rounded-full border border-white/15 bg-slate-950/85 px-2 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-white shadow-[0_18px_40px_rgba(15,23,42,0.35)] backdrop-blur-md transition-all hover:bg-slate-900 dark:border-white/10 dark:bg-slate-900/85 lg:hidden"
-        style={{ writingMode: 'vertical-rl' }}
-      >
-        90% Burnt
       </a>
       <a
         href="#burnt-supply"
@@ -1721,24 +1733,10 @@ export default function HomeTest() {
       </a>
       <a
         href="#twitter-campaigns"
-        className="fixed right-2 top-[34%] z-40 -translate-y-1/2 rounded-full border border-white/15 bg-slate-950/85 px-2 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-white shadow-[0_18px_40px_rgba(15,23,42,0.35)] backdrop-blur-md transition-all hover:bg-slate-900 dark:border-white/10 dark:bg-slate-900/85 lg:hidden"
-        style={{ writingMode: 'vertical-rl' }}
-      >
-        X Campaigns
-      </a>
-      <a
-        href="#twitter-campaigns"
         className="fixed right-4 top-[34%] z-40 hidden -translate-y-1/2 rounded-full border border-white/15 bg-slate-950/85 px-3 py-4 text-xs font-black uppercase tracking-[0.2em] text-white shadow-[0_18px_40px_rgba(15,23,42,0.35)] backdrop-blur-md transition-all hover:right-3 hover:bg-slate-900 dark:border-white/10 dark:bg-slate-900/85 lg:flex"
         style={{ writingMode: 'vertical-rl' }}
       >
         X Campaigns
-      </a>
-      <a
-        href="#daily-claim"
-        className="fixed right-2 top-[66%] z-40 -translate-y-1/2 rounded-full border border-white/15 bg-slate-950/85 px-2 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-white shadow-[0_18px_40px_rgba(15,23,42,0.35)] backdrop-blur-md transition-all hover:bg-slate-900 dark:border-white/10 dark:bg-slate-900/85 lg:hidden"
-        style={{ writingMode: 'vertical-rl' }}
-      >
-        Daily Claim
       </a>
       <a
         href="#daily-claim"
