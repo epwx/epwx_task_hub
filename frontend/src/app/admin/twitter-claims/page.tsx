@@ -496,8 +496,8 @@ export default function AdminTwitterClaimsPage() {
                       : 'bg-emerald-100 text-emerald-700';
 
                   return (
-                <div className="flex items-start justify-between gap-3">
-                  <div>
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0 flex-1">
                     {editingCampaignId === campaign.id ? (
                       <div className="grid gap-3">
                         <input name="code" value={editCampaignForm.code} onChange={handleEditCampaignFormChange} className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm text-white" />
@@ -521,7 +521,7 @@ export default function AdminTwitterClaimsPage() {
                       </div>
                     ) : (
                       <>
-                        <div className="text-base font-bold text-white">{campaign.title}</div>
+                        <div className="break-words text-base font-bold text-white">{campaign.title}</div>
                         <div className="text-sm text-white/75">Code: {campaign.code}</div>
                         <div className="text-sm text-white/75">Task: {getTaskLabel(campaign.taskType)}</div>
                         <div className="text-sm text-white/75">Reward: {Number(campaign.rewardAmount || '100000').toLocaleString()} EPWX</div>
@@ -537,7 +537,7 @@ export default function AdminTwitterClaimsPage() {
                       </>
                     )}
                   </div>
-                  <div className="flex flex-col items-end gap-2">
+                  <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
                     <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusClass}`}>
                       {statusLabel}
                     </span>
