@@ -6,11 +6,16 @@ interface TwitterRetweetClaimFormProps {
   twitterCampaignId: number;
   campaignCode: string;
   title: string;
+  taskType: 'retweet' | 'comment';
   rewardAmount?: string | null;
   claimStatus?: 'pending' | 'paid' | null;
 }
 
-const TwitterRetweetClaimForm: React.FC<TwitterRetweetClaimFormProps> = ({ wallet, twitterCampaignId, campaignCode, title, rewardAmount, claimStatus }) => {
+function getTaskLabel(taskType: 'retweet' | 'comment') {
+  return taskType === 'comment' ? 'comment' : 'retweet';
+}
+
+const TwitterRetweetClaimForm: React.FC<TwitterRetweetClaimFormProps> = ({ wallet, twitterCampaignId, campaignCode, title, taskType, rewardAmount, claimStatus }) => {
   const [file, setFile] = useState<File | null>(null);
   const [twitterUsername, setTwitterUsername] = useState('');
   const [agreed, setAgreed] = useState(false);
@@ -50,7 +55,7 @@ const TwitterRetweetClaimForm: React.FC<TwitterRetweetClaimFormProps> = ({ walle
     }
 
     if (!file) {
-      setError('Please upload your retweet screenshot.');
+      setError(`Please upload your ${getTaskLabel(taskType)} screenshot.`);
       return;
     }
 
@@ -66,7 +71,7 @@ const TwitterRetweetClaimForm: React.FC<TwitterRetweetClaimFormProps> = ({ walle
     formData.append('receiptImage', file);
 
     try {
-      const response = await fetch('/api/claims/twitter-retweet', {
+      const response = await fetch(`/api/claims/twitter-${taskType}`, {
         method: 'POST',
         body: formData,
       });
@@ -90,9 +95,9 @@ const TwitterRetweetClaimForm: React.FC<TwitterRetweetClaimFormProps> = ({ walle
     <form onSubmit={handleSubmit} className="rounded-3xl border border-white/20 bg-white/10 p-6 text-white backdrop-blur-xl shadow-2xl">
       <div className="mb-5 rounded-2xl border border-white/15 bg-black/10 p-4">
         <div className="text-xs uppercase tracking-[0.25em] text-white/60">Twitter reward claim</div>
-        <h2 className="mt-2 text-2xl font-black">{title || 'Upload your retweet screenshot'}</h2>
+        <h2 className="mt-2 text-2xl font-black">{title || `Upload your ${getTaskLabel(taskType)} screenshot`}</h2>
         <p className="mt-2 text-sm text-white/75">
-          After you retweet the post, upload a clear screenshot here. Admin will review it and either distribute EPWX or reject it with a reason.
+          After you {getTaskLabel(taskType)} the post, upload a clear screenshot here. Admin will review it and either distribute EPWX or reject it with a reason.
         </p>
         <div className="mt-3 text-sm text-white/70">Campaign: {campaignCode}</div>
         <div className="mt-1 text-sm text-white/70">Reward: {Number(rewardAmount || '100000').toLocaleString()} EPWX</div>
@@ -100,7 +105,7 @@ const TwitterRetweetClaimForm: React.FC<TwitterRetweetClaimFormProps> = ({ walle
 
         {claimStatus === 'pending' ? (
           <div className="mb-5 rounded-2xl border border-amber-300/30 bg-amber-400/15 p-4 text-sm text-amber-100">
-            You already submitted this retweet screenshot. Your claim is pending admin review, so no new upload is needed right now.
+            You already submitted this {getTaskLabel(taskType)} screenshot. Your claim is pending admin review, so no new upload is needed right now.
           </div>
         ) : null}
 
@@ -114,7 +119,7 @@ const TwitterRetweetClaimForm: React.FC<TwitterRetweetClaimFormProps> = ({ walle
         className="mb-4 w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-white placeholder:text-white/45 focus:border-emerald-300 focus:outline-none"
       />
 
-      <label className="mb-2 block text-sm font-semibold text-white/85">Retweet screenshot</label>
+      <label className="mb-2 block text-sm font-semibold text-white/85">{taskType === 'comment' ? 'Comment screenshot' : 'Retweet screenshot'}</label>
       <input
         type="file"
         accept="image/*"
@@ -132,7 +137,7 @@ const TwitterRetweetClaimForm: React.FC<TwitterRetweetClaimFormProps> = ({ walle
           disabled={claimStatus === 'pending'}
           className="mt-1"
         />
-        <span>I confirm this screenshot is from my own retweet and I understand the claim will be manually reviewed.</span>
+        <span>I confirm this screenshot is from my own {getTaskLabel(taskType)} and I understand the claim will be manually reviewed.</span>
       </label>
 
       <button

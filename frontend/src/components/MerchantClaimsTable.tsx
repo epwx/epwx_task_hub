@@ -16,6 +16,14 @@ interface MerchantClaim {
   twitterUsername?: string;
 }
 
+function getTwitterClaimFallbackLabel(claimType?: string) {
+  if (claimType === 'twitter_comment') {
+    return 'twitter-comment';
+  }
+
+  return 'twitter-retweet';
+}
+
 interface MerchantClaimsTableProps {
   claims: MerchantClaim[];
   isAdmin?: boolean;
@@ -79,7 +87,7 @@ const MerchantClaimsTable: React.FC<MerchantClaimsTableProps> = ({ claims, isAdm
               <td className="bg-white py-2 px-2 text-slate-900 dark:bg-slate-900 dark:text-slate-100 sm:px-4">
                 {context === 'twitter' ? (
                   <div>
-                    <div className="font-medium">{claim.campaignCode || 'twitter-retweet'}</div>
+                    <div className="font-medium">{claim.campaignCode || getTwitterClaimFallbackLabel(claim.claimType)}</div>
                     {claim.twitterUsername ? <div className="text-xs text-slate-500 dark:text-slate-400">@{claim.twitterUsername}</div> : null}
                   </div>
                 ) : (

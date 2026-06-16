@@ -25,20 +25,22 @@ const storage = multer.diskStorage({
     cb(null, uniqueSuffix + '-' + file.originalname.replace(/\s+/g, '_'));
   }
 });
-const upload = multer({
-  storage,
-  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB limit
-  fileFilter: (req, file, cb) => {
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
-    if (allowedTypes.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only .jpg, .jpeg, .png files are allowed!'));
-    }
-  }
-});
+const upload = multer({ storage });
 
 const router = express.Router();
+const TWITTER_TASK_TYPE_TO_CLAIM_TYPE = {
+  retweet: 'twitter_retweet',
+  comment: 'twitter_comment',
+};
+
+function normalizeTwitterTaskType(taskType) {
+  const normalized = String(taskType || '').trim().toLowerCase();
+  return Object.prototype.hasOwnProperty.call(TWITTER_TASK_TYPE_TO_CLAIM_TYPE, normalized) ? normalized : null;
+}
+
+function getTwitterClaimType(taskType) {
+  return TWITTER_TASK_TYPE_TO_CLAIM_TYPE[taskType] || null;
+}
 
 
 
@@ -53,10 +55,6 @@ function haversineDistance(lat1, lon1, lat2, lon2) {
     Math.sin(dLon / 2) * Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
-}
-
-function isCampaignExpired(campaign) {
-  return !!campaign.expiresAt && new Date(campaign.expiresAt) < new Date();
 }
 
 // POST /api/claims/add - Add a new customer claim with receipt image upload
@@ -85,85 +83,43 @@ router.post('/add', upload.single('receiptImage'), async (req, res) => {
   const customerLc = customer.toLowerCase();
   console.log('Claim attempt:', { ip, customer: customerLc });
   try {
-    // Create claim with IP and receipt image (rate limiting removed)
-    const claim = await Claim.create({ merchantId, customer: customerLc, bill, lat, lng, claimType: 'merchant', status: 'pending', ip, receiptImage: receiptImagePath });
-    res.json({ success: true, claim });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// POST /api/claims/twitter-retweet - Add a new Twitter retweet screenshot claim
-router.post('/twitter-retweet', upload.single('receiptImage'), async (req, res) => {
-  const { customer, twitterCampaignId, twitterUsername } = req.body;
-  let receiptImagePath = null;
-
-  if (req.file) {
-    receiptImagePath = path.relative(process.cwd(), req.file.path);
-  }
-
-  if (!customer || !receiptImagePath) {
-    return res.status(400).json({ error: 'Wallet address and screenshot are required' });
-  }
-
-  const normalizedCustomer = customer.toLowerCase();
-  const campaignId = Number(twitterCampaignId);
-  const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.connection?.remoteAddress || req.socket?.remoteAddress;
-
-  if (!Number.isInteger(campaignId) || campaignId <= 0) {
-    return res.status(400).json({ error: 'A valid Twitter campaign is required.' });
-  }
-
-  try {
-    const campaign = await TwitterCampaign.findByPk(campaignId);
-
-    if (!campaign || !campaign.isActive || isCampaignExpired(campaign)) {
-      return res.status(404).json({ error: 'Twitter campaign not found or inactive.' });
-    }
-
-    const existing = await Claim.findOne({
+    // Restrict by customer (wallet) for 24 hours
+    const walletClaim = await Claim.findOne({
       where: {
-        customer: normalizedCustomer,
-        claimType: 'twitter_retweet',
-        twitterCampaignId: campaign.id,
-        status: { [Op.in]: ['pending', 'paid'] },
-      },
-      order: [['createdAt', 'DESC']],
+        customer: customerLc,
+        createdAt: { [Op.gte]: since }
+      }
     });
-
-    if (existing) {
-      return res.status(409).json({ error: 'A Twitter retweet claim for this campaign is already pending or paid for this wallet.' });
+    if (walletClaim) {
+      const lastClaim = new Date(walletClaim.createdAt);
+      const nextClaim = new Date(lastClaim.getTime() + 1 * 60 * 1000); // 1 minute interval
+      const msLeft = nextClaim - now;
+      if (msLeft > 0) {
+        const hours = Math.floor(msLeft / (1000 * 60 * 60));
+        const minutes = Math.floor((msLeft % (1000 * 60 * 60)) / (1000 * 60));
+        console.log('Blocked by wallet:', customerLc, 'Last:', lastClaim);
+        return res.status(429).json({ error: `Wallet already claimed. Try again in ${hours}h ${minutes}m.` });
+      }
+      // else, allow claim
     }
-
-    const existingIpClaim = await Claim.findOne({
+    // Restrict by IP for 24 hours
+    const ipClaim = await Claim.findOne({
       where: {
         ip,
-        claimType: 'twitter_retweet',
-        twitterCampaignId: campaign.id,
-        status: { [Op.in]: ['pending', 'paid'] },
-      },
-      order: [['createdAt', 'DESC']],
+        createdAt: { [Op.gte]: since }
+      }
     });
-
-    if (existingIpClaim) {
-      return res.status(409).json({ error: 'A Twitter retweet claim for this campaign is already pending or paid from this IP address.' });
+    if (ipClaim) {
+      const lastClaim = new Date(ipClaim.createdAt);
+      const nextClaim = new Date(lastClaim.getTime() + 1 * 60 * 1000); // 1 minute interval
+      const msLeft = nextClaim - now;
+      const hours = Math.floor(msLeft / (1000 * 60 * 60));
+      const minutes = Math.floor((msLeft % (1000 * 60 * 60)) / (1000 * 60));
+      console.log('Blocked by IP:', ip, 'Last:', lastClaim);
+      return res.status(429).json({ error: `IP address already claimed. Try again in ${hours}h ${minutes}m.` });
     }
-
-    const claim = await Claim.create({
-      merchantId: null,
-      customer: normalizedCustomer,
-      bill: String(campaign.rewardAmount || '100000'),
-      lat: null,
-      lng: null,
-      claimType: 'twitter_retweet',
-      campaignCode: campaign.code,
-      twitterCampaignId: campaign.id,
-      twitterUsername: twitterUsername ? twitterUsername.trim().replace(/^@/, '') : null,
-      status: 'pending',
-      ip,
-      receiptImage: receiptImagePath,
-    });
-
+    // Create claim with IP and receipt image
+    const claim = await Claim.create({ merchantId, customer: customerLc, bill, lat, lng, status: 'pending', ip, receiptImage: receiptImagePath });
     res.json({ success: true, claim });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -180,8 +136,10 @@ router.get('/', async (req, res) => {
     if (merchantId) {
       where = { merchantId };
     } else if (admin && adminWallets.includes(admin.toLowerCase())) {
-      if (status) where.status = status;
-      if (claimType) where.claimType = claimType;
+      if (status) where = { status };
+      if (claimType) {
+        where = { ...where, claimType: String(claimType).trim() };
+      }
     } else {
       return res.status(403).json({ error: 'Unauthorized' });
     }
@@ -191,6 +149,80 @@ router.get('/', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+async function createTwitterCampaignClaim(req, res, expectedTaskType) {
+  const { customer, twitterCampaignId, twitterUsername } = req.body;
+  let receiptImagePath = null;
+
+  if (req.file) {
+    receiptImagePath = path.relative(process.cwd(), req.file.path);
+  }
+
+  if (!customer || !twitterCampaignId || !req.file) {
+    return res.status(400).json({ error: 'Customer wallet, campaign, and screenshot are required.' });
+  }
+
+  const campaignId = Number.parseInt(String(twitterCampaignId), 10);
+  if (!Number.isInteger(campaignId) || campaignId <= 0) {
+    return res.status(400).json({ error: 'Invalid Twitter campaign.' });
+  }
+
+  const normalizedTaskType = normalizeTwitterTaskType(expectedTaskType);
+  if (!normalizedTaskType) {
+    return res.status(400).json({ error: 'Invalid Twitter task type.' });
+  }
+
+  try {
+    const campaign = await TwitterCampaign.findByPk(campaignId);
+    if (!campaign || !campaign.isActive) {
+      return res.status(404).json({ error: 'Campaign not found or inactive.' });
+    }
+
+    if (campaign.taskType !== normalizedTaskType) {
+      return res.status(400).json({ error: 'Campaign task type does not match this claim route.' });
+    }
+
+    if (campaign.expiresAt && new Date(campaign.expiresAt) < new Date()) {
+      return res.status(400).json({ error: 'Campaign has expired.' });
+    }
+
+    const customerLc = String(customer).trim().toLowerCase();
+    const claimType = getTwitterClaimType(normalizedTaskType);
+    const existingClaim = await Claim.findOne({
+      where: {
+        customer: customerLc,
+        twitterCampaignId: campaign.id,
+        claimType,
+        status: { [Op.in]: ['pending', 'paid'] },
+      },
+      order: [['createdAt', 'DESC']],
+    });
+
+    if (existingClaim) {
+      return res.status(409).json({ error: existingClaim.status === 'paid' ? 'Campaign reward already paid.' : 'You already submitted this campaign for review.' });
+    }
+
+    const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.connection?.remoteAddress || req.socket?.remoteAddress;
+    const claim = await Claim.create({
+      customer: customerLc,
+      bill: campaign.rewardAmount,
+      claimType,
+      campaignCode: campaign.code,
+      twitterCampaignId: campaign.id,
+      twitterUsername: twitterUsername ? String(twitterUsername).trim().replace(/^@/, '') : null,
+      status: 'pending',
+      ip,
+      receiptImage: receiptImagePath,
+    });
+
+    return res.json({ success: true, claim });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+}
+
+router.post('/twitter-retweet', upload.single('receiptImage'), async (req, res) => createTwitterCampaignClaim(req, res, 'retweet'));
+router.post('/twitter-comment', upload.single('receiptImage'), async (req, res) => createTwitterCampaignClaim(req, res, 'comment'));
 
 // POST /api/claims/:id/mark-status - Update claim status (admin only)
 router.post('/:id/mark-status', async (req, res) => {

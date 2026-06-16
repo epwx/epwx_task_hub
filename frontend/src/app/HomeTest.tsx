@@ -170,10 +170,19 @@ interface TwitterCampaign {
   id: number;
   code: string;
   title: string;
+  taskType: 'retweet' | 'comment';
   tweetUrl: string;
   rewardAmount?: string | null;
   expiresAt?: string | null;
   claimStatus?: 'pending' | 'paid' | null;
+}
+
+function getTwitterTaskLabel(taskType: 'retweet' | 'comment') {
+  return taskType === 'comment' ? 'Comment' : 'Retweet';
+}
+
+function getTwitterTaskAction(taskType: 'retweet' | 'comment') {
+  return taskType === 'comment' ? 'Comment & Upload Screenshot' : 'Retweet & Upload Screenshot';
 }
 
 interface CampaignPagination {
@@ -392,8 +401,8 @@ function TwitterCampaignBoard({ address }: { address?: string }) {
           <div className="relative z-10">
             <div className="mb-6 text-center text-white">
               <p className="text-sm uppercase tracking-[0.3em] text-white/65">Social rewards</p>
-              <h3 className="mt-2 text-3xl font-black">View post, retweet, then upload your screenshot</h3>
-              <p className="mt-3 text-sm text-white/80">Open any active campaign below. Each campaign card gives you a direct post link and a campaign URL where you can submit the screenshot after retweeting.</p>
+              <h3 className="mt-2 text-3xl font-black">View the post, complete the task, then upload your screenshot</h3>
+              <p className="mt-3 text-sm text-white/80">Open any active campaign below. Each campaign card shows whether you need to retweet or comment before you submit a screenshot for review.</p>
             </div>
 
             {loading ? <div className="text-center text-white/80">Loading Twitter campaigns...</div> : null}
@@ -409,6 +418,7 @@ function TwitterCampaignBoard({ address }: { address?: string }) {
                         <div>
                           <div className="text-xs uppercase tracking-[0.25em] text-white/60">{campaign.code}</div>
                           <h4 className="mt-2 text-2xl font-black">{campaign.title}</h4>
+                          <div className="mt-2 text-sm text-white/70">Task: {getTwitterTaskLabel(campaign.taskType)}</div>
                         </div>
                         <div className={`rounded-full px-3 py-1 text-xs font-bold ${campaign.claimStatus === 'pending' ? 'border border-amber-300/30 bg-amber-400/20 text-amber-100' : 'border border-emerald-300/30 bg-emerald-400/20 text-emerald-100'}`}>
                           {campaign.claimStatus === 'pending' ? 'Pending Review' : 'Active'}
@@ -418,7 +428,7 @@ function TwitterCampaignBoard({ address }: { address?: string }) {
                       <div className="mt-4 grid gap-2 text-sm text-white/75">
                         <div>Reward: {Number(campaign.rewardAmount || '100000').toLocaleString()} EPWX</div>
                         <div>Expires: {formatCampaignExpiry(campaign.expiresAt)}</div>
-                        {campaign.claimStatus === 'pending' ? <div className="text-amber-100">You already submitted this campaign. Your retweet claim is pending admin review.</div> : null}
+                        {campaign.claimStatus === 'pending' ? <div className="text-amber-100">You already submitted this campaign. Your {getTwitterTaskLabel(campaign.taskType).toLowerCase()} claim is pending admin review.</div> : null}
                       </div>
 
                       <div className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -434,7 +444,7 @@ function TwitterCampaignBoard({ address }: { address?: string }) {
                           href={`/claim/twitter-retweet?campaignId=${campaign.id}`}
                           className={`inline-flex items-center justify-center rounded-2xl px-4 py-3 text-sm font-bold text-white transition-colors ${campaign.claimStatus === 'pending' ? 'bg-amber-600 hover:bg-amber-700' : 'bg-green-600 hover:bg-green-700'}`}
                         >
-                          {campaign.claimStatus === 'pending' ? 'View Pending Claim' : 'Retweet & Upload Screenshot'}
+                          {campaign.claimStatus === 'pending' ? 'View Pending Claim' : getTwitterTaskAction(campaign.taskType)}
                         </Link>
                       </div>
                     </div>

@@ -12,6 +12,7 @@ type TwitterClaim = {
   customer: string;
   bill?: string;
   status: string;
+  claimType?: string;
   createdAt: string;
   receiptImage?: string;
   rejectionComment?: string;
@@ -19,10 +20,13 @@ type TwitterClaim = {
   twitterUsername?: string;
 };
 
+type TwitterTaskType = "retweet" | "comment";
+
 type TwitterCampaign = {
   id: number;
   code: string;
   title: string;
+  taskType: TwitterTaskType;
   tweetUrl: string;
   rewardAmount: string;
   isActive: boolean;
@@ -41,6 +45,19 @@ const ADMIN_WALLETS = (process.env.NEXT_PUBLIC_ADMIN_WALLETS || "")
   .split(",")
   .map(wallet => wallet.trim().toLowerCase())
   .filter(Boolean);
+
+const TASK_TYPE_TO_CLAIM_TYPE: Record<TwitterTaskType, string> = {
+  retweet: "twitter_retweet",
+  comment: "twitter_comment",
+};
+
+function getTaskLabel(taskType: TwitterTaskType) {
+  return taskType === "comment" ? "Comment" : "Retweet";
+}
+
+function getTaskInstruction(taskType: TwitterTaskType) {
+  return taskType === "comment" ? "comment on the post" : "retweet the post";
+}
 
 function isCampaignExpired(expiresAt?: string | null) {
   return !!expiresAt && new Date(expiresAt).getTime() < Date.now();
@@ -82,12 +99,14 @@ export default function AdminTwitterClaimsPage() {
     totalPages: 1,
   });
   const [statusFilter, setStatusFilter] = useState("pending");
+  const [taskTypeFilter, setTaskTypeFilter] = useState<TwitterTaskType>("retweet");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [marking, setMarking] = useState<number | string | null>(null);
   const [campaignForm, setCampaignForm] = useState({
     code: "",
     title: "",
+    taskType: "retweet" as TwitterTaskType,
     tweetUrl: "",
     rewardAmount: "100000",
     expiresAt: "",
@@ -97,6 +116,7 @@ export default function AdminTwitterClaimsPage() {
   const [editCampaignForm, setEditCampaignForm] = useState({
     code: "",
     title: "",
+    taskType: "retweet" as TwitterTaskType,
     tweetUrl: "",
     rewardAmount: "100000",
     expiresAt: "",
@@ -135,7 +155,8 @@ export default function AdminTwitterClaimsPage() {
     setError(null);
 
     try {
-      const response = await fetch(`/api/claims?admin=${address}&status=${statusFilter}&claimType=twitter_retweet`);
+      const claimType = TASK_TYPE_TO_CLAIM_TYPE[taskTypeFilter];
+      const response = await fetch(`/api/claims?admin=${address}&status=${statusFilter}&claimType=${claimType}`);
       const data = await parseJsonResponse<{ claims?: TwitterClaim[] }>(response, "Failed to fetch Twitter claims");
       setClaims(data.claims || []);
     } catch (fetchError: any) {
@@ -151,7 +172,7 @@ export default function AdminTwitterClaimsPage() {
     }
 
     try {
-      const response = await fetch(`/api/twitter-campaigns/list?admin=${address}&page=${page}&limit=${TWITTER_CAMPAIGNS_PAGE_SIZE}`);
+      const response = await fetch(`/api/twitter-campaigns/list?admin=${address}&page=${page}&limit=${TWITTER_CAMPAIGNS_PAGE_SIZE}&taskType=${taskTypeFilter}`);
       const data = await parseJsonResponse<{
         campaigns?: TwitterCampaign[];
         pagination?: CampaignPagination;
@@ -174,15 +195,19 @@ export default function AdminTwitterClaimsPage() {
 
   useEffect(() => {
     fetchClaims();
-  }, [address, statusFilter]);
+  }, [address, statusFilter, taskTypeFilter]);
 
   useEffect(() => {
     fetchCampaigns(campaignsPage);
-  }, [address, campaignsPage]);
+  }, [address, campaignsPage, taskTypeFilter]);
 
   useEffect(() => {
     setClaimsPage(1);
-  }, [statusFilter]);
+  }, [statusFilter, taskTypeFilter]);
+
+  useEffect(() => {
+    setCampaignsPage(1);
+  }, [taskTypeFilter]);
 
   const totalClaimsPages = Math.max(1, Math.ceil(claims.length / TWITTER_CLAIMS_PAGE_SIZE));
   const paginatedClaims = claims.slice((claimsPage - 1) * TWITTER_CLAIMS_PAGE_SIZE, claimsPage * TWITTER_CLAIMS_PAGE_SIZE);
@@ -194,11 +219,11 @@ export default function AdminTwitterClaimsPage() {
     }
   }, [claimsPage, totalClaimsPages]);
 
-  const handleCampaignFormChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCampaignFormChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setCampaignForm(current => ({ ...current, [event.target.name]: event.target.value }));
   };
 
-  const handleEditCampaignFormChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleEditCampaignFormChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setEditCampaignForm(current => ({ ...current, [event.target.name]: event.target.value }));
   };
 
@@ -218,7 +243,7 @@ export default function AdminTwitterClaimsPage() {
       if (!data.success) {
         setError(data.error || "Failed to create campaign");
       } else {
-        setCampaignForm({ code: "", title: "", tweetUrl: "", rewardAmount: "100000", expiresAt: "" });
+        setCampaignForm({ code: "", title: "", taskType: taskTypeFilter, tweetUrl: "", rewardAmount: "100000", expiresAt: "" });
         setCampaignsPage(1);
       }
     } catch (saveError: any) {
@@ -254,6 +279,7 @@ export default function AdminTwitterClaimsPage() {
     setEditCampaignForm({
       code: campaign.code,
       title: campaign.title,
+      taskType: campaign.taskType,
       tweetUrl: campaign.tweetUrl,
       rewardAmount: campaign.rewardAmount || "100000",
       expiresAt: toDateTimeLocalValue(campaign.expiresAt),
@@ -262,7 +288,7 @@ export default function AdminTwitterClaimsPage() {
 
   const cancelEditingCampaign = () => {
     setEditingCampaignId(null);
-    setEditCampaignForm({ code: "", title: "", tweetUrl: "", rewardAmount: "100000", expiresAt: "" });
+    setEditCampaignForm({ code: "", title: "", taskType: taskTypeFilter, tweetUrl: "", rewardAmount: "100000", expiresAt: "" });
   };
 
   const saveCampaignEdit = async (campaignId: number) => {
@@ -385,6 +411,10 @@ export default function AdminTwitterClaimsPage() {
           <div className="mt-5 grid gap-4">
             <input name="code" value={campaignForm.code} onChange={handleCampaignFormChange} placeholder="campaign code" className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/50" required />
             <input name="title" value={campaignForm.title} onChange={handleCampaignFormChange} placeholder="campaign title" className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/50" required />
+            <select name="taskType" value={campaignForm.taskType} onChange={handleCampaignFormChange} className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white" required>
+              <option value="retweet">Retweet campaign</option>
+              <option value="comment">Comment campaign</option>
+            </select>
             <input name="tweetUrl" value={campaignForm.tweetUrl} onChange={handleCampaignFormChange} placeholder="https://x.com/..." className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/50" required />
             <input name="rewardAmount" value={campaignForm.rewardAmount} onChange={handleCampaignFormChange} placeholder="100000" className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/50" required />
             <input name="expiresAt" type="datetime-local" value={campaignForm.expiresAt} onChange={handleCampaignFormChange} className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white" />
@@ -420,6 +450,10 @@ export default function AdminTwitterClaimsPage() {
                       <div className="grid gap-3">
                         <input name="code" value={editCampaignForm.code} onChange={handleEditCampaignFormChange} className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm text-white" />
                         <input name="title" value={editCampaignForm.title} onChange={handleEditCampaignFormChange} className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm text-white" />
+                        <select name="taskType" value={editCampaignForm.taskType} onChange={handleEditCampaignFormChange} className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm text-white">
+                          <option value="retweet">Retweet campaign</option>
+                          <option value="comment">Comment campaign</option>
+                        </select>
                         <input name="tweetUrl" value={editCampaignForm.tweetUrl} onChange={handleEditCampaignFormChange} className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm text-white" />
                         <input name="rewardAmount" value={editCampaignForm.rewardAmount} onChange={handleEditCampaignFormChange} className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm text-white" />
                         <input name="expiresAt" type="datetime-local" value={editCampaignForm.expiresAt} onChange={handleEditCampaignFormChange} className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm text-white" />
@@ -436,6 +470,7 @@ export default function AdminTwitterClaimsPage() {
                       <>
                         <div className="text-base font-bold text-white">{campaign.title}</div>
                         <div className="text-sm text-white/75">Code: {campaign.code}</div>
+                        <div className="text-sm text-white/75">Task: {getTaskLabel(campaign.taskType)}</div>
                         <div className="text-sm text-white/75">Reward: {Number(campaign.rewardAmount || '100000').toLocaleString()} EPWX</div>
                         {campaign.expiresAt ? (
                           <div className="text-sm text-white/75">Expires: {new Date(campaign.expiresAt).toLocaleString()}</div>
@@ -502,8 +537,20 @@ export default function AdminTwitterClaimsPage() {
         <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
         <div className="relative z-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <h1 className="text-3xl font-black text-white">Twitter Retweet Claims</h1>
-          <p className="mt-2 text-sm text-white/75">Review uploaded retweet screenshots, then distribute EPWX or reject with a reason.</p>
+          <h1 className="text-3xl font-black text-white">Twitter {getTaskLabel(taskTypeFilter)} Claims</h1>
+          <p className="mt-2 text-sm text-white/75">Review uploaded screenshots for users who {getTaskInstruction(taskTypeFilter)}, then distribute EPWX or reject with a reason.</p>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label className="mb-2 block text-sm font-semibold text-white/85">Task</label>
+          <select
+            value={taskTypeFilter}
+            onChange={(event) => setTaskTypeFilter(event.target.value as TwitterTaskType)}
+            className="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm text-white"
+          >
+            <option value="retweet">Retweet</option>
+            <option value="comment">Comment</option>
+          </select>
         </div>
         <div>
           <label className="mb-2 block text-sm font-semibold text-white/85">Status</label>
@@ -518,13 +565,14 @@ export default function AdminTwitterClaimsPage() {
           </select>
         </div>
         </div>
+        </div>
       </div>
 
       {error ? <div className="mb-4 rounded-2xl border border-red-200/20 bg-red-400/10 px-4 py-3 text-sm text-red-100">{error}</div> : null}
       {loading ? <div className={`${glassPanelClass} p-6 text-white/80`}>Loading claims...</div> : null}
 
       {!loading && claims.length === 0 ? (
-        <div className={`${glassPanelClass} p-6 text-sm text-white/75`}>No Twitter retweet claims match the current filter.</div>
+        <div className={`${glassPanelClass} p-6 text-sm text-white/75`}>No Twitter {getTaskLabel(taskTypeFilter).toLowerCase()} claims match the current filter.</div>
       ) : null}
 
       {!loading && claims.length > 0 ? (

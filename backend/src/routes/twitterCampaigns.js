@@ -4,6 +4,17 @@ import { Claim, TwitterCampaign } from '../models/index.js';
 
 const router = express.Router();
 const FIXED_TWITTER_REWARD_AMOUNT = '100000';
+const SUPPORTED_TASK_TYPES = new Set(['retweet', 'comment']);
+const TWITTER_CLAIM_TYPES = ['twitter_retweet', 'twitter_comment'];
+
+function normalizeTaskType(taskType) {
+  const normalized = String(taskType || 'retweet').trim().toLowerCase();
+  return SUPPORTED_TASK_TYPES.has(normalized) ? normalized : null;
+}
+
+function getClaimTypeForTaskType(taskType) {
+  return taskType === 'comment' ? 'twitter_comment' : 'twitter_retweet';
+}
 
 function getAdminWallets() {
   return (process.env.ADMIN_WALLETS || '').split(',').map(wallet => wallet.trim().toLowerCase()).filter(Boolean);
@@ -53,7 +64,7 @@ async function getWalletClaimStatusByCampaignId(wallet) {
     attributes: ['twitterCampaignId', 'status'],
     where: {
       customer: wallet,
-      claimType: 'twitter_retweet',
+      claimType: { [Op.in]: TWITTER_CLAIM_TYPES },
       twitterCampaignId: { [Op.ne]: null },
       status: { [Op.in]: ['pending', 'paid'] },
     },
@@ -68,13 +79,18 @@ async function getWalletClaimStatusByCampaignId(wallet) {
 }
 
 router.post('/add', requireAdmin, async (req, res) => {
-  const { code, title, tweetUrl, expiresAt } = req.body;
+  const { code, title, tweetUrl, expiresAt, taskType } = req.body;
 
   if (!code || !title || !tweetUrl) {
     return res.status(400).json({ error: 'Code, title, and tweet URL are required.' });
   }
 
   try {
+    const normalizedTaskType = normalizeTaskType(taskType);
+    if (!normalizedTaskType) {
+      return res.status(400).json({ error: 'Invalid task type.' });
+    }
+
     const normalizedExpiresAt = normalizeExpiresAt(expiresAt);
     if (normalizedExpiresAt === undefined) {
       return res.status(400).json({ error: 'Invalid expiry date.' });
@@ -83,6 +99,7 @@ router.post('/add', requireAdmin, async (req, res) => {
     const campaign = await TwitterCampaign.create({
       code: String(code).trim().toLowerCase(),
       title: String(title).trim(),
+      taskType: normalizedTaskType,
       tweetUrl: String(tweetUrl).trim(),
       rewardAmount: FIXED_TWITTER_REWARD_AMOUNT,
       expiresAt: normalizedExpiresAt,
@@ -97,14 +114,21 @@ router.post('/add', requireAdmin, async (req, res) => {
 
 router.get('/list', requireAdmin, async (req, res) => {
   try {
+    const taskType = req.query.taskType ? normalizeTaskType(req.query.taskType) : null;
+    if (req.query.taskType && !taskType) {
+      return res.status(400).json({ error: 'Invalid task type.' });
+    }
+
     const requestedPage = parsePositiveInteger(req.query.page, 1);
     const limit = Math.min(parsePositiveInteger(req.query.limit, 10), 100);
-    const total = await TwitterCampaign.count();
+    const where = taskType ? { taskType } : undefined;
+    const total = await TwitterCampaign.count({ where });
     const totalPages = Math.max(1, Math.ceil(total / limit));
     const page = Math.min(requestedPage, totalPages);
     const offset = (page - 1) * limit;
 
     const campaigns = await TwitterCampaign.findAll({
+      where,
       order: [['createdAt', 'DESC']],
       limit,
       offset,
@@ -127,10 +151,15 @@ router.get('/list', requireAdmin, async (req, res) => {
 router.get('/active', async (req, res) => {
   try {
     const wallet = typeof req.query.wallet === 'string' ? req.query.wallet.trim().toLowerCase() : '';
+    const taskType = req.query.taskType ? normalizeTaskType(req.query.taskType) : null;
+    if (req.query.taskType && !taskType) {
+      return res.status(400).json({ error: 'Invalid task type.' });
+    }
+
     const requestedPage = parsePositiveInteger(req.query.page, 1);
     const limit = Math.min(parsePositiveInteger(req.query.limit, 6), 24);
     const campaigns = await TwitterCampaign.findAll({
-      where: { isActive: true },
+      where: { isActive: true, ...(taskType ? { taskType } : {}) },
       order: [['createdAt', 'DESC']],
     });
 
@@ -154,6 +183,7 @@ router.get('/active', async (req, res) => {
         id: campaign.id,
         code: campaign.code,
         title: campaign.title,
+        taskType: campaign.taskType,
         tweetUrl: campaign.tweetUrl,
         rewardAmount: campaign.rewardAmount,
         expiresAt: campaign.expiresAt,
@@ -188,7 +218,12 @@ router.put('/:id', requireAdmin, async (req, res) => {
     }
 
     const { code, title, tweetUrl, expiresAt, isActive } = req.body;
+    const nextTaskType = req.body.taskType !== undefined ? normalizeTaskType(req.body.taskType) : campaign.taskType;
     const normalizedExpiresAt = expiresAt !== undefined ? normalizeExpiresAt(expiresAt) : campaign.expiresAt;
+
+    if (req.body.taskType !== undefined && !nextTaskType) {
+      return res.status(400).json({ error: 'Invalid task type.' });
+    }
 
     if (normalizedExpiresAt === undefined) {
       return res.status(400).json({ error: 'Invalid expiry date.' });
@@ -196,6 +231,7 @@ router.put('/:id', requireAdmin, async (req, res) => {
 
     if (code !== undefined) campaign.code = String(code).trim().toLowerCase();
     if (title !== undefined) campaign.title = String(title).trim();
+    if (req.body.taskType !== undefined) campaign.taskType = nextTaskType;
     if (tweetUrl !== undefined) campaign.tweetUrl = String(tweetUrl).trim();
     campaign.rewardAmount = FIXED_TWITTER_REWARD_AMOUNT;
     if (expiresAt !== undefined) campaign.expiresAt = normalizedExpiresAt;
@@ -227,6 +263,7 @@ router.get('/:id', async (req, res) => {
       id: campaign.id,
       code: campaign.code,
       title: campaign.title,
+      taskType: campaign.taskType,
       tweetUrl: campaign.tweetUrl,
       rewardAmount: campaign.rewardAmount,
       expiresAt: campaign.expiresAt,

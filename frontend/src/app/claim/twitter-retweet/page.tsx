@@ -10,20 +10,33 @@ type TwitterCampaign = {
   id: number;
   code: string;
   title: string;
+  taskType: 'retweet' | 'comment';
   tweetUrl: string;
   rewardAmount: string;
   expiresAt?: string | null;
   claimStatus?: 'pending' | 'paid' | null;
 };
 
-function getRetweetIntentUrl(tweetUrl: string) {
+function getTaskIntentUrl(tweetUrl: string, taskType: 'retweet' | 'comment') {
   const match = tweetUrl.match(/status\/(\d+)/i);
 
   if (match?.[1]) {
+    if (taskType === 'comment') {
+      return `https://twitter.com/intent/tweet?in_reply_to=${match[1]}`;
+    }
+
     return `https://twitter.com/intent/retweet?tweet_id=${match[1]}`;
   }
 
   return tweetUrl;
+}
+
+function getTaskVerb(taskType: 'retweet' | 'comment') {
+  return taskType === 'comment' ? 'comment on it' : 'retweet it';
+}
+
+function getTaskCta(taskType: 'retweet' | 'comment') {
+  return taskType === 'comment' ? '2. Comment on X' : '2. Retweet on X';
 }
 
 function TwitterRetweetClaimPage() {
@@ -89,7 +102,7 @@ function TwitterRetweetClaimPage() {
             <div className="text-xs uppercase tracking-[0.35em] text-white/70">EPWX social rewards</div>
             <h1 className="mt-3 text-4xl font-black">{campaign.title}</h1>
             <p className="mt-3 text-sm text-white/80">
-              Complete the three steps below: open the campaign post, retweet it on X, then upload a screenshot that clearly shows your retweet. The admin team will review the image before approving the reward.
+              Complete the three steps below: open the campaign post, {getTaskVerb(campaign.taskType)} on X, then upload a screenshot that clearly shows the completed action. The admin team will review the image before approving the reward.
             </p>
             {campaign.tweetUrl ? (
               <div className="mt-5 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -102,12 +115,12 @@ function TwitterRetweetClaimPage() {
                   1. View Post
                 </a>
                 <a
-                  href={getRetweetIntentUrl(campaign.tweetUrl)}
+                  href={getTaskIntentUrl(campaign.tweetUrl, campaign.taskType)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex rounded-full bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700"
                 >
-                  2. Retweet on X
+                  {getTaskCta(campaign.taskType)}
                 </a>
               </div>
             ) : null}
@@ -128,6 +141,7 @@ function TwitterRetweetClaimPage() {
               twitterCampaignId={campaign.id}
               campaignCode={campaign.code}
               title={campaign.title}
+              taskType={campaign.taskType}
               rewardAmount={campaign.rewardAmount}
               claimStatus={campaign.claimStatus}
             />
