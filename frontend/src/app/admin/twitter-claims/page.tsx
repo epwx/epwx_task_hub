@@ -101,6 +101,7 @@ const glassPanelClass = "bg-white/10 backdrop-blur-lg border border-white/20 rou
 const selectClass = "rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm text-white [&>option]:bg-white [&>option]:text-slate-900";
 const formSelectClass = "rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white [&>option]:bg-white [&>option]:text-slate-900";
 const editSelectClass = "rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm text-white [&>option]:bg-white [&>option]:text-slate-900";
+const selectOptionClass = "bg-white text-slate-900";
 
 export default function AdminTwitterClaimsPage() {
   const TWITTER_CLAIMS_PAGE_SIZE = 5;
@@ -600,9 +601,9 @@ export default function AdminTwitterClaimsPage() {
             onChange={(event) => setClaimsTaskTypeFilter(event.target.value as TwitterTaskType)}
             className={selectClass}
           >
-            <option value="retweet">Retweet</option>
-            <option value="comment">Comment</option>
-            <option value="poll">Poll</option>
+            <option value="retweet" className={selectOptionClass}>Retweet</option>
+            <option value="comment" className={selectOptionClass}>Comment</option>
+            <option value="poll" className={selectOptionClass}>Poll</option>
           </select>
         </div>
         <div>
@@ -612,9 +613,9 @@ export default function AdminTwitterClaimsPage() {
             onChange={(event) => setStatusFilter(event.target.value)}
             className={selectClass}
           >
-            <option value="pending">Pending</option>
-            <option value="paid">Paid</option>
-            <option value="rejected">Rejected</option>
+            <option value="pending" className={selectOptionClass}>Pending</option>
+            <option value="paid" className={selectOptionClass}>Paid</option>
+            <option value="rejected" className={selectOptionClass}>Rejected</option>
           </select>
         </div>
         </div>
