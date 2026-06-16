@@ -53,6 +53,41 @@ function normalizeExpiresAt(expiresAt) {
   return parsed;
 }
 
+function normalizeCampaignStatusFilter(status) {
+  const normalized = String(status || 'all').trim().toLowerCase();
+  return ['all', 'active', 'inactive', 'expired'].includes(normalized) ? normalized : null;
+}
+
+function buildCampaignListWhere(taskType, status) {
+  const where = {};
+  const now = new Date();
+
+  if (taskType) {
+    where.taskType = taskType;
+  }
+
+  switch (status) {
+    case 'active':
+      where.isActive = true;
+      where[Op.or] = [
+        { expiresAt: null },
+        { expiresAt: { [Op.gte]: now } },
+      ];
+      break;
+    case 'inactive':
+      where.isActive = false;
+      break;
+    case 'expired':
+      where.isActive = true;
+      where.expiresAt = { [Op.lt]: now };
+      break;
+    default:
+      break;
+  }
+
+  return where;
+}
+
 function parsePositiveInteger(value, fallback) {
   const parsed = Number.parseInt(value, 10);
   if (!Number.isInteger(parsed) || parsed <= 0) {
@@ -126,9 +161,14 @@ router.get('/list', requireAdmin, async (req, res) => {
       return res.status(400).json({ error: 'Invalid task type.' });
     }
 
+    const status = req.query.status ? normalizeCampaignStatusFilter(req.query.status) : 'all';
+    if (req.query.status && !status) {
+      return res.status(400).json({ error: 'Invalid campaign status.' });
+    }
+
     const requestedPage = parsePositiveInteger(req.query.page, 1);
     const limit = Math.min(parsePositiveInteger(req.query.limit, 10), 100);
-    const where = taskType ? { taskType } : undefined;
+    const where = buildCampaignListWhere(taskType, status);
     const total = await TwitterCampaign.count({ where });
     const totalPages = Math.max(1, Math.ceil(total / limit));
     const page = Math.min(requestedPage, totalPages);
