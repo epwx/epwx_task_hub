@@ -21,6 +21,7 @@ type TwitterClaim = {
 };
 
 type TwitterTaskType = "retweet" | "comment" | "poll";
+type ClaimsTaskTypeFilter = TwitterTaskType | "all";
 
 type TwitterCampaign = {
   id: number;
@@ -76,6 +77,14 @@ function getTaskInstruction(taskType: TwitterTaskType) {
   }
 }
 
+function getClaimsTaskLabel(taskType: ClaimsTaskTypeFilter) {
+  return taskType === "all" ? "All" : getTaskLabel(taskType);
+}
+
+function getClaimsTaskInstruction(taskType: ClaimsTaskTypeFilter) {
+  return taskType === "all" ? "complete Twitter campaign tasks" : getTaskInstruction(taskType);
+}
+
 function isCampaignExpired(expiresAt?: string | null) {
   return !!expiresAt && new Date(expiresAt).getTime() < Date.now();
 }
@@ -120,7 +129,7 @@ export default function AdminTwitterClaimsPage() {
     totalPages: 1,
   });
   const [statusFilter, setStatusFilter] = useState("pending");
-  const [claimsTaskTypeFilter, setClaimsTaskTypeFilter] = useState<TwitterTaskType>("retweet");
+  const [claimsTaskTypeFilter, setClaimsTaskTypeFilter] = useState<ClaimsTaskTypeFilter>("retweet");
   const [campaignsTaskTypeFilter, setCampaignsTaskTypeFilter] = useState<TwitterTaskType>("retweet");
   const [campaignsStatusFilter, setCampaignsStatusFilter] = useState<CampaignStatusFilter>("all");
   const [loading, setLoading] = useState(false);
@@ -178,8 +187,15 @@ export default function AdminTwitterClaimsPage() {
     setError(null);
 
     try {
-      const claimType = TASK_TYPE_TO_CLAIM_TYPE[claimsTaskTypeFilter];
-      const response = await fetch(`/api/claims?admin=${address}&status=${statusFilter}&claimType=${claimType}`);
+      const params = new URLSearchParams();
+      params.set("admin", address);
+      params.set("status", statusFilter);
+
+      if (claimsTaskTypeFilter !== "all") {
+        params.set("claimType", TASK_TYPE_TO_CLAIM_TYPE[claimsTaskTypeFilter]);
+      }
+
+      const response = await fetch(`/api/claims?${params.toString()}`);
       const data = await parseJsonResponse<{ claims?: TwitterClaim[] }>(response, "Failed to fetch Twitter claims");
       setClaims(data.claims || []);
     } catch (fetchError: any) {
@@ -590,17 +606,18 @@ export default function AdminTwitterClaimsPage() {
         <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
         <div className="relative z-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <h1 className="text-3xl font-black text-white">Twitter {getTaskLabel(claimsTaskTypeFilter)} Claims</h1>
-          <p className="mt-2 text-sm text-white/75">Review uploaded screenshots for users who {getTaskInstruction(claimsTaskTypeFilter)}, then distribute EPWX or reject with a reason.</p>
+          <h1 className="text-3xl font-black text-white">Twitter {getClaimsTaskLabel(claimsTaskTypeFilter)} Claims</h1>
+          <p className="mt-2 text-sm text-white/75">Review uploaded screenshots for users who {getClaimsTaskInstruction(claimsTaskTypeFilter)}, then distribute EPWX or reject with a reason.</p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label className="mb-2 block text-sm font-semibold text-white/85">Task</label>
           <select
             value={claimsTaskTypeFilter}
-            onChange={(event) => setClaimsTaskTypeFilter(event.target.value as TwitterTaskType)}
+            onChange={(event) => setClaimsTaskTypeFilter(event.target.value as ClaimsTaskTypeFilter)}
             className={selectClass}
           >
+            <option value="all" className={selectOptionClass}>All</option>
             <option value="retweet" className={selectOptionClass}>Retweet</option>
             <option value="comment" className={selectOptionClass}>Comment</option>
             <option value="poll" className={selectOptionClass}>Poll</option>
@@ -626,7 +643,7 @@ export default function AdminTwitterClaimsPage() {
       {loading ? <div className={`${glassPanelClass} p-6 text-white/80`}>Loading claims...</div> : null}
 
       {!loading && claims.length === 0 ? (
-        <div className={`${glassPanelClass} p-6 text-sm text-white/75`}>No Twitter {getTaskLabel(claimsTaskTypeFilter).toLowerCase()} claims match the current filter.</div>
+        <div className={`${glassPanelClass} p-6 text-sm text-white/75`}>No Twitter {getClaimsTaskLabel(claimsTaskTypeFilter).toLowerCase()} claims match the current filter.</div>
       ) : null}
 
       {!loading && claims.length > 0 ? (
