@@ -98,6 +98,9 @@ function toIsoDateTime(value?: string | null) {
 
 const themedSectionClass = "relative overflow-hidden bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-3xl shadow-2xl p-8";
 const glassPanelClass = "bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl";
+const selectClass = "rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm text-white [&>option]:bg-white [&>option]:text-slate-900";
+const formSelectClass = "rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white [&>option]:bg-white [&>option]:text-slate-900";
+const editSelectClass = "rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm text-white [&>option]:bg-white [&>option]:text-slate-900";
 
 export default function AdminTwitterClaimsPage() {
   const TWITTER_CLAIMS_PAGE_SIZE = 5;
@@ -431,7 +434,7 @@ export default function AdminTwitterClaimsPage() {
           <div className="mt-5 grid gap-4">
             <input name="code" value={campaignForm.code} onChange={handleCampaignFormChange} placeholder="campaign code" className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/50" required />
             <input name="title" value={campaignForm.title} onChange={handleCampaignFormChange} placeholder="campaign title" className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/50" required />
-            <select name="taskType" value={campaignForm.taskType} onChange={handleCampaignFormChange} className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white" required>
+            <select name="taskType" value={campaignForm.taskType} onChange={handleCampaignFormChange} className={formSelectClass} required>
               <option value="retweet">Retweet campaign</option>
               <option value="comment">Comment campaign</option>
               <option value="poll">Poll campaign</option>
@@ -457,7 +460,7 @@ export default function AdminTwitterClaimsPage() {
               <select
                 value={campaignsTaskTypeFilter}
                 onChange={(event) => setCampaignsTaskTypeFilter(event.target.value as TwitterTaskType)}
-                className="w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm text-white"
+                className={`w-full ${selectClass}`}
               >
                 <option value="retweet">Retweet</option>
                 <option value="comment">Comment</option>
@@ -469,7 +472,7 @@ export default function AdminTwitterClaimsPage() {
               <select
                 value={campaignsStatusFilter}
                 onChange={(event) => setCampaignsStatusFilter(event.target.value as CampaignStatusFilter)}
-                className="w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm text-white"
+                className={`w-full ${selectClass}`}
               >
                 <option value="all">All</option>
                 <option value="active">Active</option>
@@ -498,7 +501,7 @@ export default function AdminTwitterClaimsPage() {
                       <div className="grid gap-3">
                         <input name="code" value={editCampaignForm.code} onChange={handleEditCampaignFormChange} className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm text-white" />
                         <input name="title" value={editCampaignForm.title} onChange={handleEditCampaignFormChange} className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm text-white" />
-                        <select name="taskType" value={editCampaignForm.taskType} onChange={handleEditCampaignFormChange} className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm text-white">
+                        <select name="taskType" value={editCampaignForm.taskType} onChange={handleEditCampaignFormChange} className={editSelectClass}>
                           <option value="retweet">Retweet campaign</option>
                           <option value="comment">Comment campaign</option>
                           <option value="poll">Poll campaign</option>
@@ -595,7 +598,7 @@ export default function AdminTwitterClaimsPage() {
           <select
             value={claimsTaskTypeFilter}
             onChange={(event) => setClaimsTaskTypeFilter(event.target.value as TwitterTaskType)}
-            className="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm text-white"
+            className={selectClass}
           >
             <option value="retweet">Retweet</option>
             <option value="comment">Comment</option>
@@ -607,7 +610,7 @@ export default function AdminTwitterClaimsPage() {
           <select
             value={statusFilter}
             onChange={(event) => setStatusFilter(event.target.value)}
-            className="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm text-white"
+            className={selectClass}
           >
             <option value="pending">Pending</option>
             <option value="paid">Paid</option>
