@@ -188,6 +188,17 @@ function getTwitterTaskLabel(taskType: 'retweet' | 'comment' | 'poll') {
   }
 }
 
+function getTwitterTaskIcon(taskType: 'retweet' | 'comment' | 'poll') {
+  switch (taskType) {
+    case 'comment':
+      return '💬';
+    case 'poll':
+      return '📊';
+    default:
+      return '🔁';
+  }
+}
+
 function getTwitterTaskAction(taskType: 'retweet' | 'comment' | 'poll') {
   switch (taskType) {
     case 'comment':
@@ -431,8 +442,15 @@ function TwitterCampaignBoard({ address }: { address?: string }) {
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <div className="text-xs uppercase tracking-[0.25em] text-white/60">{campaign.code}</div>
-                          <h4 className="mt-2 text-2xl font-black">{campaign.title}</h4>
-                          <div className="mt-2 text-sm text-white/70">Task: {getTwitterTaskLabel(campaign.taskType)}</div>
+                          <div className="mt-2 flex items-center gap-3">
+                            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-2xl">
+                              <span aria-hidden="true">{getTwitterTaskIcon(campaign.taskType)}</span>
+                            </div>
+                            <div>
+                              <h4 className="text-2xl font-black">{campaign.title}</h4>
+                              <div className="mt-1 text-sm text-white/70">Task: {getTwitterTaskLabel(campaign.taskType)}</div>
+                            </div>
+                          </div>
                         </div>
                         <div className={`rounded-full px-3 py-1 text-xs font-bold ${campaign.claimStatus === 'pending' ? 'border border-amber-300/30 bg-amber-400/20 text-amber-100' : 'border border-emerald-300/30 bg-emerald-400/20 text-emerald-100'}`}>
                           {campaign.claimStatus === 'pending' ? 'Pending Review' : 'Active'}
