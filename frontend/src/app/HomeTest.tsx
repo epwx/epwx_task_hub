@@ -60,6 +60,7 @@ const MEGA_DAILY_REWARD_THRESHOLD = 1_000_000_000_000;
 const TELEGRAM_VERIFICATION_RECHECK_INTERVAL_MS = 60_000;
 const TELEGRAM_BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "epwx_bot";
 const PENDING_REFERRAL_STORAGE_KEY = "epwx-pending-referrer";
+const HOME_SHORTCUT_SECTIONS = ['buy-epwx', 'burnt-supply', 'twitter-campaigns', 'daily-claim'] as const;
 const DAILY_REWARD_TIERS = [
   {
     walletBalanceLabel: `At least ${MEGA_DAILY_REWARD_THRESHOLD.toLocaleString()} EPWX`,
@@ -92,6 +93,8 @@ interface BuyerBadge {
   description: string;
   benefit: string;
 }
+
+type HomeShortcutSection = typeof HOME_SHORTCUT_SECTIONS[number];
 
 function BuyerBadgeIcon({ variant }: { variant: BuyerBadge['variant'] }) {
   if (variant === 'whale') {
@@ -616,6 +619,48 @@ export default function HomeTest() {
   const [specialAgreed, setSpecialAgreed] = useState(false);
   const [showSpecialTerms, setShowSpecialTerms] = useState(false);
   const [checkingVerification, setCheckingVerification] = useState(false);
+  const [activeShortcutSection, setActiveShortcutSection] = useState<HomeShortcutSection>('daily-claim');
+
+  useEffect(() => {
+    const syncShortcutSectionFromHash = () => {
+      const currentHash = window.location.hash.replace('#', '');
+      if (HOME_SHORTCUT_SECTIONS.includes(currentHash as HomeShortcutSection)) {
+        setActiveShortcutSection(currentHash as HomeShortcutSection);
+      }
+    };
+
+    syncShortcutSectionFromHash();
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visibleEntry = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((entryA, entryB) => entryB.intersectionRatio - entryA.intersectionRatio)[0];
+
+        if (visibleEntry?.target.id && HOME_SHORTCUT_SECTIONS.includes(visibleEntry.target.id as HomeShortcutSection)) {
+          setActiveShortcutSection(visibleEntry.target.id as HomeShortcutSection);
+        }
+      },
+      {
+        rootMargin: '-20% 0px -45% 0px',
+        threshold: [0.2, 0.35, 0.5, 0.7],
+      }
+    );
+
+    HOME_SHORTCUT_SECTIONS.forEach((sectionId) => {
+      const sectionElement = document.getElementById(sectionId);
+      if (sectionElement) {
+        observer.observe(sectionElement);
+      }
+    });
+
+    window.addEventListener('hashchange', syncShortcutSectionFromHash);
+
+    return () => {
+      window.removeEventListener('hashchange', syncShortcutSectionFromHash);
+      observer.disconnect();
+    };
+  }, []);
 
   const fetchReferralStats = async (wallet: string) => {
     try {
@@ -1694,53 +1739,61 @@ export default function HomeTest() {
       <div className="fixed inset-x-3 bottom-3 z-40 flex items-center justify-between gap-2 rounded-2xl border border-white/15 bg-slate-950/88 p-2 shadow-[0_18px_40px_rgba(15,23,42,0.35)] backdrop-blur-md lg:hidden">
         <a
           href="#buy-epwx"
-          className="flex min-w-0 flex-1 items-center justify-center rounded-xl bg-white/8 px-3 py-2 text-center text-[11px] font-black uppercase tracking-[0.14em] text-white transition-colors hover:bg-white/14"
+          onClick={() => setActiveShortcutSection('buy-epwx')}
+          className={`flex min-w-0 flex-1 items-center justify-center rounded-xl px-3 py-2 text-center text-[11px] font-black uppercase tracking-[0.14em] text-white transition-colors ${activeShortcutSection === 'buy-epwx' ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-white/8 hover:bg-white/14'}`}
         >
           Buy EPWX
         </a>
         <a
           href="#burnt-supply"
-          className="flex min-w-0 flex-1 items-center justify-center rounded-xl bg-white/8 px-3 py-2 text-center text-[11px] font-black uppercase tracking-[0.14em] text-white transition-colors hover:bg-white/14"
+          onClick={() => setActiveShortcutSection('burnt-supply')}
+          className={`flex min-w-0 flex-1 items-center justify-center rounded-xl px-3 py-2 text-center text-[11px] font-black uppercase tracking-[0.14em] text-white transition-colors ${activeShortcutSection === 'burnt-supply' ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-white/8 hover:bg-white/14'}`}
         >
           90% Burnt
         </a>
         <a
           href="#twitter-campaigns"
-          className="flex min-w-0 flex-1 items-center justify-center rounded-xl bg-white/8 px-3 py-2 text-center text-[11px] font-black uppercase tracking-[0.14em] text-white transition-colors hover:bg-white/14"
+          onClick={() => setActiveShortcutSection('twitter-campaigns')}
+          className={`flex min-w-0 flex-1 items-center justify-center rounded-xl px-3 py-2 text-center text-[11px] font-black uppercase tracking-[0.14em] text-white transition-colors ${activeShortcutSection === 'twitter-campaigns' ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-white/8 hover:bg-white/14'}`}
         >
           X Campaigns
         </a>
         <a
           href="#daily-claim"
-          className="flex min-w-0 flex-1 items-center justify-center rounded-xl bg-emerald-500 px-3 py-2 text-center text-[11px] font-black uppercase tracking-[0.14em] text-white transition-colors hover:bg-emerald-400"
+          onClick={() => setActiveShortcutSection('daily-claim')}
+          className={`flex min-w-0 flex-1 items-center justify-center rounded-xl px-3 py-2 text-center text-[11px] font-black uppercase tracking-[0.14em] text-white transition-colors ${activeShortcutSection === 'daily-claim' ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-white/8 hover:bg-white/14'}`}
         >
           Daily Claim
         </a>
       </div>
       <a
         href="#buy-epwx"
-        className="fixed left-4 top-[34%] z-40 hidden -translate-y-1/2 rounded-full border border-white/15 bg-slate-950/85 px-3 py-4 text-xs font-black uppercase tracking-[0.2em] text-white shadow-[0_18px_40px_rgba(15,23,42,0.35)] backdrop-blur-md transition-all hover:left-3 hover:bg-slate-900 dark:border-white/10 dark:bg-slate-900/85 lg:flex"
+        onClick={() => setActiveShortcutSection('buy-epwx')}
+        className={`fixed left-4 top-[34%] z-40 hidden -translate-y-1/2 rounded-full border border-white/15 px-3 py-4 text-xs font-black uppercase tracking-[0.2em] text-white shadow-[0_18px_40px_rgba(15,23,42,0.35)] backdrop-blur-md transition-all hover:left-3 dark:border-white/10 lg:flex ${activeShortcutSection === 'buy-epwx' ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-slate-950/85 hover:bg-slate-900 dark:bg-slate-900/85'}`}
         style={{ writingMode: 'vertical-rl' }}
       >
         Buy EPWX
       </a>
       <a
         href="#burnt-supply"
-        className="fixed left-4 top-[66%] z-40 hidden -translate-y-1/2 rounded-full border border-white/15 bg-slate-950/85 px-3 py-4 text-xs font-black uppercase tracking-[0.2em] text-white shadow-[0_18px_40px_rgba(15,23,42,0.35)] backdrop-blur-md transition-all hover:left-3 hover:bg-slate-900 dark:border-white/10 dark:bg-slate-900/85 lg:flex"
+        onClick={() => setActiveShortcutSection('burnt-supply')}
+        className={`fixed left-4 top-[66%] z-40 hidden -translate-y-1/2 rounded-full border border-white/15 px-3 py-4 text-xs font-black uppercase tracking-[0.2em] text-white shadow-[0_18px_40px_rgba(15,23,42,0.35)] backdrop-blur-md transition-all hover:left-3 dark:border-white/10 lg:flex ${activeShortcutSection === 'burnt-supply' ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-slate-950/85 hover:bg-slate-900 dark:bg-slate-900/85'}`}
         style={{ writingMode: 'vertical-rl' }}
       >
         90% Burnt
       </a>
       <a
         href="#twitter-campaigns"
-        className="fixed right-4 top-[34%] z-40 hidden -translate-y-1/2 rounded-full border border-white/15 bg-slate-950/85 px-3 py-4 text-xs font-black uppercase tracking-[0.2em] text-white shadow-[0_18px_40px_rgba(15,23,42,0.35)] backdrop-blur-md transition-all hover:right-3 hover:bg-slate-900 dark:border-white/10 dark:bg-slate-900/85 lg:flex"
+        onClick={() => setActiveShortcutSection('twitter-campaigns')}
+        className={`fixed right-4 top-[34%] z-40 hidden -translate-y-1/2 rounded-full border border-white/15 px-3 py-4 text-xs font-black uppercase tracking-[0.2em] text-white shadow-[0_18px_40px_rgba(15,23,42,0.35)] backdrop-blur-md transition-all hover:right-3 dark:border-white/10 lg:flex ${activeShortcutSection === 'twitter-campaigns' ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-slate-950/85 hover:bg-slate-900 dark:bg-slate-900/85'}`}
         style={{ writingMode: 'vertical-rl' }}
       >
         X Campaigns
       </a>
       <a
         href="#daily-claim"
-        className="fixed right-4 top-[66%] z-40 hidden -translate-y-1/2 rounded-full border border-white/15 bg-slate-950/85 px-3 py-4 text-xs font-black uppercase tracking-[0.2em] text-white shadow-[0_18px_40px_rgba(15,23,42,0.35)] backdrop-blur-md transition-all hover:right-3 hover:bg-slate-900 dark:border-white/10 dark:bg-slate-900/85 lg:flex"
+        onClick={() => setActiveShortcutSection('daily-claim')}
+        className={`fixed right-4 top-[66%] z-40 hidden -translate-y-1/2 rounded-full border border-white/15 px-3 py-4 text-xs font-black uppercase tracking-[0.2em] text-white shadow-[0_18px_40px_rgba(15,23,42,0.35)] backdrop-blur-md transition-all hover:right-3 dark:border-white/10 lg:flex ${activeShortcutSection === 'daily-claim' ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-slate-950/85 hover:bg-slate-900 dark:bg-slate-900/85'}`}
         style={{ writingMode: 'vertical-rl' }}
       >
         Daily Claim
