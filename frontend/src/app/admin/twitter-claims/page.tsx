@@ -132,7 +132,7 @@ export default function AdminTwitterClaimsPage() {
   const [statusFilter, setStatusFilter] = useState("pending");
   const [claimsTaskTypeFilter, setClaimsTaskTypeFilter] = useState<ClaimsTaskTypeFilter>("retweet");
   const [campaignsTaskTypeFilter, setCampaignsTaskTypeFilter] = useState<CampaignTaskTypeFilter>("all");
-  const [campaignsStatusFilter, setCampaignsStatusFilter] = useState<CampaignStatusFilter>("all");
+  const [campaignsStatusFilter, setCampaignsStatusFilter] = useState<CampaignStatusFilter>("active");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [marking, setMarking] = useState<number | string | null>(null);
