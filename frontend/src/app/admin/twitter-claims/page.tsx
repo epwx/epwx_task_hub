@@ -22,6 +22,7 @@ type TwitterClaim = {
 
 type TwitterTaskType = "retweet" | "comment" | "poll";
 type ClaimsTaskTypeFilter = TwitterTaskType | "all";
+type CampaignTaskTypeFilter = TwitterTaskType | "all";
 
 type TwitterCampaign = {
   id: number;
@@ -130,7 +131,7 @@ export default function AdminTwitterClaimsPage() {
   });
   const [statusFilter, setStatusFilter] = useState("pending");
   const [claimsTaskTypeFilter, setClaimsTaskTypeFilter] = useState<ClaimsTaskTypeFilter>("retweet");
-  const [campaignsTaskTypeFilter, setCampaignsTaskTypeFilter] = useState<TwitterTaskType>("retweet");
+  const [campaignsTaskTypeFilter, setCampaignsTaskTypeFilter] = useState<CampaignTaskTypeFilter>("all");
   const [campaignsStatusFilter, setCampaignsStatusFilter] = useState<CampaignStatusFilter>("all");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -211,7 +212,15 @@ export default function AdminTwitterClaimsPage() {
     }
 
     try {
-      const response = await fetch(`/api/twitter-campaigns/list?admin=${address}&page=${page}&limit=${TWITTER_CAMPAIGNS_PAGE_SIZE}&taskType=${campaignsTaskTypeFilter}&status=${campaignsStatusFilter}`);
+      const params = new URLSearchParams();
+      params.set('admin', address);
+      params.set('page', String(page));
+      params.set('limit', String(TWITTER_CAMPAIGNS_PAGE_SIZE));
+      params.set('status', campaignsStatusFilter);
+      if (campaignsTaskTypeFilter !== 'all') {
+        params.set('taskType', campaignsTaskTypeFilter);
+      }
+      const response = await fetch(`/api/twitter-campaigns/list?${params.toString()}`);
       const data = await parseJsonResponse<{
         campaigns?: TwitterCampaign[];
         pagination?: CampaignPagination;
@@ -476,9 +485,10 @@ export default function AdminTwitterClaimsPage() {
               <label className="mb-2 block text-sm font-semibold text-white/85">Campaign Task</label>
               <select
                 value={campaignsTaskTypeFilter}
-                onChange={(event) => setCampaignsTaskTypeFilter(event.target.value as TwitterTaskType)}
+                onChange={(event) => setCampaignsTaskTypeFilter(event.target.value as CampaignTaskTypeFilter)}
                 className={`w-full ${selectClass}`}
               >
+                <option value="all">All</option>
                 <option value="retweet">Retweet</option>
                 <option value="comment">Comment</option>
                 <option value="poll">Poll</option>
