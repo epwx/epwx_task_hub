@@ -337,7 +337,8 @@ export default function AdminTwitterClaimsPage() {
 
   const cancelEditingCampaign = () => {
     setEditingCampaignId(null);
-    setEditCampaignForm({ code: "", title: "", taskType: campaignsTaskTypeFilter, tweetUrl: "", rewardAmount: "100000", expiresAt: "" });
+    const defaultTaskType = campaignsTaskTypeFilter === "all" ? "retweet" : campaignsTaskTypeFilter;
+    setEditCampaignForm({ code: "", title: "", taskType: defaultTaskType, tweetUrl: "", rewardAmount: "100000", expiresAt: "" });
   };
 
   const saveCampaignEdit = async (campaignId: number) => {
