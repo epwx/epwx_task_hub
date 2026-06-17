@@ -28,6 +28,22 @@ function getTwitterClaimFallbackLabel(claimType?: string) {
   return 'twitter-retweet';
 }
 
+function getTwitterTaskTypeLabel(claimType?: string): string {
+  if (claimType === 'twitter_comment') {
+    return 'Comment';
+  }
+
+  if (claimType === 'twitter_poll') {
+    return 'Poll';
+  }
+
+  if (claimType === 'twitter_retweet') {
+    return 'Retweet';
+  }
+
+  return 'Unknown';
+}
+
 interface MerchantClaimsTableProps {
   claims: MerchantClaim[];
   isAdmin?: boolean;
@@ -76,6 +92,7 @@ const MerchantClaimsTable: React.FC<MerchantClaimsTableProps> = ({ claims, isAdm
             <th className="py-2 px-2 text-slate-700 dark:text-slate-200 sm:px-4">ID</th>
             <th className="py-2 px-2 text-slate-700 dark:text-slate-200 sm:px-4">Customer</th>
             <th className="py-2 px-2 text-slate-700 dark:text-slate-200 sm:px-4">{context === 'twitter' ? 'Campaign' : 'Bill'}</th>
+            {context === 'twitter' && <th className="py-2 px-2 text-slate-700 dark:text-slate-200 sm:px-4">Type</th>}
             <th className="py-2 px-2 text-slate-700 dark:text-slate-200 sm:px-4">EPWX</th>
             <th className="py-2 px-2 text-slate-700 dark:text-slate-200 sm:px-4">Status</th>
             <th className="py-2 px-2 text-slate-700 dark:text-slate-200 sm:px-4">Date</th>
@@ -98,6 +115,13 @@ const MerchantClaimsTable: React.FC<MerchantClaimsTableProps> = ({ claims, isAdm
                   claim.bill
                 )}
               </td>
+              {context === 'twitter' && (
+                <td className="bg-white py-2 px-2 text-slate-900 dark:bg-slate-900 dark:text-slate-100 sm:px-4">
+                  <span className="inline-block rounded-full bg-blue-100 dark:bg-blue-900 px-3 py-1 text-xs font-semibold text-blue-800 dark:text-blue-200">
+                    {getTwitterTaskTypeLabel(claim.claimType)}
+                  </span>
+                </td>
+              )}
               <td className="bg-white py-2 px-2 text-slate-900 dark:bg-slate-900 dark:text-slate-100 sm:px-4">
                 {/* Show the EPWX amount to be distributed */}
                 {(() => {
