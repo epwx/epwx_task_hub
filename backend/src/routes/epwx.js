@@ -57,9 +57,11 @@ async function getOrCreateDailyClaimStats() {
 
   const [totalClaimsTillNow, totalEpwxDistributedTillNow] = await Promise.all([
     DailyClaim.count(),
-    DailyClaim.sum('amount', {
-      where: { status: 'paid' },
-    }),
+    DailyClaim.sequelize.query(`
+      SELECT COALESCE(SUM(CAST("amount" AS NUMERIC)), 0) AS "totalEpwxDistributedTillNow"
+      FROM "daily_claims"
+      WHERE "status" = 'paid'
+    `).then(([rows]) => Number(rows?.[0]?.totalEpwxDistributedTillNow || 0)),
   ]);
 
   try {
