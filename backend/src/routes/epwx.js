@@ -1,6 +1,6 @@
 
 import express from 'express';
-import { User, DailyClaim, CashbackClaim, SpecialClaim, Claim, RewardDistributionLedger, Merchant, WalletReferral } from '../models/index.js';
+import { User, DailyClaim, CashbackClaim, SpecialClaim, Claim, RewardDistributionLedger, Merchant, WalletReferral, PlatformStats } from '../models/index.js';
 import { Op } from 'sequelize';
 // import { ethers } from 'ethers'; // Removed duplicate import
 import { getEPWXPurchaseTransactions } from '../services/epwxCashback.js';
@@ -39,6 +39,63 @@ const DAILY_REWARD_TIERS = [
     badgeBenefit: null,
   },
 ];
+const DAILY_CLAIM_STATS_KEY = 'daily_claims';
+
+function toBigIntValue(value) {
+  try {
+    return BigInt(String(value ?? '0'));
+  } catch {
+    return 0n;
+  }
+}
+
+async function getOrCreateDailyClaimStats() {
+  let stats = await PlatformStats.findOne({ where: { statsKey: DAILY_CLAIM_STATS_KEY } });
+  if (stats) {
+    return stats;
+  }
+
+  const [totalClaimsTillNow, totalEpwxDistributedTillNow] = await Promise.all([
+    DailyClaim.count(),
+    DailyClaim.sum('amount', {
+      where: { status: 'paid' },
+    }),
+  ]);
+
+  try {
+    stats = await PlatformStats.create({
+      statsKey: DAILY_CLAIM_STATS_KEY,
+      totalClaimsTillNow: String(totalClaimsTillNow || 0),
+      totalEpwxDistributedTillNow: String(totalEpwxDistributedTillNow || 0),
+    });
+    return stats;
+  } catch (error) {
+    if (error?.name === 'SequelizeUniqueConstraintError') {
+      const existing = await PlatformStats.findOne({ where: { statsKey: DAILY_CLAIM_STATS_KEY } });
+      if (existing) {
+        return existing;
+      }
+    }
+    throw error;
+  }
+}
+
+async function updateDailyClaimStats({ claimCountDelta = '0', distributedAmountDelta = '0' }) {
+  const claimDelta = toBigIntValue(claimCountDelta);
+  const distributedDelta = toBigIntValue(distributedAmountDelta);
+
+  if (claimDelta === 0n && distributedDelta === 0n) {
+    return;
+  }
+
+  const stats = await getOrCreateDailyClaimStats();
+  const nextClaimTotal = toBigIntValue(stats.totalClaimsTillNow) + claimDelta;
+  const nextDistributedTotal = toBigIntValue(stats.totalEpwxDistributedTillNow) + distributedDelta;
+
+  stats.totalClaimsTillNow = nextClaimTotal.toString();
+  stats.totalEpwxDistributedTillNow = nextDistributedTotal.toString();
+  await stats.save();
+}
 
 function normalizeWallet(wallet) {
   if (typeof wallet !== 'string') {
@@ -600,7 +657,7 @@ router.get('/daily-claims/summary', async (req, res) => {
     const startOfTodayUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
     const todayUtc = startOfTodayUtc.toISOString().slice(0, 10);
 
-    const [totalClaimsToday, totalPaidToday] = await Promise.all([
+    const [totalClaimsToday, totalPaidToday, stats] = await Promise.all([
       DailyClaim.count({
         where: {
           claimedAt: { [Op.gte]: startOfTodayUtc },
@@ -612,9 +669,16 @@ router.get('/daily-claims/summary', async (req, res) => {
           claimedAt: { [Op.gte]: startOfTodayUtc },
         },
       }),
+      getOrCreateDailyClaimStats(),
     ]);
 
-    res.json({ todayUtc, totalClaimsToday, totalPaidToday });
+    res.json({
+      todayUtc,
+      totalClaimsToday,
+      totalPaidToday,
+      totalClaimsTillNow: Number(stats.totalClaimsTillNow || 0),
+      totalEpwxDistributedTillNow: Number(stats.totalEpwxDistributedTillNow || 0),
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -630,12 +694,25 @@ router.post('/daily-claims/mark-paid', async (req, res) => {
   try {
     const claim = await DailyClaim.findByPk(claimId);
     if (!claim) return res.status(404).json({ error: 'Claim not found' });
+    const wasAlreadyPaid = claim.status === 'paid';
+    const previousAmount = String(claim.amount || '0');
     if (amount) {
       claim.amount = String(amount);
     }
     claim.status = 'paid';
     claim.txHash = txHash;
     await claim.save();
+
+    try {
+      if (!wasAlreadyPaid) {
+        await updateDailyClaimStats({ distributedAmountDelta: String(claim.amount || '0') });
+      } else if (amount && String(claim.amount || '0') !== previousAmount) {
+        const delta = toBigIntValue(claim.amount) - toBigIntValue(previousAmount);
+        await updateDailyClaimStats({ distributedAmountDelta: delta.toString() });
+      }
+    } catch (statsErr) {
+      console.error('[daily-claims/mark-paid] Failed to update platform stats:', statsErr);
+    }
 
     const rewardDetails = findDailyRewardTierByAmount(claim.amount) || await getDailyRewardDetails(claim.wallet);
     const notificationResult = await notifyDailyClaimPaid({
@@ -740,11 +817,23 @@ router.post('/daily-claim', async (req, res) => {
   const claim = await DailyClaim.create({ wallet: normalizedWallet, ip, claimedAt: now, amount });
 
   try {
+    await updateDailyClaimStats({ claimCountDelta: '1' });
+  } catch (statsErr) {
+    console.error('[daily-claim] Failed to increment total claims stats:', statsErr);
+  }
+
+  try {
     const payout = await distributeEpwxReward(normalizedWallet, amount);
     if (payout.paid) {
       claim.status = 'paid';
       claim.txHash = payout.txHash;
       await claim.save();
+
+      try {
+        await updateDailyClaimStats({ distributedAmountDelta: String(claim.amount || '0') });
+      } catch (statsErr) {
+        console.error('[daily-claim] Failed to increment distributed stats:', statsErr);
+      }
 
       const notificationResult = await notifyDailyClaimPaid({
         wallet: claim.wallet,

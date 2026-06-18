@@ -84,6 +84,8 @@ interface DailyClaimsSummary {
   todayUtc: string;
   totalClaimsToday: number;
   totalPaidToday: number;
+  totalClaimsTillNow: number;
+  totalEpwxDistributedTillNow: number;
 }
 
 interface BuyerBadge {
@@ -857,6 +859,8 @@ export default function HomeTest() {
           todayUtc: data.todayUtc,
           totalClaimsToday: Number(data.totalClaimsToday || 0),
           totalPaidToday: Number(data.totalPaidToday || 0),
+          totalClaimsTillNow: Number(data.totalClaimsTillNow || 0),
+          totalEpwxDistributedTillNow: Number(data.totalEpwxDistributedTillNow || 0),
         });
       } else {
         setDailyClaimsSummary(null);
@@ -1432,18 +1436,18 @@ export default function HomeTest() {
             <h2 className="text-2xl font-black mb-4 text-white">Daily Claim</h2>
             <div className="grid w-full grid-cols-1 gap-3 mb-6 sm:grid-cols-2">
               <div className={`${glassPanelClass} p-4 text-center`}>
-                <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/65">Claims Today</div>
+                <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/65">Daily Claims Till Now</div>
                 <div className="mt-2 text-3xl font-black text-white">
-                  {dailyClaimsSummaryLoading ? '...' : (dailyClaimsSummary?.totalClaimsToday ?? 0).toLocaleString()}
+                  {dailyClaimsSummaryLoading ? '...' : (dailyClaimsSummary?.totalClaimsTillNow ?? 0).toLocaleString()}
                 </div>
-                <div className="mt-1 text-sm text-white/75">Total submitted today</div>
+                <div className="mt-1 text-sm text-white/75">Total daily claims submitted</div>
               </div>
               <div className={`${glassPanelClass} p-4 text-center`}>
-                <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/65">Paid Today</div>
+                <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/65">EPWX Distributed Till Now</div>
                 <div className="mt-2 text-3xl font-black text-emerald-200">
-                  {dailyClaimsSummaryLoading ? '...' : (dailyClaimsSummary?.totalPaidToday ?? 0).toLocaleString()}
+                  {dailyClaimsSummaryLoading ? '...' : (dailyClaimsSummary?.totalEpwxDistributedTillNow ?? 0).toLocaleString()}
                 </div>
-                <div className="mt-1 text-sm text-white/75">Rewards marked paid today</div>
+                <div className="mt-1 text-sm text-white/75">Total paid daily-claim rewards (EPWX)</div>
               </div>
             </div>
             {address ? (
