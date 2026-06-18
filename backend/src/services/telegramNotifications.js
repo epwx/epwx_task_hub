@@ -44,8 +44,24 @@ function formatClaimTimestamp(claimedAt) {
   return `${date.toISOString().slice(0, 16).replace('T', ' ')} UTC`;
 }
 
+function formatCount(value) {
+  const numericValue = Number(value);
+  if (!Number.isFinite(numericValue)) {
+    return null;
+  }
+
+  return new Intl.NumberFormat('en-US', {
+    maximumFractionDigits: 0,
+  }).format(numericValue);
+}
+
 function formatBadgeDisplay(badgeLabel) {
-  switch (badgeLabel) {
+  const normalizedBadgeLabel = typeof badgeLabel === 'string' ? badgeLabel.trim() : badgeLabel;
+  if (!normalizedBadgeLabel || ['null', 'undefined', 'none', 'n/a'].includes(String(normalizedBadgeLabel).toLowerCase())) {
+    return null;
+  }
+
+  switch (normalizedBadgeLabel) {
     case 'Whale Buyer':
       return '🟡 👑 Whale Buyer';
     case 'Tier Buyer':
@@ -53,15 +69,25 @@ function formatBadgeDisplay(badgeLabel) {
     case 'Buyer':
       return '🔵 🎖️ Buyer';
     default:
-      return badgeLabel || null;
+      return normalizedBadgeLabel || null;
   }
 }
 
-export function buildDailyClaimPaidMessage({ wallet, amount, claimedAt, txHash, badgeLabel, badgeBenefit }) {
+function hasDisplayValue(value) {
+  if (typeof value !== 'string') {
+    return Boolean(value);
+  }
+
+  const normalized = value.trim().toLowerCase();
+  return Boolean(normalized) && !['null', 'undefined', 'none', 'n/a'].includes(normalized);
+}
+
+export function buildDailyClaimPaidMessage({ wallet, amount, claimedAt, txHash, badgeLabel, badgeBenefit, totalDailyClaimsCount }) {
   const safeShortWallet = escapeHtml(shortenHex(wallet));
   const safeAmount = escapeHtml(formatEpwxAmount(amount));
   const safeClaimedAt = escapeHtml(formatClaimTimestamp(claimedAt));
   const safeBadgeDisplay = escapeHtml(formatBadgeDisplay(badgeLabel));
+  const safeTotalDailyClaimsCount = escapeHtml(formatCount(totalDailyClaimsCount));
   const txLink = txHash ? `https://basescan.org/tx/${encodeURIComponent(txHash)}` : null;
 
   const lines = [
@@ -78,7 +104,11 @@ export function buildDailyClaimPaidMessage({ wallet, amount, claimedAt, txHash, 
     lines.push(`<b>Badge</b>: ${safeBadgeDisplay}`);
   }
 
-  if (badgeBenefit) {
+  if (safeTotalDailyClaimsCount) {
+    lines.push(`<b>Total Claims Today</b>: ${safeTotalDailyClaimsCount}`);
+  }
+
+  if (hasDisplayValue(badgeBenefit)) {
     lines.push(`<b>Benefit</b>: ${escapeHtml(badgeBenefit)}`);
   }
 

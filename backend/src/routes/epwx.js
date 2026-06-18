@@ -99,6 +99,16 @@ async function updateDailyClaimStats({ claimCountDelta = '0', distributedAmountD
   await stats.save();
 }
 
+async function getTodayDailyClaimsCount() {
+  const now = new Date();
+  const startOfTodayUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  return DailyClaim.count({
+    where: {
+      claimedAt: { [Op.gte]: startOfTodayUtc },
+    },
+  });
+}
+
 function normalizeWallet(wallet) {
   if (typeof wallet !== 'string') {
     return '';
@@ -717,6 +727,7 @@ router.post('/daily-claims/mark-paid', async (req, res) => {
     }
 
     const rewardDetails = findDailyRewardTierByAmount(claim.amount) || await getDailyRewardDetails(claim.wallet);
+    const totalDailyClaimsCount = await getTodayDailyClaimsCount();
     const notificationResult = await notifyDailyClaimPaid({
       wallet: claim.wallet,
       amount: claim.amount,
@@ -724,6 +735,7 @@ router.post('/daily-claims/mark-paid', async (req, res) => {
       txHash: claim.txHash,
       badgeLabel: rewardDetails.badgeLabel,
       badgeBenefit: rewardDetails.badgeBenefit,
+      totalDailyClaimsCount,
     });
 
     res.json({
@@ -837,6 +849,7 @@ router.post('/daily-claim', async (req, res) => {
         console.error('[daily-claim] Failed to increment distributed stats:', statsErr);
       }
 
+      const totalDailyClaimsCount = await getTodayDailyClaimsCount();
       const notificationResult = await notifyDailyClaimPaid({
         wallet: claim.wallet,
         amount: claim.amount,
@@ -844,6 +857,7 @@ router.post('/daily-claim', async (req, res) => {
         txHash: claim.txHash,
         badgeLabel: rewardDetails.badgeLabel,
         badgeBenefit: rewardDetails.badgeBenefit,
+        totalDailyClaimsCount,
       });
 
       if (!notificationResult.sent) {
