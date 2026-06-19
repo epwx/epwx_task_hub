@@ -366,155 +366,26 @@ function formatCampaignExpiry(expiresAt?: string | null) {
   return parsed.toLocaleString();
 }
 
-function TwitterCampaignBoard({ address }: { address?: string }) {
-  const TWITTER_CAMPAIGNS_PAGE_SIZE = 6;
-  const [campaigns, setCampaigns] = useState<TwitterCampaign[]>([]);
-  const [campaignPage, setCampaignPage] = useState(1);
-  const [campaignPagination, setCampaignPagination] = useState<CampaignPagination>({
-    page: 1,
-    limit: TWITTER_CAMPAIGNS_PAGE_SIZE,
-    total: 0,
-    totalPages: 1,
-  });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchCampaigns = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const params = new URLSearchParams();
-
-        params.set('page', String(campaignPage));
-        params.set('limit', String(TWITTER_CAMPAIGNS_PAGE_SIZE));
-
-        if (address) {
-          params.set('wallet', address);
-        }
-
-        const query = params.toString();
-        const response = await fetch(`/api/twitter-campaigns/active${query ? `?${query}` : ''}`, { cache: 'no-store' });
-        const data = await parseJsonResponse<{ campaigns?: TwitterCampaign[]; pagination?: CampaignPagination; error?: string }>(response, 'Failed to load Twitter campaigns.');
-
-        setCampaigns(Array.isArray(data.campaigns) ? data.campaigns : []);
-        setCampaignPagination(data.pagination || {
-          page: campaignPage,
-          limit: TWITTER_CAMPAIGNS_PAGE_SIZE,
-          total: Array.isArray(data.campaigns) ? data.campaigns.length : 0,
-          totalPages: 1,
-        });
-      } catch (fetchError: any) {
-        setCampaigns([]);
-        setCampaignPagination({
-          page: 1,
-          limit: TWITTER_CAMPAIGNS_PAGE_SIZE,
-          total: 0,
-          totalPages: 1,
-        });
-        setError(fetchError?.message || 'Failed to load Twitter campaigns.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCampaigns();
-  }, [address, campaignPage]);
-
+function TwitterCampaignBoard() {
   return (
     <section id="twitter-campaigns" className="py-12 scroll-mt-24">
       <div className="flex flex-col items-center">
-        <h2 className="text-2xl font-black mb-4 text-blue-700 text-center">Community Engagement Rewards</h2>
+        <h2 className="text-2xl font-black mb-4 text-blue-700 text-center">X Engagement Program Paused</h2>
         <div className={`${themedSectionClass} w-full max-w-5xl`}>
           <div className="absolute top-0 left-0 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
-          <div className="relative z-10">
-            <div className="mb-6 text-center text-white">
-              <p className="text-sm uppercase tracking-[0.3em] text-white/65">Community Engagement Rewards</p>
-              <h3 className="mt-2 text-3xl font-black">View the post, complete the task, then upload your screenshot</h3>
-              <p className="mt-3 text-sm text-white/80">Open any active campaign below, complete the requested action on X in accordance with platform rules, and upload clear proof for manual review. Reward eligibility is determined only after verification.</p>
-              <p className="mt-2 text-xs text-white/65">This program is not sponsored by, endorsed by, or affiliated with X.</p>
-            </div>
-
-            {loading ? <div className="text-center text-white/80">Loading engagement campaigns...</div> : null}
-            {!loading && error ? <div className="text-center text-red-200">{error}</div> : null}
-            {!loading && !error && campaigns.length === 0 ? <div className="text-center text-white/80">No active engagement campaigns are available right now.</div> : null}
-
-            {!loading && !error && campaigns.length > 0 ? (
-              <>
-                <div className="grid gap-4 md:grid-cols-2">
-                  {campaigns.map(campaign => (
-                    <div key={campaign.id} className="overflow-hidden rounded-3xl border border-white/20 bg-white/10 p-6 text-white backdrop-blur-xl shadow-xl">
-                      <div className="flex flex-col items-start gap-3 sm:flex-row sm:justify-between">
-                        <div className="min-w-0 flex-1">
-                          <div className="text-xs uppercase tracking-[0.25em] text-white/60">{campaign.code}</div>
-                          <div className="mt-2 flex items-center gap-3">
-                            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-2xl">
-                              <span aria-hidden="true">{getTwitterTaskIcon(campaign.taskType)}</span>
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <h4 className="break-all text-2xl font-black leading-tight">{campaign.title}</h4>
-                              <div className="mt-1 text-sm text-white/70">Task: {getTwitterTaskLabel(campaign.taskType)}</div>
-                            </div>
-                          </div>
-                        </div>
-                        <div className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${campaign.claimStatus === 'pending' ? 'border border-amber-300/30 bg-amber-400/20 text-amber-100' : 'border border-emerald-300/30 bg-emerald-400/20 text-emerald-100'}`}>
-                          {campaign.claimStatus === 'pending' ? 'Pending Review' : 'Active'}
-                        </div>
-                      </div>
-
-                      <div className="mt-4 grid gap-2 text-sm text-white/75">
-                        <div>Reward: {Number(campaign.rewardAmount || '100000').toLocaleString()} EPWX</div>
-                        <div>Expires: {formatCampaignExpiry(campaign.expiresAt)}</div>
-                        {campaign.claimStatus === 'pending' ? <div className="text-amber-100">You already submitted this campaign. Your {getTwitterTaskLabel(campaign.taskType).toLowerCase()} claim is pending admin review.</div> : null}
-                      </div>
-
-                      <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                        <a
-                          href={campaign.tweetUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex min-w-0 items-center justify-center rounded-2xl border border-white/20 bg-white/15 px-4 py-3 text-center text-sm font-bold leading-tight text-white transition-colors hover:bg-white/25"
-                        >
-                          View Post
-                        </a>
-                        <Link
-                          href={`/claim/engagement?campaignId=${campaign.id}`}
-                          className={`inline-flex min-w-0 items-center justify-center rounded-2xl px-4 py-3 text-center text-sm font-bold leading-tight text-white transition-colors ${campaign.claimStatus === 'pending' ? 'bg-amber-600 hover:bg-amber-700' : 'bg-green-600 hover:bg-green-700'}`}
-                        >
-                          {campaign.claimStatus === 'pending' ? 'View Pending Claim' : getTwitterTaskAction(campaign.taskType)}
-                        </Link>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                {campaignPagination.totalPages > 1 ? (
-                  <div className="mt-6 flex flex-col items-center justify-between gap-3 text-white/80 sm:flex-row">
-                    <div className="text-sm">
-                      Page {campaignPagination.page} of {campaignPagination.totalPages}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setCampaignPage(current => Math.max(1, current - 1))}
-                        disabled={campaignPagination.page === 1 || loading}
-                        className="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        Previous
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setCampaignPage(current => Math.min(campaignPagination.totalPages, current + 1))}
-                        disabled={campaignPagination.page >= campaignPagination.totalPages || loading}
-                        className="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        Next
-                      </button>
-                    </div>
-                  </div>
-                ) : null}
-              </>
-            ) : null}
+          <div className="relative z-10 text-center text-white">
+            <p className="text-sm uppercase tracking-[0.3em] text-white/65">Program Update</p>
+            <h3 className="mt-2 text-3xl font-black">X engagement claims and payouts are disabled</h3>
+            <p className="mt-3 text-sm text-white/80">
+              We removed X action-based rewards. Please use the Daily Claim section below for active reward opportunities.
+            </p>
+            <p className="mt-2 text-xs text-white/65">This program is not sponsored by, endorsed by, or affiliated with X.</p>
+            <a
+              href="#daily-claim"
+              className="mt-6 inline-flex rounded-full bg-white px-5 py-2 text-sm font-bold text-slate-900 hover:bg-slate-100"
+            >
+              Go To Daily Claim
+            </a>
           </div>
         </div>
       </div>

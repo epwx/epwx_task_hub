@@ -74,7 +74,6 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
     ? [
         { href: '/admin', label: 'Admin Dashboard', active: pathname === '/admin' },
         { href: '/admin/merchants', label: 'Merchant Admin', active: pathname === '/admin/merchants' },
-        { href: '/admin/engagement-claims', label: 'Engagement Claims', active: pathname === '/admin/engagement-claims' },
         { href: '/admin/reward-ledger', label: 'Reward Ledger', active: pathname === '/admin/reward-ledger' },
       ]
     : isMerchant
