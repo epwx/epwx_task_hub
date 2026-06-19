@@ -113,7 +113,7 @@ const formSelectClass = "rounded-xl border border-white/20 bg-white/10 px-4 py-3
 const editSelectClass = "rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm text-white [&>option]:bg-white [&>option]:text-slate-900";
 const selectOptionClass = "bg-white text-slate-900";
 
-export default function AdminTwitterClaimsPage() {
+export default function AdminEngagementClaimsPage() {
   const TWITTER_CLAIMS_PAGE_SIZE = 5;
   const TWITTER_CAMPAIGNS_PAGE_SIZE = 3;
   const { address } = useAccount();

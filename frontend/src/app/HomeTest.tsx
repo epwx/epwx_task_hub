@@ -479,7 +479,7 @@ function TwitterCampaignBoard({ address }: { address?: string }) {
                           View Post
                         </a>
                         <Link
-                          href={`/claim/twitter-retweet?campaignId=${campaign.id}`}
+                          href={`/claim/engagement?campaignId=${campaign.id}`}
                           className={`inline-flex min-w-0 items-center justify-center rounded-2xl px-4 py-3 text-center text-sm font-bold leading-tight text-white transition-colors ${campaign.claimStatus === 'pending' ? 'bg-amber-600 hover:bg-amber-700' : 'bg-green-600 hover:bg-green-700'}`}
                         >
                           {campaign.claimStatus === 'pending' ? 'View Pending Claim' : getTwitterTaskAction(campaign.taskType)}
