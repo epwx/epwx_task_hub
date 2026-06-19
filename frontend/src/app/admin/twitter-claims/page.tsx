@@ -456,7 +456,7 @@ export default function AdminTwitterClaimsPage() {
         <form onSubmit={addCampaign} className={themedSectionClass}>
           <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
           <div className="relative z-10">
-          <h2 className="text-2xl font-black text-white">Create Twitter Campaign</h2>
+          <h2 className="text-2xl font-black text-white">Create Engagement Campaign</h2>
           <p className="mt-2 text-sm text-white/75">Create the trusted campaign record first, then share the generated claim URL.</p>
           <div className="mt-5 grid gap-4">
             <input name="code" value={campaignForm.code} onChange={handleCampaignFormChange} placeholder="campaign code" className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/50" required />

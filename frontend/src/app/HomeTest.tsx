@@ -425,19 +425,19 @@ function TwitterCampaignBoard({ address }: { address?: string }) {
   return (
     <section id="twitter-campaigns" className="py-12 scroll-mt-24">
       <div className="flex flex-col items-center">
-        <h2 className="text-2xl font-black mb-4 text-blue-700 text-center">Twitter Campaigns</h2>
+        <h2 className="text-2xl font-black mb-4 text-blue-700 text-center">Community Engagement Rewards</h2>
         <div className={`${themedSectionClass} w-full max-w-5xl`}>
           <div className="absolute top-0 left-0 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
           <div className="relative z-10">
             <div className="mb-6 text-center text-white">
-              <p className="text-sm uppercase tracking-[0.3em] text-white/65">Social rewards</p>
+              <p className="text-sm uppercase tracking-[0.3em] text-white/65">Community Engagement Rewards</p>
               <h3 className="mt-2 text-3xl font-black">View the post, complete the task, then upload your screenshot</h3>
               <p className="mt-3 text-sm text-white/80">Open any active campaign below. Each campaign card shows whether you need to retweet, comment, or vote in a poll before you submit a screenshot for review.</p>
             </div>
 
-            {loading ? <div className="text-center text-white/80">Loading Twitter campaigns...</div> : null}
+            {loading ? <div className="text-center text-white/80">Loading engagement campaigns...</div> : null}
             {!loading && error ? <div className="text-center text-red-200">{error}</div> : null}
-            {!loading && !error && campaigns.length === 0 ? <div className="text-center text-white/80">No active Twitter campaigns are available right now.</div> : null}
+            {!loading && !error && campaigns.length === 0 ? <div className="text-center text-white/80">No active engagement campaigns are available right now.</div> : null}
 
             {!loading && !error && campaigns.length > 0 ? (
               <>
