@@ -63,18 +63,18 @@ function getTaskLabel(taskType: TwitterTaskType) {
     case "poll":
       return "Poll";
     default:
-      return "Retweet";
+      return "Repost";
   }
 }
 
 function getTaskInstruction(taskType: TwitterTaskType) {
   switch (taskType) {
     case "comment":
-      return "comment on the post";
+      return "complete the comment task";
     case "poll":
-      return "vote in the poll on the post";
+      return "complete the poll task";
     default:
-      return "retweet the post";
+      return "complete the repost task";
   }
 }
 
@@ -83,7 +83,7 @@ function getClaimsTaskLabel(taskType: ClaimsTaskTypeFilter) {
 }
 
 function getClaimsTaskInstruction(taskType: ClaimsTaskTypeFilter) {
-  return taskType === "all" ? "complete Twitter campaign tasks" : getTaskInstruction(taskType);
+  return taskType === "all" ? "complete engagement campaign tasks" : getTaskInstruction(taskType);
 }
 
 function isCampaignExpired(expiresAt?: string | null) {
@@ -197,10 +197,10 @@ export default function AdminTwitterClaimsPage() {
       }
 
       const response = await fetch(`/api/claims?${params.toString()}`);
-      const data = await parseJsonResponse<{ claims?: TwitterClaim[] }>(response, "Failed to fetch Twitter claims");
+      const data = await parseJsonResponse<{ claims?: TwitterClaim[] }>(response, "Failed to fetch engagement claims");
       setClaims(data.claims || []);
     } catch (fetchError: any) {
-      setError(fetchError?.message || "Failed to fetch Twitter claims");
+      setError(fetchError?.message || "Failed to fetch engagement claims");
     }
 
     setLoading(false);
@@ -224,7 +224,7 @@ export default function AdminTwitterClaimsPage() {
       const data = await parseJsonResponse<{
         campaigns?: TwitterCampaign[];
         pagination?: CampaignPagination;
-      }>(response, "Failed to fetch Twitter campaigns");
+      }>(response, "Failed to fetch engagement campaigns");
       setCampaigns(data.campaigns || []);
       setCampaignPagination(data.pagination || {
         page,
@@ -237,7 +237,7 @@ export default function AdminTwitterClaimsPage() {
         setCampaignsPage(data.pagination.page);
       }
     } catch (fetchError: any) {
-      setError(fetchError?.message || "Failed to fetch Twitter campaigns");
+      setError(fetchError?.message || "Failed to fetch engagement campaigns");
     }
   };
 
@@ -442,7 +442,7 @@ export default function AdminTwitterClaimsPage() {
         <div className={themedSectionClass}>
           <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
           <div className="relative z-10 flex flex-col items-center">
-            <div className="mb-4 text-lg font-semibold text-white">Connect an admin wallet to review Twitter screenshot claims.</div>
+            <div className="mb-4 text-lg font-semibold text-white">Connect an admin wallet to review engagement proof submissions.</div>
             <ConnectKitButton />
           </div>
         </div>
@@ -462,7 +462,7 @@ export default function AdminTwitterClaimsPage() {
             <input name="code" value={campaignForm.code} onChange={handleCampaignFormChange} placeholder="campaign code" className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/50" required />
             <input name="title" value={campaignForm.title} onChange={handleCampaignFormChange} placeholder="campaign title" className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/50" required />
             <select name="taskType" value={campaignForm.taskType} onChange={handleCampaignFormChange} className={formSelectClass} required>
-              <option value="retweet">Retweet campaign</option>
+              <option value="retweet">Repost campaign</option>
               <option value="comment">Comment campaign</option>
               <option value="poll">Poll campaign</option>
             </select>
@@ -530,7 +530,7 @@ export default function AdminTwitterClaimsPage() {
                         <input name="code" value={editCampaignForm.code} onChange={handleEditCampaignFormChange} className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm text-white" />
                         <input name="title" value={editCampaignForm.title} onChange={handleEditCampaignFormChange} className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm text-white" />
                         <select name="taskType" value={editCampaignForm.taskType} onChange={handleEditCampaignFormChange} className={editSelectClass}>
-                          <option value="retweet">Retweet campaign</option>
+                          <option value="retweet">Repost campaign</option>
                           <option value="comment">Comment campaign</option>
                           <option value="poll">Poll campaign</option>
                         </select>
@@ -617,8 +617,9 @@ export default function AdminTwitterClaimsPage() {
         <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
         <div className="relative z-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <h1 className="text-3xl font-black text-white">Twitter {getClaimsTaskLabel(claimsTaskTypeFilter)} Claims</h1>
-          <p className="mt-2 text-sm text-white/75">Review uploaded screenshots for users who {getClaimsTaskInstruction(claimsTaskTypeFilter)}, then distribute EPWX or reject with a reason.</p>
+          <h1 className="text-3xl font-black text-white">Engagement {getClaimsTaskLabel(claimsTaskTypeFilter)} Submissions</h1>
+          <p className="mt-2 text-sm text-white/75">Review uploaded proof for users who {getClaimsTaskInstruction(claimsTaskTypeFilter)}, then approve eligible rewards or reject with a reason.</p>
+          <p className="mt-1 text-xs text-white/65">This program is not sponsored by, endorsed by, or affiliated with X.</p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
         <div>
@@ -629,7 +630,7 @@ export default function AdminTwitterClaimsPage() {
             className={selectClass}
           >
             <option value="all" className={selectOptionClass}>All</option>
-            <option value="retweet" className={selectOptionClass}>Retweet</option>
+            <option value="retweet" className={selectOptionClass}>Repost</option>
             <option value="comment" className={selectOptionClass}>Comment</option>
             <option value="poll" className={selectOptionClass}>Poll</option>
           </select>
@@ -654,7 +655,7 @@ export default function AdminTwitterClaimsPage() {
       {loading ? <div className={`${glassPanelClass} p-6 text-white/80`}>Loading claims...</div> : null}
 
       {!loading && claims.length === 0 ? (
-        <div className={`${glassPanelClass} p-6 text-sm text-white/75`}>No Twitter {getClaimsTaskLabel(claimsTaskTypeFilter).toLowerCase()} claims match the current filter.</div>
+        <div className={`${glassPanelClass} p-6 text-sm text-white/75`}>No engagement {getClaimsTaskLabel(claimsTaskTypeFilter).toLowerCase()} submissions match the current filter.</div>
       ) : null}
 
       {!loading && claims.length > 0 ? (
