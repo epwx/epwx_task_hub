@@ -60,7 +60,7 @@ const MEGA_DAILY_REWARD_THRESHOLD = 1_000_000_000_000;
 const TELEGRAM_VERIFICATION_RECHECK_INTERVAL_MS = 60_000;
 const TELEGRAM_BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "epwx_bot";
 const PENDING_REFERRAL_STORAGE_KEY = "epwx-pending-referrer";
-const HOME_SHORTCUT_SECTIONS = ['buy-epwx', 'burnt-supply', 'twitter-campaigns', 'daily-claim'] as const;
+const HOME_SHORTCUT_SECTIONS = ['buy-epwx', 'burnt-supply', 'daily-claim'] as const;
 const DAILY_REWARD_TIERS = [
   {
     walletBalanceLabel: `At least ${MEGA_DAILY_REWARD_THRESHOLD.toLocaleString()} EPWX`,
@@ -1628,13 +1628,6 @@ export default function HomeTest() {
           90% Burnt
         </a>
         <a
-          href="#twitter-campaigns"
-          onClick={() => setActiveShortcutSection('twitter-campaigns')}
-          className={`flex min-w-0 flex-1 items-center justify-center rounded-xl px-3 py-2 text-center text-[11px] font-black uppercase tracking-[0.14em] text-white transition-colors ${activeShortcutSection === 'twitter-campaigns' ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-white/8 hover:bg-white/14'}`}
-        >
-          Engagement
-        </a>
-        <a
           href="#daily-claim"
           onClick={() => setActiveShortcutSection('daily-claim')}
           className={`flex min-w-0 flex-1 items-center justify-center rounded-xl px-3 py-2 text-center text-[11px] font-black uppercase tracking-[0.14em] text-white transition-colors ${activeShortcutSection === 'daily-claim' ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-white/8 hover:bg-white/14'}`}
@@ -1657,14 +1650,6 @@ export default function HomeTest() {
         style={{ writingMode: 'vertical-rl' }}
       >
         90% Burnt
-      </a>
-      <a
-        href="#twitter-campaigns"
-        onClick={() => setActiveShortcutSection('twitter-campaigns')}
-        className={`fixed right-4 top-[34%] z-40 hidden -translate-y-1/2 rounded-full border border-white/15 px-3 py-4 text-xs font-black uppercase tracking-[0.2em] text-white shadow-[0_18px_40px_rgba(15,23,42,0.35)] backdrop-blur-md transition-all hover:right-3 dark:border-white/10 lg:flex ${activeShortcutSection === 'twitter-campaigns' ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-slate-950/85 hover:bg-slate-900 dark:bg-slate-900/85'}`}
-        style={{ writingMode: 'vertical-rl' }}
-      >
-        Engagement
       </a>
       <a
         href="#daily-claim"
