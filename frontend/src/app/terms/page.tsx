@@ -38,7 +38,15 @@ export default function TermsPage() {
         <p className="mb-4">We respect your privacy. Please review our Privacy Policy to understand how we collect, use, and protect your information.</p>
         <h2 className="text-xl font-semibold mt-8 mb-4">9. Governing Law</h2>
         <p className="mb-4">These Terms are governed by the laws of the jurisdiction in which EPWX Task Hub operates.</p>
-        <h2 className="text-xl font-semibold mt-8 mb-4">10. Contact</h2>
+        <h2 className="text-xl font-semibold mt-8 mb-4">10. Campaign Participation and Third-Party Platforms</h2>
+        <ul className="list-disc pl-6 mb-4">
+          <li>You are solely responsible for complying with the rules and policies of any third-party platform used for campaign participation, including X.</li>
+          <li>EPWX Task Hub campaigns are not sponsored by, endorsed by, administered by, or associated with X.</li>
+          <li>Campaign submissions are subject to manual review and eligibility checks. Rewards are not guaranteed until explicitly approved.</li>
+          <li>We may reject, disqualify, or reverse submissions that appear fraudulent, automated, abusive, duplicated, inauthentic, or otherwise non-compliant.</li>
+          <li>We may suspend campaign participation privileges for wallets that violate these Terms, campaign rules, or applicable laws.</li>
+        </ul>
+        <h2 className="text-xl font-semibold mt-8 mb-4">11. Contact</h2>
         <p>If you have questions about these Terms, please contact info@epowex.com.</p>
       </div>
       <Footer />

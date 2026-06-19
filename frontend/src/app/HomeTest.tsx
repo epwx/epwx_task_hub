@@ -432,7 +432,8 @@ function TwitterCampaignBoard({ address }: { address?: string }) {
             <div className="mb-6 text-center text-white">
               <p className="text-sm uppercase tracking-[0.3em] text-white/65">Community Engagement Rewards</p>
               <h3 className="mt-2 text-3xl font-black">View the post, complete the task, then upload your screenshot</h3>
-              <p className="mt-3 text-sm text-white/80">Open any active campaign below. Each campaign card shows whether you need to retweet, comment, or vote in a poll before you submit a screenshot for review.</p>
+              <p className="mt-3 text-sm text-white/80">Open any active campaign below, complete the requested action on X in accordance with platform rules, and upload clear proof for manual review. Reward eligibility is determined only after verification.</p>
+              <p className="mt-2 text-xs text-white/65">This program is not sponsored by, endorsed by, or affiliated with X.</p>
             </div>
 
             {loading ? <div className="text-center text-white/80">Loading engagement campaigns...</div> : null}

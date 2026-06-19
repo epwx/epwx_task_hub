@@ -101,10 +101,10 @@ const TwitterRetweetClaimForm: React.FC<TwitterRetweetClaimFormProps> = ({ walle
   return (
     <form onSubmit={handleSubmit} className="rounded-3xl border border-white/20 bg-white/10 p-6 text-white backdrop-blur-xl shadow-2xl">
       <div className="mb-5 rounded-2xl border border-white/15 bg-black/10 p-4">
-        <div className="text-xs uppercase tracking-[0.25em] text-white/60">Twitter reward claim</div>
+        <div className="text-xs uppercase tracking-[0.25em] text-white/60">Engagement Proof Submission</div>
         <h2 className="mt-2 text-2xl font-black">{title || `Upload your ${getTaskLabel(taskType)} screenshot`}</h2>
         <p className="mt-2 text-sm text-white/75">
-          After you {getTaskLabel(taskType)} the post, upload a clear screenshot here. Admin will review it and either distribute EPWX or reject it with a reason.
+          After you complete the task on X, upload a clear screenshot here. Admin will review your submission and may approve or reject it based on eligibility and compliance checks.
         </p>
         <div className="mt-3 text-sm text-white/70">Campaign: {campaignCode}</div>
         <div className="mt-1 text-sm text-white/70">Reward: {Number(rewardAmount || '100000').toLocaleString()} EPWX</div>
@@ -144,7 +144,7 @@ const TwitterRetweetClaimForm: React.FC<TwitterRetweetClaimFormProps> = ({ walle
           disabled={claimStatus === 'pending'}
           className="mt-1"
         />
-        <span>I confirm this screenshot is from my own {getTaskLabel(taskType)} and I understand the claim will be manually reviewed.</span>
+        <span>I confirm this screenshot is from my own account activity, complies with platform rules, and I understand this submission is manually reviewed for eligibility.</span>
       </label>
 
       <button
@@ -152,7 +152,7 @@ const TwitterRetweetClaimForm: React.FC<TwitterRetweetClaimFormProps> = ({ walle
         disabled={claimStatus === 'pending' || loading || !agreed}
         className={`w-full rounded-2xl px-4 py-3 font-bold text-white ${claimStatus === 'pending' || loading || !agreed ? 'cursor-not-allowed bg-white/10 opacity-50' : 'bg-green-600 hover:bg-green-700'}`}
       >
-        {claimStatus === 'pending' ? 'Claim Pending Review' : loading ? 'Submitting...' : 'Submit Twitter Claim'}
+        {claimStatus === 'pending' ? 'Claim Pending Review' : loading ? 'Submitting...' : 'Submit Proof For Review'}
       </button>
 
       {success ? <div className="mt-4 text-sm text-emerald-200">Your screenshot was submitted and is now pending admin approval.</div> : null}

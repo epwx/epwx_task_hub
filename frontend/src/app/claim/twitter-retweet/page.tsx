@@ -38,22 +38,22 @@ function getTaskIntentUrl(tweetUrl: string, taskType: 'retweet' | 'comment' | 'p
 function getTaskVerb(taskType: 'retweet' | 'comment' | 'poll') {
   switch (taskType) {
     case 'comment':
-      return 'comment on it';
+      return 'complete the comment task';
     case 'poll':
-      return 'vote in its poll';
+      return 'complete the poll task';
     default:
-      return 'retweet it';
+      return 'complete the repost task';
   }
 }
 
 function getTaskCta(taskType: 'retweet' | 'comment' | 'poll') {
   switch (taskType) {
     case 'comment':
-      return '2. Comment on X';
+      return '2. Open Comment Task On X';
     case 'poll':
-      return '2. Vote In Poll On X';
+      return '2. Open Poll Task On X';
     default:
-      return '2. Retweet on X';
+      return '2. Open Repost Task On X';
   }
 }
 
@@ -120,8 +120,9 @@ function TwitterRetweetClaimPage() {
             <div className="text-xs uppercase tracking-[0.35em] text-white/70">EPWX social rewards</div>
             <h1 className="mt-3 text-4xl font-black">{campaign.title}</h1>
             <p className="mt-3 text-sm text-white/80">
-              Complete the three steps below: open the campaign post, {getTaskVerb(campaign.taskType)} on X, then upload a screenshot that clearly shows the completed action. The admin team will review the image before approving the reward.
+              Complete the three steps below: open the campaign post, {getTaskVerb(campaign.taskType)} on X, then upload a screenshot that clearly shows completion. The admin team will review your submission for eligibility and compliance before any reward approval.
             </p>
+            <p className="mt-2 text-xs text-white/65">Participation must comply with X platform rules and applicable laws. This program is not sponsored by, endorsed by, or affiliated with X.</p>
             {campaign.tweetUrl ? (
               <div className="mt-5 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <a
