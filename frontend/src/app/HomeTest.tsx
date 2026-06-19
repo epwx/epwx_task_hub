@@ -1187,7 +1187,7 @@ export default function HomeTest() {
           <TokenSupplyPieChart />
         </section>
 
-        <TwitterCampaignBoard address={address} />
+        <TwitterCampaignBoard />
 
         {/* Cashback Rewards Section */}
         <section id="cashback-rewards" className="py-12 scroll-mt-24">
