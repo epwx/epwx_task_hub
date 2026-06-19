@@ -1,6 +1,7 @@
 
 import express from 'express';
-import { User, DailyClaim, CashbackClaim, SpecialClaim, Claim, RewardDistributionLedger, Merchant, WalletReferral, PlatformStats } from '../models/index.js';
+import { randomInt } from 'crypto';
+import { User, DailyClaim, DailyDraw, DailyDrawWinner, CashbackClaim, SpecialClaim, Claim, RewardDistributionLedger, Merchant, WalletReferral, PlatformStats } from '../models/index.js';
 import { Op } from 'sequelize';
 // import { ethers } from 'ethers'; // Removed duplicate import
 import { getEPWXPurchaseTransactions } from '../services/epwxCashback.js';
@@ -17,6 +18,8 @@ const MEGA_TIER_DAILY_REWARD_AMOUNT = '10000000';
 const MID_TIER_DAILY_REWARD_THRESHOLD = 10_000_000_000;
 const BONUS_TIER_DAILY_REWARD_THRESHOLD = 100_000_000_000;
 const MEGA_TIER_DAILY_REWARD_THRESHOLD = 1_000_000_000_000;
+const DEFAULT_DAILY_DRAW_WINNER_COUNT = 5;
+const DEFAULT_DAILY_DRAW_PRIZE_AMOUNT = '100000';
 const EPWX_TOKEN_DECIMALS = 9;
 const EPWX_REWARD_TRANSFER_FEE_BPS = Number(process.env.EPWX_REWARD_TRANSFER_FEE_BPS || '600');
 const DAILY_REWARD_TIERS = [
@@ -40,6 +43,15 @@ const DAILY_REWARD_TIERS = [
   },
 ];
 const DAILY_CLAIM_STATS_KEY = 'daily_claims';
+
+function getAdminWallets() {
+  return (process.env.ADMIN_WALLETS || '').split(',').map(w => w.trim().toLowerCase()).filter(Boolean);
+}
+
+function isAdminWallet(wallet) {
+  if (!wallet) return false;
+  return getAdminWallets().includes(String(wallet).toLowerCase());
+}
 
 function toBigIntValue(value) {
   try {
@@ -115,6 +127,37 @@ function normalizeWallet(wallet) {
   }
 
   return wallet.trim().toLowerCase();
+}
+
+function getUtcDateString(date = new Date()) {
+  return date.toISOString().slice(0, 10);
+}
+
+function parseDrawDate(drawDate) {
+  const raw = String(drawDate || '').trim();
+  if (!raw) return getUtcDateString();
+
+  const matched = raw.match(/^\d{4}-\d{2}-\d{2}$/);
+  if (!matched) {
+    return null;
+  }
+
+  return raw;
+}
+
+function getUtcDateBounds(dateString) {
+  const start = new Date(`${dateString}T00:00:00.000Z`);
+  const end = new Date(`${dateString}T23:59:59.999Z`);
+  return { start, end };
+}
+
+function pickRandomEntries(entries, count) {
+  const pool = [...entries];
+  for (let i = pool.length - 1; i > 0; i -= 1) {
+    const j = randomInt(i + 1);
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return pool.slice(0, count);
 }
 
 function getRequestIp(req) {
@@ -693,6 +736,197 @@ router.get('/daily-claims/summary', async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/epwx/daily-draws/latest
+router.get('/daily-draws/latest', async (_req, res) => {
+  try {
+    const draw = await DailyDraw.findOne({
+      order: [['drawDate', 'DESC']],
+      include: [{ model: DailyDrawWinner, as: 'winners', order: [['rank', 'ASC']] }],
+    });
+
+    if (!draw) {
+      return res.json({ draw: null, winners: [] });
+    }
+
+    const drawJson = draw.toJSON();
+    const winners = [...(drawJson.winners || [])].sort((a, b) => a.rank - b.rank);
+    return res.json({ draw: { ...drawJson, winners: undefined }, winners });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/epwx/daily-draws?admin=0x...&limit=10
+router.get('/daily-draws', async (req, res) => {
+  const { admin, limit } = req.query;
+  if (!isAdminWallet(admin)) {
+    return res.status(403).json({ error: 'Unauthorized' });
+  }
+
+  const parsedLimit = Number.parseInt(String(limit || '10'), 10);
+  const safeLimit = Number.isInteger(parsedLimit) && parsedLimit > 0 ? Math.min(parsedLimit, 50) : 10;
+
+  try {
+    const draws = await DailyDraw.findAll({
+      order: [['drawDate', 'DESC']],
+      limit: safeLimit,
+    });
+    return res.json({ draws });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/epwx/daily-draws/:drawId/winners
+router.get('/daily-draws/:drawId/winners', async (req, res) => {
+  const drawId = Number.parseInt(String(req.params.drawId), 10);
+  if (!Number.isInteger(drawId) || drawId <= 0) {
+    return res.status(400).json({ error: 'Invalid draw id.' });
+  }
+
+  try {
+    const draw = await DailyDraw.findByPk(drawId);
+    if (!draw) {
+      return res.status(404).json({ error: 'Draw not found.' });
+    }
+
+    const winners = await DailyDrawWinner.findAll({
+      where: { drawId },
+      order: [['rank', 'ASC']],
+    });
+
+    return res.json({ draw, winners });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/epwx/daily-draws/run
+router.post('/daily-draws/run', async (req, res) => {
+  const { admin, drawDate, winnerCount, prizeAmount } = req.body;
+  if (!isAdminWallet(admin)) {
+    return res.status(403).json({ error: 'Unauthorized' });
+  }
+
+  const resolvedDrawDate = parseDrawDate(drawDate);
+  if (!resolvedDrawDate) {
+    return res.status(400).json({ error: 'drawDate must be YYYY-MM-DD format.' });
+  }
+
+  const requestedWinnerCount = Number.parseInt(String(winnerCount || DEFAULT_DAILY_DRAW_WINNER_COUNT), 10);
+  if (!Number.isInteger(requestedWinnerCount) || requestedWinnerCount <= 0) {
+    return res.status(400).json({ error: 'winnerCount must be a positive integer.' });
+  }
+
+  const normalizedPrizeAmount = String(prizeAmount || DEFAULT_DAILY_DRAW_PRIZE_AMOUNT).trim();
+  if (!/^\d+$/.test(normalizedPrizeAmount) || normalizedPrizeAmount === '0') {
+    return res.status(400).json({ error: 'prizeAmount must be a positive integer string.' });
+  }
+
+  const { start, end } = getUtcDateBounds(resolvedDrawDate);
+
+  try {
+    const existingDraw = await DailyDraw.findOne({ where: { drawDate: resolvedDrawDate } });
+    if (existingDraw) {
+      return res.status(409).json({ error: 'Draw already exists for this date.', draw: existingDraw });
+    }
+
+    const claims = await DailyClaim.findAll({
+      where: {
+        claimedAt: { [Op.gte]: start, [Op.lte]: end },
+      },
+      attributes: ['id', 'wallet', 'claimedAt'],
+      order: [['claimedAt', 'ASC']],
+    });
+
+    const uniqueByWallet = new Map();
+    for (const claim of claims) {
+      const wallet = normalizeWallet(claim.wallet);
+      if (!wallet || uniqueByWallet.has(wallet)) {
+        continue;
+      }
+      uniqueByWallet.set(wallet, claim);
+    }
+
+    const eligibleClaims = Array.from(uniqueByWallet.values());
+    const eligibleCount = eligibleClaims.length;
+    if (eligibleCount === 0) {
+      return res.status(400).json({ error: 'No eligible daily claims found for the selected draw date.' });
+    }
+
+    const selectedWinnerCount = Math.min(requestedWinnerCount, eligibleCount);
+    const pickedClaims = pickRandomEntries(eligibleClaims, selectedWinnerCount);
+
+    const result = await DailyDraw.sequelize.transaction(async (transaction) => {
+      const draw = await DailyDraw.create({
+        drawDate: resolvedDrawDate,
+        winnerCount: selectedWinnerCount,
+        eligibleCount,
+        prizeAmount: normalizedPrizeAmount,
+        status: 'completed',
+        runBy: normalizeWallet(admin),
+        runAt: new Date(),
+      }, { transaction });
+
+      const winnerRows = pickedClaims.map((claim, index) => ({
+        drawId: draw.id,
+        dailyClaimId: claim.id,
+        wallet: normalizeWallet(claim.wallet),
+        rank: index + 1,
+        prizeAmount: normalizedPrizeAmount,
+        status: 'pending',
+      }));
+
+      await DailyDrawWinner.bulkCreate(winnerRows, { transaction });
+      const winners = await DailyDrawWinner.findAll({
+        where: { drawId: draw.id },
+        order: [['rank', 'ASC']],
+        transaction,
+      });
+
+      return { draw, winners };
+    });
+
+    return res.json({ success: true, ...result });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/epwx/daily-draws/winners/:winnerId/mark-paid
+router.post('/daily-draws/winners/:winnerId/mark-paid', async (req, res) => {
+  const { admin, txHash } = req.body;
+  const winnerId = Number.parseInt(String(req.params.winnerId), 10);
+
+  if (!isAdminWallet(admin)) {
+    return res.status(403).json({ error: 'Unauthorized' });
+  }
+
+  if (!Number.isInteger(winnerId) || winnerId <= 0) {
+    return res.status(400).json({ error: 'Invalid winner id.' });
+  }
+
+  if (!txHash || !String(txHash).trim()) {
+    return res.status(400).json({ error: 'txHash is required.' });
+  }
+
+  try {
+    const winner = await DailyDrawWinner.findByPk(winnerId);
+    if (!winner) {
+      return res.status(404).json({ error: 'Winner not found.' });
+    }
+
+    winner.status = 'paid';
+    winner.txHash = String(txHash).trim();
+    winner.paidAt = new Date();
+    await winner.save();
+
+    return res.json({ success: true, winner });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
   }
 });
 

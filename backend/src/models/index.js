@@ -6,6 +6,8 @@ import Campaign from './Campaign.js';
 import TaskSubmission from './TaskSubmission.js';
 import CashbackClaim from './CashbackClaim.js';
 import DailyClaim from './DailyClaim.js';
+import DailyDraw from './DailyDraw.js';
+import DailyDrawWinner from './DailyDrawWinner.js';
 import SpecialClaim from './SpecialClaim.js';
 import Merchant from './Merchant.js';
 import Claim from './Claim.js';
@@ -25,4 +27,7 @@ TaskSubmission.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 Campaign.hasMany(TaskSubmission, { foreignKey: 'campaignId', as: 'submissions' });
 User.hasMany(TaskSubmission, { foreignKey: 'userId', as: 'submissions' });
 
-export { User, Campaign, TaskSubmission, CashbackClaim, DailyClaim, SpecialClaim, Merchant, Claim, TwitterCampaign, RewardDistributionLedger, WalletReferral, PlatformStats };
+DailyDraw.hasMany(DailyDrawWinner, { foreignKey: 'drawId', as: 'winners' });
+DailyDrawWinner.belongsTo(DailyDraw, { foreignKey: 'drawId', as: 'draw' });
+
+export { User, Campaign, TaskSubmission, CashbackClaim, DailyClaim, DailyDraw, DailyDrawWinner, SpecialClaim, Merchant, Claim, TwitterCampaign, RewardDistributionLedger, WalletReferral, PlatformStats };
