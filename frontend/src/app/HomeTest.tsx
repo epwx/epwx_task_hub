@@ -88,6 +88,23 @@ interface DailyClaimsSummary {
   totalEpwxDistributedTillNow: number;
 }
 
+interface LatestDailyDraw {
+  id: number;
+  drawDate: string;
+  winnerCount: number;
+  eligibleCount: number;
+  prizeAmount: string;
+}
+
+interface LatestDailyDrawWinner {
+  id: number;
+  wallet: string;
+  rank: number;
+  prizeAmount: string;
+  status: string;
+  txHash?: string | null;
+}
+
 interface BuyerBadge {
   variant: 'whale' | 'tier' | 'buyer';
   label: string;
@@ -351,6 +368,112 @@ function formatEpwxBalance(normalized: number) {
   }
 
   return "<0.00000001";
+}
+
+function formatWalletAddress(wallet: string) {
+  if (!wallet) return "-";
+  if (wallet.length <= 12) return wallet;
+  return `${wallet.slice(0, 8)}...${wallet.slice(-6)}`;
+}
+
+function LatestDailyWinnersBoard() {
+  const [draw, setDraw] = useState<LatestDailyDraw | null>(null);
+  const [winners, setWinners] = useState<LatestDailyDrawWinner[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchLatestWinners = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await fetch('/api/epwx/daily-draws/latest', { cache: 'no-store' });
+        const data = await parseJsonResponse<{ draw?: LatestDailyDraw | null; winners?: LatestDailyDrawWinner[] }>(
+          response,
+          'Failed to load latest winners.'
+        );
+        setDraw(data.draw || null);
+        setWinners(Array.isArray(data.winners) ? data.winners : []);
+      } catch (fetchError: any) {
+        setDraw(null);
+        setWinners([]);
+        setError(fetchError?.message || 'Failed to load latest winners.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLatestWinners();
+  }, []);
+
+  return (
+    <section id="latest-winners" className="py-12 scroll-mt-24">
+      <div className="flex flex-col items-center">
+        <h2 className="text-2xl font-black mb-4 text-blue-700 text-center">Latest Daily Winners</h2>
+        <div className={`${themedSectionClass} w-full max-w-5xl`}>
+          <div className="absolute top-0 left-0 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
+          <div className="relative z-10 text-white">
+            <div className="mb-6 text-center">
+              <p className="text-sm uppercase tracking-[0.3em] text-white/65">Daily Draw Results</p>
+              <h3 className="mt-2 text-3xl font-black">Transparent winners for each daily draw</h3>
+              <p className="mt-3 text-sm text-white/80">Winners are selected randomly from unique daily claim wallets and listed below with payout status.</p>
+            </div>
+
+            {loading ? <div className="text-center text-white/80">Loading latest winners...</div> : null}
+            {!loading && error ? <div className="text-center text-red-200">{error}</div> : null}
+            {!loading && !error && !draw ? <div className="text-center text-white/80">No draw has been completed yet.</div> : null}
+
+            {!loading && !error && draw ? (
+              <>
+                <div className={`${glassPanelClass} mb-5 p-4 text-sm text-white/85`}>
+                  <div className="text-xs uppercase tracking-[0.2em] text-white/60">Latest Draw Date</div>
+                  <div className="mt-1 text-xl font-black text-white">{draw.drawDate}</div>
+                  <div className="mt-2 grid gap-2 sm:grid-cols-3">
+                    <div>Winners: <span className="font-bold text-white">{draw.winnerCount}</span></div>
+                    <div>Eligible Wallets: <span className="font-bold text-white">{draw.eligibleCount}</span></div>
+                    <div>Prize Per Winner: <span className="font-bold text-emerald-100">{Number(draw.prizeAmount || '0').toLocaleString()} EPWX</span></div>
+                  </div>
+                </div>
+
+                {winners.length === 0 ? (
+                  <div className="text-center text-white/80">No winners available for this draw yet.</div>
+                ) : (
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {winners
+                      .slice()
+                      .sort((a, b) => a.rank - b.rank)
+                      .map((winner) => (
+                        <div key={winner.id} className={`${glassPanelClass} p-4`}>
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="text-sm font-black text-white">Winner #{winner.rank}</div>
+                            <span className={`rounded-full px-3 py-1 text-xs font-bold ${winner.status === 'paid' ? 'bg-emerald-400/20 text-emerald-100 border border-emerald-300/30' : 'bg-amber-400/20 text-amber-100 border border-amber-300/30'}`}>
+                              {winner.status === 'paid' ? 'Paid' : 'Pending'}
+                            </span>
+                          </div>
+                          <div className="mt-2 text-sm text-white/85 break-all">Wallet: {formatWalletAddress(winner.wallet)}</div>
+                          <div className="mt-1 text-sm text-white/75">Prize: {Number(winner.prizeAmount || '0').toLocaleString()} EPWX</div>
+                          {winner.txHash ? (
+                            <a
+                              href={`https://basescan.org/tx/${winner.txHash}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="mt-2 block text-xs text-emerald-200 underline hover:text-white break-all"
+                            >
+                              View Transaction
+                            </a>
+                          ) : null}
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </>
+            ) : null}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
 }
 
 export default function HomeTest() {
@@ -1146,6 +1269,8 @@ export default function HomeTest() {
         <section id="burnt-supply" className="scroll-mt-24">
           <TokenSupplyPieChart />
         </section>
+
+        <LatestDailyWinnersBoard />
 
         {/* Cashback Rewards Section */}
         <section id="cashback-rewards" className="py-12 scroll-mt-24">
