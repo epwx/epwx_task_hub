@@ -1761,7 +1761,7 @@ export default function HomeTest() {
           onClick={() => setActiveShortcutSection('twitter-campaigns')}
           className={`flex min-w-0 flex-1 items-center justify-center rounded-xl px-3 py-2 text-center text-[11px] font-black uppercase tracking-[0.14em] text-white transition-colors ${activeShortcutSection === 'twitter-campaigns' ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-white/8 hover:bg-white/14'}`}
         >
-          X Campaigns
+          Engagement
         </a>
         <a
           href="#daily-claim"
@@ -1793,7 +1793,7 @@ export default function HomeTest() {
         className={`fixed right-4 top-[34%] z-40 hidden -translate-y-1/2 rounded-full border border-white/15 px-3 py-4 text-xs font-black uppercase tracking-[0.2em] text-white shadow-[0_18px_40px_rgba(15,23,42,0.35)] backdrop-blur-md transition-all hover:right-3 dark:border-white/10 lg:flex ${activeShortcutSection === 'twitter-campaigns' ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-slate-950/85 hover:bg-slate-900 dark:bg-slate-900/85'}`}
         style={{ writingMode: 'vertical-rl' }}
       >
-        X Campaigns
+        Engagement
       </a>
       <a
         href="#daily-claim"
