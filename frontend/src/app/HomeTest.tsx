@@ -353,46 +353,6 @@ function formatEpwxBalance(normalized: number) {
   return "<0.00000001";
 }
 
-function formatCampaignExpiry(expiresAt?: string | null) {
-  if (!expiresAt) {
-    return "No expiry set";
-  }
-
-  const parsed = new Date(expiresAt);
-  if (Number.isNaN(parsed.getTime())) {
-    return "Expiry unavailable";
-  }
-
-  return parsed.toLocaleString();
-}
-
-function TwitterCampaignBoard() {
-  return (
-    <section id="twitter-campaigns" className="py-12 scroll-mt-24">
-      <div className="flex flex-col items-center">
-        <h2 className="text-2xl font-black mb-4 text-blue-700 text-center">X Engagement Program Paused</h2>
-        <div className={`${themedSectionClass} w-full max-w-5xl`}>
-          <div className="absolute top-0 left-0 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
-          <div className="relative z-10 text-center text-white">
-            <p className="text-sm uppercase tracking-[0.3em] text-white/65">Program Update</p>
-            <h3 className="mt-2 text-3xl font-black">X engagement claims and payouts are disabled</h3>
-            <p className="mt-3 text-sm text-white/80">
-              We removed X action-based rewards. Please use the Daily Claim section below for active reward opportunities.
-            </p>
-            <p className="mt-2 text-xs text-white/65">This program is not sponsored by, endorsed by, or affiliated with X.</p>
-            <a
-              href="#daily-claim"
-              className="mt-6 inline-flex rounded-full bg-white px-5 py-2 text-sm font-bold text-slate-900 hover:bg-slate-100"
-            >
-              Go To Daily Claim
-            </a>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 export default function HomeTest() {
   const { address, isConnected } = useAccount();
   const [incomingReferralWallet, setIncomingReferralWallet] = useState<string | null>(null);
@@ -1186,8 +1146,6 @@ export default function HomeTest() {
         <section id="burnt-supply" className="scroll-mt-24">
           <TokenSupplyPieChart />
         </section>
-
-        <TwitterCampaignBoard />
 
         {/* Cashback Rewards Section */}
         <section id="cashback-rewards" className="py-12 scroll-mt-24">
