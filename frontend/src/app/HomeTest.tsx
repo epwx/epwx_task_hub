@@ -58,6 +58,7 @@ const MID_TIER_DAILY_REWARD_THRESHOLD = 10_000_000_000;
 const BONUS_DAILY_REWARD_THRESHOLD = 100_000_000_000;
 const MEGA_DAILY_REWARD_THRESHOLD = 1_000_000_000_000;
 const TELEGRAM_VERIFICATION_RECHECK_INTERVAL_MS = 60_000;
+const LATEST_WINNERS_REFRESH_INTERVAL_MS = 60_000;
 const TELEGRAM_BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "epwx_bot";
 const PENDING_REFERRAL_STORAGE_KEY = "epwx-pending-referrer";
 const HOME_SHORTCUT_SECTIONS = ['buy-epwx', 'burnt-supply', 'daily-claim'] as const;
@@ -381,10 +382,15 @@ function LatestDailyWinnersBoard() {
   const [winners, setWinners] = useState<LatestDailyDrawWinner[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchLatestWinners = async () => {
-      setLoading(true);
+    let isMounted = true;
+
+    const fetchLatestWinners = async (silent = false) => {
+      if (!silent) {
+        setLoading(true);
+      }
       setError(null);
 
       try {
@@ -393,18 +399,35 @@ function LatestDailyWinnersBoard() {
           response,
           'Failed to load latest winners.'
         );
+        if (!isMounted) {
+          return;
+        }
         setDraw(data.draw || null);
         setWinners(Array.isArray(data.winners) ? data.winners : []);
+        setLastUpdatedAt(new Date().toLocaleTimeString());
       } catch (fetchError: any) {
+        if (!isMounted) {
+          return;
+        }
         setDraw(null);
         setWinners([]);
         setError(fetchError?.message || 'Failed to load latest winners.');
       } finally {
-        setLoading(false);
+        if (!silent && isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchLatestWinners();
+    const intervalId = window.setInterval(() => {
+      fetchLatestWinners(true);
+    }, LATEST_WINNERS_REFRESH_INTERVAL_MS);
+
+    return () => {
+      isMounted = false;
+      window.clearInterval(intervalId);
+    };
   }, []);
 
   return (
@@ -415,19 +438,20 @@ function LatestDailyWinnersBoard() {
           <div className="absolute top-0 left-0 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
           <div className="relative z-10 text-white">
             <div className="mb-6 text-center">
-              <p className="text-sm uppercase tracking-[0.3em] text-white/65">Daily Draw Results</p>
+              <p className="text-sm uppercase tracking-[0.3em] text-white/80">Daily Draw Results</p>
               <h3 className="mt-2 text-3xl font-black">Transparent winners for each daily draw</h3>
-              <p className="mt-3 text-sm text-white/80">Winners are selected randomly from unique daily claim wallets and listed below with payout status.</p>
+              <p className="mt-3 text-sm text-white/90">Winners are selected randomly from unique daily claim wallets and listed below with payout status.</p>
+              {lastUpdatedAt ? <p className="mt-2 text-xs text-white/85">Auto-refreshes every minute. Last updated: {lastUpdatedAt}</p> : null}
             </div>
 
-            {loading ? <div className="text-center text-white/80">Loading latest winners...</div> : null}
+            {loading ? <div className="text-center text-white/90">Loading latest winners...</div> : null}
             {!loading && error ? <div className="text-center text-red-200">{error}</div> : null}
-            {!loading && !error && !draw ? <div className="text-center text-white/80">No draw has been completed yet.</div> : null}
+            {!loading && !error && !draw ? <div className="text-center text-white/90">No draw has been completed yet.</div> : null}
 
             {!loading && !error && draw ? (
               <>
-                <div className={`${glassPanelClass} mb-5 p-4 text-sm text-white/85`}>
-                  <div className="text-xs uppercase tracking-[0.2em] text-white/60">Latest Draw Date</div>
+                <div className={`${glassPanelClass} mb-5 p-4 text-sm text-white/95`}>
+                  <div className="text-xs uppercase tracking-[0.2em] text-white/80">Latest Draw Date</div>
                   <div className="mt-1 text-xl font-black text-white">{draw.drawDate}</div>
                   <div className="mt-2 grid gap-2 sm:grid-cols-3">
                     <div>Winners: <span className="font-bold text-white">{draw.winnerCount}</span></div>
@@ -437,7 +461,7 @@ function LatestDailyWinnersBoard() {
                 </div>
 
                 {winners.length === 0 ? (
-                  <div className="text-center text-white/80">No winners available for this draw yet.</div>
+                  <div className="text-center text-white/90">No winners available for this draw yet.</div>
                 ) : (
                   <div className="grid gap-3 sm:grid-cols-2">
                     {winners
@@ -451,14 +475,14 @@ function LatestDailyWinnersBoard() {
                               {winner.status === 'paid' ? 'Paid' : 'Pending'}
                             </span>
                           </div>
-                          <div className="mt-2 text-sm text-white/85 break-all">Wallet: {formatWalletAddress(winner.wallet)}</div>
-                          <div className="mt-1 text-sm text-white/75">Prize: {Number(winner.prizeAmount || '0').toLocaleString()} EPWX</div>
+                          <div className="mt-2 text-sm text-white/95 break-all">Wallet: {formatWalletAddress(winner.wallet)}</div>
+                          <div className="mt-1 text-sm text-white/90">Prize: {Number(winner.prizeAmount || '0').toLocaleString()} EPWX</div>
                           {winner.txHash ? (
                             <a
                               href={`https://basescan.org/tx/${winner.txHash}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="mt-2 block text-xs text-emerald-200 underline hover:text-white break-all"
+                              className="mt-2 block text-xs text-emerald-50 underline decoration-emerald-100/80 underline-offset-2 hover:text-white break-all"
                             >
                               View Transaction
                             </a>
