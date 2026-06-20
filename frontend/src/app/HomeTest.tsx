@@ -398,6 +398,23 @@ function formatUtcDateTime(date: Date) {
   return `${year}-${month}-${day} ${hour}:${minute}:${second} UTC`;
 }
 
+function buildDailyDrawShareText(params: {
+  draw: LatestDailyDraw;
+  nextDrawCountdown: string;
+  nextDrawAtUtc: string;
+  pageUrl: string;
+}) {
+  const prizeAmount = Number(params.draw.prizeAmount || '0').toLocaleString();
+  return [
+    `EPWX Daily Draw ${params.draw.drawDate}`,
+    `Winners: ${params.draw.winnerCount}`,
+    `Eligible wallets: ${params.draw.eligibleCount}`,
+    `Prize per winner: ${prizeAmount} EPWX`,
+    `Next draw in: ${params.nextDrawCountdown} (${params.nextDrawAtUtc})`,
+    `Open: ${params.pageUrl}`,
+  ].join('\n');
+}
+
 function formatEpwxBalance(normalized: number) {
   if (!Number.isFinite(normalized) || normalized === 0) {
     return "0";
@@ -432,6 +449,42 @@ function LatestDailyWinnersBoard() {
   const [lastUpdatedAt, setLastUpdatedAt] = useState<string | null>(null);
   const [nextDrawCountdown, setNextDrawCountdown] = useState<string>("Calculating...");
   const [nextDrawAtUtc, setNextDrawAtUtc] = useState<string>("");
+
+  const handleShareDailyDraw = async () => {
+    if (!draw || typeof window === "undefined") {
+      return;
+    }
+
+    const pageUrl = `${window.location.origin}/#latest-winners`;
+    const shareMessage = buildDailyDrawShareText({
+      draw,
+      nextDrawCountdown,
+      nextDrawAtUtc,
+      pageUrl,
+    });
+
+    if (typeof navigator.share !== "function") {
+      try {
+        await navigator.clipboard.writeText(shareMessage);
+        toast.success("Daily draw details copied. Paste them anywhere to share.");
+      } catch {
+        toast.error("Unable to copy the daily draw details right now.");
+      }
+      return;
+    }
+
+    try {
+      await navigator.share({
+        title: "EPWX Daily Draw",
+        text: shareMessage,
+        url: pageUrl,
+      });
+    } catch (error: any) {
+      if (error?.name !== "AbortError") {
+        toast.error("Unable to open the share dialog right now.");
+      }
+    }
+  };
 
   useEffect(() => {
     const updateCountdown = () => {
@@ -521,8 +574,20 @@ function LatestDailyWinnersBoard() {
             {!loading && !error && draw ? (
               <>
                 <div className={`${glassPanelClass} mb-5 p-4 text-sm text-white/95`}>
-                  <div className="text-xs uppercase tracking-[0.2em] text-white/80">Latest Draw Date</div>
-                  <div className="mt-1 text-xl font-black text-white">{draw.drawDate}</div>
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <div className="text-xs uppercase tracking-[0.2em] text-white/80">Latest Draw Date</div>
+                      <div className="mt-1 text-xl font-black text-white">{draw.drawDate}</div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleShareDailyDraw}
+                      className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-white transition-colors hover:bg-white/20"
+                    >
+                      <ShareIcon />
+                      Share Draw
+                    </button>
+                  </div>
                   <div className="mt-2 grid gap-2 sm:grid-cols-3">
                     <div>Winners: <span className="font-bold text-white">{draw.winnerCount}</span></div>
                     <div>Eligible Wallets: <span className="font-bold text-white">{draw.eligibleCount}</span></div>
