@@ -59,6 +59,9 @@ const BONUS_DAILY_REWARD_THRESHOLD = 100_000_000_000;
 const MEGA_DAILY_REWARD_THRESHOLD = 1_000_000_000_000;
 const TELEGRAM_VERIFICATION_RECHECK_INTERVAL_MS = 60_000;
 const LATEST_WINNERS_REFRESH_INTERVAL_MS = 60_000;
+const NEXT_DRAW_COUNTDOWN_REFRESH_INTERVAL_MS = 1_000;
+const DEFAULT_AUTO_DAILY_DRAW_TIME_UTC = "00:05";
+const NEXT_PUBLIC_AUTO_DAILY_DRAW_TIME_UTC = String(process.env.NEXT_PUBLIC_AUTO_DAILY_DRAW_TIME_UTC || DEFAULT_AUTO_DAILY_DRAW_TIME_UTC).trim();
 const TELEGRAM_BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "epwx_bot";
 const PENDING_REFERRAL_STORAGE_KEY = "epwx-pending-referrer";
 const HOME_SHORTCUT_SECTIONS = ['buy-epwx', 'burnt-supply', 'daily-claim'] as const;
@@ -351,6 +354,50 @@ function formatDuration(msLeft: number) {
   return `${minutes}m ${seconds}s`;
 }
 
+function parseUtcHourMinute(input: string) {
+  const matched = String(input || "").match(/^(\d{2}):(\d{2})$/);
+  if (!matched) {
+    return { hour: 0, minute: 5 };
+  }
+
+  const hour = Number.parseInt(matched[1], 10);
+  const minute = Number.parseInt(matched[2], 10);
+  if (!Number.isInteger(hour) || !Number.isInteger(minute) || hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+    return { hour: 0, minute: 5 };
+  }
+
+  return { hour, minute };
+}
+
+function getNextDrawAtUtc(now = new Date()) {
+  const { hour, minute } = parseUtcHourMinute(NEXT_PUBLIC_AUTO_DAILY_DRAW_TIME_UTC);
+  const next = new Date(Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate(),
+    hour,
+    minute,
+    0,
+    0,
+  ));
+
+  if (next.getTime() <= now.getTime()) {
+    next.setUTCDate(next.getUTCDate() + 1);
+  }
+
+  return next;
+}
+
+function formatUtcDateTime(date: Date) {
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  const hour = String(date.getUTCHours()).padStart(2, "0");
+  const minute = String(date.getUTCMinutes()).padStart(2, "0");
+  const second = String(date.getUTCSeconds()).padStart(2, "0");
+  return `${year}-${month}-${day} ${hour}:${minute}:${second} UTC`;
+}
+
 function formatEpwxBalance(normalized: number) {
   if (!Number.isFinite(normalized) || normalized === 0) {
     return "0";
@@ -383,6 +430,22 @@ function LatestDailyWinnersBoard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdatedAt, setLastUpdatedAt] = useState<string | null>(null);
+  const [nextDrawCountdown, setNextDrawCountdown] = useState<string>("Calculating...");
+  const [nextDrawAtUtc, setNextDrawAtUtc] = useState<string>("");
+
+  useEffect(() => {
+    const updateCountdown = () => {
+      const now = new Date();
+      const nextDrawAt = getNextDrawAtUtc(now);
+      const msRemaining = Math.max(nextDrawAt.getTime() - now.getTime(), 0);
+      setNextDrawCountdown(formatDuration(msRemaining));
+      setNextDrawAtUtc(formatUtcDateTime(nextDrawAt));
+    };
+
+    updateCountdown();
+    const timerId = window.setInterval(updateCountdown, NEXT_DRAW_COUNTDOWN_REFRESH_INTERVAL_MS);
+    return () => window.clearInterval(timerId);
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -442,6 +505,13 @@ function LatestDailyWinnersBoard() {
               <h3 className="mt-2 text-3xl font-black">Transparent winners for each daily draw</h3>
               <p className="mt-3 text-sm text-white/90">Winners are selected randomly from unique daily claim wallets and listed below with payout status.</p>
               {lastUpdatedAt ? <p className="mt-2 text-xs text-white/85">Auto-refreshes every minute. Last updated: {lastUpdatedAt}</p> : null}
+            </div>
+
+            <div className={`${glassPanelClass} mb-5 p-4`}>
+              <div className="text-xs uppercase tracking-[0.2em] text-white/80">Next Draw Countdown</div>
+              <div className="mt-1 text-2xl font-black text-emerald-100">{nextDrawCountdown}</div>
+              <div className="mt-1 text-xs text-white/85">Next scheduled run: {nextDrawAtUtc || "-"}</div>
+              <div className="mt-1 text-xs text-white/80">Schedule source: {NEXT_PUBLIC_AUTO_DAILY_DRAW_TIME_UTC} UTC</div>
             </div>
 
             {loading ? <div className="text-center text-white/90">Loading latest winners...</div> : null}
