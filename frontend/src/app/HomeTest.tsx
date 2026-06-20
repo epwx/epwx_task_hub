@@ -64,7 +64,7 @@ const DEFAULT_AUTO_DAILY_DRAW_TIME_UTC = "00:05";
 const NEXT_PUBLIC_AUTO_DAILY_DRAW_TIME_UTC = String(process.env.NEXT_PUBLIC_AUTO_DAILY_DRAW_TIME_UTC || DEFAULT_AUTO_DAILY_DRAW_TIME_UTC).trim();
 const TELEGRAM_BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "epwx_bot";
 const PENDING_REFERRAL_STORAGE_KEY = "epwx-pending-referrer";
-const HOME_SHORTCUT_SECTIONS = ['buy-epwx', 'burnt-supply', 'daily-claim'] as const;
+const HOME_SHORTCUT_SECTIONS = ['buy-epwx', 'burnt-supply', 'latest-winners', 'daily-claim'] as const;
 const DAILY_REWARD_TIERS = [
   {
     walletBalanceLabel: `At least ${MEGA_DAILY_REWARD_THRESHOLD.toLocaleString()} EPWX`,
@@ -1805,6 +1805,13 @@ export default function HomeTest() {
           90% Burnt
         </a>
         <a
+          href="#latest-winners"
+          onClick={() => setActiveShortcutSection('latest-winners')}
+          className={`flex min-w-0 flex-1 items-center justify-center rounded-xl px-3 py-2 text-center text-[11px] font-black uppercase tracking-[0.14em] text-white transition-colors ${activeShortcutSection === 'latest-winners' ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-white/8 hover:bg-white/14'}`}
+        >
+          Next Draw
+        </a>
+        <a
           href="#daily-claim"
           onClick={() => setActiveShortcutSection('daily-claim')}
           className={`flex min-w-0 flex-1 items-center justify-center rounded-xl px-3 py-2 text-center text-[11px] font-black uppercase tracking-[0.14em] text-white transition-colors ${activeShortcutSection === 'daily-claim' ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-white/8 hover:bg-white/14'}`}
@@ -1827,6 +1834,14 @@ export default function HomeTest() {
         style={{ writingMode: 'vertical-rl' }}
       >
         90% Burnt
+      </a>
+      <a
+        href="#latest-winners"
+        onClick={() => setActiveShortcutSection('latest-winners')}
+        className={`fixed right-4 top-[34%] z-40 hidden -translate-y-1/2 rounded-full border border-white/15 px-3 py-4 text-xs font-black uppercase tracking-[0.2em] text-white shadow-[0_18px_40px_rgba(15,23,42,0.35)] backdrop-blur-md transition-all hover:right-3 dark:border-white/10 lg:flex ${activeShortcutSection === 'latest-winners' ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-slate-950/85 hover:bg-slate-900 dark:bg-slate-900/85'}`}
+        style={{ writingMode: 'vertical-rl' }}
+      >
+        Next Draw
       </a>
       <a
         href="#daily-claim"
