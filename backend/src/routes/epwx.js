@@ -133,6 +133,14 @@ function getUtcDateString(date = new Date()) {
   return date.toISOString().slice(0, 10);
 }
 
+function createDailyDrawError(message, status, code, details = {}) {
+  const error = new Error(message);
+  error.status = status;
+  error.code = code;
+  Object.assign(error, details);
+  return error;
+}
+
 function parseDrawDate(drawDate) {
   const raw = String(drawDate || '').trim();
   if (!raw) return getUtcDateString();
@@ -162,6 +170,96 @@ function pickRandomEntries(entries, count) {
 
 function getRequestIp(req) {
   return req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.connection.remoteAddress || req.socket?.remoteAddress || null;
+}
+
+export async function runDailyDraw({ drawDate, winnerCount, prizeAmount, runBy }) {
+  const resolvedDrawDate = parseDrawDate(drawDate);
+  if (!resolvedDrawDate) {
+    throw createDailyDrawError('drawDate must be YYYY-MM-DD format.', 400, 'INVALID_DRAW_DATE');
+  }
+
+  const requestedWinnerCount = Number.parseInt(String(winnerCount || DEFAULT_DAILY_DRAW_WINNER_COUNT), 10);
+  if (!Number.isInteger(requestedWinnerCount) || requestedWinnerCount <= 0) {
+    throw createDailyDrawError('winnerCount must be a positive integer.', 400, 'INVALID_WINNER_COUNT');
+  }
+
+  const normalizedPrizeAmount = String(prizeAmount || DEFAULT_DAILY_DRAW_PRIZE_AMOUNT).trim();
+  if (!/^\d+$/.test(normalizedPrizeAmount) || normalizedPrizeAmount === '0') {
+    throw createDailyDrawError('prizeAmount must be a positive integer string.', 400, 'INVALID_PRIZE_AMOUNT');
+  }
+
+  const { start, end } = getUtcDateBounds(resolvedDrawDate);
+
+  const existingDraw = await DailyDraw.findOne({ where: { drawDate: resolvedDrawDate } });
+  if (existingDraw) {
+    throw createDailyDrawError('Draw already exists for this date.', 409, 'DRAW_ALREADY_EXISTS', { draw: existingDraw });
+  }
+
+  const claims = await DailyClaim.findAll({
+    where: {
+      claimedAt: { [Op.gte]: start, [Op.lte]: end },
+    },
+    attributes: ['id', 'wallet', 'claimedAt'],
+    order: [['claimedAt', 'ASC']],
+  });
+
+  const uniqueByWallet = new Map();
+  for (const claim of claims) {
+    const wallet = normalizeWallet(claim.wallet);
+    if (!wallet || uniqueByWallet.has(wallet)) {
+      continue;
+    }
+    uniqueByWallet.set(wallet, claim);
+  }
+
+  const eligibleClaims = Array.from(uniqueByWallet.values());
+  const eligibleCount = eligibleClaims.length;
+  if (eligibleCount === 0) {
+    throw createDailyDrawError('No eligible daily claims found for the selected draw date.', 400, 'NO_ELIGIBLE_CLAIMS');
+  }
+
+  const selectedWinnerCount = Math.min(requestedWinnerCount, eligibleCount);
+  const pickedClaims = pickRandomEntries(eligibleClaims, selectedWinnerCount);
+
+  try {
+    const result = await DailyDraw.sequelize.transaction(async (transaction) => {
+      const draw = await DailyDraw.create({
+        drawDate: resolvedDrawDate,
+        winnerCount: selectedWinnerCount,
+        eligibleCount,
+        prizeAmount: normalizedPrizeAmount,
+        status: 'completed',
+        runBy: normalizeWallet(runBy || 'system:auto-draw'),
+        runAt: new Date(),
+      }, { transaction });
+
+      const winnerRows = pickedClaims.map((claim, index) => ({
+        drawId: draw.id,
+        dailyClaimId: claim.id,
+        wallet: normalizeWallet(claim.wallet),
+        rank: index + 1,
+        prizeAmount: normalizedPrizeAmount,
+        status: 'pending',
+      }));
+
+      await DailyDrawWinner.bulkCreate(winnerRows, { transaction });
+      const winners = await DailyDrawWinner.findAll({
+        where: { drawId: draw.id },
+        order: [['rank', 'ASC']],
+        transaction,
+      });
+
+      return { draw, winners };
+    });
+
+    return result;
+  } catch (error) {
+    if (error?.name === 'SequelizeUniqueConstraintError') {
+      const existingOnRace = await DailyDraw.findOne({ where: { drawDate: resolvedDrawDate } });
+      throw createDailyDrawError('Draw already exists for this date.', 409, 'DRAW_ALREADY_EXISTS', { draw: existingOnRace || null });
+    }
+    throw error;
+  }
 }
 
 function getGrossRewardAmount(amount) {
@@ -811,87 +909,23 @@ router.post('/daily-draws/run', async (req, res) => {
     return res.status(403).json({ error: 'Unauthorized' });
   }
 
-  const resolvedDrawDate = parseDrawDate(drawDate);
-  if (!resolvedDrawDate) {
-    return res.status(400).json({ error: 'drawDate must be YYYY-MM-DD format.' });
-  }
-
-  const requestedWinnerCount = Number.parseInt(String(winnerCount || DEFAULT_DAILY_DRAW_WINNER_COUNT), 10);
-  if (!Number.isInteger(requestedWinnerCount) || requestedWinnerCount <= 0) {
-    return res.status(400).json({ error: 'winnerCount must be a positive integer.' });
-  }
-
-  const normalizedPrizeAmount = String(prizeAmount || DEFAULT_DAILY_DRAW_PRIZE_AMOUNT).trim();
-  if (!/^\d+$/.test(normalizedPrizeAmount) || normalizedPrizeAmount === '0') {
-    return res.status(400).json({ error: 'prizeAmount must be a positive integer string.' });
-  }
-
-  const { start, end } = getUtcDateBounds(resolvedDrawDate);
-
   try {
-    const existingDraw = await DailyDraw.findOne({ where: { drawDate: resolvedDrawDate } });
-    if (existingDraw) {
-      return res.status(409).json({ error: 'Draw already exists for this date.', draw: existingDraw });
-    }
-
-    const claims = await DailyClaim.findAll({
-      where: {
-        claimedAt: { [Op.gte]: start, [Op.lte]: end },
-      },
-      attributes: ['id', 'wallet', 'claimedAt'],
-      order: [['claimedAt', 'ASC']],
-    });
-
-    const uniqueByWallet = new Map();
-    for (const claim of claims) {
-      const wallet = normalizeWallet(claim.wallet);
-      if (!wallet || uniqueByWallet.has(wallet)) {
-        continue;
-      }
-      uniqueByWallet.set(wallet, claim);
-    }
-
-    const eligibleClaims = Array.from(uniqueByWallet.values());
-    const eligibleCount = eligibleClaims.length;
-    if (eligibleCount === 0) {
-      return res.status(400).json({ error: 'No eligible daily claims found for the selected draw date.' });
-    }
-
-    const selectedWinnerCount = Math.min(requestedWinnerCount, eligibleCount);
-    const pickedClaims = pickRandomEntries(eligibleClaims, selectedWinnerCount);
-
-    const result = await DailyDraw.sequelize.transaction(async (transaction) => {
-      const draw = await DailyDraw.create({
-        drawDate: resolvedDrawDate,
-        winnerCount: selectedWinnerCount,
-        eligibleCount,
-        prizeAmount: normalizedPrizeAmount,
-        status: 'completed',
-        runBy: normalizeWallet(admin),
-        runAt: new Date(),
-      }, { transaction });
-
-      const winnerRows = pickedClaims.map((claim, index) => ({
-        drawId: draw.id,
-        dailyClaimId: claim.id,
-        wallet: normalizeWallet(claim.wallet),
-        rank: index + 1,
-        prizeAmount: normalizedPrizeAmount,
-        status: 'pending',
-      }));
-
-      await DailyDrawWinner.bulkCreate(winnerRows, { transaction });
-      const winners = await DailyDrawWinner.findAll({
-        where: { drawId: draw.id },
-        order: [['rank', 'ASC']],
-        transaction,
-      });
-
-      return { draw, winners };
+    const result = await runDailyDraw({
+      drawDate,
+      winnerCount,
+      prizeAmount,
+      runBy: admin,
     });
 
     return res.json({ success: true, ...result });
   } catch (err) {
+    if (err?.status) {
+      const payload = { error: err.message };
+      if (err.draw) {
+        payload.draw = err.draw;
+      }
+      return res.status(err.status).json(payload);
+    }
     return res.status(500).json({ error: err.message });
   }
 });
