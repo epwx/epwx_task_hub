@@ -404,6 +404,7 @@ function buildDailyDrawShareText(params: {
   nextDrawAtUtc: string;
   pageUrl: string;
   referralLink?: string;
+  includePageUrl?: boolean;
 }) {
   const prizeAmount = Number(params.draw.prizeAmount || '0').toLocaleString();
   const lines = [
@@ -412,8 +413,11 @@ function buildDailyDrawShareText(params: {
     `Eligible wallets: ${params.draw.eligibleCount}`,
     `Prize per winner: ${prizeAmount} EPWX`,
     `Next draw in: ${params.nextDrawCountdown} (${params.nextDrawAtUtc})`,
-    `Open: ${params.pageUrl}`,
   ];
+
+  if (params.includePageUrl) {
+    lines.push(`Open: ${params.pageUrl}`);
+  }
 
   if (params.referralLink) {
     lines.push(`My referral link: ${params.referralLink}`);
@@ -580,6 +584,14 @@ function LatestDailyWinnersBoard({ referralLink }: { referralLink?: string }) {
       pageUrl,
       referralLink: referralLink?.trim() || undefined,
     });
+    const copyMessage = buildDailyDrawShareText({
+      draw,
+      nextDrawCountdown,
+      nextDrawAtUtc,
+      pageUrl,
+      referralLink: referralLink?.trim() || undefined,
+      includePageUrl: true,
+    });
     const shareFile = await buildDailyDrawShareFile({
       draw,
       nextDrawCountdown,
@@ -597,7 +609,7 @@ function LatestDailyWinnersBoard({ referralLink }: { referralLink?: string }) {
 
     if (typeof navigator.share !== "function" || !supportsFileShare) {
       try {
-        await navigator.clipboard.writeText(shareMessage);
+        await navigator.clipboard.writeText(copyMessage);
         toast.success("Daily draw details copied. Paste them anywhere to share.");
       } catch {
         const objectUrl = URL.createObjectURL(shareFile);
@@ -616,7 +628,7 @@ function LatestDailyWinnersBoard({ referralLink }: { referralLink?: string }) {
     } catch (error: any) {
       if (error?.name !== "AbortError") {
         try {
-          await navigator.clipboard.writeText(shareMessage);
+          await navigator.clipboard.writeText(copyMessage);
           toast.success("Daily draw details copied. Paste them anywhere to share.");
         } catch {
           toast.error("Unable to share the daily draw right now.");
