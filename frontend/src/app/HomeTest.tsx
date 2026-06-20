@@ -403,16 +403,23 @@ function buildDailyDrawShareText(params: {
   nextDrawCountdown: string;
   nextDrawAtUtc: string;
   pageUrl: string;
+  referralLink?: string;
 }) {
   const prizeAmount = Number(params.draw.prizeAmount || '0').toLocaleString();
-  return [
+  const lines = [
     `EPWX Daily Draw ${params.draw.drawDate}`,
     `Winners: ${params.draw.winnerCount}`,
     `Eligible wallets: ${params.draw.eligibleCount}`,
     `Prize per winner: ${prizeAmount} EPWX`,
     `Next draw in: ${params.nextDrawCountdown} (${params.nextDrawAtUtc})`,
     `Open: ${params.pageUrl}`,
-  ].join('\n');
+  ];
+
+  if (params.referralLink) {
+    lines.push(`My referral link: ${params.referralLink}`);
+  }
+
+  return lines.join('\n');
 }
 
 function escapeSvgText(value: string) {
@@ -551,7 +558,7 @@ function formatWalletAddress(wallet: string) {
   return `${wallet.slice(0, 8)}...${wallet.slice(-6)}`;
 }
 
-function LatestDailyWinnersBoard() {
+function LatestDailyWinnersBoard({ referralLink }: { referralLink?: string }) {
   const [draw, setDraw] = useState<LatestDailyDraw | null>(null);
   const [winners, setWinners] = useState<LatestDailyDrawWinner[]>([]);
   const [loading, setLoading] = useState(true);
@@ -571,6 +578,7 @@ function LatestDailyWinnersBoard() {
       nextDrawCountdown,
       nextDrawAtUtc,
       pageUrl,
+      referralLink: referralLink?.trim() || undefined,
     });
     const shareFile = await buildDailyDrawShareFile({
       draw,
@@ -1560,7 +1568,7 @@ export default function HomeTest() {
           <TokenSupplyPieChart />
         </section>
 
-        <LatestDailyWinnersBoard />
+        <LatestDailyWinnersBoard referralLink={referralLink} />
 
         {/* Cashback Rewards Section */}
         <section id="cashback-rewards" className="py-12 scroll-mt-24">
