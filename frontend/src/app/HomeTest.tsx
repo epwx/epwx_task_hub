@@ -486,7 +486,43 @@ async function buildDailyDrawShareFile(params: {
   pageUrl: string;
 }) {
   const svg = buildDailyDrawShareSvg(params);
-  return new File([svg], `epwx-daily-draw-${params.draw.drawDate}.svg`, { type: 'image/svg+xml' });
+
+  const svgBlob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+  const svgUrl = URL.createObjectURL(svgBlob);
+
+  try {
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error('Failed to render share image.'));
+      img.src = svgUrl;
+    });
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 1200;
+    canvas.height = 630;
+    const context = canvas.getContext('2d');
+    if (!context) {
+      throw new Error('Canvas context unavailable.');
+    }
+
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+    const pngBlob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (blob) {
+          resolve(blob);
+          return;
+        }
+        reject(new Error('Failed to create PNG share image.'));
+      }, 'image/png');
+    });
+
+    return new File([pngBlob], `epwx-daily-draw-${params.draw.drawDate}.png`, { type: 'image/png' });
+  } catch {
+    return new File([svg], `epwx-daily-draw-${params.draw.drawDate}.svg`, { type: 'image/svg+xml' });
+  } finally {
+    URL.revokeObjectURL(svgUrl);
+  }
 }
 
 function formatEpwxBalance(normalized: number) {
