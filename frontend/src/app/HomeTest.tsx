@@ -415,6 +415,80 @@ function buildDailyDrawShareText(params: {
   ].join('\n');
 }
 
+function escapeSvgText(value: string) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+function buildDailyDrawShareSvg(params: {
+  draw: LatestDailyDraw;
+  nextDrawCountdown: string;
+  nextDrawAtUtc: string;
+  pageUrl: string;
+}) {
+  const prizeAmount = Number(params.draw.prizeAmount || '0').toLocaleString();
+  const dateLabel = escapeSvgText(params.draw.drawDate);
+  const winnersLabel = escapeSvgText(String(params.draw.winnerCount));
+  const eligibleLabel = escapeSvgText(String(params.draw.eligibleCount));
+  const prizeLabel = escapeSvgText(`${prizeAmount} EPWX`);
+  const countdownLabel = escapeSvgText(params.nextDrawCountdown);
+  const nextRunLabel = escapeSvgText(params.nextDrawAtUtc);
+  const pageLabel = escapeSvgText(params.pageUrl);
+
+  return `
+  <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none">
+    <defs>
+      <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+        <stop stop-color="#1d4ed8"/>
+        <stop offset="0.52" stop-color="#7c3aed"/>
+        <stop offset="1" stop-color="#db2777"/>
+      </linearGradient>
+      <linearGradient id="card" x1="120" y1="110" x2="1080" y2="520" gradientUnits="userSpaceOnUse">
+        <stop stop-color="rgba(255,255,255,0.22)"/>
+        <stop offset="1" stop-color="rgba(255,255,255,0.08)"/>
+      </linearGradient>
+      <filter id="shadow" x="80" y="80" width="1040" height="470" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+        <feDropShadow dx="0" dy="20" stdDeviation="30" flood-color="rgba(15,23,42,0.35)"/>
+      </filter>
+    </defs>
+    <rect width="1200" height="630" rx="48" fill="url(#bg)"/>
+    <circle cx="130" cy="110" r="95" fill="rgba(255,255,255,0.10)"/>
+    <circle cx="1080" cy="520" r="140" fill="rgba(255,255,255,0.08)"/>
+    <rect x="90" y="80" width="1020" height="470" rx="40" fill="url(#card)" stroke="rgba(255,255,255,0.18)" filter="url(#shadow)"/>
+    <text x="600" y="142" fill="rgba(255,255,255,0.78)" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="700" letter-spacing="6" text-anchor="middle">EPWX DAILY DRAW</text>
+    <text x="600" y="208" fill="#ffffff" font-family="Inter, Arial, sans-serif" font-size="54" font-weight="900" text-anchor="middle">${dateLabel}</text>
+    <text x="600" y="262" fill="rgba(255,255,255,0.92)" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="500" text-anchor="middle">Winners selected from daily claim wallets</text>
+
+    <rect x="150" y="312" width="900" height="118" rx="24" fill="rgba(255,255,255,0.10)" stroke="rgba(255,255,255,0.16)"/>
+    <text x="190" y="350" fill="rgba(255,255,255,0.72)" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700" letter-spacing="3">WINNERS</text>
+    <text x="190" y="390" fill="#ffffff" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="900">${winnersLabel}</text>
+    <text x="420" y="350" fill="rgba(255,255,255,0.72)" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700" letter-spacing="3">ELIGIBLE</text>
+    <text x="420" y="390" fill="#ffffff" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="900">${eligibleLabel}</text>
+    <text x="665" y="350" fill="rgba(255,255,255,0.72)" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700" letter-spacing="3">PRIZE PER WINNER</text>
+    <text x="665" y="390" fill="#d9f99d" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="900">${prizeLabel}</text>
+
+    <rect x="150" y="454" width="900" height="56" rx="18" fill="rgba(15,23,42,0.18)" stroke="rgba(255,255,255,0.14)"/>
+    <text x="180" y="489" fill="rgba(255,255,255,0.9)" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="700">Next draw in</text>
+    <text x="340" y="489" fill="#ffffff" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="700">${countdownLabel}</text>
+    <text x="600" y="489" fill="rgba(255,255,255,0.75)" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="500" text-anchor="middle">${nextRunLabel}</text>
+    <text x="1040" y="489" fill="rgba(255,255,255,0.75)" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="500" text-anchor="end">${pageLabel}</text>
+  </svg>`;
+}
+
+async function buildDailyDrawShareFile(params: {
+  draw: LatestDailyDraw;
+  nextDrawCountdown: string;
+  nextDrawAtUtc: string;
+  pageUrl: string;
+}) {
+  const svg = buildDailyDrawShareSvg(params);
+  return new File([svg], `epwx-daily-draw-${params.draw.drawDate}.svg`, { type: 'image/svg+xml' });
+}
+
 function formatEpwxBalance(normalized: number) {
   if (!Number.isFinite(normalized) || normalized === 0) {
     return "0";
@@ -462,26 +536,47 @@ function LatestDailyWinnersBoard() {
       nextDrawAtUtc,
       pageUrl,
     });
+    const shareFile = await buildDailyDrawShareFile({
+      draw,
+      nextDrawCountdown,
+      nextDrawAtUtc,
+      pageUrl,
+    });
+    const shareData = {
+      title: "EPWX Daily Draw",
+      text: shareMessage,
+      url: pageUrl,
+      files: [shareFile],
+    };
 
-    if (typeof navigator.share !== "function") {
+    const supportsFileShare = typeof navigator.canShare === "function" && navigator.canShare({ files: [shareFile] });
+
+    if (typeof navigator.share !== "function" || !supportsFileShare) {
       try {
         await navigator.clipboard.writeText(shareMessage);
         toast.success("Daily draw details copied. Paste them anywhere to share.");
       } catch {
-        toast.error("Unable to copy the daily draw details right now.");
+        const objectUrl = URL.createObjectURL(shareFile);
+        const anchor = document.createElement('a');
+        anchor.href = objectUrl;
+        anchor.download = shareFile.name;
+        anchor.click();
+        window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+        toast.success("Share image downloaded. Attach it when posting your draw.");
       }
       return;
     }
 
     try {
-      await navigator.share({
-        title: "EPWX Daily Draw",
-        text: shareMessage,
-        url: pageUrl,
-      });
+      await navigator.share(shareData);
     } catch (error: any) {
       if (error?.name !== "AbortError") {
-        toast.error("Unable to open the share dialog right now.");
+        try {
+          await navigator.clipboard.writeText(shareMessage);
+          toast.success("Daily draw details copied. Paste them anywhere to share.");
+        } catch {
+          toast.error("Unable to share the daily draw right now.");
+        }
       }
     }
   };
