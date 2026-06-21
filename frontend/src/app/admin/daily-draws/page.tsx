@@ -56,26 +56,24 @@ function normalizePositiveIntegerString(value: string): string | null {
     return null;
   }
 
-  const base = BigInt(matched[1]);
+  const base = matched[1].replace(/^0+/, "") || "0";
   const suffix = String(matched[2] || "").toLowerCase();
-  const multiplierBySuffix: Record<string, bigint> = {
-    "": 1n,
-    k: 1000n,
-    m: 1000000n,
-    b: 1000000000n,
+  const zerosBySuffix: Record<string, number> = {
+    "": 0,
+    k: 3,
+    m: 6,
+    b: 9,
   };
 
-  const multiplier = multiplierBySuffix[suffix];
-  if (!multiplier) {
+  if (!(suffix in zerosBySuffix)) {
     return null;
   }
 
-  const normalized = base * multiplier;
-  if (normalized <= 0n) {
+  if (base === "0") {
     return null;
   }
 
-  return normalized.toString();
+  return base + "0".repeat(zerosBySuffix[suffix]);
 }
 
 const DEFAULT_DAILY_DRAW_PRIZE_AMOUNT =
