@@ -82,6 +82,41 @@ function hasDisplayValue(value) {
   return Boolean(normalized) && !['null', 'undefined', 'none', 'n/a'].includes(normalized);
 }
 
+function getTimeUntilNextDraw() {
+  const AUTO_DAILY_DRAW_TIME_UTC = String(process.env.AUTO_DAILY_DRAW_TIME_UTC || '00:05').trim();
+  const matched = AUTO_DAILY_DRAW_TIME_UTC.match(/^(\d{2}):(\d{2})$/);
+  if (!matched) {
+    return null;
+  }
+
+  const hour = Number.parseInt(matched[1], 10);
+  const minute = Number.parseInt(matched[2], 10);
+  if (!Number.isInteger(hour) || !Number.isInteger(minute) || hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+    return null;
+  }
+
+  const now = new Date();
+  const next = new Date(Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate(),
+    hour,
+    minute,
+    0,
+    0,
+  ));
+
+  if (next.getTime() <= now.getTime()) {
+    next.setUTCDate(next.getUTCDate() + 1);
+  }
+
+  const msRemaining = next.getTime() - now.getTime();
+  const hoursRemaining = Math.floor(msRemaining / (1000 * 60 * 60));
+  const minutesRemaining = Math.floor((msRemaining % (1000 * 60 * 60)) / (1000 * 60));
+
+  return `${hoursRemaining}h ${minutesRemaining}m`;
+}
+
 export function buildDailyClaimPaidMessage({ wallet, amount, claimedAt, txHash, badgeLabel, badgeBenefit, totalDailyClaimsCount, isNewWallet }) {
   const safeShortWallet = escapeHtml(shortenHex(wallet));
   const safeAmount = escapeHtml(formatEpwxAmount(amount));
@@ -99,8 +134,14 @@ export function buildDailyClaimPaidMessage({ wallet, amount, claimedAt, txHash, 
     `<b>Wallet</b>  <code>${safeShortWallet}</code>`,
     `<b>Amount</b>: ${safeAmount} EPWX`,
     `<b>Time</b>: ${safeClaimedAt}`,
-    '',
   ];
+
+  const timeUntilNextDraw = getTimeUntilNextDraw();
+  if (timeUntilNextDraw) {
+    lines.push(`<b>Next Draw In</b>: ${timeUntilNextDraw}`);
+  }
+
+  lines.push('');
 
   if (safeBadgeDisplay) {
     lines.push(`<b>Badge</b>: ${safeBadgeDisplay}`);
