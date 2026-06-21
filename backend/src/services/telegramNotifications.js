@@ -82,12 +82,14 @@ function hasDisplayValue(value) {
   return Boolean(normalized) && !['null', 'undefined', 'none', 'n/a'].includes(normalized);
 }
 
-export function buildDailyClaimPaidMessage({ wallet, amount, claimedAt, txHash, badgeLabel, badgeBenefit, totalDailyClaimsCount }) {
+export function buildDailyClaimPaidMessage({ wallet, amount, claimedAt, txHash, badgeLabel, badgeBenefit, totalDailyClaimsCount, isNewWallet }) {
   const safeShortWallet = escapeHtml(shortenHex(wallet));
   const safeAmount = escapeHtml(formatEpwxAmount(amount));
   const safeClaimedAt = escapeHtml(formatClaimTimestamp(claimedAt));
-  const safeBadgeDisplay = escapeHtml(formatBadgeDisplay(badgeLabel));
-  const safeTotalDailyClaimsCount = escapeHtml(formatCount(totalDailyClaimsCount));
+  const badgeDisplay = formatBadgeDisplay(badgeLabel);
+  const safeBadgeDisplay = badgeDisplay ? escapeHtml(badgeDisplay) : null;
+  const totalDailyClaimsCountDisplay = formatCount(totalDailyClaimsCount);
+  const safeTotalDailyClaimsCount = totalDailyClaimsCountDisplay ? escapeHtml(totalDailyClaimsCountDisplay) : null;
   const txLink = txHash ? `https://basescan.org/tx/${encodeURIComponent(txHash)}` : null;
 
   const lines = [
@@ -104,8 +106,13 @@ export function buildDailyClaimPaidMessage({ wallet, amount, claimedAt, txHash, 
     lines.push(`<b>Badge</b>: ${safeBadgeDisplay}`);
   }
 
+
   if (safeTotalDailyClaimsCount) {
     lines.push(`<b>Total Claims Today</b>: ${safeTotalDailyClaimsCount}`);
+  }
+
+  if (isNewWallet) {
+    lines.push('<b>Status</b>: 🆕 New Wallet');
   }
 
   if (hasDisplayValue(badgeBenefit)) {

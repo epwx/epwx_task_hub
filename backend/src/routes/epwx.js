@@ -1039,6 +1039,8 @@ router.post('/daily-claims/mark-paid', async (req, res) => {
 
     const rewardDetails = findDailyRewardTierByAmount(claim.amount) || await getDailyRewardDetails(claim.wallet);
     const totalDailyClaimsCount = await getTodayDailyClaimsCount();
+    const walletClaimCount = await DailyClaim.count({ where: { wallet: claim.wallet } });
+    const isNewWallet = walletClaimCount === 1;
     const notificationResult = await notifyDailyClaimPaid({
       wallet: claim.wallet,
       amount: claim.amount,
@@ -1047,6 +1049,7 @@ router.post('/daily-claims/mark-paid', async (req, res) => {
       badgeLabel: rewardDetails.badgeLabel,
       badgeBenefit: rewardDetails.badgeBenefit,
       totalDailyClaimsCount,
+      isNewWallet,
     });
 
     res.json({
@@ -1161,6 +1164,10 @@ router.post('/daily-claim', async (req, res) => {
       }
 
       const totalDailyClaimsCount = await getTodayDailyClaimsCount();
+
+      // Check if this is a new wallet (only 1 claim total across all days)
+      const walletClaimCount = await DailyClaim.count({ where: { wallet: normalizedWallet } });
+      const isNewWallet = walletClaimCount === 1;
       const notificationResult = await notifyDailyClaimPaid({
         wallet: claim.wallet,
         amount: claim.amount,
@@ -1169,6 +1176,7 @@ router.post('/daily-claim', async (req, res) => {
         badgeLabel: rewardDetails.badgeLabel,
         badgeBenefit: rewardDetails.badgeBenefit,
         totalDailyClaimsCount,
+        isNewWallet,
       });
 
       if (!notificationResult.sent) {
