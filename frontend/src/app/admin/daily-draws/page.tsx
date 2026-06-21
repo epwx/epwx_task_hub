@@ -45,6 +45,46 @@ function getUtcDateInputDefault() {
   return new Date().toISOString().slice(0, 10);
 }
 
+function normalizePositiveIntegerString(value: string): string | null {
+  const raw = String(value || "").trim().replace(/,/g, "");
+  if (!raw) {
+    return null;
+  }
+
+  const matched = raw.match(/^(\d+)([kKmMbB])?$/);
+  if (!matched) {
+    return null;
+  }
+
+  const base = BigInt(matched[1]);
+  const suffix = String(matched[2] || "").toLowerCase();
+  const multiplierBySuffix: Record<string, bigint> = {
+    "": 1n,
+    k: 1000n,
+    m: 1000000n,
+    b: 1000000000n,
+  };
+
+  const multiplier = multiplierBySuffix[suffix];
+  if (!multiplier) {
+    return null;
+  }
+
+  const normalized = base * multiplier;
+  if (normalized <= 0n) {
+    return null;
+  }
+
+  return normalized.toString();
+}
+
+const DEFAULT_DAILY_DRAW_PRIZE_AMOUNT =
+  normalizePositiveIntegerString(
+    process.env.NEXT_PUBLIC_DAILY_DRAW_PRIZE_AMOUNT ||
+      process.env.NEXT_PUBLIC_AUTO_DAILY_DRAW_PRIZE_AMOUNT ||
+      "1000000"
+  ) || "1000000";
+
 export default function AdminDailyDrawsPage() {
   const { address } = useAccount();
   const publicClient = usePublicClient();
@@ -61,7 +101,7 @@ export default function AdminDailyDrawsPage() {
 
   const [drawDate, setDrawDate] = useState<string>(getUtcDateInputDefault());
   const [winnerCount, setWinnerCount] = useState<string>("5");
-  const [prizeAmount, setPrizeAmount] = useState<string>("100000");
+  const [prizeAmount, setPrizeAmount] = useState<string>(DEFAULT_DAILY_DRAW_PRIZE_AMOUNT);
 
   const EPWX_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_EPWX_TOKEN as `0x${string}`) || "0x0000000000000000000000000000000000000000";
   const EPWX_TOKEN_ABI = [
@@ -143,6 +183,12 @@ export default function AdminDailyDrawsPage() {
       setError(null);
       setSuccess(null);
 
+      const normalizedPrizeAmount = normalizePositiveIntegerString(prizeAmount);
+      if (!normalizedPrizeAmount) {
+        setError("Prize amount must be a positive number (examples: 1000000 or 1M)");
+        return;
+      }
+
       const response = await fetch("/api/epwx/daily-draws/run", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -150,7 +196,7 @@ export default function AdminDailyDrawsPage() {
           admin: address,
           drawDate,
           winnerCount,
-          prizeAmount,
+          prizeAmount: normalizedPrizeAmount,
         }),
       });
 

@@ -19,7 +19,10 @@ const MID_TIER_DAILY_REWARD_THRESHOLD = 10_000_000_000;
 const BONUS_TIER_DAILY_REWARD_THRESHOLD = 100_000_000_000;
 const MEGA_TIER_DAILY_REWARD_THRESHOLD = 1_000_000_000_000;
 const DEFAULT_DAILY_DRAW_WINNER_COUNT = 5;
-const DEFAULT_DAILY_DRAW_PRIZE_AMOUNT = '100000';
+const DEFAULT_DAILY_DRAW_PRIZE_AMOUNT =
+  normalizePositiveIntegerString(
+    process.env.DAILY_DRAW_PRIZE_AMOUNT || process.env.AUTO_DAILY_DRAW_PRIZE_AMOUNT || '1000000'
+  ) || '1000000';
 const EPWX_TOKEN_DECIMALS = 9;
 const EPWX_REWARD_TRANSFER_FEE_BPS = Number(process.env.EPWX_REWARD_TRANSFER_FEE_BPS || '600');
 const DAILY_REWARD_TIERS = [
@@ -153,6 +156,44 @@ function parseDrawDate(drawDate) {
   return raw;
 }
 
+function normalizePositiveIntegerString(value) {
+  if (value === undefined || value === null) {
+    return null;
+  }
+
+  const raw = String(value).trim().replace(/,/g, '');
+  if (!raw) {
+    return null;
+  }
+
+  const matched = raw.match(/^(\d+)([kKmMbB])?$/);
+  if (!matched) {
+    return null;
+  }
+
+  const base = BigInt(matched[1]);
+  const suffix = String(matched[2] || '').toLowerCase();
+
+  const multiplierBySuffix = {
+    '': 1n,
+    k: 1_000n,
+    m: 1_000_000n,
+    b: 1_000_000_000n,
+  };
+
+  const multiplier = multiplierBySuffix[suffix];
+  if (!multiplier) {
+    return null;
+  }
+
+  const normalized = base * multiplier;
+  if (normalized <= 0n) {
+    return null;
+  }
+
+  return normalized.toString();
+}
+
 function getUtcDateBounds(dateString) {
   const start = new Date(`${dateString}T00:00:00.000Z`);
   const end = new Date(`${dateString}T23:59:59.999Z`);
@@ -183,9 +224,11 @@ export async function runDailyDraw({ drawDate, winnerCount, prizeAmount, runBy }
     throw createDailyDrawError('winnerCount must be a positive integer.', 400, 'INVALID_WINNER_COUNT');
   }
 
-  const normalizedPrizeAmount = String(prizeAmount || DEFAULT_DAILY_DRAW_PRIZE_AMOUNT).trim();
-  if (!/^\d+$/.test(normalizedPrizeAmount) || normalizedPrizeAmount === '0') {
-    throw createDailyDrawError('prizeAmount must be a positive integer string.', 400, 'INVALID_PRIZE_AMOUNT');
+  const normalizedPrizeAmount = normalizePositiveIntegerString(
+    prizeAmount ?? DEFAULT_DAILY_DRAW_PRIZE_AMOUNT
+  );
+  if (!normalizedPrizeAmount) {
+    throw createDailyDrawError('prizeAmount must be a positive integer (examples: 1000000, 1M).', 400, 'INVALID_PRIZE_AMOUNT');
   }
 
   const { start, end } = getUtcDateBounds(resolvedDrawDate);
