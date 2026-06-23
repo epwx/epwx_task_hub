@@ -15,6 +15,9 @@ import TwitterCampaign from './TwitterCampaign.js';
 import RewardDistributionLedgerDef from './RewardDistributionLedger.js';
 import WalletReferral from './WalletReferral.js';
 import PlatformStats from './PlatformStats.js';
+import Partner from './Partner.js';
+import PartnerReferral from './PartnerReferral.js';
+import PartnerEarning from './PartnerEarning.js';
 
 const RewardDistributionLedger = RewardDistributionLedgerDef(sequelize, DataTypes);
 
@@ -30,4 +33,20 @@ User.hasMany(TaskSubmission, { foreignKey: 'userId', as: 'submissions' });
 DailyDraw.hasMany(DailyDrawWinner, { foreignKey: 'drawId', as: 'winners' });
 DailyDrawWinner.belongsTo(DailyDraw, { foreignKey: 'drawId', as: 'draw' });
 
-export { User, Campaign, TaskSubmission, CashbackClaim, DailyClaim, DailyDraw, DailyDrawWinner, SpecialClaim, Merchant, Claim, TwitterCampaign, RewardDistributionLedger, WalletReferral, PlatformStats };
+// Partner associations
+Partner.hasMany(PartnerReferral, { foreignKey: 'partnerId', as: 'referrals' });
+PartnerReferral.belongsTo(Partner, { foreignKey: 'partnerId', as: 'partner' });
+
+Partner.hasMany(PartnerEarning, { foreignKey: 'partnerId', as: 'earnings' });
+PartnerEarning.belongsTo(Partner, { foreignKey: 'partnerId', as: 'partner' });
+
+PartnerReferral.hasMany(PartnerEarning, { foreignKey: 'referralId', as: 'earnings' });
+PartnerEarning.belongsTo(PartnerReferral, { foreignKey: 'referralId', as: 'referral' });
+
+User.hasMany(PartnerReferral, { foreignKey: 'userId', as: 'partnerReferrals' });
+PartnerReferral.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
+User.hasMany(PartnerEarning, { foreignKey: 'userId', as: 'partnerEarnings' });
+PartnerEarning.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
+export { User, Campaign, TaskSubmission, CashbackClaim, DailyClaim, DailyDraw, DailyDrawWinner, SpecialClaim, Merchant, Claim, TwitterCampaign, RewardDistributionLedger, WalletReferral, PlatformStats, Partner, PartnerReferral, PartnerEarning };

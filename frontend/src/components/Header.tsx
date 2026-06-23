@@ -75,11 +75,14 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
         { href: '/admin', label: 'Admin Dashboard', active: pathname === '/admin' },
         { href: '/admin/daily-draws', label: 'Daily Draws', active: pathname === '/admin/daily-draws' },
         { href: '/admin/merchants', label: 'Merchant Admin', active: pathname === '/admin/merchants' },
+        { href: '/admin/partners', label: 'Partner Verification', active: pathname === '/admin/partners' },
         { href: '/admin/reward-ledger', label: 'Reward Ledger', active: pathname === '/admin/reward-ledger' },
       ]
     : isMerchant
       ? [{ href: '/admin/reward-ledger', label: 'Reward Ledger', active: pathname === '/admin/reward-ledger' }]
-      : [];
+      : isConnected
+        ? [{ href: '/partner', label: 'Partner Portal', active: pathname === '/partner' }]
+        : [];
   const desktopNavLinkClass = (active: boolean) =>
     `rounded-full px-4 py-2 text-sm font-semibold tracking-[0.01em] transition-all ${
       active

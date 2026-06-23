@@ -1,11 +1,12 @@
 
 import express from 'express';
 import { randomInt } from 'crypto';
-import { User, DailyClaim, DailyDraw, DailyDrawWinner, CashbackClaim, SpecialClaim, Claim, RewardDistributionLedger, Merchant, WalletReferral, PlatformStats } from '../models/index.js';
+import { User, DailyClaim, DailyDraw, DailyDrawWinner, CashbackClaim, SpecialClaim, Claim, RewardDistributionLedger, Merchant, WalletReferral, PlatformStats, PartnerReferral, Partner, PartnerEarning } from '../models/index.js';
 import { Op } from 'sequelize';
 // import { ethers } from 'ethers'; // Removed duplicate import
 import { getEPWXPurchaseTransactions } from '../services/epwxCashback.js';
 import { notifyDailyClaimPaid } from '../services/telegramNotifications.js';
+import { recordPartnerEarning } from '../services/partnerService.js';
 import { ethers } from 'ethers';
 import { epwxTokenContract, epwxTokenWithSigner } from '../services/blockchain.js';
 const router = express.Router();
@@ -19,10 +20,7 @@ const MID_TIER_DAILY_REWARD_THRESHOLD = 10_000_000_000;
 const BONUS_TIER_DAILY_REWARD_THRESHOLD = 100_000_000_000;
 const MEGA_TIER_DAILY_REWARD_THRESHOLD = 1_000_000_000_000;
 const DEFAULT_DAILY_DRAW_WINNER_COUNT = 5;
-const DEFAULT_DAILY_DRAW_PRIZE_AMOUNT =
-  normalizePositiveIntegerString(
-    process.env.DAILY_DRAW_PRIZE_AMOUNT || process.env.AUTO_DAILY_DRAW_PRIZE_AMOUNT || '1000000'
-  ) || '1000000';
+const DEFAULT_DAILY_DRAW_PRIZE_AMOUNT = '100000';
 const EPWX_TOKEN_DECIMALS = 9;
 const EPWX_REWARD_TRANSFER_FEE_BPS = Number(process.env.EPWX_REWARD_TRANSFER_FEE_BPS || '600');
 const DAILY_REWARD_TIERS = [
@@ -156,44 +154,6 @@ function parseDrawDate(drawDate) {
   return raw;
 }
 
-function normalizePositiveIntegerString(value) {
-  if (value === undefined || value === null) {
-    return null;
-  }
-
-  const raw = String(value).trim().replace(/,/g, '');
-  if (!raw) {
-    return null;
-  }
-
-  const matched = raw.match(/^(\d+)([kKmMbB])?$/);
-  if (!matched) {
-    return null;
-  }
-
-  const base = BigInt(matched[1]);
-  const suffix = String(matched[2] || '').toLowerCase();
-
-  const multiplierBySuffix = {
-    '': 1n,
-    k: 1_000n,
-    m: 1_000_000n,
-    b: 1_000_000_000n,
-  };
-
-  const multiplier = multiplierBySuffix[suffix];
-  if (!multiplier) {
-    return null;
-  }
-
-  const normalized = base * multiplier;
-  if (normalized <= 0n) {
-    return null;
-  }
-
-  return normalized.toString();
-}
-
 function getUtcDateBounds(dateString) {
   const start = new Date(`${dateString}T00:00:00.000Z`);
   const end = new Date(`${dateString}T23:59:59.999Z`);
@@ -224,11 +184,9 @@ export async function runDailyDraw({ drawDate, winnerCount, prizeAmount, runBy }
     throw createDailyDrawError('winnerCount must be a positive integer.', 400, 'INVALID_WINNER_COUNT');
   }
 
-  const normalizedPrizeAmount = normalizePositiveIntegerString(
-    prizeAmount ?? DEFAULT_DAILY_DRAW_PRIZE_AMOUNT
-  );
-  if (!normalizedPrizeAmount) {
-    throw createDailyDrawError('prizeAmount must be a positive integer (examples: 1000000, 1M).', 400, 'INVALID_PRIZE_AMOUNT');
+  const normalizedPrizeAmount = String(prizeAmount || DEFAULT_DAILY_DRAW_PRIZE_AMOUNT).trim();
+  if (!/^\d+$/.test(normalizedPrizeAmount) || normalizedPrizeAmount === '0') {
+    throw createDailyDrawError('prizeAmount must be a positive integer string.', 400, 'INVALID_PRIZE_AMOUNT');
   }
 
   const { start, end } = getUtcDateBounds(resolvedDrawDate);
@@ -1039,8 +997,6 @@ router.post('/daily-claims/mark-paid', async (req, res) => {
 
     const rewardDetails = findDailyRewardTierByAmount(claim.amount) || await getDailyRewardDetails(claim.wallet);
     const totalDailyClaimsCount = await getTodayDailyClaimsCount();
-    const walletClaimCount = await DailyClaim.count({ where: { wallet: claim.wallet } });
-    const isNewWallet = walletClaimCount === 1;
     const notificationResult = await notifyDailyClaimPaid({
       wallet: claim.wallet,
       amount: claim.amount,
@@ -1049,7 +1005,6 @@ router.post('/daily-claims/mark-paid', async (req, res) => {
       badgeLabel: rewardDetails.badgeLabel,
       badgeBenefit: rewardDetails.badgeBenefit,
       totalDailyClaimsCount,
-      isNewWallet,
     });
 
     res.json({
@@ -1074,7 +1029,7 @@ router.get('/reward-ledger', async (req, res) => {
 });
 
 router.post('/daily-claim', async (req, res) => {
-  const { wallet, signature } = req.body;
+  const { wallet, signature, referralCode } = req.body;
   const normalizedWallet = normalizeWallet(wallet);
   if (!normalizedWallet || !signature) return res.status(400).json({ error: 'wallet and signature are required' });
   const ip = getRequestIp(req);
@@ -1098,6 +1053,20 @@ router.post('/daily-claim', async (req, res) => {
   const user = await User.findOne({ where: { walletAddress: normalizedWallet } });
   if (!user || !user.telegramVerified) {
     return res.status(403).json({ error: 'Telegram not verified' });
+  }
+
+  // Check for partner referral if referralCode is provided
+  let partnerReferral = null;
+  let partnerId = null;
+  if (referralCode) {
+    partnerReferral = await PartnerReferral.findOne({ 
+      where: { referralCode },
+      include: [{ model: Partner, as: 'partner' }]
+    });
+    
+    if (partnerReferral && partnerReferral.partner?.status === 'active') {
+      partnerId = partnerReferral.partnerId;
+    }
   }
 
   const historicalClaim = await DailyClaim.findOne({
@@ -1142,12 +1111,31 @@ router.post('/daily-claim', async (req, res) => {
   // TODO: Send EPWX to wallet here (call contract or queue for admin)
   const rewardDetails = await getDailyRewardDetails(normalizedWallet);
   const amount = rewardDetails.amount;
-  const claim = await DailyClaim.create({ wallet: normalizedWallet, ip, claimedAt: now, amount });
+  const claim = await DailyClaim.create({ 
+    wallet: normalizedWallet, 
+    ip, 
+    claimedAt: now, 
+    amount,
+    partnerReferralId: partnerReferral?.id || null,
+    partnerId: partnerId || null
+  });
 
   try {
     await updateDailyClaimStats({ claimCountDelta: '1' });
   } catch (statsErr) {
     console.error('[daily-claim] Failed to increment total claims stats:', statsErr);
+  }
+
+  // Record partner earning if partner referral exists
+  if (partnerReferral && partnerId) {
+    try {
+      await recordPartnerEarning(partnerId, partnerReferral.userId, partnerReferral.id, now);
+      console.log(`[daily-claim] Partner earning recorded for partner ${partnerId}`);
+    } catch (partnerErr) {
+      console.error('[daily-claim] Failed to record partner earning:', partnerErr);
+      // Don't fail the claim if partner earning fails, just log it
+      // This handles case where partner is not approved yet
+    }
   }
 
   try {
@@ -1164,10 +1152,6 @@ router.post('/daily-claim', async (req, res) => {
       }
 
       const totalDailyClaimsCount = await getTodayDailyClaimsCount();
-
-      // Check if this is a new wallet (only 1 claim total across all days)
-      const walletClaimCount = await DailyClaim.count({ where: { wallet: normalizedWallet } });
-      const isNewWallet = walletClaimCount === 1;
       const notificationResult = await notifyDailyClaimPaid({
         wallet: claim.wallet,
         amount: claim.amount,
@@ -1176,7 +1160,6 @@ router.post('/daily-claim', async (req, res) => {
         badgeLabel: rewardDetails.badgeLabel,
         badgeBenefit: rewardDetails.badgeBenefit,
         totalDailyClaimsCount,
-        isNewWallet,
       });
 
       if (!notificationResult.sent) {
@@ -1200,6 +1183,11 @@ router.post('/daily-claim', async (req, res) => {
     status: claim.status,
     txHash: claim.txHash || null,
     referralReward,
+    partnerReward: partnerReferral ? {
+      partnerId: partnerId,
+      partnerName: partnerReferral.partner?.name,
+      rewardAmount: '100000000000'
+    } : null,
   });
 });
 

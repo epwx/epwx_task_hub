@@ -75,6 +75,7 @@ import merchantsRouter from './routes/merchants.js';
 import claimsRouter from './routes/claims.js';
 import twitterCampaignsRouter from './routes/twitterCampaigns.js';
 import rewardLedgerRouter from './routes/rewardLedger.js';
+import partnersRouter from './routes/partners.js';
 import { runDailyDraw } from './routes/epwx.js';
 import { DailyDraw } from './models/index.js';
 
@@ -248,6 +249,7 @@ app.use('/api/claims', claimsRouter);
 app.use('/api/merchants', merchantsRouter);
 app.use('/api/twitter-campaigns', twitterCampaignsRouter);
 app.use('/api/reward-ledger', rewardLedgerRouter);
+app.use('/api/partners', partnersRouter);
 
 // Error handler
 app.use((err, req, res, next) => {

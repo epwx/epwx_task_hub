@@ -33,12 +33,30 @@ const DailyClaim = sequelize.define('DailyClaim', {
     allowNull: false,
     defaultValue: 'pending', // 'pending', 'paid'
   },
+  partnerReferralId: {
+    type: DataTypes.UUID,
+    allowNull: true,
+    references: {
+      model: 'PartnerReferrals',
+      key: 'id'
+    }
+  },
+  partnerId: {
+    type: DataTypes.UUID,
+    allowNull: true,
+    references: {
+      model: 'Partners',
+      key: 'id'
+    }
+  },
 }, {
   indexes: [
     { fields: ['wallet'] },
     { fields: ['ip'] },
     { fields: ['claimedAt'] },
     { fields: ['status', 'claimedAt'] },
+    { fields: ['partnerId'] },
+    { fields: ['partnerReferralId'] },
   ],
   tableName: 'daily_claims',
   timestamps: false,
