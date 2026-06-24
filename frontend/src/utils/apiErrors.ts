@@ -1,4 +1,4 @@
-export const TEMPORARY_LIVE_DATA_MESSAGE = 'Live data is temporarily unavailable right now. Please try again in a few minutes.';
+export const TEMPORARY_LIVE_DATA_MESSAGE = 'The entire homepage is temporarily unavailable. Please try again in a few minutes.';
 
 type ErrorPayload = {
   error?: string;
