@@ -13,6 +13,7 @@ import {
   approvePartner,
   rejectPartner
 } from '../services/partnerService.js';
+import { Partner, User } from '../models/index.js';
 
 const uploadDir = path.join(process.cwd(), 'uploads/partner-verification');
 if (!fs.existsSync(uploadDir)) {
@@ -99,9 +100,37 @@ router.get('/', async (req, res) => {
 router.post('/:partnerId/generate-link', async (req, res) => {
   try {
     const { partnerId } = req.params;
-    const { userId } = req.body;
-    if (!userId) return res.status(400).json({ success: false, message: 'User ID is required' });
-    const referral = await createPartnerReferral(partnerId, userId);
+    const { userId, walletAddress } = req.body || {};
+
+    let resolvedUserId = userId;
+
+    if (!resolvedUserId) {
+      const partner = await Partner.findByPk(partnerId, {
+        attributes: ['id', 'walletAddress']
+      });
+
+      if (!partner) {
+        return res.status(404).json({ success: false, message: 'Partner not found' });
+      }
+
+      const lookupWallet = (walletAddress || partner.walletAddress || '').toLowerCase();
+      if (!lookupWallet) {
+        return res.status(400).json({ success: false, message: 'Unable to resolve wallet for referral link generation' });
+      }
+
+      const user = await User.findOne({
+        where: { walletAddress: lookupWallet },
+        attributes: ['id']
+      });
+
+      if (!user) {
+        return res.status(400).json({ success: false, message: 'No user account found for this wallet. Complete user onboarding first.' });
+      }
+
+      resolvedUserId = user.id;
+    }
+
+    const referral = await createPartnerReferral(partnerId, resolvedUserId);
     res.json({ success: true, message: 'Referral link generated', referral: { id: referral.id, referralCode: referral.referralCode, referralLink: referral.referralLink } });
   } catch (error) {
     console.error('Generate link error:', error);

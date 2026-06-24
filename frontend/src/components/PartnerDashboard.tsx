@@ -14,6 +14,11 @@ interface Partner {
   createdAt: string;
   telegramChannel?: string;
   xProfile?: string;
+  referrals?: Array<{
+    id: string;
+    referralLink: string;
+    referralCode: string;
+  }>;
 }
 
 interface DashboardStats {
@@ -41,6 +46,8 @@ export default function PartnerDashboard({
   partner,
 }: PartnerDashboardProps) {
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [referralLink, setReferralLink] = useState("");
+  const [generatingLink, setGeneratingLink] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -51,6 +58,10 @@ export default function PartnerDashboard({
 
       if (data.success) {
         setStats(data.stats);
+        const latestReferralLink = data?.stats?.partner?.referrals?.[0]?.referralLink;
+        if (latestReferralLink) {
+          setReferralLink(latestReferralLink);
+        }
       } else {
         toast.error("Failed to load dashboard stats");
       }
@@ -70,6 +81,45 @@ export default function PartnerDashboard({
     await fetchStats();
     setRefreshing(false);
     toast.success("Stats refreshed");
+  };
+
+  const handleGenerateReferralLink = async () => {
+    try {
+      setGeneratingLink(true);
+      const response = await fetch(`/api/partners/${partner.id}/generate-link`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ walletAddress: partner.walletAddress }),
+      });
+
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        toast.error(data.message || "Failed to generate referral link");
+        return;
+      }
+
+      setReferralLink(data.referral.referralLink);
+      toast.success("Referral link ready");
+    } catch (error) {
+      console.error("Error generating referral link:", error);
+      toast.error("Failed to generate referral link");
+    } finally {
+      setGeneratingLink(false);
+    }
+  };
+
+  const handleCopyReferralLink = async () => {
+    if (!referralLink) return;
+
+    try {
+      await navigator.clipboard.writeText(referralLink);
+      toast.success("Referral link copied");
+    } catch (error) {
+      console.error("Copy referral link failed:", error);
+      toast.error("Unable to copy referral link");
+    }
   };
 
   if (loading) {
@@ -189,6 +239,34 @@ export default function PartnerDashboard({
                   <p className="mt-1 text-slate-300">{partner.xProfile}</p>
                 </div>
               )}
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-blue-500/20 bg-blue-500/10 p-6">
+            <h3 className="mb-3 font-semibold text-blue-100">Partner Referral Link</h3>
+            <p className="mb-3 text-xs text-blue-200/80">
+              Share this link so users can claim with your partner referral code.
+            </p>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <input
+                readOnly
+                value={referralLink || "Generate your referral link to start sharing"}
+                className="w-full rounded-lg border border-blue-400/30 bg-slate-900/60 px-3 py-2 text-sm text-blue-100"
+              />
+              <button
+                onClick={handleGenerateReferralLink}
+                disabled={generatingLink}
+                className="rounded-lg border border-cyan-500/40 bg-cyan-500/20 px-4 py-2 text-sm font-semibold text-cyan-100 hover:bg-cyan-500/30 disabled:opacity-50"
+              >
+                {generatingLink ? "Generating..." : "Generate"}
+              </button>
+              <button
+                onClick={handleCopyReferralLink}
+                disabled={!referralLink}
+                className="rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/20 disabled:opacity-50"
+              >
+                Copy
+              </button>
             </div>
           </div>
 
