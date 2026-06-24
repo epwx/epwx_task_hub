@@ -1,6 +1,6 @@
 import { Partner, PartnerReferral, PartnerEarning, User } from '../models/index.js';
 import { randomBytes } from 'crypto';
-import { Op } from 'sequelize';
+import { Op, fn, col } from 'sequelize';
 
 /**
  * Generate a unique referral code
@@ -174,7 +174,7 @@ export async function getPartnerStats(partnerId) {
   // Get earnings by status
   const earnings = await PartnerEarning.findAll({
     where: { partnerId },
-    attributes: ['status', [require('sequelize').fn('sum', require('sequelize').col('amount')), 'totalAmount']],
+    attributes: ['status', [fn('sum', col('amount')), 'totalAmount']],
     group: ['status']
   });
 
