@@ -1064,7 +1064,7 @@ router.post('/daily-claim', async (req, res) => {
       include: [{ model: Partner, as: 'partner' }]
     });
     
-    if (partnerReferral && partnerReferral.partner?.status === 'active') {
+    if (partnerReferral && partnerReferral.partner?.status === 'approved') {
       partnerId = partnerReferral.partnerId;
     }
   }
