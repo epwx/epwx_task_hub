@@ -20,6 +20,7 @@ function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
 
 function ClaimPage() {
   const searchParams = useSearchParams();
+  const partnerCode = searchParams.get("partner");
   const merchantId = searchParams.get("merchant") || searchParams.get("merchantId");
   const [merchantLat, setMerchantLat] = useState<number | null>(null);
   const [merchantLng, setMerchantLng] = useState<number | null>(null);
@@ -32,6 +33,15 @@ function ClaimPage() {
   const [merchantError, setMerchantError] = useState<string | null>(null);
   const pageShellClass = "relative overflow-hidden bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-3xl shadow-2xl p-8";
   const centeredMessageClass = "max-w-2xl mx-auto py-16 px-6 text-center";
+
+  useEffect(() => {
+    if (!partnerCode || typeof window === "undefined") {
+      return;
+    }
+
+    const target = `/?partner=${encodeURIComponent(partnerCode)}`;
+    window.location.replace(target);
+  }, [partnerCode]);
 
   // Fetch merchant coordinates and info if not present in URL
   useEffect(() => {
@@ -83,6 +93,9 @@ function ClaimPage() {
 
   if (merchantError) {
     return <div className={`${centeredMessageClass} text-red-200`}>{merchantError}</div>;
+  }
+  if (partnerCode) {
+    return <div className={`${centeredMessageClass} text-white/80`}>Redirecting to daily claim...</div>;
   }
   if (merchantLat === null || merchantLng === null) {
     return <div className={`${centeredMessageClass} text-white/80`}>Loading merchant info...</div>;

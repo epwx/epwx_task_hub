@@ -64,6 +64,7 @@ const DEFAULT_AUTO_DAILY_DRAW_TIME_UTC = "00:05";
 const NEXT_PUBLIC_AUTO_DAILY_DRAW_TIME_UTC = String(process.env.NEXT_PUBLIC_AUTO_DAILY_DRAW_TIME_UTC || DEFAULT_AUTO_DAILY_DRAW_TIME_UTC).trim();
 const TELEGRAM_BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "epwx_bot";
 const PENDING_REFERRAL_STORAGE_KEY = "epwx-pending-referrer";
+const PENDING_PARTNER_REFERRAL_CODE_STORAGE_KEY = "epwx-pending-partner-referral-code";
 const HOME_SHORTCUT_SECTIONS = ['buy-epwx', 'burnt-supply', 'latest-winners', 'daily-claim'] as const;
 const DAILY_REWARD_TIERS = [
   {
@@ -789,6 +790,7 @@ function LatestDailyWinnersBoard({ referralLink }: { referralLink?: string }) {
 export default function HomeTest() {
   const { address, isConnected } = useAccount();
   const [incomingReferralWallet, setIncomingReferralWallet] = useState<string | null>(null);
+  const [incomingPartnerReferralCode, setIncomingPartnerReferralCode] = useState<string | null>(null);
   const { data: epwxBalance, isLoading: balanceLoading } = useBalance({
     address,
     token: EPWX_TOKEN_ADDRESS,
@@ -1148,7 +1150,9 @@ export default function HomeTest() {
 
     const params = new URLSearchParams(window.location.search);
     const referralWallet = params.get("ref");
+    const partnerCode = params.get("partner");
     setIncomingReferralWallet(referralWallet ? referralWallet.toLowerCase() : null);
+    setIncomingPartnerReferralCode(partnerCode ? partnerCode.trim().toUpperCase() : null);
   }, []);
 
   useEffect(() => {
@@ -1161,6 +1165,17 @@ export default function HomeTest() {
       setReferralStatus("Referral saved. Connect your wallet, then complete your first daily claim to qualify both wallets for 1,000,000 EPWX.");
     }
   }, [incomingReferralWallet, address]);
+
+  useEffect(() => {
+    if (!incomingPartnerReferralCode || typeof window === "undefined") {
+      return;
+    }
+
+    localStorage.setItem(PENDING_PARTNER_REFERRAL_CODE_STORAGE_KEY, incomingPartnerReferralCode);
+    if (!address) {
+      setReferralStatus("Partner referral saved. Connect your wallet and complete daily claim to attribute partner reward.");
+    }
+  }, [incomingPartnerReferralCode, address]);
 
   useEffect(() => {
     if (!address) {
@@ -1344,23 +1359,36 @@ export default function HomeTest() {
     setClaimStatus(null);
     setShowClaimUpgradePrompt(false);
     try {
+      const partnerReferralCode = typeof window !== "undefined"
+        ? (localStorage.getItem(PENDING_PARTNER_REFERRAL_CODE_STORAGE_KEY) || incomingPartnerReferralCode)
+        : incomingPartnerReferralCode;
       const todayUtc = new Date(Date.now()).toISOString().slice(0, 10);
       const message = `EPWX Daily Claim for ${address} on ${todayUtc}`;
       const signature = await signMessageAsync({ message });
       const res = await fetch("/api/epwx/daily-claim", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ wallet: address, signature }),
+        body: JSON.stringify({
+          wallet: address,
+          signature,
+          ...(partnerReferralCode ? { referralCode: partnerReferralCode } : {}),
+        }),
       });
       const data = await res.json();
       if (data.success) {
         const claimedAmount = Number(data.amount || DEFAULT_DAILY_REWARD).toLocaleString();
         const referralMessage = formatReferralRewardMessage(data.referralReward);
+        const partnerMessage = data.partnerReward?.partnerName
+          ? ` Partner reward attributed to ${data.partnerReward.partnerName}.`
+          : "";
         setClaimStatus(
           referralMessage
-            ? `Successfully claimed ${claimedAmount} EPWX! Your reward will be sent soon. ${referralMessage}`
-            : `Successfully claimed ${claimedAmount} EPWX! Your reward will be sent soon.`
+            ? `Successfully claimed ${claimedAmount} EPWX! Your reward will be sent soon. ${referralMessage}${partnerMessage}`
+            : `Successfully claimed ${claimedAmount} EPWX! Your reward will be sent soon.${partnerMessage}`
         );
+        if (partnerReferralCode && typeof window !== "undefined") {
+          localStorage.removeItem(PENDING_PARTNER_REFERRAL_CODE_STORAGE_KEY);
+        }
         if (nextTierTarget) {
           setShowClaimUpgradePrompt(true);
         }
