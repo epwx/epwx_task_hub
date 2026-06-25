@@ -78,6 +78,8 @@ import rewardLedgerRouter from './routes/rewardLedger.js';
 import partnersRouter from './routes/partners.js';
 import { runDailyDraw } from './routes/epwx.js';
 import { DailyDraw } from './models/index.js';
+import { getPendingEarningsForSettlement, updatePartnerEarningStatus } from './services/partnerService.js';
+import { epwxTokenWithSigner } from './services/blockchain.js';
 
 const AUTO_DAILY_DRAW_ENABLED = ['1', 'true', 'yes', 'on'].includes(String(process.env.AUTO_DAILY_DRAW_ENABLED || 'false').toLowerCase());
 const AUTO_DAILY_DRAW_TIME_UTC = String(process.env.AUTO_DAILY_DRAW_TIME_UTC || '00:05').trim();
@@ -90,6 +92,15 @@ const AUTO_DAILY_DRAW_WINNER_COUNT = process.env.AUTO_DAILY_DRAW_WINNER_COUNT
 const AUTO_DAILY_DRAW_PRIZE_AMOUNT = process.env.AUTO_DAILY_DRAW_PRIZE_AMOUNT
   ? String(process.env.AUTO_DAILY_DRAW_PRIZE_AMOUNT).trim()
   : undefined;
+const AUTO_PARTNER_SETTLEMENT_ENABLED = ['1', 'true', 'yes', 'on'].includes(String(process.env.AUTO_PARTNER_SETTLEMENT_ENABLED || 'false').toLowerCase());
+const AUTO_PARTNER_SETTLEMENT_INTERVAL_MINUTES = Number.parseInt(String(process.env.AUTO_PARTNER_SETTLEMENT_INTERVAL_MINUTES || '60'), 10);
+const AUTO_PARTNER_SETTLEMENT_MIN_AGE_HOURS = Number.parseInt(String(process.env.AUTO_PARTNER_SETTLEMENT_MIN_AGE_HOURS || '168'), 10);
+const AUTO_PARTNER_SETTLEMENT_BATCH_SIZE = Number.parseInt(String(process.env.AUTO_PARTNER_SETTLEMENT_BATCH_SIZE || '100'), 10);
+const AUTO_PARTNER_SETTLEMENT_LOCK_KEY = Number.parseInt(String(process.env.AUTO_PARTNER_SETTLEMENT_LOCK_KEY || '90412022'), 10);
+
+function normalizePositiveInt(value, fallback) {
+  return Number.isInteger(value) && value > 0 ? value : fallback;
+}
 
 function parseUtcTime(value) {
   const matched = String(value || '').match(/^(\d{2}):(\d{2})$/);
@@ -231,6 +242,113 @@ function startAutoDailyDrawScheduler() {
   scheduleNextRun();
 }
 
+async function acquirePartnerSettlementLock() {
+  const rows = await DailyDraw.sequelize.query(
+    'SELECT pg_try_advisory_lock(:lockKey) AS acquired',
+    {
+      replacements: { lockKey: AUTO_PARTNER_SETTLEMENT_LOCK_KEY },
+      type: QueryTypes.SELECT,
+    }
+  );
+
+  const acquiredRaw = rows?.[0]?.acquired;
+  return acquiredRaw === true || acquiredRaw === 't' || acquiredRaw === 1;
+}
+
+async function releasePartnerSettlementLock() {
+  await DailyDraw.sequelize.query(
+    'SELECT pg_advisory_unlock(:lockKey)',
+    {
+      replacements: { lockKey: AUTO_PARTNER_SETTLEMENT_LOCK_KEY },
+      type: QueryTypes.SELECT,
+    }
+  );
+}
+
+async function executeAutoPartnerSettlement() {
+  const acquired = await acquirePartnerSettlementLock();
+  if (!acquired) {
+    console.log('[partner-settlement] Skipping run because another backend instance owns the scheduler lock.');
+    return;
+  }
+
+  try {
+    if (!epwxTokenWithSigner) {
+      console.log('[partner-settlement] Token signer unavailable. Set ADMIN_PRIVATE_KEY or VERIFIER_PRIVATE_KEY to enable settlement payouts.');
+      return;
+    }
+
+    const minAgeHours = normalizePositiveInt(AUTO_PARTNER_SETTLEMENT_MIN_AGE_HOURS, 168);
+    const batchSize = normalizePositiveInt(AUTO_PARTNER_SETTLEMENT_BATCH_SIZE, 100);
+    const pendingEarnings = await getPendingEarningsForSettlement(minAgeHours);
+
+    if (!pendingEarnings.length) {
+      console.log(`[partner-settlement] No pending partner earnings older than ${minAgeHours}h.`);
+      return;
+    }
+
+    const earningsToProcess = pendingEarnings.slice(0, batchSize);
+    let completedCount = 0;
+    let failedCount = 0;
+
+    for (const earning of earningsToProcess) {
+      const walletAddress = earning?.partner?.walletAddress;
+      if (!walletAddress) {
+        failedCount += 1;
+        console.error(`[partner-settlement] Missing partner wallet for earning ${earning.id}.`);
+        continue;
+      }
+
+      try {
+        const tx = await epwxTokenWithSigner.transfer(walletAddress, BigInt(String(earning.amount || '0')));
+        const receipt = await tx.wait();
+
+        if (!receipt || receipt.status !== 1) {
+          throw new Error('Token transfer receipt status is not successful.');
+        }
+
+        await updatePartnerEarningStatus(earning.id, 'completed', tx.hash);
+        completedCount += 1;
+      } catch (error) {
+        failedCount += 1;
+        console.error(`[partner-settlement] Failed to settle earning ${earning.id}:`, error);
+      }
+    }
+
+    console.log(`[partner-settlement] Run complete. processed=${earningsToProcess.length}, completed=${completedCount}, failed=${failedCount}`);
+  } catch (error) {
+    console.error('[partner-settlement] Scheduled run failed:', error);
+  } finally {
+    try {
+      await releasePartnerSettlementLock();
+    } catch (unlockError) {
+      console.error('[partner-settlement] Failed to release scheduler lock:', unlockError);
+    }
+  }
+}
+
+function startAutoPartnerSettlementScheduler() {
+  if (!AUTO_PARTNER_SETTLEMENT_ENABLED) {
+    console.log('[partner-settlement] Scheduler disabled. Set AUTO_PARTNER_SETTLEMENT_ENABLED=true to enable automatic settlement.');
+    return;
+  }
+
+  const intervalMinutes = normalizePositiveInt(AUTO_PARTNER_SETTLEMENT_INTERVAL_MINUTES, 60);
+  const intervalMs = intervalMinutes * 60 * 1000;
+
+  const scheduleNextRun = () => {
+    const nextRun = new Date(Date.now() + intervalMs);
+    console.log(`[partner-settlement] Next scheduled settlement check at ${nextRun.toISOString()}.`);
+
+    setTimeout(async () => {
+      await executeAutoPartnerSettlement();
+      scheduleNextRun();
+    }, intervalMs);
+  };
+
+  executeAutoPartnerSettlement().finally(scheduleNextRun);
+}
+
 app.use('/api/auth', authRouter);
 app.use('/api/campaigns', campaignsRouter);
 app.use('/api/tasks', tasksRouter);
@@ -268,6 +386,7 @@ app.listen(PORT, () => {
   console.log(`🚀 EPWX Task Platform API running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV}`);
   startAutoDailyDrawScheduler();
+  startAutoPartnerSettlementScheduler();
 });
 
 export default app;
