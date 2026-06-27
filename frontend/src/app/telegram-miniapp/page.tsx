@@ -85,6 +85,27 @@ function formatRemaining(ms: number): string {
   return `${hours}h ${minutes}m ${seconds}s`;
 }
 
+function resolveInitDataFromLocation(): string {
+  if (typeof window === "undefined") {
+    return "";
+  }
+
+  const fromSearch = new URLSearchParams(window.location.search).get("tgWebAppData");
+  if (fromSearch) {
+    return fromSearch;
+  }
+
+  const hash = window.location.hash?.startsWith("#") ? window.location.hash.slice(1) : window.location.hash;
+  if (hash) {
+    const fromHash = new URLSearchParams(hash).get("tgWebAppData");
+    if (fromHash) {
+      return fromHash;
+    }
+  }
+
+  return "";
+}
+
 export default function TelegramMiniAppPage() {
   const { address } = useAccount();
   const { signMessageAsync } = useSignMessage();
@@ -115,7 +136,8 @@ export default function TelegramMiniAppPage() {
     const webApp = window.Telegram?.WebApp;
     webApp?.ready?.();
     webApp?.expand?.();
-    setInitData(webApp?.initData || "");
+    const resolved = webApp?.initData || resolveInitDataFromLocation();
+    setInitData(resolved);
   }, []);
 
   useEffect(() => {

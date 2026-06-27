@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { unstable_noStore as noStore } from "next/cache";
+import Script from "next/script";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { isMaintenanceModeEnabled } from "@/utils/maintenanceMode";
@@ -77,6 +78,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <Script src="https://telegram.org/js/telegram-web-app.js" strategy="beforeInteractive" />
         <script dangerouslySetInnerHTML={{ __html: setInitialDarkModeScript() }} />
       </head>
       <body className={inter.className}>
