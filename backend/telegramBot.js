@@ -9,10 +9,11 @@ import axios from 'axios';
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '<YOUR_BOT_TOKEN_HERE>';
 const GROUP_ID = process.env.TELEGRAM_GROUP_ID || '-1001970739822'; // Replace with your group ID
-const BOT_USERNAME = (process.env.TELEGRAM_BOT_USERNAME || 'ePowerXBot').replace(/^@/, '');
+const BOT_USERNAME_FALLBACK = (process.env.TELEGRAM_BOT_USERNAME || 'ePowerXBot').replace(/^@/, '');
 const FRONTEND_URL = process.env.FRONTEND_URL || 'https://tasks.epowex.com';
 const MINI_APP_URL = process.env.TELEGRAM_MINIAPP_URL || `${FRONTEND_URL.replace(/\/$/, '')}/telegram-miniapp`;
 const bot = new TelegramBot(BOT_TOKEN, { polling: true });
+let resolvedBotUsername = BOT_USERNAME_FALLBACK;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const walletRequestsFile = path.join(__dirname, '.telegram-wallet-requests.json');
@@ -24,7 +25,7 @@ function buildMiniAppKeyboard(chatType = 'private') {
   const isPrivate = chatType === 'private';
   const launchUrl = isPrivate
     ? MINI_APP_URL
-    : `https://t.me/${BOT_USERNAME}?start=miniapp`;
+    : `https://t.me/${resolvedBotUsername}?start=miniapp`;
 
   return {
     reply_markup: {
@@ -41,6 +42,21 @@ function buildMiniAppKeyboard(chatType = 'private') {
       ]],
     },
   };
+}
+
+async function resolveBotUsername() {
+  try {
+    const me = await bot.getMe();
+    if (me?.username) {
+      resolvedBotUsername = String(me.username).replace(/^@/, '');
+      console.log(`[BOT] Resolved bot username: @${resolvedBotUsername}`);
+      return;
+    }
+  } catch (error) {
+    console.error('[BOT] Failed to resolve bot username from Telegram API:', error?.response?.data || error.message);
+  }
+
+  console.log(`[BOT] Using fallback bot username: @${resolvedBotUsername}`);
 }
 
 async function configureMiniAppMenuButton() {
@@ -91,6 +107,7 @@ async function saveWalletRequests() {
 }
 
 await loadWalletRequests();
+await resolveBotUsername();
 await configureBotCommands();
 await configureMiniAppMenuButton();
 
