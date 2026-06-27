@@ -197,13 +197,29 @@ async function isOfficialTelegramGroupMember(telegramUserId) {
 
     const status = String(payload.result.status || '').toLowerCase();
     if (status === 'restricted') {
-      return { isMember: Boolean(payload.result.is_member), reason: status };
+      const restrictedMembership = Boolean(payload.result.is_member);
+      console.log('[daily-claim] official group membership check:', {
+        telegramUserId: String(telegramUserId),
+        required: TELEGRAM_GROUP_MEMBERSHIP_REQUIRED,
+        groupId: process.env.TELEGRAM_GROUP_ID,
+        telegramStatus: status,
+        isMember: restrictedMembership,
+      });
+      return { isMember: restrictedMembership, reason: status };
     }
 
-    return {
+    const result = {
       isMember: ['member', 'administrator', 'creator'].includes(status),
       reason: status || 'unknown',
     };
+    console.log('[daily-claim] official group membership check:', {
+      telegramUserId: String(telegramUserId),
+      required: TELEGRAM_GROUP_MEMBERSHIP_REQUIRED,
+      groupId: process.env.TELEGRAM_GROUP_ID,
+      telegramStatus: status,
+      isMember: result.isMember,
+    });
+    return result;
   } catch {
     return { isMember: false, reason: 'telegram_membership_check_error' };
   }
@@ -1093,6 +1109,11 @@ router.post('/daily-claim', async (req, res) => {
 
   const officialMembership = await isOfficialTelegramGroupMember(user.telegramUserId);
   if (!officialMembership.isMember) {
+    console.log('[daily-claim] blocked due to official Telegram group membership requirement', {
+      wallet: normalizedWallet,
+      telegramUserId: user.telegramUserId || null,
+      reason: officialMembership.reason,
+    });
     return res.status(403).json({
       error: 'Join the official EPWX Telegram group to claim daily rewards.',
       code: 'OFFICIAL_GROUP_MEMBERSHIP_REQUIRED',
