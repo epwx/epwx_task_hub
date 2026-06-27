@@ -76,6 +76,7 @@ import claimsRouter from './routes/claims.js';
 import twitterCampaignsRouter from './routes/twitterCampaigns.js';
 import rewardLedgerRouter from './routes/rewardLedger.js';
 import partnersRouter from './routes/partners.js';
+import telegramMiniAppRouter from './routes/telegramMiniApp.js';
 import { runDailyDraw } from './routes/epwx.js';
 import { DailyDraw } from './models/index.js';
 import { getPendingEarningsForSettlement, updatePartnerEarningStatus } from './services/partnerService.js';
@@ -368,6 +369,7 @@ app.use('/api/merchants', merchantsRouter);
 app.use('/api/twitter-campaigns', twitterCampaignsRouter);
 app.use('/api/reward-ledger', rewardLedgerRouter);
 app.use('/api/partners', partnersRouter);
+app.use('/api/telegram-miniapp', telegramMiniAppRouter);
 
 // Error handler
 app.use((err, req, res, next) => {

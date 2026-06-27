@@ -39,6 +39,13 @@ Welcome to the EPWX Task Platform! This guide will help you understand the main 
 ## 8. Footer Links
 - Access the main site, Terms of Service, Privacy Policy, and Twitter from the footer.
 
+## 9. Telegram Mini App Daily Claim
+- Open the Mini App page from Telegram and wait for session verification.
+- Connect your wallet inside the Mini App, then tap **Link Wallet** once.
+- After linking is successful, tap **Request Daily Claim** to submit your claim.
+- The Mini App enforces the same 24-hour cooldown rules as the main dApp.
+- If the connected wallet and linked wallet do not match, claims are blocked until they match.
+
 ## Tips
 - Make sure your wallet is connected and Telegram is verified for full access.
 - If you encounter issues, refresh the page or reconnect your wallet.

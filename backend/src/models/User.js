@@ -64,6 +64,15 @@ const User = sequelize.define('User', {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
     allowNull: false
+  },
+  telegramUserId: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    unique: true
+  },
+  telegramUsername: {
+    type: DataTypes.STRING,
+    allowNull: true
   }
 }, {
   tableName: 'users',
