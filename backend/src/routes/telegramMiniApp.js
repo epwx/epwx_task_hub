@@ -9,6 +9,22 @@ const router = express.Router();
 const MINI_APP_NONCE_TTL_MS = Number.parseInt(process.env.TELEGRAM_MINIAPP_NONCE_TTL_MS || '300000', 10);
 const TELEGRAM_AUTH_MAX_AGE_SECONDS = Number.parseInt(process.env.TELEGRAM_MINIAPP_AUTH_MAX_AGE_SECONDS || '86400', 10);
 const walletChallenges = new Map();
+let usersTableColumnsCache = null;
+
+async function getUsersTableColumns() {
+  if (usersTableColumnsCache) {
+    return usersTableColumnsCache;
+  }
+
+  try {
+    const queryInterface = User.sequelize.getQueryInterface();
+    usersTableColumnsCache = await queryInterface.describeTable('users');
+    return usersTableColumnsCache;
+  } catch {
+    usersTableColumnsCache = {};
+    return usersTableColumnsCache;
+  }
+}
 
 function normalizeWallet(value) {
   return typeof value === 'string' ? value.trim().toLowerCase() : '';
@@ -175,13 +191,23 @@ router.post('/auth', async (req, res) => {
   const { telegramUser } = verification;
 
   try {
-    const user = await User.findOne({ where: { telegramUserId: telegramUser.id } });
+    const columns = await getUsersTableColumns();
+    const supportsTelegramUserId = Boolean(columns.telegramUserId);
+    const supportsTelegramUsername = Boolean(columns.telegramUsername);
+
+    let user = null;
+    if (supportsTelegramUserId) {
+      user = await User.findOne({ where: { telegramUserId: telegramUser.id } });
+    } else if (supportsTelegramUsername && telegramUser.username) {
+      user = await User.findOne({ where: { telegramUsername: telegramUser.username } });
+    }
 
     return res.json({
       success: true,
       telegramUser,
       linkedWallet: user?.walletAddress || null,
       telegramVerified: Boolean(user?.telegramVerified),
+      migrationRequired: !supportsTelegramUserId,
     });
   } catch (error) {
     return res.status(500).json({ error: error.message });
@@ -252,14 +278,20 @@ router.post('/wallet/connect', async (req, res) => {
   }
 
   try {
-    const existingByTelegram = await User.findOne({ where: { telegramUserId: telegramUser.id } });
+    const columns = await getUsersTableColumns();
+    const supportsTelegramUserId = Boolean(columns.telegramUserId);
+    const supportsTelegramUsername = Boolean(columns.telegramUsername);
+
+    const existingByTelegram = supportsTelegramUserId
+      ? await User.findOne({ where: { telegramUserId: telegramUser.id } })
+      : null;
     const existingByWallet = await User.findOne({ where: { walletAddress: normalizedWallet } });
 
     if (existingByTelegram && existingByWallet && existingByTelegram.id !== existingByWallet.id) {
       return res.status(409).json({ error: 'This Telegram account and wallet are already linked to different users.' });
     }
 
-    if (existingByWallet && existingByWallet.telegramUserId && existingByWallet.telegramUserId !== telegramUser.id) {
+    if (supportsTelegramUserId && existingByWallet && existingByWallet.telegramUserId && existingByWallet.telegramUserId !== telegramUser.id) {
       return res.status(409).json({ error: 'This wallet is already linked to another Telegram account.' });
     }
 
@@ -272,8 +304,8 @@ router.post('/wallet/connect', async (req, res) => {
       user = await User.create({
         walletAddress: normalizedWallet,
         telegramVerified: true,
-        telegramUserId: telegramUser.id,
-        telegramUsername: telegramUser.username || null,
+        ...(supportsTelegramUserId ? { telegramUserId: telegramUser.id } : {}),
+        ...(supportsTelegramUsername ? { telegramUsername: telegramUser.username || null } : {}),
         username,
         email: `${safeEmailLocal}@telegram.epwx`,
         password: crypto.randomBytes(24).toString('hex'),
@@ -282,8 +314,12 @@ router.post('/wallet/connect', async (req, res) => {
     } else {
       user.walletAddress = normalizedWallet;
       user.telegramVerified = true;
-      user.telegramUserId = telegramUser.id;
-      user.telegramUsername = telegramUser.username || user.telegramUsername || null;
+      if (supportsTelegramUserId) {
+        user.telegramUserId = telegramUser.id;
+      }
+      if (supportsTelegramUsername) {
+        user.telegramUsername = telegramUser.username || user.telegramUsername || null;
+      }
       user.lastLogin = new Date();
       await user.save();
     }
@@ -306,12 +342,13 @@ router.post('/wallet/connect', async (req, res) => {
         user: {
           id: user.id,
           walletAddress: user.walletAddress,
-          telegramUserId: user.telegramUserId,
-          telegramUsername: user.telegramUsername,
+          telegramUserId: supportsTelegramUserId ? user.telegramUserId : null,
+          telegramUsername: supportsTelegramUsername ? user.telegramUsername : null,
           telegramVerified: user.telegramVerified,
         },
         token,
       },
+      migrationRequired: !supportsTelegramUserId,
     });
   } catch (error) {
     return res.status(500).json({ error: error.message });
