@@ -85,6 +85,14 @@ function formatRemaining(ms: number): string {
   return `${hours}h ${minutes}m ${seconds}s`;
 }
 
+function shortenAddress(value: string): string {
+  if (!value || value.length <= 14) {
+    return value;
+  }
+
+  return `${value.slice(0, 8)}...${value.slice(-6)}`;
+}
+
 function resolveInitDataFromLocation(): string {
   if (typeof window === "undefined") {
     return "";
@@ -354,17 +362,32 @@ export default function TelegramMiniAppPage() {
               {loadingAuth ? "Checking..." : telegramUser ? "Verified" : "Not verified"}
             </span>
           </div>
-          <div className="flex items-center justify-between">
+          <div className="grid grid-cols-[auto,1fr] items-center gap-3">
             <span className="text-slate-300">Telegram user</span>
-            <span className="font-mono text-xs text-slate-200">{telegramUser?.username || telegramUser?.id || "-"}</span>
+            <span
+              className="truncate text-right font-mono text-xs text-slate-200"
+              title={telegramUser?.username || telegramUser?.id || "-"}
+            >
+              {telegramUser?.username || telegramUser?.id || "-"}
+            </span>
           </div>
-          <div className="flex items-center justify-between">
+          <div className="grid grid-cols-[auto,1fr] items-center gap-3">
             <span className="text-slate-300">Linked wallet</span>
-            <span className="font-mono text-xs text-slate-200">{normalizedLinkedWallet || "-"}</span>
+            <span
+              className="truncate text-right font-mono text-xs text-slate-200"
+              title={normalizedLinkedWallet || "-"}
+            >
+              {normalizedLinkedWallet ? shortenAddress(normalizedLinkedWallet) : "-"}
+            </span>
           </div>
-          <div className="flex items-center justify-between">
+          <div className="grid grid-cols-[auto,1fr] items-center gap-3">
             <span className="text-slate-300">Connected wallet</span>
-            <span className="font-mono text-xs text-slate-200">{normalizedConnectedWallet || "-"}</span>
+            <span
+              className="truncate text-right font-mono text-xs text-slate-200"
+              title={normalizedConnectedWallet || "-"}
+            >
+              {normalizedConnectedWallet ? shortenAddress(normalizedConnectedWallet) : "-"}
+            </span>
           </div>
           {remaining ? (
             <div className="rounded-xl border border-amber-300/30 bg-amber-300/10 px-3 py-2 text-center text-amber-100">
