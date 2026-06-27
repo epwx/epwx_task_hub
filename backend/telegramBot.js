@@ -119,7 +119,7 @@ bot.onText(/\/start (.+)/, async (msg, match) => {
   if (['miniapp', 'claim', 'daily'].includes(normalizedParam)) {
     bot.sendMessage(
       msg.chat.id,
-      'Open the EPWX Daily Claim Mini App using the button below.',
+      'Open the EPWX Daily Claim Mini App using the button below. This is the recommended flow for all groups.',
       buildMiniAppKeyboard(msg.chat?.type)
     );
     return;
@@ -140,9 +140,10 @@ bot.onText(/\/start (.+)/, async (msg, match) => {
       console.error('[BOT] Failed to notify backend for referral:', err?.response?.data || err);
     }
     bot.sendMessage(msg.chat.id,
-      'To verify your Telegram membership:\n' +
-      'Step 1: Join our group: https://t.me/ePowerX_On_Base\n\n' +
-      'Step 2: Click /verify below in this chat.',
+      'Daily claim works through Mini App for all groups.\n\n' +
+      'Optional legacy verification flow:\n' +
+      'Step 1: Join our group: https://t.me/ePowerX_On_Base\n' +
+      'Step 2: Click /verify below in this chat (legacy only).',
       buildMiniAppKeyboard(msg.chat?.type)
     );
     // Optionally, you can notify the referrer here if you want
@@ -154,9 +155,10 @@ bot.onText(/\/start (.+)/, async (msg, match) => {
   walletRequests[userId] = wallet;
   await saveWalletRequests();
   bot.sendMessage(msg.chat.id,
-    'To verify your Telegram membership:\n' +
-    'Step 1: Join our group: https://t.me/ePowerX_On_Base\n\n' +
-    'Step 2: Click /verify below in this chat.',
+    'Daily claim works through Mini App for all groups.\n\n' +
+    'Optional legacy verification flow:\n' +
+    'Step 1: Join our group: https://t.me/ePowerX_On_Base\n' +
+    'Step 2: Click /verify below in this chat (legacy only).',
     buildMiniAppKeyboard(msg.chat?.type)
   );
 });
@@ -164,7 +166,7 @@ bot.onText(/\/start (.+)/, async (msg, match) => {
 bot.onText(/\/start$/, async (msg) => {
   bot.sendMessage(
     msg.chat.id,
-    'Use the button below to open EPWX Daily Claim Mini App. If you need legacy verification, open the verification link from EPWX Task Hub and then tap /verify.',
+    'Use the button below to open EPWX Daily Claim Mini App (works for all groups). If you need legacy verification, open the verification link from EPWX Task Hub and then tap /verify.',
     buildMiniAppKeyboard(msg.chat?.type)
   );
 });
@@ -172,7 +174,7 @@ bot.onText(/\/start$/, async (msg) => {
 bot.onText(/^\/miniapp(?:@\w+)?$/i, async (msg) => {
   bot.sendMessage(
     msg.chat.id,
-    'Open the EPWX Daily Claim Mini App:',
+    'Open the EPWX Daily Claim Mini App (recommended for all groups):',
     buildMiniAppKeyboard(msg.chat?.type)
   );
 });
@@ -183,7 +185,7 @@ bot.onText(/\/verify/, async (msg) => {
   console.log(`[BOT] Received /verify from user: ${userId}, wallet: ${wallet}`);
   if (!wallet) {
     console.log(`[BOT] No wallet found for user: ${userId}`);
-    bot.sendMessage(msg.chat.id, 'No wallet address found. Please use the verification link from the dApp.');
+    bot.sendMessage(msg.chat.id, 'No wallet address found. Daily claim does not require /verify in Mini App mode. Use /miniapp to continue.');
     return;
   }
   // Check group membership
