@@ -9,6 +9,7 @@ import axios from 'axios';
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '<YOUR_BOT_TOKEN_HERE>';
 const GROUP_ID = process.env.TELEGRAM_GROUP_ID || '-1001970739822'; // Replace with your group ID
+const BOT_USERNAME = (process.env.TELEGRAM_BOT_USERNAME || 'ePowerXBot').replace(/^@/, '');
 const FRONTEND_URL = process.env.FRONTEND_URL || 'https://tasks.epowex.com';
 const MINI_APP_URL = process.env.TELEGRAM_MINIAPP_URL || `${FRONTEND_URL.replace(/\/$/, '')}/telegram-miniapp`;
 const bot = new TelegramBot(BOT_TOKEN, { polling: true });
@@ -19,14 +20,24 @@ const walletRequestsFile = path.join(__dirname, '.telegram-wallet-requests.json'
 // Keep a persisted copy so /verify still works after PM2 restarts.
 const walletRequests = {};
 
-function buildMiniAppKeyboard() {
+function buildMiniAppKeyboard(chatType = 'private') {
+  const isPrivate = chatType === 'private';
+  const launchUrl = isPrivate
+    ? MINI_APP_URL
+    : `https://t.me/${BOT_USERNAME}?start=miniapp`;
+
   return {
     reply_markup: {
       inline_keyboard: [[
-        {
-          text: 'Open Daily Claim Mini App',
-          web_app: { url: MINI_APP_URL },
-        },
+        isPrivate
+          ? {
+              text: 'Open Daily Claim Mini App',
+              web_app: { url: launchUrl },
+            }
+          : {
+              text: 'Open Bot Private Chat',
+              url: launchUrl,
+            },
       ]],
     },
   };
@@ -86,6 +97,17 @@ await configureMiniAppMenuButton();
 bot.onText(/\/start (.+)/, async (msg, match) => {
   const param = match[1];
   const userId = msg.from.id;
+  const normalizedParam = String(param || '').trim().toLowerCase();
+
+  if (['miniapp', 'claim', 'daily'].includes(normalizedParam)) {
+    bot.sendMessage(
+      msg.chat.id,
+      'Open the EPWX Daily Claim Mini App using the button below.',
+      buildMiniAppKeyboard(msg.chat?.type)
+    );
+    return;
+  }
+
   // Referral: /start ref_{wallet}
   if (param.startsWith('ref_')) {
     const referrerWallet = param.replace('ref_', '');
@@ -104,7 +126,7 @@ bot.onText(/\/start (.+)/, async (msg, match) => {
       'To verify your Telegram membership:\n' +
       'Step 1: Join our group: https://t.me/ePowerX_On_Base\n\n' +
       'Step 2: Click /verify below in this chat.',
-      buildMiniAppKeyboard()
+      buildMiniAppKeyboard(msg.chat?.type)
     );
     // Optionally, you can notify the referrer here if you want
     return;
@@ -118,7 +140,7 @@ bot.onText(/\/start (.+)/, async (msg, match) => {
     'To verify your Telegram membership:\n' +
     'Step 1: Join our group: https://t.me/ePowerX_On_Base\n\n' +
     'Step 2: Click /verify below in this chat.',
-    buildMiniAppKeyboard()
+    buildMiniAppKeyboard(msg.chat?.type)
   );
 });
 
@@ -126,15 +148,15 @@ bot.onText(/\/start$/, async (msg) => {
   bot.sendMessage(
     msg.chat.id,
     'Use the button below to open EPWX Daily Claim Mini App. If you need legacy verification, open the verification link from EPWX Task Hub and then tap /verify.',
-    buildMiniAppKeyboard()
+    buildMiniAppKeyboard(msg.chat?.type)
   );
 });
 
-bot.onText(/\/miniapp/, async (msg) => {
+bot.onText(/^\/miniapp(?:@\w+)?$/i, async (msg) => {
   bot.sendMessage(
     msg.chat.id,
     'Open the EPWX Daily Claim Mini App:',
-    buildMiniAppKeyboard()
+    buildMiniAppKeyboard(msg.chat?.type)
   );
 });
 
