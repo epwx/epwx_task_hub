@@ -8,8 +8,40 @@ const router = express.Router();
 
 const MINI_APP_NONCE_TTL_MS = Number.parseInt(process.env.TELEGRAM_MINIAPP_NONCE_TTL_MS || '300000', 10);
 const TELEGRAM_AUTH_MAX_AGE_SECONDS = Number.parseInt(process.env.TELEGRAM_MINIAPP_AUTH_MAX_AGE_SECONDS || '86400', 10);
+const TELEGRAM_GROUP_MEMBERSHIP_REQUIRED = ['1', 'true', 'yes', 'on'].includes(String(process.env.TELEGRAM_GROUP_MEMBERSHIP_REQUIRED || 'true').toLowerCase());
 const walletChallenges = new Map();
 let usersTableColumnsCache = null;
+
+async function checkOfficialGroupMembership(telegramUserId) {
+  if (!TELEGRAM_GROUP_MEMBERSHIP_REQUIRED) {
+    return { isMember: true, reason: 'membership_check_disabled' };
+  }
+
+  if (!process.env.TELEGRAM_BOT_TOKEN || !process.env.TELEGRAM_GROUP_ID) {
+    return { isMember: false, reason: 'telegram_membership_config_missing' };
+  }
+
+  try {
+    const response = await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/getChatMember?chat_id=${encodeURIComponent(process.env.TELEGRAM_GROUP_ID)}&user_id=${encodeURIComponent(String(telegramUserId))}`);
+    const payload = await response.json();
+
+    if (!payload?.ok || !payload?.result) {
+      return { isMember: false, reason: 'telegram_membership_check_failed' };
+    }
+
+    const status = String(payload.result.status || '').toLowerCase();
+    if (status === 'restricted') {
+      return { isMember: Boolean(payload.result.is_member), reason: status };
+    }
+
+    return {
+      isMember: ['member', 'administrator', 'creator'].includes(status),
+      reason: status || 'unknown',
+    };
+  } catch {
+    return { isMember: false, reason: 'telegram_membership_check_error' };
+  }
+}
 
 async function getUsersTableColumns() {
   if (usersTableColumnsCache) {
@@ -195,6 +227,8 @@ router.post('/auth', async (req, res) => {
     const supportsTelegramUserId = Boolean(columns.telegramUserId);
     const supportsTelegramUsername = Boolean(columns.telegramUsername);
 
+    const membership = await checkOfficialGroupMembership(telegramUser.id);
+
     let user = null;
     if (supportsTelegramUserId) {
       user = await User.findOne({ where: { telegramUserId: telegramUser.id } });
@@ -206,7 +240,9 @@ router.post('/auth', async (req, res) => {
       success: true,
       telegramUser,
       linkedWallet: user?.walletAddress || null,
-      telegramVerified: Boolean(user?.telegramVerified),
+      telegramVerified: Boolean(user?.telegramVerified) && membership.isMember,
+      officialGroupMember: membership.isMember,
+      officialGroupReason: membership.reason,
       migrationRequired: !supportsTelegramUserId,
     });
   } catch (error) {
@@ -257,6 +293,14 @@ router.post('/wallet/connect', async (req, res) => {
   }
 
   const { telegramUser } = verification;
+  const membership = await checkOfficialGroupMembership(telegramUser.id);
+  if (!membership.isMember) {
+    return res.status(403).json({
+      error: 'Join the official EPWX Telegram group before linking wallet and claiming daily rewards.',
+      code: 'OFFICIAL_GROUP_MEMBERSHIP_REQUIRED',
+    });
+  }
+
   const challengeResult = getValidWalletChallenge({
     wallet: normalizedWallet,
     telegramUserId: telegramUser.id,

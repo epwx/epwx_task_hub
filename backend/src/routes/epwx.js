@@ -44,6 +44,7 @@ const DAILY_REWARD_TIERS = [
   },
 ];
 const DAILY_CLAIM_STATS_KEY = 'daily_claims';
+const TELEGRAM_GROUP_MEMBERSHIP_REQUIRED = ['1', 'true', 'yes', 'on'].includes(String(process.env.TELEGRAM_GROUP_MEMBERSHIP_REQUIRED || 'true').toLowerCase());
 
 function getAdminWallets() {
   return (process.env.ADMIN_WALLETS || '').split(',').map(w => w.trim().toLowerCase()).filter(Boolean);
@@ -171,6 +172,41 @@ function pickRandomEntries(entries, count) {
 
 function getRequestIp(req) {
   return req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.connection.remoteAddress || req.socket?.remoteAddress || null;
+}
+
+async function isOfficialTelegramGroupMember(telegramUserId) {
+  if (!TELEGRAM_GROUP_MEMBERSHIP_REQUIRED) {
+    return { isMember: true, reason: 'membership_check_disabled' };
+  }
+
+  if (!telegramUserId) {
+    return { isMember: false, reason: 'missing_telegram_user_id' };
+  }
+
+  if (!process.env.TELEGRAM_BOT_TOKEN || !process.env.TELEGRAM_GROUP_ID) {
+    return { isMember: false, reason: 'telegram_membership_config_missing' };
+  }
+
+  try {
+    const response = await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/getChatMember?chat_id=${encodeURIComponent(process.env.TELEGRAM_GROUP_ID)}&user_id=${encodeURIComponent(String(telegramUserId))}`);
+    const payload = await response.json();
+
+    if (!payload?.ok || !payload?.result) {
+      return { isMember: false, reason: 'telegram_membership_check_failed' };
+    }
+
+    const status = String(payload.result.status || '').toLowerCase();
+    if (status === 'restricted') {
+      return { isMember: Boolean(payload.result.is_member), reason: status };
+    }
+
+    return {
+      isMember: ['member', 'administrator', 'creator'].includes(status),
+      reason: status || 'unknown',
+    };
+  } catch {
+    return { isMember: false, reason: 'telegram_membership_check_error' };
+  }
 }
 
 export async function runDailyDraw({ drawDate, winnerCount, prizeAmount, runBy }) {
@@ -1055,6 +1091,15 @@ router.post('/daily-claim', async (req, res) => {
     return res.status(403).json({ error: 'Telegram not verified' });
   }
 
+  const officialMembership = await isOfficialTelegramGroupMember(user.telegramUserId);
+  if (!officialMembership.isMember) {
+    return res.status(403).json({
+      error: 'Join the official EPWX Telegram group to claim daily rewards.',
+      code: 'OFFICIAL_GROUP_MEMBERSHIP_REQUIRED',
+      reason: officialMembership.reason,
+    });
+  }
+
   // Check for partner referral if referralCode is provided
   let partnerReferral = null;
   let partnerId = null;
@@ -1064,7 +1109,7 @@ router.post('/daily-claim', async (req, res) => {
       include: [{ model: Partner, as: 'partner' }]
     });
     
-    if (partnerReferral && partnerReferral.partner?.status === 'approved') {
+    if (partnerReferral && partnerReferral.partner?.status === 'active') {
       partnerId = partnerReferral.partnerId;
     }
   }

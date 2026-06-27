@@ -17,6 +17,8 @@ type TelegramMiniAppAuthResponse = {
   telegramUser: TelegramMiniAppUser;
   linkedWallet: string | null;
   telegramVerified: boolean;
+  officialGroupMember?: boolean;
+  officialGroupReason?: string;
   error?: string;
 };
 
@@ -175,7 +177,11 @@ export default function TelegramMiniAppPage() {
 
         setTelegramUser(data.telegramUser);
         setLinkedWallet(data.linkedWallet || null);
-        setStatus(data.linkedWallet ? "Telegram account verified. Wallet is linked." : "Telegram account verified. Connect and link a wallet.");
+        if (data.officialGroupMember === false) {
+          setStatus("Join the official EPWX Telegram group first, then reopen this Mini App.");
+        } else {
+          setStatus(data.linkedWallet ? "Telegram account verified. Wallet is linked." : "Telegram account verified. Connect and link a wallet.");
+        }
       } catch {
         setStatus("Unable to verify Telegram session right now.");
       } finally {
