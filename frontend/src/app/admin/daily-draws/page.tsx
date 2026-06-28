@@ -84,6 +84,7 @@ const DEFAULT_DAILY_DRAW_PRIZE_AMOUNT =
   ) || "1000000";
 
 const DRAWS_PER_PAGE = 5;
+const WINNERS_PER_PAGE = 5;
 
 export default function AdminDailyDrawsPage() {
   const { address } = useAccount();
@@ -103,6 +104,7 @@ export default function AdminDailyDrawsPage() {
   const [winnerCount, setWinnerCount] = useState<string>("5");
   const [prizeAmount, setPrizeAmount] = useState<string>(DEFAULT_DAILY_DRAW_PRIZE_AMOUNT);
   const [drawsPage, setDrawsPage] = useState<number>(1);
+  const [winnersPage, setWinnersPage] = useState<number>(1);
 
   const EPWX_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_EPWX_TOKEN as `0x${string}`) || "0x0000000000000000000000000000000000000000";
   const EPWX_TOKEN_ABI = [
@@ -131,6 +133,15 @@ export default function AdminDailyDrawsPage() {
     const start = (drawsPage - 1) * DRAWS_PER_PAGE;
     return draws.slice(start, start + DRAWS_PER_PAGE);
   }, [draws, drawsPage]);
+
+  const totalWinnersPages = useMemo(() => {
+    return Math.max(1, Math.ceil(winners.length / WINNERS_PER_PAGE));
+  }, [winners.length]);
+
+  const paginatedWinners = useMemo(() => {
+    const start = (winnersPage - 1) * WINNERS_PER_PAGE;
+    return winners.slice(start, start + WINNERS_PER_PAGE);
+  }, [winners, winnersPage]);
 
   const fetchDraws = async () => {
     if (!address || !isAdmin) return;
@@ -172,6 +183,7 @@ export default function AdminDailyDrawsPage() {
         setSelectedDraw(data.draw);
       }
       setWinners((data.winners || []).sort((a, b) => a.rank - b.rank));
+      setWinnersPage(1);
     } catch (fetchError: any) {
       setError(fetchError?.message || "Failed to fetch draw winners");
     }
@@ -186,6 +198,12 @@ export default function AdminDailyDrawsPage() {
       setDrawsPage(totalDrawPages);
     }
   }, [drawsPage, totalDrawPages]);
+
+  useEffect(() => {
+    if (winnersPage > totalWinnersPages) {
+      setWinnersPage(totalWinnersPages);
+    }
+  }, [winnersPage, totalWinnersPages]);
 
   const runDraw = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -220,6 +238,7 @@ export default function AdminDailyDrawsPage() {
       const data = await parseJsonResponse<{ draw: DailyDraw; winners: DailyDrawWinner[] }>(response, "Failed to run daily draw");
       setSelectedDraw(data.draw);
       setWinners((data.winners || []).sort((a, b) => a.rank - b.rank));
+      setWinnersPage(1);
       setSuccess(`Daily draw completed for ${data.draw.drawDate}`);
       await fetchDraws();
     } catch (runError: any) {
@@ -413,7 +432,7 @@ export default function AdminDailyDrawsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {winners.map((winner) => (
+                  {paginatedWinners.map((winner) => (
                     <tr key={winner.id} className="border-t border-white/10">
                       <td className="px-4 py-3">#{winner.rank}</td>
                       <td className="px-4 py-3 break-all">{winner.wallet}</td>
@@ -438,6 +457,28 @@ export default function AdminDailyDrawsPage() {
                   ))}
                 </tbody>
               </table>
+
+              {winners.length > WINNERS_PER_PAGE ? (
+                <div className="mt-3 flex items-center justify-between rounded-xl border border-white/15 bg-white/5 px-3 py-2">
+                  <button
+                    type="button"
+                    onClick={() => setWinnersPage((page) => Math.max(1, page - 1))}
+                    disabled={winnersPage === 1}
+                    className="rounded-lg border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold text-white hover:bg-white/20 disabled:opacity-40"
+                  >
+                    Prev
+                  </button>
+                  <span className="text-xs font-semibold text-white/80">Page {winnersPage} of {totalWinnersPages}</span>
+                  <button
+                    type="button"
+                    onClick={() => setWinnersPage((page) => Math.min(totalWinnersPages, page + 1))}
+                    disabled={winnersPage === totalWinnersPages}
+                    className="rounded-lg border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold text-white hover:bg-white/20 disabled:opacity-40"
+                  >
+                    Next
+                  </button>
+                </div>
+              ) : null}
             </div>
           ) : null}
         </div>
