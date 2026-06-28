@@ -918,20 +918,52 @@ router.get('/daily-claims/summary', async (req, res) => {
 });
 
 // GET /api/epwx/daily-draws/latest
-router.get('/daily-draws/latest', async (_req, res) => {
+router.get('/daily-draws/latest', async (req, res) => {
   try {
+    const parsedPage = Number.parseInt(String(req.query.page || '1'), 10);
+    const requestedPage = Number.isInteger(parsedPage) && parsedPage > 0 ? parsedPage : 1;
+    const pageSize = 1;
+
+    const totalDraws = await DailyDraw.count();
+    const totalPages = totalDraws > 0 ? Math.ceil(totalDraws / pageSize) : 1;
+    const safePage = Math.min(requestedPage, totalPages);
+
     const draw = await DailyDraw.findOne({
       order: [['drawDate', 'DESC']],
+      offset: (safePage - 1) * pageSize,
+      limit: pageSize,
       include: [{ model: DailyDrawWinner, as: 'winners', order: [['rank', 'ASC']] }],
     });
 
     if (!draw) {
-      return res.json({ draw: null, winners: [] });
+      return res.json({
+        draw: null,
+        winners: [],
+        pagination: {
+          page: 1,
+          pageSize,
+          totalPages: 1,
+          totalDraws: 0,
+          hasPrevPage: false,
+          hasNextPage: false,
+        },
+      });
     }
 
     const drawJson = draw.toJSON();
     const winners = [...(drawJson.winners || [])].sort((a, b) => a.rank - b.rank);
-    return res.json({ draw: { ...drawJson, winners: undefined }, winners });
+    return res.json({
+      draw: { ...drawJson, winners: undefined },
+      winners,
+      pagination: {
+        page: safePage,
+        pageSize,
+        totalPages,
+        totalDraws,
+        hasPrevPage: safePage > 1,
+        hasNextPage: safePage < totalPages,
+      },
+    });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }

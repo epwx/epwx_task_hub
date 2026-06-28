@@ -110,6 +110,13 @@ interface LatestDailyDrawWinner {
   txHash?: string | null;
 }
 
+interface LatestDailyDrawPagination {
+  page: number;
+  totalPages: number;
+  hasPrevPage: boolean;
+  hasNextPage: boolean;
+}
+
 interface BuyerBadge {
   variant: 'whale' | 'tier' | 'buyer';
   label: string;
@@ -566,6 +573,13 @@ function formatWalletAddress(wallet: string) {
 function LatestDailyWinnersBoard({ referralLink }: { referralLink?: string }) {
   const [draw, setDraw] = useState<LatestDailyDraw | null>(null);
   const [winners, setWinners] = useState<LatestDailyDrawWinner[]>([]);
+  const [drawPage, setDrawPage] = useState<number>(1);
+  const [drawPagination, setDrawPagination] = useState<LatestDailyDrawPagination>({
+    page: 1,
+    totalPages: 1,
+    hasPrevPage: false,
+    hasNextPage: false,
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdatedAt, setLastUpdatedAt] = useState<string | null>(null);
@@ -662,8 +676,12 @@ function LatestDailyWinnersBoard({ referralLink }: { referralLink?: string }) {
       setError(null);
 
       try {
-        const response = await fetch('/api/epwx/daily-draws/latest', { cache: 'no-store' });
-        const data = await parseJsonResponse<{ draw?: LatestDailyDraw | null; winners?: LatestDailyDrawWinner[] }>(
+        const response = await fetch(`/api/epwx/daily-draws/latest?page=${drawPage}`, { cache: 'no-store' });
+        const data = await parseJsonResponse<{
+          draw?: LatestDailyDraw | null;
+          winners?: LatestDailyDrawWinner[];
+          pagination?: LatestDailyDrawPagination;
+        }>(
           response,
           'Failed to load latest winners.'
         );
@@ -672,6 +690,16 @@ function LatestDailyWinnersBoard({ referralLink }: { referralLink?: string }) {
         }
         setDraw(data.draw || null);
         setWinners(Array.isArray(data.winners) ? data.winners : []);
+        const nextPagination: LatestDailyDrawPagination = {
+          page: Math.max(1, Number(data.pagination?.page || 1)),
+          totalPages: Math.max(1, Number(data.pagination?.totalPages || 1)),
+          hasPrevPage: Boolean(data.pagination?.hasPrevPage),
+          hasNextPage: Boolean(data.pagination?.hasNextPage),
+        };
+        setDrawPagination(nextPagination);
+        if (nextPagination.page !== drawPage) {
+          setDrawPage(nextPagination.page);
+        }
         setLastUpdatedAt(new Date().toLocaleTimeString());
       } catch (fetchError: any) {
         if (!isMounted) {
@@ -679,6 +707,12 @@ function LatestDailyWinnersBoard({ referralLink }: { referralLink?: string }) {
         }
         setDraw(null);
         setWinners([]);
+        setDrawPagination({
+          page: 1,
+          totalPages: 1,
+          hasPrevPage: false,
+          hasNextPage: false,
+        });
         setError(fetchError?.message || 'Failed to load latest winners.');
       } finally {
         if (!silent && isMounted) {
@@ -696,7 +730,7 @@ function LatestDailyWinnersBoard({ referralLink }: { referralLink?: string }) {
       isMounted = false;
       window.clearInterval(intervalId);
     };
-  }, []);
+  }, [drawPage]);
 
   return (
     <section id="latest-winners" className="py-12 scroll-mt-24">
@@ -728,7 +762,7 @@ function LatestDailyWinnersBoard({ referralLink }: { referralLink?: string }) {
                 <div className={`${glassPanelClass} mb-5 p-4 text-sm text-white/95`}>
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <div className="text-xs uppercase tracking-[0.2em] text-white/80">Latest Draw Date</div>
+                      <div className="text-xs uppercase tracking-[0.2em] text-white/80">Draw Date</div>
                       <div className="mt-1 text-xl font-black text-white">{draw.drawDate}</div>
                     </div>
                     <button
@@ -744,6 +778,25 @@ function LatestDailyWinnersBoard({ referralLink }: { referralLink?: string }) {
                     <div>Winners: <span className="font-bold text-white">{draw.winnerCount}</span></div>
                     <div>Eligible Wallets: <span className="font-bold text-white">{draw.eligibleCount}</span></div>
                     <div>Prize Per Winner: <span className="font-bold text-emerald-100">{Number(draw.prizeAmount || '0').toLocaleString()} EPWX</span></div>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between rounded-xl border border-white/15 bg-white/5 px-3 py-2">
+                    <button
+                      type="button"
+                      onClick={() => setDrawPage((current) => Math.max(1, current - 1))}
+                      disabled={!drawPagination.hasPrevPage}
+                      className="rounded-lg border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold text-white hover:bg-white/20 disabled:opacity-40"
+                    >
+                      Prev Draw
+                    </button>
+                    <span className="text-xs font-semibold text-white/80">Draw Page {drawPagination.page} of {drawPagination.totalPages}</span>
+                    <button
+                      type="button"
+                      onClick={() => setDrawPage((current) => current + 1)}
+                      disabled={!drawPagination.hasNextPage}
+                      className="rounded-lg border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold text-white hover:bg-white/20 disabled:opacity-40"
+                    >
+                      Next Draw
+                    </button>
                   </div>
                 </div>
 
