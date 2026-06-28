@@ -45,6 +45,7 @@ const DAILY_REWARD_TIERS = [
 ];
 const DAILY_CLAIM_STATS_KEY = 'daily_claims';
 const TELEGRAM_GROUP_MEMBERSHIP_REQUIRED = ['1', 'true', 'yes', 'on'].includes(String(process.env.TELEGRAM_GROUP_MEMBERSHIP_REQUIRED || 'true').toLowerCase());
+const ALLOW_LEGACY_TELEGRAM_VERIFIED_CLAIMS = ['1', 'true', 'yes', 'on'].includes(String(process.env.ALLOW_LEGACY_TELEGRAM_VERIFIED_CLAIMS || 'true').toLowerCase());
 
 function getAdminWallets() {
   return (process.env.ADMIN_WALLETS || '').split(',').map(w => w.trim().toLowerCase()).filter(Boolean);
@@ -768,15 +769,19 @@ router.get('/special-claim/status', async (req, res) => {
 
 // POST /api/epwx/telegram-verify
 router.post('/telegram-verify', async (req, res) => {
-  const { wallet } = req.body;
+  const { wallet, telegramUserId, telegramUsername } = req.body;
   if (!wallet) return res.status(400).json({ error: 'wallet is required' });
   try {
     let user = await User.findOne({ where: { walletAddress: wallet.toLowerCase() } });
+    const normalizedTelegramUserId = telegramUserId ? String(telegramUserId).trim() : null;
+    const normalizedTelegramUsername = telegramUsername ? String(telegramUsername).trim() : null;
     if (!user) {
       // Create user if not found, provide a default username
       const userData = {
         walletAddress: wallet.toLowerCase(),
         telegramVerified: true,
+        ...(normalizedTelegramUserId ? { telegramUserId: normalizedTelegramUserId } : {}),
+        ...(normalizedTelegramUsername ? { telegramUsername: normalizedTelegramUsername } : {}),
         username: wallet.toLowerCase(), // Use wallet address as default username
         email: wallet.toLowerCase() + '@telegram.epwx', // Placeholder email
         password: 'telegram-bot' // Placeholder password (should be random/secure in production)
@@ -786,8 +791,22 @@ router.post('/telegram-verify', async (req, res) => {
       console.log(`[TELEGRAM VERIFY] Created new user for wallet: ${wallet.toLowerCase()}`);
     } else if (!user.telegramVerified) {
       user.telegramVerified = true;
+      if (normalizedTelegramUserId) {
+        user.telegramUserId = normalizedTelegramUserId;
+      }
+      if (normalizedTelegramUsername) {
+        user.telegramUsername = normalizedTelegramUsername;
+      }
       await user.save();
       console.log(`[TELEGRAM VERIFY] Updated telegramVerified for wallet: ${wallet.toLowerCase()}`);
+    } else if (normalizedTelegramUserId || normalizedTelegramUsername) {
+      if (normalizedTelegramUserId && !user.telegramUserId) {
+        user.telegramUserId = normalizedTelegramUserId;
+      }
+      if (normalizedTelegramUsername && !user.telegramUsername) {
+        user.telegramUsername = normalizedTelegramUsername;
+      }
+      await user.save();
     }
     res.json({ success: true });
   } catch (err) {
@@ -1107,18 +1126,33 @@ router.post('/daily-claim', async (req, res) => {
     return res.status(403).json({ error: 'Telegram not verified' });
   }
 
-  const officialMembership = await isOfficialTelegramGroupMember(user.telegramUserId);
-  if (!officialMembership.isMember) {
-    console.log('[daily-claim] blocked due to official Telegram group membership requirement', {
+  const hasTelegramUserId = Boolean(String(user.telegramUserId || '').trim());
+  if (!hasTelegramUserId && TELEGRAM_GROUP_MEMBERSHIP_REQUIRED) {
+    if (!ALLOW_LEGACY_TELEGRAM_VERIFIED_CLAIMS) {
+      return res.status(403).json({
+        error: 'Please link your wallet from the EPWX Telegram Mini App and try again.',
+        code: 'TELEGRAM_WALLET_LINK_REQUIRED',
+      });
+    }
+
+    console.log('[daily-claim] allowing legacy telegramVerified user without telegramUserId', {
       wallet: normalizedWallet,
-      telegramUserId: user.telegramUserId || null,
-      reason: officialMembership.reason,
+      telegramVerified: user.telegramVerified,
     });
-    return res.status(403).json({
-      error: 'Join the official EPWX Telegram group to claim daily rewards.',
-      code: 'OFFICIAL_GROUP_MEMBERSHIP_REQUIRED',
-      reason: officialMembership.reason,
-    });
+  } else {
+    const officialMembership = await isOfficialTelegramGroupMember(user.telegramUserId);
+    if (!officialMembership.isMember) {
+      console.log('[daily-claim] blocked due to official Telegram group membership requirement', {
+        wallet: normalizedWallet,
+        telegramUserId: user.telegramUserId || null,
+        reason: officialMembership.reason,
+      });
+      return res.status(403).json({
+        error: 'Join the official EPWX Telegram group to claim daily rewards.',
+        code: 'OFFICIAL_GROUP_MEMBERSHIP_REQUIRED',
+        reason: officialMembership.reason,
+      });
+    }
   }
 
   // Check for partner referral if referralCode is provided
