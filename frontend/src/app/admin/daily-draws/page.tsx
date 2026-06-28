@@ -83,6 +83,8 @@ const DEFAULT_DAILY_DRAW_PRIZE_AMOUNT =
       "1000000"
   ) || "1000000";
 
+const DRAWS_PER_PAGE = 5;
+
 export default function AdminDailyDrawsPage() {
   const { address } = useAccount();
   const publicClient = usePublicClient();
@@ -100,6 +102,7 @@ export default function AdminDailyDrawsPage() {
   const [drawDate, setDrawDate] = useState<string>(getUtcDateInputDefault());
   const [winnerCount, setWinnerCount] = useState<string>("5");
   const [prizeAmount, setPrizeAmount] = useState<string>(DEFAULT_DAILY_DRAW_PRIZE_AMOUNT);
+  const [drawsPage, setDrawsPage] = useState<number>(1);
 
   const EPWX_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_EPWX_TOKEN as `0x${string}`) || "0x0000000000000000000000000000000000000000";
   const EPWX_TOKEN_ABI = [
@@ -120,6 +123,15 @@ export default function AdminDailyDrawsPage() {
     return getAdminWallets().includes(address.toLowerCase());
   }, [address]);
 
+  const totalDrawPages = useMemo(() => {
+    return Math.max(1, Math.ceil(draws.length / DRAWS_PER_PAGE));
+  }, [draws.length]);
+
+  const paginatedDraws = useMemo(() => {
+    const start = (drawsPage - 1) * DRAWS_PER_PAGE;
+    return draws.slice(start, start + DRAWS_PER_PAGE);
+  }, [draws, drawsPage]);
+
   const fetchDraws = async () => {
     if (!address || !isAdmin) return;
 
@@ -130,6 +142,7 @@ export default function AdminDailyDrawsPage() {
       const data = await parseJsonResponse<{ draws?: DailyDraw[] }>(response, "Failed to fetch daily draws");
       const nextDraws = data.draws || [];
       setDraws(nextDraws);
+      setDrawsPage(1);
 
       if (nextDraws.length === 0) {
         setSelectedDraw(null);
@@ -167,6 +180,12 @@ export default function AdminDailyDrawsPage() {
   useEffect(() => {
     fetchDraws();
   }, [address, isAdmin]);
+
+  useEffect(() => {
+    if (drawsPage > totalDrawPages) {
+      setDrawsPage(totalDrawPages);
+    }
+  }, [drawsPage, totalDrawPages]);
 
   const runDraw = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -329,7 +348,7 @@ export default function AdminDailyDrawsPage() {
             <h2 className="text-2xl font-black text-white">Recent Draws</h2>
             <div className="mt-4 space-y-3">
               {draws.length === 0 ? <div className="text-sm text-white/75">No draws yet.</div> : null}
-              {draws.map((draw) => (
+              {paginatedDraws.map((draw) => (
                 <button
                   key={draw.id}
                   type="button"
@@ -341,6 +360,28 @@ export default function AdminDailyDrawsPage() {
                   <div className="text-xs text-white/70">Prize: {Number(draw.prizeAmount || "0").toLocaleString()} EPWX</div>
                 </button>
               ))}
+
+              {draws.length > DRAWS_PER_PAGE ? (
+                <div className="flex items-center justify-between rounded-xl border border-white/15 bg-white/5 px-3 py-2">
+                  <button
+                    type="button"
+                    onClick={() => setDrawsPage((page) => Math.max(1, page - 1))}
+                    disabled={drawsPage === 1}
+                    className="rounded-lg border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold text-white hover:bg-white/20 disabled:opacity-40"
+                  >
+                    Prev
+                  </button>
+                  <span className="text-xs font-semibold text-white/80">Page {drawsPage} of {totalDrawPages}</span>
+                  <button
+                    type="button"
+                    onClick={() => setDrawsPage((page) => Math.min(totalDrawPages, page + 1))}
+                    disabled={drawsPage === totalDrawPages}
+                    className="rounded-lg border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold text-white hover:bg-white/20 disabled:opacity-40"
+                  >
+                    Next
+                  </button>
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
