@@ -46,6 +46,12 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
   const isHomePage = pathname === '/';
   const desktopLinks = [
     {
+      href: '/',
+      label: 'Home',
+      external: false,
+      active: pathname === '/',
+    },
+    {
       href: 'https://epowex.com',
       label: 'Main Site',
       external: true,
@@ -197,6 +203,7 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
         {mobileMenuOpen && (
           <div className="md:hidden mt-4 py-4 border-t border-gray-200 animate-fadeIn">
             <nav className="flex flex-col gap-4">
+              <Link href="/" className="text-gray-700 dark:text-gray-200 hover:text-blue-600 font-medium transition-colors py-2" onClick={() => setMobileMenuOpen(false)}>Home</Link>
               <a 
                 href="https://epowex.com" 
                 target="_blank" 
