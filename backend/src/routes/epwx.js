@@ -552,14 +552,18 @@ router.post('/claims/mark-paid', async (req, res) => {
   // DEBUG: Log route hit and admin values for troubleshooting
   console.log('--- mark-paid route HIT ---');
   console.log('admin:', req.body.admin, 'ADMIN_WALLETS:', process.env.ADMIN_WALLETS);
-  const { admin, claimId, txHash } = req.body;
+  const { admin, claimId, txHash, claimSource } = req.body;
   // Support multiple admin wallets (comma-separated, case-insensitive)
   const adminWallets = (process.env.ADMIN_WALLETS || '').split(',').map(a => a.trim().toLowerCase());
   if (!admin || !adminWallets.length || !adminWallets.includes(admin.toLowerCase())) {
     return res.status(403).json({ error: 'Unauthorized' });
   }
   try {
-    const claim = await Claim.findByPk(claimId);
+    const isCashbackClaim = String(claimSource || '').toLowerCase() === 'cashback';
+    const claim = isCashbackClaim
+      ? await CashbackClaim.findByPk(claimId)
+      : await Claim.findByPk(claimId);
+
     if (!claim) {
       console.log('[mark-paid] Claim not found for id:', claimId);
       return res.status(404).json({ error: 'Claim not found' });
@@ -586,32 +590,36 @@ router.post('/claims/mark-paid', async (req, res) => {
     console.log('[mark-paid] Verified on-chain tx:', txHash, 'for claim:', claimId);
     claim.status = 'paid';
     claim.txHash = txHash;
+    if (isCashbackClaim) {
+      claim.cashbackAmount = '1000000000';
+    }
     await claim.save();
     console.log('[mark-paid] Updated claim:', claim.id, 'status:', claim.status);
 
     // Insert into RewardDistributionLedger with detailed logging
     try {
-      const merchant = await Merchant.findByPk(claim.merchantId);
+      const merchant = isCashbackClaim ? null : await Merchant.findByPk(claim.merchantId);
+      const epwxAmount = isCashbackClaim
+        ? '1000000000'
+        : ((claim.cashbackAmount && !isNaN(Number(claim.cashbackAmount))) ? String(claim.cashbackAmount) : '100000');
+
       console.log('[RewardLedger] Attempting insert:', {
         date: new Date(),
-        merchant_id: claim.merchantId,
+        merchant_id: isCashbackClaim ? null : claim.merchantId,
         merchant_name: merchant ? merchant.name : '',
-        customer_id: claim.customer,
+        customer_id: isCashbackClaim ? claim.wallet : claim.customer,
         receipt_id: claim.id.toString(),
-        epwx_amount: claim.cashbackAmount || '',
+        epwx_amount: epwxAmount,
         fiat_value: null,
         transaction_hash: txHash,
         notes: 'Cashback claim paid'
       });
-    // Centralized default cashback amount for all cashback logic
-    const DEFAULT_CASHBACK = '100000';
 
-      const epwxAmount = (claim.cashbackAmount && !isNaN(Number(claim.cashbackAmount))) ? String(claim.cashbackAmount) : DEFAULT_CASHBACK;
       const ledgerEntry = await RewardDistributionLedger.create({
         date: new Date(),
-        merchant_id: claim.merchantId,
+        merchant_id: isCashbackClaim ? null : claim.merchantId,
         merchant_name: merchant ? merchant.name : '',
-        customer_id: claim.customer,
+        customer_id: isCashbackClaim ? claim.wallet : claim.customer,
         receipt_id: claim.id.toString(),
         epwx_amount: epwxAmount,
         fiat_value: null,
@@ -1384,25 +1392,6 @@ router.get('/claims', async (req, res) => {
     return;
   }
   return res.status(400).json({ error: 'Missing admin or wallet parameter' });
-});
-
-// POST /api/epwx/claims/mark-paid
-router.post('/claims/mark-paid', async (req, res) => {
-  const { admin, claimId } = req.body;
-  const adminWallets = (process.env.ADMIN_WALLETS || '').split(',').map(a => a.trim().toLowerCase());
-  if (!admin || !adminWallets.length || !adminWallets.includes(admin.toLowerCase())) {
-    return res.status(403).json({ error: 'Unauthorized' });
-  }
-  try {
-    const claim = await CashbackClaim.findByPk(claimId);
-    if (!claim) return res.status(404).json({ error: 'Claim not found' });
-    claim.cashbackAmount = '1000000000';
-    claim.status = 'paid';
-    await claim.save();
-    res.json({ success: true, claim });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
 });
 
 export default router;
