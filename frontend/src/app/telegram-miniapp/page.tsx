@@ -116,6 +116,27 @@ function resolveInitDataFromLocation(): string {
   return "";
 }
 
+function resolveGroupContextTokenFromLocation(): string {
+  if (typeof window === "undefined") {
+    return "";
+  }
+
+  const fromSearch = new URLSearchParams(window.location.search).get("groupCtx");
+  if (fromSearch) {
+    return fromSearch;
+  }
+
+  const hash = window.location.hash?.startsWith("#") ? window.location.hash.slice(1) : window.location.hash;
+  if (hash) {
+    const fromHash = new URLSearchParams(hash).get("groupCtx");
+    if (fromHash) {
+      return fromHash;
+    }
+  }
+
+  return "";
+}
+
 export default function TelegramMiniAppPage() {
   const { address } = useAccount();
   const { signMessageAsync } = useSignMessage();
@@ -128,6 +149,7 @@ export default function TelegramMiniAppPage() {
   const [status, setStatus] = useState<string>("");
   const [nextClaimAt, setNextClaimAt] = useState<number | null>(null);
   const [remaining, setRemaining] = useState<string>("");
+  const [groupContextToken, setGroupContextToken] = useState<string>("");
 
   const normalizedConnectedWallet = useMemo(() => normalizeWallet(address), [address]);
   const normalizedLinkedWallet = useMemo(() => normalizeWallet(linkedWallet || undefined), [linkedWallet]);
@@ -148,6 +170,7 @@ export default function TelegramMiniAppPage() {
     webApp?.expand?.();
     const resolved = webApp?.initData || resolveInitDataFromLocation();
     setInitData(resolved);
+    setGroupContextToken(resolveGroupContextTokenFromLocation());
   }, []);
 
   useEffect(() => {
@@ -333,6 +356,7 @@ export default function TelegramMiniAppPage() {
         body: JSON.stringify({
           wallet: normalizedConnectedWallet,
           signature,
+          ...(groupContextToken ? { groupContextToken } : {}),
         }),
       });
 

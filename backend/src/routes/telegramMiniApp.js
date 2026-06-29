@@ -2,15 +2,58 @@ import express from 'express';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import { ethers } from 'ethers';
-import { User } from '../models/index.js';
+import { Op } from 'sequelize';
+import { User, TelegramGroupOwner, TelegramGroupReward } from '../models/index.js';
 
 const router = express.Router();
 
 const MINI_APP_NONCE_TTL_MS = Number.parseInt(process.env.TELEGRAM_MINIAPP_NONCE_TTL_MS || '300000', 10);
 const TELEGRAM_AUTH_MAX_AGE_SECONDS = Number.parseInt(process.env.TELEGRAM_MINIAPP_AUTH_MAX_AGE_SECONDS || '86400', 10);
 const TELEGRAM_GROUP_MEMBERSHIP_REQUIRED = ['1', 'true', 'yes', 'on'].includes(String(process.env.TELEGRAM_GROUP_MEMBERSHIP_REQUIRED || 'true').toLowerCase());
+const TELEGRAM_GROUP_CONTEXT_TOKEN_TTL_SECONDS = Number.parseInt(process.env.TELEGRAM_GROUP_CONTEXT_TOKEN_TTL_SECONDS || '2592000', 10);
+const TELEGRAM_GROUP_CONTEXT_SECRET = process.env.TELEGRAM_GROUP_CONTEXT_SECRET || process.env.JWT_SECRET || 'epwx-group-context-dev-secret';
 const walletChallenges = new Map();
 let usersTableColumnsCache = null;
+
+function normalizeGroupId(value) {
+  return String(value || '').trim();
+}
+
+function signGroupContextToken({ groupId, ownerTelegramUserId, ownerWallet }) {
+  return jwt.sign(
+    {
+      type: 'telegram_group_context',
+      groupId,
+      ownerTelegramUserId,
+      ownerWallet,
+    },
+    TELEGRAM_GROUP_CONTEXT_SECRET,
+    { expiresIn: TELEGRAM_GROUP_CONTEXT_TOKEN_TTL_SECONDS }
+  );
+}
+
+async function checkGroupAdminMembership(groupId, telegramUserId) {
+  if (!process.env.TELEGRAM_BOT_TOKEN) {
+    return { isAdmin: false, reason: 'telegram_bot_token_missing' };
+  }
+
+  try {
+    const response = await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/getChatMember?chat_id=${encodeURIComponent(groupId)}&user_id=${encodeURIComponent(String(telegramUserId))}`);
+    const payload = await response.json();
+
+    if (!payload?.ok || !payload?.result) {
+      return { isAdmin: false, reason: 'group_admin_check_failed' };
+    }
+
+    const status = String(payload.result.status || '').toLowerCase();
+    return {
+      isAdmin: status === 'administrator' || status === 'creator',
+      reason: status || 'unknown',
+    };
+  } catch {
+    return { isAdmin: false, reason: 'group_admin_check_error' };
+  }
+}
 
 async function checkOfficialGroupMembership(telegramUserId) {
   if (!TELEGRAM_GROUP_MEMBERSHIP_REQUIRED) {
@@ -413,6 +456,132 @@ router.post('/wallet/connect', async (req, res) => {
         token,
       },
       migrationRequired: !supportsTelegramUserId,
+    });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+router.post('/group-owner/register', async (req, res) => {
+  const { initData, walletAddress, groupId, groupTitle } = req.body;
+
+  const verification = parseAndVerifyInitData(initData);
+  if (!verification.ok) {
+    return res.status(401).json({ error: verification.error });
+  }
+
+  const normalizedWallet = normalizeWallet(walletAddress);
+  if (!/^0x[a-f0-9]{40}$/.test(normalizedWallet)) {
+    return res.status(400).json({ error: 'walletAddress must be a valid EVM wallet address.' });
+  }
+
+  const normalizedGroupId = normalizeGroupId(groupId);
+  if (!normalizedGroupId) {
+    return res.status(400).json({ error: 'groupId is required.' });
+  }
+
+  const { telegramUser } = verification;
+
+  try {
+    const user = await User.findOne({ where: { walletAddress: normalizedWallet } });
+    if (!user || !user.telegramVerified || String(user.telegramUserId || '') !== telegramUser.id) {
+      return res.status(403).json({ error: 'Wallet must be linked to this Telegram account before registering group rewards.' });
+    }
+
+    const adminCheck = await checkGroupAdminMembership(normalizedGroupId, telegramUser.id);
+    if (!adminCheck.isAdmin) {
+      return res.status(403).json({
+        error: 'Only group admins can register a group for owner rewards.',
+        reason: adminCheck.reason,
+      });
+    }
+
+    const existingGroup = await TelegramGroupOwner.findOne({ where: { groupId: normalizedGroupId } });
+
+    if (existingGroup && existingGroup.ownerTelegramUserId !== telegramUser.id) {
+      return res.status(409).json({ error: 'This group is already registered by a different owner.' });
+    }
+
+    const owner = existingGroup || TelegramGroupOwner.build({ groupId: normalizedGroupId });
+    owner.groupTitle = groupTitle ? String(groupTitle).trim() : owner.groupTitle;
+    owner.ownerTelegramUserId = telegramUser.id;
+    owner.ownerWallet = normalizedWallet;
+    owner.status = 'active';
+    await owner.save();
+
+    const groupContextToken = signGroupContextToken({
+      groupId: owner.groupId,
+      ownerTelegramUserId: owner.ownerTelegramUserId,
+      ownerWallet: owner.ownerWallet,
+    });
+
+    const frontendBaseUrl = (process.env.FRONTEND_URL || 'https://tasks.epowex.com').replace(/\/$/, '');
+    const miniAppLink = `${frontendBaseUrl}/telegram-miniapp?groupCtx=${encodeURIComponent(groupContextToken)}`;
+
+    return res.json({
+      success: true,
+      owner: {
+        id: owner.id,
+        groupId: owner.groupId,
+        groupTitle: owner.groupTitle,
+        ownerWallet: owner.ownerWallet,
+        ownerTelegramUserId: owner.ownerTelegramUserId,
+        status: owner.status,
+      },
+      groupContextToken,
+      miniAppLink,
+    });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+router.get('/group-owner/rewards', async (req, res) => {
+  const wallet = normalizeWallet(req.query.wallet);
+  if (!wallet) {
+    return res.status(400).json({ error: 'wallet is required.' });
+  }
+
+  try {
+    const owners = await TelegramGroupOwner.findAll({
+      where: {
+        ownerWallet: wallet,
+        status: 'active',
+      },
+      attributes: ['id', 'groupId', 'groupTitle', 'ownerWallet', 'ownerTelegramUserId', 'status', 'createdAt', 'updatedAt'],
+      order: [['createdAt', 'DESC']],
+    });
+
+    const ownerIds = owners.map((owner) => owner.id);
+    const rewards = ownerIds.length
+      ? await TelegramGroupReward.findAll({
+          where: { groupOwnerId: { [Op.in]: ownerIds } },
+          order: [['createdAt', 'DESC']],
+          limit: 100,
+        })
+      : [];
+
+    const summary = rewards.reduce((acc, reward) => {
+      const amount = Number(reward.rewardAmount || 0);
+      acc.totalRewards += 1;
+      acc.totalAmount += Number.isFinite(amount) ? amount : 0;
+      if (reward.status === 'pending') acc.pending += 1;
+      if (reward.status === 'paid') acc.paid += 1;
+      if (reward.status === 'blocked') acc.blocked += 1;
+      return acc;
+    }, {
+      totalRewards: 0,
+      totalAmount: 0,
+      pending: 0,
+      paid: 0,
+      blocked: 0,
+    });
+
+    return res.json({
+      success: true,
+      owners,
+      summary,
+      rewards,
     });
   } catch (error) {
     return res.status(500).json({ error: error.message });

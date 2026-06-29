@@ -1,7 +1,8 @@
 
 import express from 'express';
 import { randomInt } from 'crypto';
-import { User, DailyClaim, DailyDraw, DailyDrawWinner, CashbackClaim, SpecialClaim, Claim, RewardDistributionLedger, Merchant, WalletReferral, PlatformStats, PartnerReferral, Partner, PartnerEarning } from '../models/index.js';
+import jwt from 'jsonwebtoken';
+import { User, DailyClaim, DailyDraw, DailyDrawWinner, CashbackClaim, SpecialClaim, Claim, RewardDistributionLedger, Merchant, WalletReferral, PlatformStats, PartnerReferral, Partner, PartnerEarning, TelegramGroupOwner, TelegramGroupReward } from '../models/index.js';
 import { Op } from 'sequelize';
 // import { ethers } from 'ethers'; // Removed duplicate import
 import { getEPWXPurchaseTransactions } from '../services/epwxCashback.js';
@@ -46,6 +47,8 @@ const DAILY_REWARD_TIERS = [
 const DAILY_CLAIM_STATS_KEY = 'daily_claims';
 const TELEGRAM_GROUP_MEMBERSHIP_REQUIRED = ['1', 'true', 'yes', 'on'].includes(String(process.env.TELEGRAM_GROUP_MEMBERSHIP_REQUIRED || 'true').toLowerCase());
 const ALLOW_LEGACY_TELEGRAM_VERIFIED_CLAIMS = ['1', 'true', 'yes', 'on'].includes(String(process.env.ALLOW_LEGACY_TELEGRAM_VERIFIED_CLAIMS || 'true').toLowerCase());
+const TELEGRAM_GROUP_OWNER_REWARD_AMOUNT = String(process.env.TELEGRAM_GROUP_OWNER_REWARD_AMOUNT || '10000').trim();
+const TELEGRAM_GROUP_CONTEXT_SECRET = process.env.TELEGRAM_GROUP_CONTEXT_SECRET || process.env.JWT_SECRET || 'epwx-group-context-dev-secret';
 
 function getAdminWallets() {
   return (process.env.ADMIN_WALLETS || '').split(',').map(w => w.trim().toLowerCase()).filter(Boolean);
@@ -173,6 +176,134 @@ function pickRandomEntries(entries, count) {
 
 function getRequestIp(req) {
   return req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.connection.remoteAddress || req.socket?.remoteAddress || null;
+}
+
+function verifyGroupContextToken(groupContextToken) {
+  if (!groupContextToken || typeof groupContextToken !== 'string') {
+    return null;
+  }
+
+  try {
+    const payload = jwt.verify(groupContextToken, TELEGRAM_GROUP_CONTEXT_SECRET);
+    if (!payload || payload.type !== 'telegram_group_context') {
+      return null;
+    }
+
+    return {
+      groupId: String(payload.groupId || '').trim(),
+      ownerTelegramUserId: String(payload.ownerTelegramUserId || '').trim(),
+      ownerWallet: normalizeWallet(payload.ownerWallet),
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function isTelegramGroupMember(groupId, telegramUserId) {
+  if (!process.env.TELEGRAM_BOT_TOKEN || !groupId || !telegramUserId) {
+    return { isMember: false, reason: 'group_membership_check_config_or_input_missing' };
+  }
+
+  try {
+    const response = await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/getChatMember?chat_id=${encodeURIComponent(String(groupId))}&user_id=${encodeURIComponent(String(telegramUserId))}`);
+    const payload = await response.json();
+
+    if (!payload?.ok || !payload?.result) {
+      return { isMember: false, reason: 'group_membership_check_failed' };
+    }
+
+    const status = String(payload.result.status || '').toLowerCase();
+    if (status === 'restricted') {
+      return { isMember: Boolean(payload.result.is_member), reason: status };
+    }
+
+    return {
+      isMember: ['member', 'administrator', 'creator'].includes(status),
+      reason: status || 'unknown',
+    };
+  } catch {
+    return { isMember: false, reason: 'group_membership_check_error' };
+  }
+}
+
+async function recordTelegramGroupOwnerReward({ claim, claimantUser, groupContextToken }) {
+  const context = verifyGroupContextToken(groupContextToken);
+  if (!context || !context.groupId || !context.ownerTelegramUserId || !context.ownerWallet) {
+    return null;
+  }
+
+  const claimantWallet = normalizeWallet(claim?.wallet);
+  const claimantTelegramUserId = String(claimantUser?.telegramUserId || '').trim();
+  if (!claimantWallet || !claimantTelegramUserId) {
+    return null;
+  }
+
+  if (claimantWallet === context.ownerWallet || claimantTelegramUserId === context.ownerTelegramUserId) {
+    return {
+      status: 'blocked',
+      reason: 'Owner self-attribution is not eligible.',
+      rewardAmount: TELEGRAM_GROUP_OWNER_REWARD_AMOUNT,
+    };
+  }
+
+  const owner = await TelegramGroupOwner.findOne({
+    where: {
+      groupId: context.groupId,
+      ownerTelegramUserId: context.ownerTelegramUserId,
+      ownerWallet: context.ownerWallet,
+      status: 'active',
+    },
+  });
+
+  if (!owner) {
+    return {
+      status: 'blocked',
+      reason: 'Group owner registration not found or inactive.',
+      rewardAmount: TELEGRAM_GROUP_OWNER_REWARD_AMOUNT,
+    };
+  }
+
+  const membership = await isTelegramGroupMember(owner.groupId, claimantTelegramUserId);
+  if (!membership.isMember) {
+    return {
+      status: 'blocked',
+      reason: `Claimant is not an active member of source group (${membership.reason}).`,
+      rewardAmount: TELEGRAM_GROUP_OWNER_REWARD_AMOUNT,
+    };
+  }
+
+  const existingReward = await TelegramGroupReward.findOne({ where: { dailyClaimId: claim.id } });
+  if (existingReward) {
+    return {
+      status: existingReward.status,
+      reason: existingReward.reason,
+      rewardAmount: existingReward.rewardAmount,
+      rewardId: existingReward.id,
+      ownerWallet: existingReward.ownerWallet,
+      groupId: existingReward.groupId,
+    };
+  }
+
+  const reward = await TelegramGroupReward.create({
+    groupOwnerId: owner.id,
+    groupId: owner.groupId,
+    ownerWallet: owner.ownerWallet,
+    claimantWallet,
+    claimantTelegramUserId,
+    dailyClaimId: claim.id,
+    rewardAmount: TELEGRAM_GROUP_OWNER_REWARD_AMOUNT,
+    status: 'pending',
+    reason: null,
+  });
+
+  return {
+    status: reward.status,
+    reason: reward.reason,
+    rewardAmount: reward.rewardAmount,
+    rewardId: reward.id,
+    ownerWallet: reward.ownerWallet,
+    groupId: reward.groupId,
+  };
 }
 
 async function isOfficialTelegramGroupMember(telegramUserId) {
@@ -1140,7 +1271,7 @@ router.get('/reward-ledger', async (req, res) => {
 });
 
 router.post('/daily-claim', async (req, res) => {
-  const { wallet, signature, referralCode } = req.body;
+  const { wallet, signature, referralCode, groupContextToken } = req.body;
   const normalizedWallet = normalizeWallet(wallet);
   if (!normalizedWallet || !signature) return res.status(400).json({ error: 'wallet and signature are required' });
   const ip = getRequestIp(req);
@@ -1316,6 +1447,19 @@ router.post('/daily-claim', async (req, res) => {
     referralReward = await qualifyReferralReward({ referral, claim, ip, now });
   }
 
+  let telegramGroupOwnerReward = null;
+  if (groupContextToken) {
+    try {
+      telegramGroupOwnerReward = await recordTelegramGroupOwnerReward({
+        claim,
+        claimantUser: user,
+        groupContextToken,
+      });
+    } catch (telegramGroupOwnerRewardError) {
+      console.error('[daily-claim] Failed to record telegram group owner reward:', telegramGroupOwnerRewardError);
+    }
+  }
+
   res.json({
     success: true,
     message: claim.status === 'paid' ? 'Daily claim successful and paid!' : 'Daily claim successful and queued for payout.',
@@ -1323,6 +1467,7 @@ router.post('/daily-claim', async (req, res) => {
     status: claim.status,
     txHash: claim.txHash || null,
     referralReward,
+    telegramGroupOwnerReward,
     partnerReward: partnerReferral ? {
       partnerId: partnerId,
       partnerName: partnerReferral.partner?.name,
