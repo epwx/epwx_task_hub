@@ -137,6 +137,27 @@ function resolveGroupContextTokenFromLocation(): string {
   return "";
 }
 
+function resolveQueryValueFromLocation(key: string): string {
+  if (typeof window === "undefined") {
+    return "";
+  }
+
+  const fromSearch = new URLSearchParams(window.location.search).get(key);
+  if (fromSearch) {
+    return fromSearch;
+  }
+
+  const hash = window.location.hash?.startsWith("#") ? window.location.hash.slice(1) : window.location.hash;
+  if (hash) {
+    const fromHash = new URLSearchParams(hash).get(key);
+    if (fromHash) {
+      return fromHash;
+    }
+  }
+
+  return "";
+}
+
 export default function TelegramMiniAppPage() {
   const { address } = useAccount();
   const { signMessageAsync } = useSignMessage();
@@ -150,6 +171,8 @@ export default function TelegramMiniAppPage() {
   const [nextClaimAt, setNextClaimAt] = useState<number | null>(null);
   const [remaining, setRemaining] = useState<string>("");
   const [groupContextToken, setGroupContextToken] = useState<string>("");
+  const [registerGroupId, setRegisterGroupId] = useState<string>("");
+  const [sourceGroupId, setSourceGroupId] = useState<string>("");
 
   const normalizedConnectedWallet = useMemo(() => normalizeWallet(address), [address]);
   const normalizedLinkedWallet = useMemo(() => normalizeWallet(linkedWallet || undefined), [linkedWallet]);
@@ -171,6 +194,8 @@ export default function TelegramMiniAppPage() {
     const resolved = webApp?.initData || resolveInitDataFromLocation();
     setInitData(resolved);
     setGroupContextToken(resolveGroupContextTokenFromLocation());
+    setRegisterGroupId(resolveQueryValueFromLocation("registerGroupId"));
+    setSourceGroupId(resolveQueryValueFromLocation("sourceGroupId"));
   }, []);
 
   useEffect(() => {
@@ -214,6 +239,42 @@ export default function TelegramMiniAppPage() {
 
     void checkAuth();
   }, [initData]);
+
+  useEffect(() => {
+    const loadGroupContextToken = async () => {
+      if (!initData || !sourceGroupId) {
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/telegram-miniapp/group-owner/context-token", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            initData,
+            groupId: sourceGroupId,
+          }),
+        });
+
+        const data = (await res.json()) as {
+          success?: boolean;
+          error?: string;
+          groupContextToken?: string;
+        };
+
+        if (!res.ok || !data.success || !data.groupContextToken) {
+          setStatus((current) => current || data.error || "Unable to resolve group campaign context.");
+          return;
+        }
+
+        setGroupContextToken(data.groupContextToken);
+      } catch {
+        setStatus((current) => current || "Unable to resolve group campaign context.");
+      }
+    };
+
+    void loadGroupContextToken();
+  }, [initData, sourceGroupId]);
 
   useEffect(() => {
     if (!normalizedLinkedWallet) {
@@ -377,6 +438,67 @@ export default function TelegramMiniAppPage() {
     }
   };
 
+  const handleRegisterGroup = async () => {
+    if (!initData) {
+      setStatus("Telegram session missing. Reopen the Mini App.");
+      return;
+    }
+    if (!registerGroupId) {
+      setStatus("Group registration context is missing.");
+      return;
+    }
+    if (!normalizedConnectedWallet || !canClaim) {
+      setStatus("Connect and link the same wallet before group registration.");
+      return;
+    }
+
+    setBusy(true);
+    setStatus("");
+
+    try {
+      const res = await fetch("/api/telegram-miniapp/group-owner/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          initData,
+          walletAddress: normalizedConnectedWallet,
+          groupId: registerGroupId,
+        }),
+      });
+
+      const data = (await res.json()) as {
+        success?: boolean;
+        error?: string;
+        miniAppLink?: string;
+        groupContextToken?: string;
+      };
+
+      if (!res.ok || !data.success) {
+        setStatus(data.error || "Failed to register this group.");
+        return;
+      }
+
+      if (data.groupContextToken) {
+        setGroupContextToken(data.groupContextToken);
+      }
+
+      if (data.miniAppLink) {
+        try {
+          await navigator.clipboard.writeText(data.miniAppLink);
+          setStatus("Group registered. Campaign Mini App link copied to clipboard.");
+        } catch {
+          setStatus(`Group registered. Share this link in your group: ${data.miniAppLink}`);
+        }
+      } else {
+        setStatus("Group registered successfully.");
+      }
+    } catch {
+      setStatus("Failed to register this group.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <main className="min-h-screen bg-slate-950 px-4 py-8 text-slate-100">
       <section className="mx-auto max-w-lg rounded-3xl border border-cyan-300/20 bg-gradient-to-br from-cyan-900/50 via-slate-900 to-blue-950 p-6 shadow-2xl">
@@ -431,6 +553,17 @@ export default function TelegramMiniAppPage() {
         </div>
 
         <div className="mt-4 grid gap-3">
+          {registerGroupId ? (
+            <button
+              type="button"
+              disabled={busy || !telegramUser || !canClaim}
+              onClick={handleRegisterGroup}
+              className="rounded-xl border border-fuchsia-200/40 bg-fuchsia-300/15 px-4 py-3 font-semibold text-fuchsia-50 transition hover:bg-fuchsia-300/25 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {busy ? "Processing..." : "Register This Group For Owner Rewards"}
+            </button>
+          ) : null}
+
           <button
             type="button"
             disabled={busy || !telegramUser || !normalizedConnectedWallet}

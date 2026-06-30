@@ -69,6 +69,33 @@ async function checkGroupAdminMembership(groupId, telegramUserId) {
   }
 }
 
+async function checkGroupMembership(groupId, telegramUserId) {
+  if (!process.env.TELEGRAM_BOT_TOKEN) {
+    return { isMember: false, reason: 'telegram_bot_token_missing' };
+  }
+
+  try {
+    const response = await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/getChatMember?chat_id=${encodeURIComponent(groupId)}&user_id=${encodeURIComponent(String(telegramUserId))}`);
+    const payload = await response.json();
+
+    if (!payload?.ok || !payload?.result) {
+      return { isMember: false, reason: 'group_membership_check_failed' };
+    }
+
+    const status = String(payload.result.status || '').toLowerCase();
+    if (status === 'restricted') {
+      return { isMember: Boolean(payload.result.is_member), reason: status };
+    }
+
+    return {
+      isMember: ['member', 'administrator', 'creator'].includes(status),
+      reason: status || 'unknown',
+    };
+  } catch {
+    return { isMember: false, reason: 'group_membership_check_error' };
+  }
+}
+
 async function checkOfficialGroupMembership(telegramUserId) {
   if (!TELEGRAM_GROUP_MEMBERSHIP_REQUIRED) {
     return { isMember: true, reason: 'membership_check_disabled' };
@@ -544,6 +571,61 @@ router.post('/group-owner/register', async (req, res) => {
       },
       groupContextToken,
       miniAppLink,
+    });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+router.post('/group-owner/context-token', async (req, res) => {
+  const { initData, groupId } = req.body;
+
+  const verification = parseAndVerifyInitData(initData);
+  if (!verification.ok) {
+    return res.status(401).json({ error: verification.error });
+  }
+
+  const normalizedGroupId = normalizeGroupId(groupId);
+  if (!normalizedGroupId) {
+    return res.status(400).json({ error: 'groupId is required.' });
+  }
+
+  const { telegramUser } = verification;
+
+  try {
+    const owner = await TelegramGroupOwner.findOne({
+      where: {
+        groupId: normalizedGroupId,
+        status: 'active',
+      },
+    });
+
+    if (!owner) {
+      return res.status(404).json({ error: 'Group owner registration not found for this group.' });
+    }
+
+    const memberCheck = await checkGroupMembership(normalizedGroupId, telegramUser.id);
+    if (!memberCheck.isMember) {
+      return res.status(403).json({
+        error: 'Join this Telegram group before claiming from its Daily Claim button.',
+        reason: memberCheck.reason,
+      });
+    }
+
+    const groupContextToken = signGroupContextToken({
+      groupId: owner.groupId,
+      ownerTelegramUserId: owner.ownerTelegramUserId,
+      ownerWallet: owner.ownerWallet,
+    });
+
+    return res.json({
+      success: true,
+      groupContextToken,
+      owner: {
+        groupId: owner.groupId,
+        groupTitle: owner.groupTitle,
+        ownerWallet: owner.ownerWallet,
+      },
     });
   } catch (error) {
     return res.status(500).json({ error: error.message });

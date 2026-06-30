@@ -44,6 +44,29 @@ function buildMiniAppKeyboard(chatType = 'private') {
   };
 }
 
+function buildPrivateStartUrl(param) {
+  return `https://t.me/${resolvedBotUsername}?start=${encodeURIComponent(param)}`;
+}
+
+function isGroupChat(chatType = '') {
+  return chatType === 'group' || chatType === 'supergroup';
+}
+
+async function isChatAdmin(chatId, userId) {
+  try {
+    const res = await axios.get(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${encodeURIComponent(String(chatId))}&user_id=${encodeURIComponent(String(userId))}`);
+    const status = String(res?.data?.result?.status || '').toLowerCase();
+    return status === 'administrator' || status === 'creator';
+  } catch {
+    return false;
+  }
+}
+
+function groupStartParam(prefix, groupId) {
+  const safeGroupId = String(groupId || '').replace(/[^0-9-]/g, '');
+  return `${prefix}_${safeGroupId}`;
+}
+
 async function resolveBotUsername() {
   try {
     const me = await bot.getMe();
@@ -78,6 +101,8 @@ async function configureBotCommands() {
     await bot.setMyCommands([
       { command: 'miniapp', description: 'Open EPWX Daily Claim Mini App' },
       { command: 'verify', description: 'Verify Telegram group membership' },
+      { command: 'registergroup', description: 'Register this group for owner rewards (admins)' },
+      { command: 'postdailyclaimbutton', description: 'Post Daily Claim button in this group (admins)' },
     ]);
   } catch (error) {
     console.error('[BOT] Failed to set bot commands:', error?.response?.data || error.message);
@@ -115,6 +140,46 @@ bot.onText(/\/start (.+)/, async (msg, match) => {
   const param = match[1];
   const userId = msg.from.id;
   const normalizedParam = String(param || '').trim().toLowerCase();
+
+  if (normalizedParam.startsWith('groupreg_')) {
+    const groupId = String(param).slice('groupreg_'.length);
+    const groupMiniAppUrl = `${MINI_APP_URL}?registerGroupId=${encodeURIComponent(groupId)}`;
+    bot.sendMessage(
+      msg.chat.id,
+      'Open Mini App and connect your wallet to register this group for owner rewards.',
+      {
+        reply_markup: {
+          inline_keyboard: [[
+            {
+              text: 'Register Group Owner Rewards',
+              web_app: { url: groupMiniAppUrl },
+            },
+          ]],
+        },
+      }
+    );
+    return;
+  }
+
+  if (normalizedParam.startsWith('groupclaim_')) {
+    const groupId = String(param).slice('groupclaim_'.length);
+    const groupMiniAppUrl = `${MINI_APP_URL}?sourceGroupId=${encodeURIComponent(groupId)}`;
+    bot.sendMessage(
+      msg.chat.id,
+      'Open Mini App to claim Daily EPWX from this group campaign.',
+      {
+        reply_markup: {
+          inline_keyboard: [[
+            {
+              text: 'Daily Claim',
+              web_app: { url: groupMiniAppUrl },
+            },
+          ]],
+        },
+      }
+    );
+    return;
+  }
 
   if (['miniapp', 'claim', 'daily'].includes(normalizedParam)) {
     bot.sendMessage(
@@ -177,6 +242,50 @@ bot.onText(/^\/miniapp(?:@\w+)?$/i, async (msg) => {
     'Open the EPWX Daily Claim Mini App (recommended for all groups):',
     buildMiniAppKeyboard(msg.chat?.type)
   );
+});
+
+bot.onText(/^\/registergroup(?:@\w+)?$/i, async (msg) => {
+  if (!isGroupChat(msg.chat?.type)) {
+    bot.sendMessage(msg.chat.id, 'Use /registergroup inside your Telegram group.');
+    return;
+  }
+
+  const isAdmin = await isChatAdmin(msg.chat.id, msg.from.id);
+  if (!isAdmin) {
+    bot.sendMessage(msg.chat.id, 'Only group admins can register this group for owner rewards.');
+    return;
+  }
+
+  const startParam = groupStartParam('groupreg', msg.chat.id);
+  const privateUrl = buildPrivateStartUrl(startParam);
+
+  bot.sendMessage(msg.chat.id, 'Admin verified. Open private chat to complete group registration:', {
+    reply_markup: {
+      inline_keyboard: [[{ text: 'Complete Registration', url: privateUrl }]],
+    },
+  });
+});
+
+bot.onText(/^\/postdailyclaimbutton(?:@\w+)?$/i, async (msg) => {
+  if (!isGroupChat(msg.chat?.type)) {
+    bot.sendMessage(msg.chat.id, 'Use /postdailyclaimbutton inside your Telegram group.');
+    return;
+  }
+
+  const isAdmin = await isChatAdmin(msg.chat.id, msg.from.id);
+  if (!isAdmin) {
+    bot.sendMessage(msg.chat.id, 'Only group admins can post the Daily Claim button.');
+    return;
+  }
+
+  const startParam = groupStartParam('groupclaim', msg.chat.id);
+  const privateUrl = buildPrivateStartUrl(startParam);
+
+  bot.sendMessage(msg.chat.id, 'Tap to open EPWX Daily Claim:', {
+    reply_markup: {
+      inline_keyboard: [[{ text: 'Daily Claim', url: privateUrl }]],
+    },
+  });
 });
 
 bot.onText(/\/verify/, async (msg) => {
