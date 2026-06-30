@@ -82,6 +82,7 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
         { href: '/admin/daily-draws', label: 'Daily Draws', active: pathname === '/admin/daily-draws' },
         { href: '/admin/merchants', label: 'Merchant Admin', active: pathname === '/admin/merchants' },
         { href: '/admin/partners', label: 'Partner Verification', active: pathname === '/admin/partners' },
+        { href: '/admin/telegram-group-rewards', label: 'Telegram Group Rewards', active: pathname === '/admin/telegram-group-rewards' },
         { href: '/admin/reward-ledger', label: 'Reward Ledger', active: pathname === '/admin/reward-ledger' },
       ]
     : isMerchant

@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import { ethers } from 'ethers';
 import { Op } from 'sequelize';
-import { User, TelegramGroupOwner, TelegramGroupReward } from '../models/index.js';
+import { User, TelegramGroupOwner, TelegramGroupReward, RewardDistributionLedger } from '../models/index.js';
 
 const router = express.Router();
 
@@ -17,6 +17,20 @@ let usersTableColumnsCache = null;
 
 function normalizeGroupId(value) {
   return String(value || '').trim();
+}
+
+function getAdminWallets() {
+  return (process.env.ADMIN_WALLETS || '')
+    .split(',')
+    .map((wallet) => wallet.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+function isAdminWallet(wallet) {
+  if (!wallet) {
+    return false;
+  }
+  return getAdminWallets().includes(String(wallet).toLowerCase());
 }
 
 function signGroupContextToken({ groupId, ownerTelegramUserId, ownerWallet }) {
@@ -583,6 +597,104 @@ router.get('/group-owner/rewards', async (req, res) => {
       summary,
       rewards,
     });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+router.get('/group-owner/rewards/admin', async (req, res) => {
+  const admin = normalizeWallet(req.query.admin);
+  const status = String(req.query.status || '').trim().toLowerCase();
+  const limitRaw = Number.parseInt(String(req.query.limit || '100'), 10);
+  const limit = Number.isInteger(limitRaw) && limitRaw > 0 ? Math.min(limitRaw, 500) : 100;
+
+  if (!isAdminWallet(admin)) {
+    return res.status(403).json({ error: 'Unauthorized' });
+  }
+
+  const where = {};
+  if (['pending', 'paid', 'blocked'].includes(status)) {
+    where.status = status;
+  }
+
+  try {
+    const rewards = await TelegramGroupReward.findAll({
+      where,
+      include: [
+        {
+          model: TelegramGroupOwner,
+          as: 'groupOwner',
+          attributes: ['id', 'groupId', 'groupTitle', 'ownerTelegramUserId', 'ownerWallet', 'status'],
+        },
+      ],
+      order: [['createdAt', 'DESC']],
+      limit,
+    });
+
+    return res.json({ success: true, rewards });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+router.post('/group-owner/rewards/:rewardId/mark-paid', async (req, res) => {
+  const rewardId = String(req.params.rewardId || '').trim();
+  const admin = normalizeWallet(req.body.admin);
+  const txHashRaw = String(req.body.txHash || '').trim();
+
+  if (!isAdminWallet(admin)) {
+    return res.status(403).json({ error: 'Unauthorized' });
+  }
+
+  if (!rewardId) {
+    return res.status(400).json({ error: 'rewardId is required.' });
+  }
+
+  if (!txHashRaw) {
+    return res.status(400).json({ error: 'txHash is required.' });
+  }
+
+  try {
+    const reward = await TelegramGroupReward.findByPk(rewardId, {
+      include: [{ model: TelegramGroupOwner, as: 'groupOwner' }],
+    });
+
+    if (!reward) {
+      return res.status(404).json({ error: 'Reward not found.' });
+    }
+
+    if (reward.status === 'paid') {
+      return res.json({ success: true, reward, alreadyPaid: true });
+    }
+
+    if (reward.status !== 'pending') {
+      return res.status(400).json({ error: `Only pending rewards can be marked paid. Current status: ${reward.status}` });
+    }
+
+    reward.status = 'paid';
+    reward.txHash = txHashRaw;
+    reward.paidAt = new Date();
+    reward.paidByWallet = admin;
+    reward.reason = null;
+    await reward.save();
+
+    try {
+      await RewardDistributionLedger.create({
+        date: new Date(),
+        merchant_id: reward.groupId,
+        merchant_name: 'telegram_group_owner',
+        customer_id: reward.ownerWallet,
+        receipt_id: reward.id,
+        epwx_amount: reward.rewardAmount,
+        fiat_value: null,
+        transaction_hash: txHashRaw,
+        notes: `Telegram group owner reward paid for claimant ${reward.claimantWallet}`,
+      });
+    } catch (ledgerError) {
+      console.error('[telegram-group-owner-reward] Reward ledger insert failed:', ledgerError);
+    }
+
+    return res.json({ success: true, reward });
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }

@@ -50,6 +50,18 @@ const TelegramGroupReward = sequelize.define('TelegramGroupReward', {
     allowNull: false,
     defaultValue: 'pending',
   },
+  txHash: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  paidAt: {
+    type: DataTypes.DATE,
+    allowNull: true,
+  },
+  paidByWallet: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
   reason: {
     type: DataTypes.STRING,
     allowNull: true,
