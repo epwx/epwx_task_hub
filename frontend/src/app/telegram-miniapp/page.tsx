@@ -173,6 +173,7 @@ export default function TelegramMiniAppPage() {
   const [groupContextToken, setGroupContextToken] = useState<string>("");
   const [registerGroupId, setRegisterGroupId] = useState<string>("");
   const [sourceGroupId, setSourceGroupId] = useState<string>("");
+  const [groupRegistrationComplete, setGroupRegistrationComplete] = useState(false);
 
   const normalizedConnectedWallet = useMemo(() => normalizeWallet(address), [address]);
   const normalizedLinkedWallet = useMemo(() => normalizeWallet(linkedWallet || undefined), [linkedWallet]);
@@ -482,6 +483,9 @@ export default function TelegramMiniAppPage() {
         setGroupContextToken(data.groupContextToken);
       }
 
+      setGroupRegistrationComplete(true);
+      setRegisterGroupId("");
+
       if (data.miniAppLink) {
         try {
           await navigator.clipboard.writeText(data.miniAppLink);
@@ -553,7 +557,7 @@ export default function TelegramMiniAppPage() {
         </div>
 
         <div className="mt-4 grid gap-3">
-          {registerGroupId ? (
+          {registerGroupId && !groupRegistrationComplete ? (
             <button
               type="button"
               disabled={busy || !telegramUser || !canClaim}
@@ -562,6 +566,10 @@ export default function TelegramMiniAppPage() {
             >
               {busy ? "Processing..." : "Register This Group For Owner Rewards"}
             </button>
+          ) : groupRegistrationComplete ? (
+            <div className="rounded-xl border border-emerald-200/30 bg-emerald-300/10 px-4 py-3 text-center text-sm font-semibold text-emerald-100">
+              Group already registered for owner rewards.
+            </div>
           ) : null}
 
           <button
