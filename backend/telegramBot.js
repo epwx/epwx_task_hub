@@ -52,11 +52,11 @@ function isGroupChat(chatType = '') {
   return chatType === 'group' || chatType === 'supergroup';
 }
 
-async function isChatAdmin(chatId, userId) {
+async function isChatOwner(chatId, userId) {
   try {
     const res = await axios.get(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${encodeURIComponent(String(chatId))}&user_id=${encodeURIComponent(String(userId))}`);
     const status = String(res?.data?.result?.status || '').toLowerCase();
-    return status === 'administrator' || status === 'creator';
+    return status === 'creator';
   } catch {
     return false;
   }
@@ -101,8 +101,8 @@ async function configureBotCommands() {
     await bot.setMyCommands([
       { command: 'miniapp', description: 'Open EPWX Daily Claim Mini App' },
       { command: 'verify', description: 'Verify Telegram group membership' },
-      { command: 'registergroup', description: 'Register this group for owner rewards (admins)' },
-      { command: 'postdailyclaimbutton', description: 'Post Daily Claim button in this group (admins)' },
+      { command: 'registergroup', description: 'Register this group for owner rewards (owner only)' },
+      { command: 'postdailyclaimbutton', description: 'Post Daily Claim button in this group (owner only)' },
     ]);
   } catch (error) {
     console.error('[BOT] Failed to set bot commands:', error?.response?.data || error.message);
@@ -250,9 +250,9 @@ bot.onText(/^\/registergroup(?:@\w+)?$/i, async (msg) => {
     return;
   }
 
-  const isAdmin = await isChatAdmin(msg.chat.id, msg.from.id);
-  if (!isAdmin) {
-    bot.sendMessage(msg.chat.id, 'Only group admins can register this group for owner rewards.');
+  const isOwner = await isChatOwner(msg.chat.id, msg.from.id);
+  if (!isOwner) {
+    bot.sendMessage(msg.chat.id, 'Only the group owner can register this group for owner rewards.');
     return;
   }
 
@@ -272,9 +272,9 @@ bot.onText(/^\/postdailyclaimbutton(?:@\w+)?$/i, async (msg) => {
     return;
   }
 
-  const isAdmin = await isChatAdmin(msg.chat.id, msg.from.id);
-  if (!isAdmin) {
-    bot.sendMessage(msg.chat.id, 'Only group admins can post the Daily Claim button.');
+  const isOwner = await isChatOwner(msg.chat.id, msg.from.id);
+  if (!isOwner) {
+    bot.sendMessage(msg.chat.id, 'Only the group owner can post the Daily Claim button.');
     return;
   }
 

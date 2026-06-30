@@ -46,9 +46,9 @@ function signGroupContextToken({ groupId, ownerTelegramUserId, ownerWallet }) {
   );
 }
 
-async function checkGroupAdminMembership(groupId, telegramUserId) {
+async function checkGroupOwnerMembership(groupId, telegramUserId) {
   if (!process.env.TELEGRAM_BOT_TOKEN) {
-    return { isAdmin: false, reason: 'telegram_bot_token_missing' };
+    return { isOwner: false, reason: 'telegram_bot_token_missing' };
   }
 
   try {
@@ -56,16 +56,16 @@ async function checkGroupAdminMembership(groupId, telegramUserId) {
     const payload = await response.json();
 
     if (!payload?.ok || !payload?.result) {
-      return { isAdmin: false, reason: 'group_admin_check_failed' };
+      return { isOwner: false, reason: 'group_owner_check_failed' };
     }
 
     const status = String(payload.result.status || '').toLowerCase();
     return {
-      isAdmin: status === 'administrator' || status === 'creator',
+      isOwner: status === 'creator',
       reason: status || 'unknown',
     };
   } catch {
-    return { isAdmin: false, reason: 'group_admin_check_error' };
+    return { isOwner: false, reason: 'group_owner_check_error' };
   }
 }
 
@@ -529,11 +529,11 @@ router.post('/group-owner/register', async (req, res) => {
       return res.status(403).json({ error: 'Wallet must be linked to this Telegram account before registering group rewards.' });
     }
 
-    const adminCheck = await checkGroupAdminMembership(normalizedGroupId, telegramUser.id);
-    if (!adminCheck.isAdmin) {
+    const ownerCheck = await checkGroupOwnerMembership(normalizedGroupId, telegramUser.id);
+    if (!ownerCheck.isOwner) {
       return res.status(403).json({
-        error: 'Only group admins can register a group for owner rewards.',
-        reason: adminCheck.reason,
+        error: 'Only the group owner can register a group for owner rewards.',
+        reason: ownerCheck.reason,
       });
     }
 
