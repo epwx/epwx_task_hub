@@ -63,6 +63,7 @@ type TelegramWebApp = {
   initData?: string;
   ready?: () => void;
   expand?: () => void;
+  openLink?: (url: string) => void;
 };
 
 declare global {
@@ -189,6 +190,7 @@ export default function TelegramMiniAppPage() {
   const [registerGroupId, setRegisterGroupId] = useState<string>("");
   const [sourceGroupId, setSourceGroupId] = useState<string>("");
   const [groupRegistrationComplete, setGroupRegistrationComplete] = useState(false);
+  const [isTelegramWebView, setIsTelegramWebView] = useState(false);
 
   const normalizedConnectedWallet = useMemo(() => normalizeWallet(address), [address]);
   const normalizedLinkedWallet = useMemo(() => normalizeWallet(linkedWallet || undefined), [linkedWallet]);
@@ -205,6 +207,7 @@ export default function TelegramMiniAppPage() {
     }
 
     const webApp = window.Telegram?.WebApp;
+    setIsTelegramWebView(Boolean(webApp));
     webApp?.ready?.();
     webApp?.expand?.();
     const resolved = webApp?.initData || resolveInitDataFromLocation();
@@ -346,6 +349,56 @@ export default function TelegramMiniAppPage() {
     const intervalId = window.setInterval(tick, 1000);
     return () => window.clearInterval(intervalId);
   }, [nextClaimAt]);
+
+  const buildMiniAppResumeUrl = (): string => {
+    if (typeof window === "undefined") {
+      return "";
+    }
+
+    const resumeUrl = new URL(window.location.origin + window.location.pathname);
+    if (initData) {
+      resumeUrl.searchParams.set("tgWebAppData", initData);
+    }
+    if (groupContextToken) {
+      resumeUrl.searchParams.set("groupCtx", groupContextToken);
+    }
+    if (registerGroupId) {
+      resumeUrl.searchParams.set("registerGroupId", registerGroupId);
+    }
+    if (sourceGroupId) {
+      resumeUrl.searchParams.set("sourceGroupId", sourceGroupId);
+    }
+
+    return resumeUrl.toString();
+  };
+
+  const openExternalUrl = (url: string) => {
+    const webApp = window.Telegram?.WebApp;
+    if (webApp?.openLink) {
+      webApp.openLink(url);
+      return;
+    }
+
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+
+  const handleTelegramConnectWallet = () => {
+    if (!initData) {
+      setStatus("Telegram session missing. Reopen the Mini App.");
+      return;
+    }
+
+    const resumeUrl = buildMiniAppResumeUrl();
+    if (!resumeUrl) {
+      setStatus("Unable to build wallet launch URL.");
+      return;
+    }
+
+    const dappPath = resumeUrl.replace(/^https?:\/\//i, "");
+    const metaMaskUrl = `https://metamask.app.link/dapp/${dappPath}`;
+    openExternalUrl(metaMaskUrl);
+    setStatus("Opening MetaMask app for wallet connection.");
+  };
 
   const handleLinkWallet = async () => {
     if (!initData) {
@@ -602,9 +655,22 @@ export default function TelegramMiniAppPage() {
           ) : null}
         </div>
 
-        <div className="mt-6 flex justify-center">
-          <ConnectKitButton />
-        </div>
+        {isTelegramWebView ? (
+          <div className="mt-6 flex justify-center">
+            <button
+              type="button"
+              disabled={busy || !telegramUser}
+              onClick={handleTelegramConnectWallet}
+              className="w-full rounded-xl border border-cyan-200/40 bg-cyan-300/15 px-4 py-3 font-semibold text-cyan-50 transition hover:bg-cyan-300/25 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Connect Wallet
+            </button>
+          </div>
+        ) : (
+          <div className="mt-6 flex justify-center">
+            <ConnectKitButton />
+          </div>
+        )}
 
         <div className="mt-4 grid gap-3">
           {registerGroupId && !groupRegistrationComplete ? (
