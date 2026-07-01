@@ -47,6 +47,7 @@ const DAILY_REWARD_TIERS = [
 const DAILY_CLAIM_STATS_KEY = 'daily_claims';
 const TELEGRAM_GROUP_MEMBERSHIP_REQUIRED = ['1', 'true', 'yes', 'on'].includes(String(process.env.TELEGRAM_GROUP_MEMBERSHIP_REQUIRED || 'true').toLowerCase());
 const ALLOW_LEGACY_TELEGRAM_VERIFIED_CLAIMS = ['1', 'true', 'yes', 'on'].includes(String(process.env.ALLOW_LEGACY_TELEGRAM_VERIFIED_CLAIMS || 'true').toLowerCase());
+const TELEGRAM_API_TIMEOUT_MS = Number(process.env.TELEGRAM_API_TIMEOUT_MS || 8000);
 const TELEGRAM_GROUP_OWNER_REWARD_AMOUNT = String(process.env.TELEGRAM_GROUP_OWNER_REWARD_AMOUNT || '10000').trim();
 const TELEGRAM_GROUP_CONTEXT_SECRET = process.env.TELEGRAM_GROUP_CONTEXT_SECRET || process.env.JWT_SECRET || 'epwx-group-context-dev-secret';
 
@@ -57,6 +58,15 @@ function getAdminWallets() {
 function isAdminWallet(wallet) {
   if (!wallet) return false;
   return getAdminWallets().includes(String(wallet).toLowerCase());
+}
+
+async function fetchTelegramChatMember(groupId, telegramUserId) {
+  const signal = AbortSignal.timeout(TELEGRAM_API_TIMEOUT_MS);
+  const response = await fetch(
+    `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/getChatMember?chat_id=${encodeURIComponent(String(groupId))}&user_id=${encodeURIComponent(String(telegramUserId))}`,
+    { signal }
+  );
+  return response.json();
 }
 
 function toBigIntValue(value) {
@@ -205,8 +215,7 @@ async function isTelegramGroupMember(groupId, telegramUserId) {
   }
 
   try {
-    const response = await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/getChatMember?chat_id=${encodeURIComponent(String(groupId))}&user_id=${encodeURIComponent(String(telegramUserId))}`);
-    const payload = await response.json();
+    const payload = await fetchTelegramChatMember(groupId, telegramUserId);
 
     if (!payload?.ok || !payload?.result) {
       return { isMember: false, reason: 'group_membership_check_failed' };
@@ -320,8 +329,7 @@ async function isOfficialTelegramGroupMember(telegramUserId) {
   }
 
   try {
-    const response = await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/getChatMember?chat_id=${encodeURIComponent(process.env.TELEGRAM_GROUP_ID)}&user_id=${encodeURIComponent(String(telegramUserId))}`);
-    const payload = await response.json();
+    const payload = await fetchTelegramChatMember(process.env.TELEGRAM_GROUP_ID, telegramUserId);
 
     if (!payload?.ok || !payload?.result) {
       return { isMember: false, reason: 'telegram_membership_check_failed' };

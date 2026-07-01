@@ -74,6 +74,21 @@ declare global {
 }
 
 const BASE_DAILY_REWARD = 100000;
+const MINI_APP_FETCH_TIMEOUT_MS = 15000;
+
+async function fetchWithTimeout(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), MINI_APP_FETCH_TIMEOUT_MS);
+
+  try {
+    return await fetch(input, {
+      ...init,
+      signal: controller.signal,
+    });
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
+}
 
 function normalizeWallet(wallet: string | undefined): string {
   return (wallet || "").trim().toLowerCase();
@@ -209,7 +224,7 @@ export default function TelegramMiniAppPage() {
 
       setLoadingAuth(true);
       try {
-        const res = await fetch("/api/telegram-miniapp/auth", {
+        const res = await fetchWithTimeout("/api/telegram-miniapp/auth", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ initData }),
@@ -248,7 +263,7 @@ export default function TelegramMiniAppPage() {
       }
 
       try {
-        const res = await fetch("/api/telegram-miniapp/group-owner/context-token", {
+        const res = await fetchWithTimeout("/api/telegram-miniapp/group-owner/context-token", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -285,7 +300,7 @@ export default function TelegramMiniAppPage() {
 
     const loadLastClaim = async () => {
       try {
-        const res = await fetch(`/api/epwx/daily-claims?wallet=${normalizedLinkedWallet}&limit=1`, { cache: "no-store" });
+        const res = await fetchWithTimeout(`/api/epwx/daily-claims?wallet=${normalizedLinkedWallet}&limit=1`, { cache: "no-store" });
         if (!res.ok) {
           setNextClaimAt(null);
           return;
@@ -342,7 +357,7 @@ export default function TelegramMiniAppPage() {
     setStatus("");
 
     try {
-      const nonceRes = await fetch("/api/telegram-miniapp/wallet/nonce", {
+      const nonceRes = await fetchWithTimeout("/api/telegram-miniapp/wallet/nonce", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -360,7 +375,7 @@ export default function TelegramMiniAppPage() {
 
       const signature = await signMessageAsync({ message: nonceData.message });
 
-      const connectRes = await fetch("/api/telegram-miniapp/wallet/connect", {
+      const connectRes = await fetchWithTimeout("/api/telegram-miniapp/wallet/connect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -383,8 +398,12 @@ export default function TelegramMiniAppPage() {
       }
 
       setStatus("Wallet linked successfully. You can request your daily claim now.");
-    } catch {
-      setStatus("Wallet link failed. Please try again.");
+    } catch (error) {
+      if ((error as Error)?.name === "AbortError") {
+        setStatus("Wallet link timed out. Please try again.");
+      } else {
+        setStatus("Wallet link failed. Please try again.");
+      }
     } finally {
       setBusy(false);
     }
@@ -412,7 +431,7 @@ export default function TelegramMiniAppPage() {
       const message = `EPWX Daily Claim for ${normalizedConnectedWallet} on ${todayUtc}`;
       const signature = await signMessageAsync({ message });
 
-      const res = await fetch("/api/epwx/daily-claim", {
+      const res = await fetchWithTimeout("/api/epwx/daily-claim", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -432,8 +451,12 @@ export default function TelegramMiniAppPage() {
       const amount = Number(data.amount || BASE_DAILY_REWARD).toLocaleString();
       setStatus(`Claim submitted: ${amount} EPWX. ${data.message || ""}`.trim());
       setNextClaimAt(Date.now() + 24 * 60 * 60 * 1000);
-    } catch {
-      setStatus("Daily claim failed. Please try again.");
+    } catch (error) {
+      if ((error as Error)?.name === "AbortError") {
+        setStatus("Daily claim timed out. Please try again.");
+      } else {
+        setStatus("Daily claim failed. Please try again.");
+      }
     } finally {
       setBusy(false);
     }
@@ -457,7 +480,7 @@ export default function TelegramMiniAppPage() {
     setStatus("");
 
     try {
-      const res = await fetch("/api/telegram-miniapp/group-owner/register", {
+      const res = await fetchWithTimeout("/api/telegram-miniapp/group-owner/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -496,8 +519,12 @@ export default function TelegramMiniAppPage() {
       } else {
         setStatus("Group registered successfully.");
       }
-    } catch {
-      setStatus("Failed to register this group.");
+    } catch (error) {
+      if ((error as Error)?.name === "AbortError") {
+        setStatus("Group registration timed out. Please try again.");
+      } else {
+        setStatus("Failed to register this group.");
+      }
     } finally {
       setBusy(false);
     }
