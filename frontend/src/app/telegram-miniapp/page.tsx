@@ -63,7 +63,6 @@ type TelegramWebApp = {
   initData?: string;
   ready?: () => void;
   expand?: () => void;
-  openLink?: (url: string) => void;
 };
 
 declare global {
@@ -190,7 +189,6 @@ export default function TelegramMiniAppPage() {
   const [registerGroupId, setRegisterGroupId] = useState<string>("");
   const [sourceGroupId, setSourceGroupId] = useState<string>("");
   const [groupRegistrationComplete, setGroupRegistrationComplete] = useState(false);
-  const [isTelegramWebView, setIsTelegramWebView] = useState(false);
 
   const normalizedConnectedWallet = useMemo(() => normalizeWallet(address), [address]);
   const normalizedLinkedWallet = useMemo(() => normalizeWallet(linkedWallet || undefined), [linkedWallet]);
@@ -207,7 +205,6 @@ export default function TelegramMiniAppPage() {
     }
 
     const webApp = window.Telegram?.WebApp;
-    setIsTelegramWebView(Boolean(webApp));
     webApp?.ready?.();
     webApp?.expand?.();
     const resolved = webApp?.initData || resolveInitDataFromLocation();
@@ -345,72 +342,6 @@ export default function TelegramMiniAppPage() {
     const intervalId = window.setInterval(tick, 1000);
     return () => window.clearInterval(intervalId);
   }, [nextClaimAt]);
-
-  const buildMiniAppResumeUrl = (): string => {
-    if (typeof window === "undefined") {
-      return "";
-    }
-
-    const resumeUrl = new URL(window.location.origin + window.location.pathname);
-    if (initData) {
-      resumeUrl.searchParams.set("tgWebAppData", initData);
-    }
-    if (groupContextToken) {
-      resumeUrl.searchParams.set("groupCtx", groupContextToken);
-    }
-    if (registerGroupId) {
-      resumeUrl.searchParams.set("registerGroupId", registerGroupId);
-    }
-    if (sourceGroupId) {
-      resumeUrl.searchParams.set("sourceGroupId", sourceGroupId);
-    }
-
-    return resumeUrl.toString();
-  };
-
-  const openExternalUrl = (url: string) => {
-    const webApp = window.Telegram?.WebApp;
-    if (webApp?.openLink) {
-      webApp.openLink(url);
-      return;
-    }
-
-    window.open(url, "_blank", "noopener,noreferrer");
-  };
-
-  const handleOpenInMetaMask = () => {
-    if (!initData) {
-      setStatus("Telegram session missing. Reopen the Mini App.");
-      return;
-    }
-
-    const resumeUrl = buildMiniAppResumeUrl();
-    if (!resumeUrl) {
-      setStatus("Unable to build MetaMask launch URL.");
-      return;
-    }
-
-    const dappPath = resumeUrl.replace(/^https?:\/\//i, "");
-    const metaMaskUrl = `https://metamask.app.link/dapp/${encodeURIComponent(dappPath)}`;
-    openExternalUrl(metaMaskUrl);
-    setStatus("Opening MetaMask browser. Return here after wallet connection if prompted.");
-  };
-
-  const handleOpenInExternalBrowser = () => {
-    if (!initData) {
-      setStatus("Telegram session missing. Reopen the Mini App.");
-      return;
-    }
-
-    const resumeUrl = buildMiniAppResumeUrl();
-    if (!resumeUrl) {
-      setStatus("Unable to build external browser URL.");
-      return;
-    }
-
-    openExternalUrl(resumeUrl);
-    setStatus("Opening external browser for wallet connection.");
-  };
 
   const handleLinkWallet = async () => {
     if (!initData) {
@@ -648,33 +579,9 @@ export default function TelegramMiniAppPage() {
           ) : null}
         </div>
 
-        {isTelegramWebView ? (
-          <div className="mt-6 space-y-3">
-            <div className="rounded-xl border border-amber-200/35 bg-amber-300/10 px-4 py-3 text-sm text-amber-100">
-              Telegram in-app browser may block MetaMask deep links. Use one of the launch buttons below.
-            </div>
-            <button
-              type="button"
-              disabled={busy || !telegramUser}
-              onClick={handleOpenInMetaMask}
-              className="w-full rounded-xl border border-orange-200/40 bg-orange-300/15 px-4 py-3 font-semibold text-orange-50 transition hover:bg-orange-300/25 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Open In MetaMask Browser
-            </button>
-            <button
-              type="button"
-              disabled={busy || !telegramUser}
-              onClick={handleOpenInExternalBrowser}
-              className="w-full rounded-xl border border-slate-200/35 bg-slate-100/10 px-4 py-3 font-semibold text-slate-100 transition hover:bg-slate-100/20 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Open In External Browser
-            </button>
-          </div>
-        ) : (
-          <div className="mt-6 flex justify-center">
-            <ConnectKitButton />
-          </div>
-        )}
+        <div className="mt-6 flex justify-center">
+          <ConnectKitButton />
+        </div>
 
         <div className="mt-4 grid gap-3">
           {registerGroupId && !groupRegistrationComplete ? (
