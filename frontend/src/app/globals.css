@@ -277,3 +277,13 @@ a svg:not([class*="w-"]) {
   object-fit: contain !important;
 }
 
+/* Keep ConnectKit wallet icons at their intended size inside modals/buttons. */
+[class*="ck-"] img,
+[class*="ck-"] svg {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  object-fit: contain !important;
+}
+
