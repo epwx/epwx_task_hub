@@ -179,8 +179,6 @@ html {
 img {
   max-width: 100% !important;
   max-height: 400px !important;
-  height: auto !important;
-  width: auto !important;
   object-fit: contain !important;
 }
 
@@ -188,8 +186,6 @@ img {
 svg {
   max-width: 100% !important;
   max-height: 100% !important;
-  width: auto !important;
-  height: auto !important;
 }
 
 /* Force specific size for SVGs without size classes */
@@ -272,14 +268,12 @@ a img,
 a svg:not([class*="w-"]) {
   max-width: 100% !important;
   max-height: 48px !important;
-  width: auto !important;
-  height: auto !important;
   object-fit: contain !important;
 }
 
 /* Keep ConnectKit wallet icons at their intended size inside modals/buttons. */
-[class*="ck-"] img,
-[class*="ck-"] svg {
+[data-connectkit] img,
+[data-connectkit] svg {
   width: 100% !important;
   height: 100% !important;
   max-width: none !important;
