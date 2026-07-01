@@ -340,7 +340,11 @@ router.post('/auth', async (req, res) => {
     if (supportsTelegramUserId) {
       user = await User.findOne({ where: { telegramUserId: telegramUser.id } });
     } else if (supportsTelegramUsername && telegramUser.username) {
-      user = await User.findOne({ where: { telegramUsername: telegramUser.username } });
+      // Older schemas can have multiple rows per telegramUsername; use latest activity.
+      user = await User.findOne({
+        where: { telegramUsername: telegramUser.username },
+        order: [['updatedAt', 'DESC'], ['id', 'DESC']],
+      });
     }
 
     return res.json({
@@ -439,7 +443,12 @@ router.post('/wallet/connect', async (req, res) => {
 
     const existingByTelegram = supportsTelegramUserId
       ? await User.findOne({ where: { telegramUserId: telegramUser.id } })
-      : null;
+      : supportsTelegramUsername && telegramUser.username
+        ? await User.findOne({
+            where: { telegramUsername: telegramUser.username },
+            order: [['updatedAt', 'DESC'], ['id', 'DESC']],
+          })
+        : null;
     const existingByWallet = await User.findOne({ where: { walletAddress: normalizedWallet } });
 
     if (existingByTelegram && existingByWallet && existingByTelegram.id !== existingByWallet.id) {
