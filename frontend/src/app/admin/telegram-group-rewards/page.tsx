@@ -135,7 +135,7 @@ export default function TelegramGroupRewardsAdminPage() {
         <h1 className="text-2xl font-black">Telegram Group Owner Rewards</h1>
         <div className="flex items-center gap-2">
           <select
-            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900"
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             value={statusFilter}
             onChange={(event) => setStatusFilter(event.target.value)}
           >
@@ -146,7 +146,7 @@ export default function TelegramGroupRewardsAdminPage() {
           <button
             type="button"
             onClick={() => fetchRewards()}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800"
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-900 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
           >
             Refresh
           </button>
