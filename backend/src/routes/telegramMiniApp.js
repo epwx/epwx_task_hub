@@ -451,15 +451,57 @@ router.post('/wallet/connect', async (req, res) => {
         : null;
     const existingByWallet = await User.findOne({ where: { walletAddress: normalizedWallet } });
 
-    if (existingByTelegram && existingByWallet && existingByTelegram.id !== existingByWallet.id) {
-      return res.status(409).json({ error: 'This Telegram account and wallet are already linked to different users.' });
-    }
+    const walletLinkedToDifferentTelegram = Boolean(
+      supportsTelegramUserId &&
+      existingByWallet &&
+      existingByWallet.telegramUserId &&
+      existingByWallet.telegramUserId !== telegramUser.id
+    );
 
-    if (supportsTelegramUserId && existingByWallet && existingByWallet.telegramUserId && existingByWallet.telegramUserId !== telegramUser.id) {
+    const walletLinkedToDifferentUsername = Boolean(
+      !supportsTelegramUserId &&
+      supportsTelegramUsername &&
+      existingByWallet &&
+      existingByWallet.telegramUsername &&
+      telegramUser.username &&
+      existingByWallet.telegramUsername !== telegramUser.username
+    );
+
+    if (walletLinkedToDifferentTelegram || walletLinkedToDifferentUsername) {
       return res.status(409).json({ error: 'This wallet is already linked to another Telegram account.' });
     }
 
     let user = existingByTelegram || existingByWallet;
+    if (existingByTelegram && existingByWallet && existingByTelegram.id !== existingByWallet.id) {
+      const transaction = await User.sequelize.transaction();
+      try {
+        if (supportsTelegramUserId) {
+          existingByTelegram.telegramUserId = null;
+        }
+        if (supportsTelegramUsername) {
+          existingByTelegram.telegramUsername = null;
+        }
+        existingByTelegram.telegramVerified = false;
+        await existingByTelegram.save({ transaction });
+
+        if (supportsTelegramUserId) {
+          existingByWallet.telegramUserId = telegramUser.id;
+        }
+        if (supportsTelegramUsername) {
+          existingByWallet.telegramUsername = telegramUser.username || existingByWallet.telegramUsername || null;
+        }
+        existingByWallet.telegramVerified = true;
+        existingByWallet.lastLogin = new Date();
+        await existingByWallet.save({ transaction });
+
+        await transaction.commit();
+        user = existingByWallet;
+      } catch (error) {
+        await transaction.rollback();
+        throw error;
+      }
+    }
+
     if (!user) {
       const baseName = sanitizeBaseUsername(telegramUser.username || telegramUser.firstName || `tg_${telegramUser.id}`);
       const username = await buildUniqueUsername(baseName, normalizedWallet);
