@@ -244,7 +244,11 @@ export default function TelegramMiniAppPage() {
         if (data.officialGroupMember === false) {
           setStatus("Join the official EPWX Telegram group first, then reopen this Mini App.");
         } else {
-          setStatus(data.linkedWallet ? "Telegram account verified. Wallet is linked." : "Telegram account verified. Connect and link a wallet.");
+          setStatus(
+            data.linkedWallet
+              ? "Telegram account verified. Wallet is linked. To switch wallets, connect a different wallet and tap Update Linked Wallet."
+              : "Telegram account verified. Connect and link a wallet."
+          );
         }
       } catch {
         setStatus("Unable to verify Telegram session right now.");
@@ -353,6 +357,16 @@ export default function TelegramMiniAppPage() {
       return;
     }
 
+    if (normalizedLinkedWallet && normalizedLinkedWallet !== normalizedConnectedWallet) {
+      const confirmed = window.confirm(
+        `Linked wallet is currently ${shortenAddress(normalizedLinkedWallet)}. Do you want to replace it with ${shortenAddress(normalizedConnectedWallet)}?`
+      );
+      if (!confirmed) {
+        setStatus("Wallet change cancelled.");
+        return;
+      }
+    }
+
     setBusy(true);
     setStatus("");
 
@@ -397,7 +411,11 @@ export default function TelegramMiniAppPage() {
         setLinkedWallet(connectedWallet);
       }
 
-      setStatus("Wallet linked successfully. You can request your daily claim now.");
+      setStatus(
+        normalizedLinkedWallet && normalizedLinkedWallet !== connectedWallet
+          ? "Linked wallet updated successfully. You can request your daily claim now."
+          : "Wallet linked successfully. You can request your daily claim now."
+      );
     } catch (error) {
       if ((error as Error)?.name === "AbortError") {
         setStatus("Wallet link timed out. Please try again.");
@@ -535,7 +553,7 @@ export default function TelegramMiniAppPage() {
       <section className="mx-auto max-w-lg rounded-3xl border border-cyan-300/20 bg-gradient-to-br from-cyan-900/50 via-slate-900 to-blue-950 p-6 shadow-2xl">
         <h1 className="text-center text-3xl font-black tracking-tight">Telegram Daily Claim</h1>
         <p className="mt-2 text-center text-sm text-slate-300">
-          Verify Telegram session, link wallet once, then submit your daily EPWX claim.
+          Verify Telegram session, link or update wallet, then submit your daily EPWX claim.
         </p>
 
         <div className="mt-6 space-y-3 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm">
@@ -572,6 +590,11 @@ export default function TelegramMiniAppPage() {
               {normalizedConnectedWallet ? shortenAddress(normalizedConnectedWallet) : "-"}
             </span>
           </div>
+          {normalizedLinkedWallet && normalizedConnectedWallet && normalizedLinkedWallet !== normalizedConnectedWallet ? (
+            <div className="rounded-xl border border-orange-200/35 bg-orange-300/10 px-3 py-2 text-center text-orange-100">
+              Connected wallet is different from linked wallet. Tap Update Linked Wallet to switch.
+            </div>
+          ) : null}
           {remaining ? (
             <div className="rounded-xl border border-amber-300/30 bg-amber-300/10 px-3 py-2 text-center text-amber-100">
               Next claim in {remaining}
@@ -605,7 +628,7 @@ export default function TelegramMiniAppPage() {
             onClick={handleLinkWallet}
             className="rounded-xl border border-cyan-200/40 bg-cyan-300/15 px-4 py-3 font-semibold text-cyan-50 transition hover:bg-cyan-300/25 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {busy ? "Processing..." : "Link Wallet"}
+            {busy ? "Processing..." : normalizedLinkedWallet ? "Update Linked Wallet" : "Link Wallet"}
           </button>
 
           <button
