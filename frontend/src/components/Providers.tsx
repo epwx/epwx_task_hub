@@ -1,10 +1,11 @@
 'use client';
 
 import { WagmiProvider, createConfig, http } from 'wagmi';
+import { useAccount, useReconnect } from 'wagmi';
 import { base } from 'wagmi/chains';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ConnectKitProvider, getDefaultConfig } from 'connectkit';
-import { ReactNode } from 'react';
+import { ConnectKitProvider, getDefaultConfig, useModal } from 'connectkit';
+import { ReactNode, useEffect } from 'react';
 
 const config = createConfig(
   getDefaultConfig({
@@ -24,6 +25,40 @@ const config = createConfig(
 
 const queryClient = new QueryClient();
 
+function WalletReturnSync() {
+  const { isConnected } = useAccount();
+  const { reconnect } = useReconnect();
+  const { open, setOpen } = useModal();
+
+  useEffect(() => {
+    const syncWalletState = () => {
+      void reconnect();
+    };
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        syncWalletState();
+      }
+    };
+
+    window.addEventListener('focus', syncWalletState);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    return () => {
+      window.removeEventListener('focus', syncWalletState);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
+  }, [reconnect]);
+
+  useEffect(() => {
+    if (open && isConnected) {
+      setOpen(false);
+    }
+  }, [open, isConnected, setOpen]);
+
+  return null;
+}
+
 export function Providers({ children }: { children: ReactNode }) {
   return (
     <WagmiProvider config={config}>
@@ -35,6 +70,7 @@ export function Providers({ children }: { children: ReactNode }) {
             hideQuestionMarkCTA: true,
           }}
         >
+          <WalletReturnSync />
           {children}
         </ConnectKitProvider>
       </QueryClientProvider>
