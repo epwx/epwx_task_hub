@@ -1,8 +1,9 @@
 "use client";
 
 import React from "react";
-import { useAccount } from "wagmi";
+import { ethers } from "ethers";
 import { ConnectKitButton } from "connectkit";
+import { useAccount, usePublicClient, useWriteContract } from "wagmi";
 
 type GroupOwner = {
   id: string;
@@ -44,11 +45,27 @@ const getAdminWallets = () => {
 
 export default function TelegramGroupRewardsAdminPage() {
   const { address } = useAccount();
+  const { writeContractAsync } = useWriteContract();
+  const publicClient = usePublicClient();
   const [statusFilter, setStatusFilter] = React.useState<string>("pending");
   const [rewards, setRewards] = React.useState<GroupReward[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [markingId, setMarkingId] = React.useState<string | null>(null);
+
+  const EPWX_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_EPWX_TOKEN as `0x${string}`) || "0x0000000000000000000000000000000000000000";
+  const EPWX_TOKEN_ABI = [
+    {
+      inputs: [
+        { internalType: "address", name: "to", type: "address" },
+        { internalType: "uint256", name: "amount", type: "uint256" },
+      ],
+      name: "transfer",
+      outputs: [{ internalType: "bool", name: "", type: "bool" }],
+      stateMutability: "nonpayable",
+      type: "function",
+    },
+  ] as const;
 
   const isAdmin = React.useMemo(() => {
     if (!address) return false;
@@ -87,12 +104,12 @@ export default function TelegramGroupRewardsAdminPage() {
 
   const markPaid = async (reward: GroupReward) => {
     if (!address || !isAdmin) {
-      setError("Connect admin wallet to mark rewards as paid.");
+      setError("Connect admin wallet to distribute rewards.");
       return;
     }
 
-    const txHash = window.prompt("Enter payout tx hash for this reward:", reward.txHash || "");
-    if (!txHash || !txHash.trim()) {
+    if (!publicClient) {
+      setError("Public client not available");
       return;
     }
 
@@ -100,10 +117,23 @@ export default function TelegramGroupRewardsAdminPage() {
     setError(null);
 
     try {
+      const amount = ethers.parseUnits(String(reward.rewardAmount || "0"), 9);
+      const txHash = await writeContractAsync({
+        address: EPWX_TOKEN_ADDRESS,
+        abi: EPWX_TOKEN_ABI,
+        functionName: "transfer",
+        args: [reward.ownerWallet as `0x${string}`, amount],
+      });
+
+      const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
+      if (receipt.status !== "success") {
+        throw new Error("Token transfer failed or was reverted");
+      }
+
       const res = await fetch(`/api/telegram-miniapp/group-owner/rewards/${encodeURIComponent(reward.id)}/mark-paid`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ admin: address, txHash: txHash.trim() }),
+        body: JSON.stringify({ admin: address, txHash }),
       });
 
       const data = (await res.json()) as { success?: boolean; error?: string; reward?: GroupReward };
@@ -113,7 +143,7 @@ export default function TelegramGroupRewardsAdminPage() {
 
       setRewards((current) => current.map((item) => (item.id === reward.id ? data.reward! : item)));
     } catch (markError: any) {
-      setError(markError?.message || "Failed to mark reward as paid");
+      setError(markError?.message || "Failed to distribute reward");
     } finally {
       setMarkingId(null);
     }
@@ -123,7 +153,7 @@ export default function TelegramGroupRewardsAdminPage() {
     return (
       <div className="mx-auto max-w-2xl px-4 py-12 text-center">
         <h1 className="text-2xl font-black mb-3">Telegram Group Owner Rewards</h1>
-        <p className="mb-4 text-slate-600 dark:text-slate-300">Connect an admin wallet to view and settle pending rewards.</p>
+        <p className="mb-4 text-slate-600 dark:text-slate-300">Connect an admin wallet to view and distribute pending rewards.</p>
         <ConnectKitButton />
       </div>
     );
@@ -196,7 +226,7 @@ export default function TelegramGroupRewardsAdminPage() {
                         disabled={markingId === reward.id}
                         className="rounded-lg border border-emerald-500/50 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-500/20 disabled:opacity-50 dark:text-emerald-300"
                       >
-                        {markingId === reward.id ? "Saving..." : "Mark Paid"}
+                        {markingId === reward.id ? "Distributing..." : "Distribute"}
                       </button>
                     ) : (
                       <span className="text-xs text-slate-500">-</span>
