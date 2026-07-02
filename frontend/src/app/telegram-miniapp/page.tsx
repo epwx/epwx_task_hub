@@ -76,6 +76,25 @@ declare global {
 
 const BASE_DAILY_REWARD = 100000;
 const MINI_APP_FETCH_TIMEOUT_MS = 15000;
+const SIGNATURE_TIMEOUT_MS = 90000;
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, errorMessage: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timerId = window.setTimeout(() => {
+      reject(new Error(errorMessage));
+    }, timeoutMs);
+
+    promise
+      .then((value) => {
+        window.clearTimeout(timerId);
+        resolve(value);
+      })
+      .catch((error) => {
+        window.clearTimeout(timerId);
+        reject(error);
+      });
+  });
+}
 
 async function fetchWithTimeout(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   const controller = new AbortController();
@@ -423,7 +442,7 @@ export default function TelegramMiniAppPage() {
     }
 
     setBusy(true);
-    setStatus("");
+    setStatus("Preparing wallet challenge...");
 
     try {
       const nonceRes = await fetchWithTimeout("/api/telegram-miniapp/wallet/nonce", {
@@ -442,7 +461,14 @@ export default function TelegramMiniAppPage() {
         return;
       }
 
-      const signature = await signMessageAsync({ message: nonceData.message });
+      setStatus("Waiting for wallet signature approval...");
+      const signature = await withTimeout(
+        signMessageAsync({ message: nonceData.message }),
+        SIGNATURE_TIMEOUT_MS,
+        "Signature request timed out. Please retry and approve in your wallet app."
+      );
+
+      setStatus("Linking wallet...");
 
       const connectRes = await fetchWithTimeout("/api/telegram-miniapp/wallet/connect", {
         method: "POST",
@@ -464,6 +490,23 @@ export default function TelegramMiniAppPage() {
       const connectedWallet = normalizeWallet(connectData.data?.user?.walletAddress);
       if (connectedWallet) {
         setLinkedWallet(connectedWallet);
+      }
+
+      // Ensure UI reflects latest linked wallet even if provider/session state is delayed.
+      try {
+        const authRes = await fetchWithTimeout("/api/telegram-miniapp/auth", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ initData }),
+        });
+
+        const authData = (await authRes.json()) as TelegramMiniAppAuthResponse;
+        if (authRes.ok && authData.success) {
+          setLinkedWallet(authData.linkedWallet || connectedWallet || null);
+          setTelegramUser(authData.telegramUser || telegramUser);
+        }
+      } catch {
+        // Non-fatal; optimistic UI update already applied above.
       }
 
       setStatus(
