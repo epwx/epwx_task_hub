@@ -5,7 +5,7 @@ import { useAccount, useReconnect } from 'wagmi';
 import { base } from 'wagmi/chains';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ConnectKitProvider, getDefaultConfig, useModal } from 'connectkit';
-import { ReactNode, useEffect } from 'react';
+import { ReactNode, useEffect, useRef } from 'react';
 
 const config = createConfig(
   getDefaultConfig({
@@ -29,6 +29,7 @@ function WalletReturnSync() {
   const { isConnected } = useAccount();
   const { reconnect } = useReconnect();
   const { open, setOpen } = useModal();
+  const wasConnectedRef = useRef(isConnected);
 
   useEffect(() => {
     const syncWalletState = () => {
@@ -51,9 +52,11 @@ function WalletReturnSync() {
   }, [reconnect]);
 
   useEffect(() => {
-    if (open && isConnected) {
+    const justConnected = !wasConnectedRef.current && isConnected;
+    if (open && justConnected) {
       setOpen(false);
     }
+    wasConnectedRef.current = isConnected;
   }, [open, isConnected, setOpen]);
 
   return null;
