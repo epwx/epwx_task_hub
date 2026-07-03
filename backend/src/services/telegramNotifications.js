@@ -1,5 +1,8 @@
 import axios from 'axios';
 
+const TELEGRAM_BOT_USERNAME = String(process.env.TELEGRAM_BOT_USERNAME || 'epwx_bot').replace(/^@/, '');
+const TELEGRAM_BOT_GROUP_LINK = `https://t.me/${encodeURIComponent(TELEGRAM_BOT_USERNAME)}?startgroup=true`;
+
 function hasTelegramConfig() {
   return Boolean(process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_GROUP_ID);
 }
@@ -163,6 +166,7 @@ export function buildDailyClaimPaidMessage({ wallet, amount, claimedAt, txHash, 
   lines.push(
     '',
     '<a href="https://tasks.epowex.com/#daily-claim">Claim Daily Free EPWX</a> • <a href="https://tasks.epowex.com/#buy-epwx">Buy EPWX</a> • <a href="https://coinmarketcap.com/currencies/epowerx-on-base/">CMC Watchlist</a>',
+    `<a href="${TELEGRAM_BOT_GROUP_LINK}">Add @${escapeHtml(TELEGRAM_BOT_USERNAME)} to Your Group</a>`,
   );
 
   if (txHash && txLink) {
