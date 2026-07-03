@@ -15,6 +15,9 @@ const TELEGRAM_GROUP_CONTEXT_TOKEN_TTL_SECONDS = Number.parseInt(process.env.TEL
 const TELEGRAM_GROUP_CONTEXT_SECRET = process.env.TELEGRAM_GROUP_CONTEXT_SECRET || process.env.JWT_SECRET || 'epwx-group-context-dev-secret';
 const walletChallenges = new Map();
 let usersTableColumnsCache = null;
+let baseRpcProvider = null;
+
+const ERC1271_MAGIC_VALUE = '0x1626ba7e';
 
 function normalizeGroupId(value) {
   return String(value || '').trim();
@@ -32,6 +35,51 @@ function isAdminWallet(wallet) {
     return false;
   }
   return getAdminWallets().includes(String(wallet).toLowerCase());
+}
+
+function getBaseRpcProvider() {
+  if (!baseRpcProvider) {
+    const rpcUrl = process.env.BASE_RPC_URL || process.env.RPC_URL;
+    if (!rpcUrl) {
+      return null;
+    }
+
+    baseRpcProvider = new ethers.JsonRpcProvider(rpcUrl);
+  }
+
+  return baseRpcProvider;
+}
+
+async function verifyWalletSignature(message, signature, walletAddress) {
+  try {
+    const recovered = ethers.verifyMessage(message, signature).toLowerCase();
+    if (recovered === walletAddress) {
+      return true;
+    }
+  } catch {
+    // Fall through to ERC-1271 verification for smart wallets.
+  }
+
+  const provider = getBaseRpcProvider();
+  if (!provider) {
+    return false;
+  }
+
+  try {
+    const code = await provider.getCode(walletAddress);
+    if (!code || code === '0x') {
+      return false;
+    }
+
+    const isValidSignatureAbi = ['function isValidSignature(bytes32 hash, bytes signature) view returns (bytes4 magicValue)'];
+    const contract = new ethers.Contract(walletAddress, isValidSignatureAbi, provider);
+    const digest = ethers.hashMessage(message);
+    const result = await contract.isValidSignature(digest, signature);
+    return String(result).toLowerCase() === ERC1271_MAGIC_VALUE;
+  } catch (error) {
+    console.warn('[telegram-miniapp] Smart wallet signature verification failed:', error?.message || error);
+    return false;
+  }
 }
 
 async function fetchTelegramChatMember(groupId, telegramUserId) {
@@ -463,14 +511,13 @@ router.post('/wallet/connect', async (req, res) => {
     return res.status(400).json({ error: challengeResult.error });
   }
 
-  let recovered;
-  try {
-    recovered = ethers.verifyMessage(challengeResult.challenge.message, signature).toLowerCase();
-  } catch {
-    return res.status(400).json({ error: 'Invalid wallet signature.' });
-  }
+  const signatureValid = await verifyWalletSignature(
+    challengeResult.challenge.message,
+    signature,
+    normalizedWallet
+  );
 
-  if (recovered !== normalizedWallet) {
+  if (!signatureValid) {
     return res.status(401).json({ error: 'Signature does not match walletAddress.' });
   }
 
