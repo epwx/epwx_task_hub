@@ -77,6 +77,43 @@ export default function BlogPage() {
               <li>If rewards do not appear, verify member claimed from group link and membership checks passed.</li>
             </ul>
           </section>
+
+          <section>
+            <h2 className="text-xl font-extrabold text-white">7. Telegram Bot Commands</h2>
+            <p className="mt-3 text-slate-300">Use these commands in the EPWX Telegram bot to run the owner-reward and claim flows:</p>
+            <div className="mt-3 overflow-x-auto rounded-xl border border-white/10">
+              <table className="min-w-full text-left text-sm">
+                <thead className="bg-white/5 text-slate-100">
+                  <tr>
+                    <th className="px-3 py-2 font-bold">Command</th>
+                    <th className="px-3 py-2 font-bold">Purpose</th>
+                  </tr>
+                </thead>
+                <tbody className="text-slate-300">
+                  <tr className="border-t border-white/10">
+                    <td className="px-3 py-2 font-mono">/miniapp</td>
+                    <td className="px-3 py-2">Open EPWX Daily Claim Mini App.</td>
+                  </tr>
+                  <tr className="border-t border-white/10">
+                    <td className="px-3 py-2 font-mono">/verify</td>
+                    <td className="px-3 py-2">Legacy Telegram verification flow (not required for Mini App claim path).</td>
+                  </tr>
+                  <tr className="border-t border-white/10">
+                    <td className="px-3 py-2 font-mono">/registergroup</td>
+                    <td className="px-3 py-2">Group owner only: register current Telegram group for owner rewards.</td>
+                  </tr>
+                  <tr className="border-t border-white/10">
+                    <td className="px-3 py-2 font-mono">/postdailyclaimbutton</td>
+                    <td className="px-3 py-2">Group owner only: post the Daily Claim button in the group.</td>
+                  </tr>
+                  <tr className="border-t border-white/10">
+                    <td className="px-3 py-2 font-mono">/start</td>
+                    <td className="px-3 py-2">Open base bot flow. Also supports deep-link params used by group registration and group claim campaigns.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
         </article>
       </section>
     </main>
