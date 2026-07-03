@@ -76,6 +76,7 @@ declare global {
 
 const BASE_DAILY_REWARD = 100000;
 const MINI_APP_FETCH_TIMEOUT_MS = 15000;
+const TELEGRAM_BOT_ADD_GROUP_URL = "https://t.me/epwx_bot?startgroup=true";
 
 async function fetchWithTimeout(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   const controller = new AbortController();
@@ -610,6 +611,20 @@ export default function TelegramMiniAppPage() {
     }
   };
 
+  const handleAddBotToGroup = () => {
+    try {
+      const webApp = window.Telegram?.WebApp;
+      if (webApp?.openLink) {
+        webApp.openLink(TELEGRAM_BOT_ADD_GROUP_URL, { try_instant_view: false });
+        return;
+      }
+
+      window.open(TELEGRAM_BOT_ADD_GROUP_URL, "_blank", "noopener,noreferrer");
+    } catch {
+      setStatus("Unable to open Telegram add-bot flow automatically. Open https://t.me/epwx_bot?startgroup=true manually.");
+    }
+  };
+
   return (
     <main className="min-h-screen bg-slate-950 px-4 py-8 text-slate-100">
       <section className="mx-auto max-w-lg rounded-3xl border border-cyan-300/20 bg-gradient-to-br from-cyan-900/50 via-slate-900 to-blue-950 p-6 shadow-2xl">
@@ -697,6 +712,20 @@ export default function TelegramMiniAppPage() {
             </p>
           </div>
         ) : null}
+
+        <div className="mt-4 rounded-2xl border border-cyan-300/30 bg-cyan-300/10 p-4 text-sm text-cyan-50">
+          <p className="font-semibold">Group owner quick setup</p>
+          <p className="mt-1 text-xs text-cyan-100/90">
+            Add @epwx_bot to your Telegram group first. Then promote it as admin and run /registergroup inside the group.
+          </p>
+          <button
+            type="button"
+            onClick={handleAddBotToGroup}
+            className="mt-3 w-full rounded-xl border border-cyan-200/40 bg-cyan-300/20 px-4 py-3 text-sm font-bold text-cyan-50 transition hover:bg-cyan-300/30"
+          >
+            Add @epwx_bot To Group
+          </button>
+        </div>
 
         <div className="mt-6 flex justify-center">
           <ConnectKitButton />
