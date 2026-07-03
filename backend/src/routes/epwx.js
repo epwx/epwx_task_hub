@@ -50,6 +50,9 @@ const ALLOW_LEGACY_TELEGRAM_VERIFIED_CLAIMS = ['1', 'true', 'yes', 'on'].include
 const TELEGRAM_API_TIMEOUT_MS = Number(process.env.TELEGRAM_API_TIMEOUT_MS || 8000);
 const TELEGRAM_GROUP_OWNER_REWARD_AMOUNT = String(process.env.TELEGRAM_GROUP_OWNER_REWARD_AMOUNT || '10000').trim();
 const TELEGRAM_GROUP_CONTEXT_SECRET = process.env.TELEGRAM_GROUP_CONTEXT_SECRET || process.env.JWT_SECRET || 'epwx-group-context-dev-secret';
+const ERC1271_MAGIC_VALUE = '0x1626ba7e';
+
+let baseRpcProvider = null;
 
 function getAdminWallets() {
   return (process.env.ADMIN_WALLETS || '').split(',').map(w => w.trim().toLowerCase()).filter(Boolean);
@@ -58,6 +61,51 @@ function getAdminWallets() {
 function isAdminWallet(wallet) {
   if (!wallet) return false;
   return getAdminWallets().includes(String(wallet).toLowerCase());
+}
+
+function getBaseRpcProvider() {
+  if (!baseRpcProvider) {
+    const rpcUrl = process.env.BASE_RPC_URL || process.env.RPC_URL;
+    if (!rpcUrl) {
+      return null;
+    }
+
+    baseRpcProvider = new ethers.JsonRpcProvider(rpcUrl);
+  }
+
+  return baseRpcProvider;
+}
+
+async function verifyWalletSignature(message, signature, walletAddress) {
+  try {
+    const recovered = ethers.verifyMessage(message, signature).toLowerCase();
+    if (recovered === walletAddress) {
+      return true;
+    }
+  } catch {
+    // Fall through to ERC-1271 verification for smart wallets.
+  }
+
+  const provider = getBaseRpcProvider();
+  if (!provider) {
+    return false;
+  }
+
+  try {
+    const code = await provider.getCode(walletAddress);
+    if (!code || code === '0x') {
+      return false;
+    }
+
+    const isValidSignatureAbi = ['function isValidSignature(bytes32 hash, bytes signature) view returns (bytes4 magicValue)'];
+    const contract = new ethers.Contract(walletAddress, isValidSignatureAbi, provider);
+    const digest = ethers.hashMessage(message);
+    const result = await contract.isValidSignature(digest, signature);
+    return String(result).toLowerCase() === ERC1271_MAGIC_VALUE;
+  } catch (error) {
+    console.warn('[daily-claim] Smart wallet signature verification failed:', error?.message || error);
+    return false;
+  }
 }
 
 async function fetchTelegramChatMember(groupId, telegramUserId) {
@@ -1289,14 +1337,9 @@ router.post('/daily-claim', async (req, res) => {
   const since = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
   // 1. Verify signature
-  const message = `EPWX Daily Claim for ${wallet} on ${todayUtc}`;
-  let recovered;
-  try {
-    recovered = ethers.verifyMessage(message, signature);
-  } catch (e) {
-    return res.status(400).json({ error: 'Invalid signature' });
-  }
-  if (recovered.toLowerCase() !== normalizedWallet) {
+  const message = `EPWX Daily Claim for ${normalizedWallet} on ${todayUtc}`;
+  const signatureValid = await verifyWalletSignature(message, signature, normalizedWallet);
+  if (!signatureValid) {
     return res.status(401).json({ error: 'Signature does not match wallet' });
   }
 
