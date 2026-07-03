@@ -10,6 +10,9 @@ export default function BlogPage() {
           This guide explains exactly how Telegram Group Owner Rewards work in EPWX Task Hub, from group registration to
           admin payout and ledger tracking.
         </p>
+        <p className="mt-3 rounded-xl border border-emerald-300/35 bg-emerald-300/10 px-4 py-3 text-sm font-semibold text-emerald-100">
+          Reward rule: 10,000 EPWX is distributed to the Telegram group owner for each eligible group-attributed member daily claim.
+        </p>
 
         <article className="mt-8 space-y-7 text-sm leading-7 text-slate-200 md:text-base">
           <section>
@@ -91,7 +94,7 @@ export default function BlogPage() {
             <h2 className="text-xl font-extrabold text-white">5. Admin payout flow</h2>
             <ul className="mt-3 list-disc space-y-2 pl-5 text-slate-300">
               <li>Admin opens Telegram Group Rewards page and filters pending rewards.</li>
-              <li>Admin distributes EPWX to owner wallet from connected admin wallet.</li>
+              <li>Admin distributes 10,000 EPWX to owner wallet from connected admin wallet for each pending reward row.</li>
               <li>Backend marks reward as paid with tx hash.</li>
               <li>Reward ledger entry is written for audit trail.</li>
             </ul>
