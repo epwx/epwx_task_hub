@@ -1,0 +1,35 @@
+name: Post Deploy Smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      frontend_url:
+        description: Frontend URL to smoke test
+        required: false
+        default: https://tasks.epowex.com
+      api_base_url:
+        description: API base URL to smoke test
+        required: false
+        default: https://api.epowex.com
+  repository_dispatch:
+    types: [post-deploy-smoke]
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run smoke checks
+        env:
+          FRONTEND_URL: ${{ github.event.inputs.frontend_url || github.event.client_payload.frontend_url || 'https://tasks.epowex.com' }}
+          API_BASE_URL: ${{ github.event.inputs.api_base_url || github.event.client_payload.api_base_url || 'https://api.epowex.com' }}
+        run: node scripts/post-deploy-smoke.mjs
