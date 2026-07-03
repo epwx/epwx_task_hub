@@ -63,6 +63,7 @@ type TelegramWebApp = {
   initData?: string;
   ready?: () => void;
   expand?: () => void;
+  openLink?: (url: string, options?: { try_instant_view?: boolean }) => void;
 };
 
 declare global {
@@ -189,6 +190,8 @@ export default function TelegramMiniAppPage() {
   const [registerGroupId, setRegisterGroupId] = useState<string>("");
   const [sourceGroupId, setSourceGroupId] = useState<string>("");
   const [groupRegistrationComplete, setGroupRegistrationComplete] = useState(false);
+  const [isTelegramWebView, setIsTelegramWebView] = useState(false);
+  const [shareableUrl, setShareableUrl] = useState<string>("");
 
   const normalizedConnectedWallet = useMemo(() => normalizeWallet(address), [address]);
   const normalizedLinkedWallet = useMemo(() => normalizeWallet(linkedWallet || undefined), [linkedWallet]);
@@ -207,11 +210,13 @@ export default function TelegramMiniAppPage() {
     const webApp = window.Telegram?.WebApp;
     webApp?.ready?.();
     webApp?.expand?.();
+    setIsTelegramWebView(Boolean(webApp));
     const resolved = webApp?.initData || resolveInitDataFromLocation();
     setInitData(resolved);
     setGroupContextToken(resolveGroupContextTokenFromLocation());
     setRegisterGroupId(resolveQueryValueFromLocation("registerGroupId"));
     setSourceGroupId(resolveQueryValueFromLocation("sourceGroupId"));
+    setShareableUrl(window.location.href);
   }, []);
 
   useEffect(() => {
@@ -548,6 +553,39 @@ export default function TelegramMiniAppPage() {
     }
   };
 
+  const handleOpenInExternalBrowser = () => {
+    if (!shareableUrl) {
+      setStatus("Unable to determine the current Mini App link.");
+      return;
+    }
+
+    try {
+      const webApp = window.Telegram?.WebApp;
+      if (webApp?.openLink) {
+        webApp.openLink(shareableUrl, { try_instant_view: false });
+        return;
+      }
+
+      window.open(shareableUrl, "_blank", "noopener,noreferrer");
+    } catch {
+      setStatus("Unable to open external browser automatically. Copy this page URL and open it in Coinbase Wallet or MetaMask browser.");
+    }
+  };
+
+  const handleCopyMiniAppLink = async () => {
+    if (!shareableUrl) {
+      setStatus("Unable to determine the current Mini App link.");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(shareableUrl);
+      setStatus("Mini App link copied. Open it in Coinbase Wallet browser or MetaMask browser.");
+    } catch {
+      setStatus(`Copy this Mini App URL manually: ${shareableUrl}`);
+    }
+  };
+
   return (
     <main className="min-h-screen bg-slate-950 px-4 py-8 text-slate-100">
       <section className="mx-auto max-w-lg rounded-3xl border border-cyan-300/20 bg-gradient-to-br from-cyan-900/50 via-slate-900 to-blue-950 p-6 shadow-2xl">
@@ -601,6 +639,33 @@ export default function TelegramMiniAppPage() {
             </div>
           ) : null}
         </div>
+
+        {isTelegramWebView ? (
+          <div className="mt-4 space-y-3 rounded-2xl border border-orange-300/30 bg-orange-300/10 p-4 text-sm text-orange-50">
+            <p>
+              Coinbase wallet connection can fail inside Telegram&apos;s in-app browser. If Coinbase shows a smart-wallet error, open this Mini App in an external browser or in the Coinbase Wallet browser instead.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={handleOpenInExternalBrowser}
+                className="rounded-xl border border-orange-200/40 bg-orange-300/15 px-4 py-3 font-semibold text-orange-50 transition hover:bg-orange-300/25"
+              >
+                Open In External Browser
+              </button>
+              <button
+                type="button"
+                onClick={handleCopyMiniAppLink}
+                className="rounded-xl border border-orange-200/40 bg-orange-300/15 px-4 py-3 font-semibold text-orange-50 transition hover:bg-orange-300/25"
+              >
+                Copy Mini App Link
+              </button>
+            </div>
+            <p className="text-xs text-orange-100/80">
+              For the cleanest test flow, open the copied link in MetaMask mobile browser or Coinbase Wallet browser, then connect and link the wallet there.
+            </p>
+          </div>
+        ) : null}
 
         <div className="mt-6 flex justify-center">
           <ConnectKitButton />
