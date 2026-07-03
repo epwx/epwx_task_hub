@@ -103,3 +103,18 @@ Mark release as pass only if all are true:
 - `POST /api/telegram-miniapp/group-owner/register`
 - `GET /api/telegram-miniapp/group-owner/rewards/admin`
 - `POST /api/telegram-miniapp/group-owner/rewards/:rewardId/mark-paid`
+
+## Trigger Smoke After Backend-Only Deploy
+
+If you deploy only backend (for example `git pull` + `pm2 restart epwx-api`), run this command on the server to trigger the same GitHub smoke workflow automatically:
+
+```bash
+cd /path/to/epwx_task_hub && GITHUB_TOKEN=YOUR_GITHUB_TOKEN node scripts/trigger-post-deploy-smoke.mjs
+```
+
+Optional overrides:
+
+- `POST_DEPLOY_SMOKE_REPO` (default `epwx/epwx_task_hub`)
+- `POST_DEPLOY_SMOKE_EVENT` (default `post-deploy-smoke`)
+- `POST_DEPLOY_SMOKE_FRONTEND_URL` (default `https://tasks.epowex.com`)
+- `POST_DEPLOY_SMOKE_API_BASE_URL` (default `https://api.epowex.com`)
