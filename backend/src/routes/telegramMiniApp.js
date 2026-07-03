@@ -43,6 +43,44 @@ async function fetchTelegramChatMember(groupId, telegramUserId) {
   return response.json();
 }
 
+async function fetchTelegramChat(groupId) {
+  const timeoutSignal = AbortSignal.timeout(TELEGRAM_API_TIMEOUT_MS);
+  const response = await fetch(
+    `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/getChat?chat_id=${encodeURIComponent(String(groupId))}`,
+    { signal: timeoutSignal }
+  );
+  return response.json();
+}
+
+async function resolveTelegramGroupTitle(groupId) {
+  if (!process.env.TELEGRAM_BOT_TOKEN) {
+    return null;
+  }
+
+  try {
+    const payload = await fetchTelegramChat(groupId);
+    const title = String(payload?.result?.title || '').trim();
+    return title || null;
+  } catch {
+    return null;
+  }
+}
+
+async function ensureGroupOwnerTitle(owner) {
+  if (!owner || String(owner.groupTitle || '').trim()) {
+    return owner?.groupTitle || null;
+  }
+
+  const resolvedTitle = await resolveTelegramGroupTitle(owner.groupId);
+  if (!resolvedTitle) {
+    return null;
+  }
+
+  owner.groupTitle = resolvedTitle;
+  await owner.save();
+  return resolvedTitle;
+}
+
 function signGroupContextToken({ groupId, ownerTelegramUserId, ownerWallet }) {
   return jwt.sign(
     {
@@ -602,7 +640,9 @@ router.post('/group-owner/register', async (req, res) => {
     }
 
     const owner = existingGroup || TelegramGroupOwner.build({ groupId: normalizedGroupId });
-    owner.groupTitle = groupTitle ? String(groupTitle).trim() : owner.groupTitle;
+    const providedGroupTitle = String(groupTitle || '').trim();
+    const resolvedGroupTitle = providedGroupTitle || owner.groupTitle || await resolveTelegramGroupTitle(normalizedGroupId);
+    owner.groupTitle = resolvedGroupTitle || null;
     owner.ownerTelegramUserId = telegramUser.id;
     owner.ownerWallet = normalizedWallet;
     owner.status = 'active';
@@ -770,6 +810,14 @@ router.get('/group-owner/rewards/admin', async (req, res) => {
       order: [['createdAt', 'DESC']],
       limit,
     });
+
+    const ownersMissingTitle = rewards
+      .map((reward) => reward.groupOwner)
+      .filter((owner, index, owners) => owner && !String(owner.groupTitle || '').trim() && owners.findIndex((candidate) => candidate?.id === owner.id) === index);
+
+    if (ownersMissingTitle.length > 0) {
+      await Promise.all(ownersMissingTitle.map((owner) => ensureGroupOwnerTitle(owner)));
+    }
 
     return res.json({ success: true, rewards });
   } catch (error) {
