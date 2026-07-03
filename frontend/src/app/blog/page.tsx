@@ -13,73 +13,7 @@ export default function BlogPage() {
 
         <article className="mt-8 space-y-7 text-sm leading-7 text-slate-200 md:text-base">
           <section>
-            <h2 className="text-xl font-extrabold text-white">1. Group owner registers a group</h2>
-            <ul className="mt-3 list-disc space-y-2 pl-5 text-slate-300">
-              <li>Group owner runs the registration command in Telegram.</li>
-              <li>Telegram bot opens the Mini App with group registration context.</li>
-              <li>Owner connects wallet and links it to Telegram account.</li>
-              <li>Backend verifies owner role in the Telegram group before activation.</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-extrabold text-white">2. Members claim from group context</h2>
-            <ul className="mt-3 list-disc space-y-2 pl-5 text-slate-300">
-              <li>Member opens Mini App from the group claim link.</li>
-              <li>Member links wallet and submits daily claim signature.</li>
-              <li>Backend validates membership and official Telegram requirements.</li>
-              <li>If eligible, a Telegram Group Owner Reward is recorded.</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-extrabold text-white">3. Reward status lifecycle</h2>
-            <div className="mt-3 grid gap-3 sm:grid-cols-3">
-              <div className="rounded-xl border border-amber-300/30 bg-amber-300/10 p-3">
-                <p className="font-bold text-amber-200">Pending</p>
-                <p className="mt-1 text-xs text-amber-100/90">Created after a valid member claim with group context.</p>
-              </div>
-              <div className="rounded-xl border border-emerald-300/30 bg-emerald-300/10 p-3">
-                <p className="font-bold text-emerald-200">Paid</p>
-                <p className="mt-1 text-xs text-emerald-100/90">Marked paid by admin after successful on-chain transfer.</p>
-              </div>
-              <div className="rounded-xl border border-rose-300/30 bg-rose-300/10 p-3">
-                <p className="font-bold text-rose-200">Blocked</p>
-                <p className="mt-1 text-xs text-rose-100/90">Rejected by eligibility rules such as self-attribution checks.</p>
-              </div>
-            </div>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-extrabold text-white">4. Admin payout flow</h2>
-            <ul className="mt-3 list-disc space-y-2 pl-5 text-slate-300">
-              <li>Admin opens Telegram Group Rewards page and filters pending rewards.</li>
-              <li>Admin distributes EPWX to owner wallet from connected admin wallet.</li>
-              <li>Backend marks reward as paid with tx hash.</li>
-              <li>Reward ledger entry is written for audit trail.</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-extrabold text-white">5. Wallet compatibility notes</h2>
-            <ul className="mt-3 list-disc space-y-2 pl-5 text-slate-300">
-              <li>Telegram in-app browser can block some wallet flows.</li>
-              <li>Use external browser, Coinbase Wallet browser, or MetaMask browser when prompted.</li>
-              <li>Backend supports both normal signatures and smart-wallet signatures for wallet linking and daily claims.</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-extrabold text-white">6. Quick troubleshooting</h2>
-            <ul className="mt-3 list-disc space-y-2 pl-5 text-slate-300">
-              <li>If group title is missing in admin table, refresh after backend title backfill runs.</li>
-              <li>If signature fails, confirm connected wallet and linked wallet are the same.</li>
-              <li>If rewards do not appear, verify member claimed from group link and membership checks passed.</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-extrabold text-white">7. Telegram Bot Commands</h2>
+            <h2 className="text-xl font-extrabold text-white">1. Telegram Bot Commands</h2>
             <p className="mt-3 text-slate-300">Use these commands in the EPWX Telegram bot to run the owner-reward and claim flows:</p>
             <div className="mt-3 overflow-x-auto rounded-xl border border-white/10">
               <table className="min-w-full text-left text-sm">
@@ -113,6 +47,72 @@ export default function BlogPage() {
                 </tbody>
               </table>
             </div>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-extrabold text-white">2. Group owner registers a group</h2>
+            <ul className="mt-3 list-disc space-y-2 pl-5 text-slate-300">
+              <li>Group owner runs the registration command in Telegram.</li>
+              <li>Telegram bot opens the Mini App with group registration context.</li>
+              <li>Owner connects wallet and links it to Telegram account.</li>
+              <li>Backend verifies owner role in the Telegram group before activation.</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-extrabold text-white">3. Members claim from group context</h2>
+            <ul className="mt-3 list-disc space-y-2 pl-5 text-slate-300">
+              <li>Member opens Mini App from the group claim link.</li>
+              <li>Member links wallet and submits daily claim signature.</li>
+              <li>Backend validates membership and official Telegram requirements.</li>
+              <li>If eligible, a Telegram Group Owner Reward is recorded.</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-extrabold text-white">4. Reward status lifecycle</h2>
+            <div className="mt-3 grid gap-3 sm:grid-cols-3">
+              <div className="rounded-xl border border-amber-300/30 bg-amber-300/10 p-3">
+                <p className="font-bold text-amber-200">Pending</p>
+                <p className="mt-1 text-xs text-amber-100/90">Created after a valid member claim with group context.</p>
+              </div>
+              <div className="rounded-xl border border-emerald-300/30 bg-emerald-300/10 p-3">
+                <p className="font-bold text-emerald-200">Paid</p>
+                <p className="mt-1 text-xs text-emerald-100/90">Marked paid by admin after successful on-chain transfer.</p>
+              </div>
+              <div className="rounded-xl border border-rose-300/30 bg-rose-300/10 p-3">
+                <p className="font-bold text-rose-200">Blocked</p>
+                <p className="mt-1 text-xs text-rose-100/90">Rejected by eligibility rules such as self-attribution checks.</p>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-extrabold text-white">5. Admin payout flow</h2>
+            <ul className="mt-3 list-disc space-y-2 pl-5 text-slate-300">
+              <li>Admin opens Telegram Group Rewards page and filters pending rewards.</li>
+              <li>Admin distributes EPWX to owner wallet from connected admin wallet.</li>
+              <li>Backend marks reward as paid with tx hash.</li>
+              <li>Reward ledger entry is written for audit trail.</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-extrabold text-white">6. Wallet compatibility notes</h2>
+            <ul className="mt-3 list-disc space-y-2 pl-5 text-slate-300">
+              <li>Telegram in-app browser can block some wallet flows.</li>
+              <li>Use external browser, Coinbase Wallet browser, or MetaMask browser when prompted.</li>
+              <li>Backend supports both normal signatures and smart-wallet signatures for wallet linking and daily claims.</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-extrabold text-white">7. Quick troubleshooting</h2>
+            <ul className="mt-3 list-disc space-y-2 pl-5 text-slate-300">
+              <li>If group title is missing in admin table, refresh after backend title backfill runs.</li>
+              <li>If signature fails, confirm connected wallet and linked wallet are the same.</li>
+              <li>If rewards do not appear, verify member claimed from group link and membership checks passed.</li>
+            </ul>
           </section>
         </article>
       </section>
