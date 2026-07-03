@@ -70,6 +70,12 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
       active: pathname === '/platform-stats',
     },
     {
+      href: '/blog',
+      label: 'Blog',
+      external: false,
+      active: pathname === '/blog',
+    },
+    {
       href: 'https://t.me/ePowerX_On_Base',
       label: 'Contact Us',
       external: true,
@@ -216,6 +222,7 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
               </a>
               <Link href="/whitepaper" className="text-gray-700 dark:text-gray-200 hover:text-blue-600 font-medium transition-colors py-2" onClick={() => setMobileMenuOpen(false)}>Whitepaper</Link>
               <Link href="/platform-stats" className="text-gray-700 dark:text-gray-200 hover:text-blue-600 font-medium transition-colors py-2" onClick={() => setMobileMenuOpen(false)}>Platform Stats</Link>
+              <Link href="/blog" className="text-gray-700 dark:text-gray-200 hover:text-blue-600 font-medium transition-colors py-2" onClick={() => setMobileMenuOpen(false)}>Blog</Link>
               <a
                 href="https://t.me/ePowerX_On_Base"
                 target="_blank"
