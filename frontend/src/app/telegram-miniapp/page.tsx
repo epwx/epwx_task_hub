@@ -718,6 +718,9 @@ export default function TelegramMiniAppPage() {
           <p className="mt-1 text-xs text-cyan-100/90">
             Add @epwx_bot to your Telegram group first. Then promote it as admin and run /registergroup inside the group.
           </p>
+          <p className="mt-2 text-xs font-semibold text-emerald-100">
+            Reward rule: Group owner receives 10,000 EPWX for each user who successfully submits a daily claim from that group context.
+          </p>
           <button
             type="button"
             onClick={handleAddBotToGroup}
