@@ -111,6 +111,10 @@ function shortenAddress(value: string): string {
   return `${value.slice(0, 8)}...${value.slice(-6)}`;
 }
 
+function buildMetaMaskDeepLink(url: string): string {
+  return `https://link.metamask.io/dapp/${encodeURIComponent(url)}`;
+}
+
 function resolveInitDataFromLocation(): string {
   if (typeof window === "undefined") {
     return "";
@@ -586,6 +590,26 @@ export default function TelegramMiniAppPage() {
     }
   };
 
+  const handleOpenInMetaMaskBrowser = () => {
+    if (!shareableUrl) {
+      setStatus("Unable to determine the current Mini App link.");
+      return;
+    }
+
+    const metaMaskUrl = buildMetaMaskDeepLink(shareableUrl);
+    try {
+      const webApp = window.Telegram?.WebApp;
+      if (webApp?.openLink) {
+        webApp.openLink(metaMaskUrl, { try_instant_view: false });
+        return;
+      }
+
+      window.open(metaMaskUrl, "_blank", "noopener,noreferrer");
+    } catch {
+      setStatus("Unable to open MetaMask automatically. Copy the Mini App link and open it in MetaMask mobile browser.");
+    }
+  };
+
   return (
     <main className="min-h-screen bg-slate-950 px-4 py-8 text-slate-100">
       <section className="mx-auto max-w-lg rounded-3xl border border-cyan-300/20 bg-gradient-to-br from-cyan-900/50 via-slate-900 to-blue-950 p-6 shadow-2xl">
@@ -643,7 +667,7 @@ export default function TelegramMiniAppPage() {
         {isTelegramWebView ? (
           <div className="mt-4 space-y-3 rounded-2xl border border-orange-300/30 bg-orange-300/10 p-4 text-sm text-orange-50">
             <p>
-              Coinbase wallet connection can fail inside Telegram&apos;s in-app browser. If Coinbase shows a smart-wallet error, open this Mini App in an external browser or in the Coinbase Wallet browser instead.
+              Coinbase and MetaMask wallet connections can fail inside Telegram&apos;s in-app browser. If a wallet shows a smart-wallet or URL-scheme error, open this Mini App in an external browser or in the wallet&apos;s own browser instead.
             </p>
             <div className="grid gap-3 sm:grid-cols-2">
               <button
@@ -655,6 +679,13 @@ export default function TelegramMiniAppPage() {
               </button>
               <button
                 type="button"
+                onClick={handleOpenInMetaMaskBrowser}
+                className="rounded-xl border border-orange-200/40 bg-orange-300/15 px-4 py-3 font-semibold text-orange-50 transition hover:bg-orange-300/25"
+              >
+                Open In MetaMask Browser
+              </button>
+              <button
+                type="button"
                 onClick={handleCopyMiniAppLink}
                 className="rounded-xl border border-orange-200/40 bg-orange-300/15 px-4 py-3 font-semibold text-orange-50 transition hover:bg-orange-300/25"
               >
@@ -662,7 +693,7 @@ export default function TelegramMiniAppPage() {
               </button>
             </div>
             <p className="text-xs text-orange-100/80">
-              For the cleanest test flow, open the copied link in MetaMask mobile browser or Coinbase Wallet browser, then connect and link the wallet there.
+              For the cleanest test flow, open the copied link in MetaMask mobile browser, Coinbase Wallet browser, or an external browser, then connect and link the wallet there.
             </p>
           </div>
         ) : null}
