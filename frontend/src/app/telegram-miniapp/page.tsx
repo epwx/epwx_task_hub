@@ -722,7 +722,7 @@ export default function TelegramMiniAppPage() {
             After registration, run /postdailyclaimbutton in the group and pin that Daily Claim post so members can claim easily.
           </p>
           <p className="mt-2 text-xs font-semibold text-emerald-100">
-            Reward rule: Group owner receives 10,000 EPWX for each user who successfully submits a daily claim from that group context.
+            Reward rule: Group owner receives 10,000 EPWX for each user who successfully submits a daily claim from that group context. This is a lifetime recurring reward model, so owners continue earning per eligible user, per day.
           </p>
           <button
             type="button"
