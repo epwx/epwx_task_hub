@@ -166,7 +166,7 @@ export function buildDailyClaimPaidMessage({ wallet, amount, claimedAt, txHash, 
   lines.push(
     '',
     '<a href="https://tasks.epowex.com/#daily-claim">Claim Daily Free EPWX</a> • <a href="https://tasks.epowex.com/#buy-epwx">Buy EPWX</a> • <a href="https://coinmarketcap.com/currencies/epowerx-on-base/">CMC Watchlist</a>',
-    `<a href="${TELEGRAM_BOT_GROUP_LINK}">Add @${escapeHtml(TELEGRAM_BOT_USERNAME)} to Your Group</a>`,
+    `<a href="${TELEGRAM_BOT_GROUP_LINK}">Add @${escapeHtml(TELEGRAM_BOT_USERNAME)} to your Telegram group. Group admins earn lifetime rewards for every member daily claim from their group.</a>`,
   );
 
   if (txHash && txLink) {
