@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ConnectKitButton } from "connectkit";
 import { useAccount, useSignMessage } from "wagmi";
+import { ethers } from "ethers";
 
 type TelegramMiniAppUser = {
   id: string;
@@ -51,6 +52,11 @@ type ErrorLike = {
   shortMessage?: string;
 };
 
+function getErrorMessage(error: unknown): string {
+  const err = (error || {}) as ErrorLike;
+  return String(err.shortMessage || err.message || "").trim();
+}
+
 type DailyClaimResponse = {
   success?: boolean;
   error?: string;
@@ -73,6 +79,7 @@ type TelegramWebApp = {
 
 declare global {
   interface Window {
+    ethereum?: unknown;
     Telegram?: {
       WebApp?: TelegramWebApp;
     };
@@ -385,6 +392,23 @@ export default function TelegramMiniAppPage() {
     return () => window.clearInterval(intervalId);
   }, [nextClaimAt]);
 
+  const signMessageForMiniApp = async (message: string): Promise<string> => {
+    try {
+      return await signMessageAsync({ message });
+    } catch (error) {
+      const rawMessage = getErrorMessage(error);
+      const isChainSwitchIssue = /switch chain|switch network|unsupported chain|chain not configured/i.test(rawMessage);
+      if (!isChainSwitchIssue || !window.ethereum) {
+        throw error;
+      }
+
+      const browserProvider = new ethers.BrowserProvider(window.ethereum as ethers.Eip1193Provider);
+      await browserProvider.send("eth_requestAccounts", []);
+      const signer = await browserProvider.getSigner();
+      return signer.signMessage(message);
+    }
+  };
+
   const handleLinkWallet = async () => {
     if (!initData) {
       setStatus("Telegram session missing. Reopen the Mini App.");
@@ -431,7 +455,7 @@ export default function TelegramMiniAppPage() {
         return;
       }
 
-      const signature = await signMessageAsync({ message: nonceData.message });
+      const signature = await signMessageForMiniApp(nonceData.message);
 
       const connectRes = await fetchWithTimeout("/api/telegram-miniapp/wallet/connect", {
         method: "POST",
@@ -470,8 +494,7 @@ export default function TelegramMiniAppPage() {
       if ((error as Error)?.name === "AbortError") {
         setStatus("Wallet link timed out. Please try again.");
       } else {
-        const err = (error || {}) as ErrorLike;
-        const rawMessage = String(err.shortMessage || err.message || "").trim();
+        const rawMessage = getErrorMessage(error);
         if (/rejected|denied|cancelled|canceled/i.test(rawMessage)) {
           setStatus("Wallet signature was cancelled in your wallet app.");
         } else if (rawMessage) {
@@ -505,7 +528,7 @@ export default function TelegramMiniAppPage() {
     try {
       const todayUtc = new Date().toISOString().slice(0, 10);
       const message = `EPWX Daily Claim for ${normalizedConnectedWallet} on ${todayUtc}`;
-      const signature = await signMessageAsync({ message });
+      const signature = await signMessageForMiniApp(message);
 
       const res = await fetchWithTimeout("/api/epwx/daily-claim", {
         method: "POST",
