@@ -79,7 +79,7 @@ type TelegramWebApp = {
 
 declare global {
   interface Window {
-    ethereum?: unknown;
+    ethereum?: any;
     Telegram?: {
       WebApp?: TelegramWebApp;
     };
