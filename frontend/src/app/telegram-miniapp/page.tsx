@@ -46,6 +46,11 @@ type TelegramMiniAppConnectResponse = {
   error?: string;
 };
 
+type ErrorLike = {
+  message?: string;
+  shortMessage?: string;
+};
+
 type DailyClaimResponse = {
   success?: boolean;
   error?: string;
@@ -89,6 +94,29 @@ async function fetchWithTimeout(input: RequestInfo | URL, init?: RequestInit): P
     });
   } finally {
     window.clearTimeout(timeoutId);
+  }
+}
+
+async function readApiError(response: Response, fallback: string): Promise<string> {
+  try {
+    const text = await response.text();
+    if (!text) {
+      return `${fallback} (HTTP ${response.status})`;
+    }
+
+    try {
+      const parsed = JSON.parse(text) as { error?: string; message?: string };
+      const detailed = parsed.error || parsed.message;
+      if (detailed) {
+        return detailed;
+      }
+    } catch {
+      // Non-JSON responses can happen behind proxies/load balancers.
+    }
+
+    return `${fallback} (HTTP ${response.status})`;
+  } catch {
+    return `${fallback} (HTTP ${response.status})`;
   }
 }
 
@@ -390,8 +418,14 @@ export default function TelegramMiniAppPage() {
         }),
       });
 
+      if (!nonceRes.ok) {
+        setStatus(await readApiError(nonceRes, "Failed to create wallet challenge."));
+        setBusy(false);
+        return;
+      }
+
       const nonceData = (await nonceRes.json()) as TelegramMiniAppNonceResponse;
-      if (!nonceRes.ok || !nonceData.success) {
+      if (!nonceData.success) {
         setStatus(nonceData.error || "Failed to create wallet challenge.");
         setBusy(false);
         return;
@@ -409,8 +443,14 @@ export default function TelegramMiniAppPage() {
         }),
       });
 
+      if (!connectRes.ok) {
+        setStatus(await readApiError(connectRes, "Wallet link failed."));
+        setBusy(false);
+        return;
+      }
+
       const connectData = (await connectRes.json()) as TelegramMiniAppConnectResponse;
-      if (!connectRes.ok || !connectData.success) {
+      if (!connectData.success) {
         setStatus(connectData.error || "Wallet link failed.");
         setBusy(false);
         return;
@@ -430,7 +470,15 @@ export default function TelegramMiniAppPage() {
       if ((error as Error)?.name === "AbortError") {
         setStatus("Wallet link timed out. Please try again.");
       } else {
-        setStatus("Wallet link failed. Please try again.");
+        const err = (error || {}) as ErrorLike;
+        const rawMessage = String(err.shortMessage || err.message || "").trim();
+        if (/rejected|denied|cancelled|canceled/i.test(rawMessage)) {
+          setStatus("Wallet signature was cancelled in your wallet app.");
+        } else if (rawMessage) {
+          setStatus(`Wallet link failed: ${rawMessage}`);
+        } else {
+          setStatus("Wallet link failed. Please try again.");
+        }
       }
     } finally {
       setBusy(false);
