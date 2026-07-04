@@ -1408,21 +1408,27 @@ export default function HomeTest() {
   }, [nextDailyClaimAt]);
 
   const handleDailyClaim = async () => {
+    if (!address) {
+      setClaimStatus("Connect your wallet first.");
+      return;
+    }
+
     setClaiming(true);
     setClaimStatus(null);
     setShowClaimUpgradePrompt(false);
     try {
+      const normalizedWallet = address.toLowerCase();
       const partnerReferralCode = typeof window !== "undefined"
         ? (localStorage.getItem(PENDING_PARTNER_REFERRAL_CODE_STORAGE_KEY) || incomingPartnerReferralCode)
         : incomingPartnerReferralCode;
       const todayUtc = new Date(Date.now()).toISOString().slice(0, 10);
-      const message = `EPWX Daily Claim for ${address} on ${todayUtc}`;
+      const message = `EPWX Daily Claim for ${normalizedWallet} on ${todayUtc}`;
       const signature = await signMessageAsync({ message });
       const res = await fetch("/api/epwx/daily-claim", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          wallet: address,
+          wallet: normalizedWallet,
           signature,
           ...(partnerReferralCode ? { referralCode: partnerReferralCode } : {}),
         }),

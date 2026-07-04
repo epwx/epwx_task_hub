@@ -76,14 +76,21 @@ function getBaseRpcProvider() {
   return baseRpcProvider;
 }
 
-async function verifyWalletSignature(message, signature, walletAddress) {
-  try {
-    const recovered = ethers.verifyMessage(message, signature).toLowerCase();
-    if (recovered === walletAddress) {
-      return true;
+async function verifyWalletSignature(messageOrMessages, signature, walletAddress) {
+  const messages = Array.isArray(messageOrMessages)
+    ? messageOrMessages
+    : [messageOrMessages];
+  const uniqueMessages = [...new Set(messages.filter((value) => typeof value === 'string' && value.trim()))];
+
+  for (const message of uniqueMessages) {
+    try {
+      const recovered = ethers.verifyMessage(message, signature).toLowerCase();
+      if (recovered === walletAddress) {
+        return true;
+      }
+    } catch {
+      // Fall through to ERC-1271 verification for smart wallets.
     }
-  } catch {
-    // Fall through to ERC-1271 verification for smart wallets.
   }
 
   const provider = getBaseRpcProvider();
@@ -99,13 +106,36 @@ async function verifyWalletSignature(message, signature, walletAddress) {
 
     const isValidSignatureAbi = ['function isValidSignature(bytes32 hash, bytes signature) view returns (bytes4 magicValue)'];
     const contract = new ethers.Contract(walletAddress, isValidSignatureAbi, provider);
-    const digest = ethers.hashMessage(message);
-    const result = await contract.isValidSignature(digest, signature);
-    return String(result).toLowerCase() === ERC1271_MAGIC_VALUE;
+    for (const message of uniqueMessages) {
+      const digest = ethers.hashMessage(message);
+      const result = await contract.isValidSignature(digest, signature);
+      if (String(result).toLowerCase() === ERC1271_MAGIC_VALUE) {
+        return true;
+      }
+    }
+
+    return false;
   } catch (error) {
     console.warn('[daily-claim] Smart wallet signature verification failed:', error?.message || error);
     return false;
   }
+}
+
+function buildDailyClaimMessages(walletInput, normalizedWallet, dateString) {
+  const candidates = [normalizedWallet];
+  const rawWallet = typeof walletInput === 'string' ? walletInput.trim() : '';
+  if (rawWallet) {
+    candidates.push(rawWallet);
+  }
+
+  try {
+    candidates.push(ethers.getAddress(normalizedWallet));
+  } catch {
+    // Ignore checksum conversion failures and continue with available candidates.
+  }
+
+  const uniqueWallets = [...new Set(candidates.filter((value) => typeof value === 'string' && value.trim()))];
+  return uniqueWallets.map((walletAddress) => `EPWX Daily Claim for ${walletAddress} on ${dateString}`);
 }
 
 async function fetchTelegramChatMember(groupId, telegramUserId) {
@@ -1330,6 +1360,7 @@ router.get('/reward-ledger', async (req, res) => {
 
 router.post('/daily-claim', async (req, res) => {
   const { wallet, signature, referralCode, groupContextToken } = req.body;
+  const rawWallet = typeof wallet === 'string' ? wallet.trim() : '';
   const normalizedWallet = normalizeWallet(wallet);
   if (!normalizedWallet || !signature) return res.status(400).json({ error: 'wallet and signature are required' });
   const ip = getRequestIp(req);
@@ -1339,8 +1370,8 @@ router.post('/daily-claim', async (req, res) => {
   const since = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
   // 1. Verify signature
-  const message = `EPWX Daily Claim for ${normalizedWallet} on ${todayUtc}`;
-  const signatureValid = await verifyWalletSignature(message, signature, normalizedWallet);
+  const messages = buildDailyClaimMessages(rawWallet, normalizedWallet, todayUtc);
+  const signatureValid = await verifyWalletSignature(messages, signature, normalizedWallet);
   if (!signatureValid) {
     return res.status(401).json({ error: 'Signature does not match wallet' });
   }
