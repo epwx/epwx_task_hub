@@ -218,11 +218,13 @@ export default function TelegramMiniAppPage() {
   const { address } = useAccount();
   const { signMessageAsync } = useSignMessage();
 
+  type ActiveAction = "link" | "claim" | "register";
+
   const [initData, setInitData] = useState<string>("");
   const [telegramUser, setTelegramUser] = useState<TelegramMiniAppUser | null>(null);
   const [linkedWallet, setLinkedWallet] = useState<string | null>(null);
   const [loadingAuth, setLoadingAuth] = useState<boolean>(true);
-  const [busy, setBusy] = useState<boolean>(false);
+  const [activeAction, setActiveAction] = useState<ActiveAction | null>(null);
   const [status, setStatus] = useState<string>("");
   const [nextClaimAt, setNextClaimAt] = useState<number | null>(null);
   const [remaining, setRemaining] = useState<string>("");
@@ -235,6 +237,7 @@ export default function TelegramMiniAppPage() {
 
   const normalizedConnectedWallet = useMemo(() => normalizeWallet(address), [address]);
   const normalizedLinkedWallet = useMemo(() => normalizeWallet(linkedWallet || undefined), [linkedWallet]);
+  const busy = activeAction !== null;
   const canClaim = Boolean(
     initData &&
       normalizedConnectedWallet &&
@@ -429,7 +432,7 @@ export default function TelegramMiniAppPage() {
       }
     }
 
-    setBusy(true);
+    setActiveAction("link");
     setStatus("");
 
     try {
@@ -444,14 +447,14 @@ export default function TelegramMiniAppPage() {
 
       if (!nonceRes.ok) {
         setStatus(await readApiError(nonceRes, "Failed to create wallet challenge."));
-        setBusy(false);
+        setActiveAction(null);
         return;
       }
 
       const nonceData = (await nonceRes.json()) as TelegramMiniAppNonceResponse;
       if (!nonceData.success) {
         setStatus(nonceData.error || "Failed to create wallet challenge.");
-        setBusy(false);
+        setActiveAction(null);
         return;
       }
 
@@ -469,14 +472,14 @@ export default function TelegramMiniAppPage() {
 
       if (!connectRes.ok) {
         setStatus(await readApiError(connectRes, "Wallet link failed."));
-        setBusy(false);
+        setActiveAction(null);
         return;
       }
 
       const connectData = (await connectRes.json()) as TelegramMiniAppConnectResponse;
       if (!connectData.success) {
         setStatus(connectData.error || "Wallet link failed.");
-        setBusy(false);
+        setActiveAction(null);
         return;
       }
 
@@ -504,7 +507,7 @@ export default function TelegramMiniAppPage() {
         }
       }
     } finally {
-      setBusy(false);
+      setActiveAction(null);
     }
   };
 
@@ -522,7 +525,7 @@ export default function TelegramMiniAppPage() {
       return;
     }
 
-    setBusy(true);
+    setActiveAction("claim");
     setStatus("");
 
     try {
@@ -543,7 +546,7 @@ export default function TelegramMiniAppPage() {
       const data = (await res.json()) as DailyClaimResponse;
       if (!res.ok || !data.success) {
         setStatus(data.error || "Daily claim failed.");
-        setBusy(false);
+        setActiveAction(null);
         return;
       }
 
@@ -557,7 +560,7 @@ export default function TelegramMiniAppPage() {
         setStatus("Daily claim failed. Please try again.");
       }
     } finally {
-      setBusy(false);
+      setActiveAction(null);
     }
   };
 
@@ -575,7 +578,7 @@ export default function TelegramMiniAppPage() {
       return;
     }
 
-    setBusy(true);
+    setActiveAction("register");
     setStatus("");
 
     try {
@@ -625,7 +628,7 @@ export default function TelegramMiniAppPage() {
         setStatus("Failed to register this group.");
       }
     } finally {
-      setBusy(false);
+      setActiveAction(null);
     }
   };
 
@@ -816,7 +819,7 @@ export default function TelegramMiniAppPage() {
               onClick={handleRegisterGroup}
               className="rounded-xl border border-fuchsia-200/40 bg-fuchsia-300/15 px-4 py-3 font-semibold text-fuchsia-50 transition hover:bg-fuchsia-300/25 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {busy ? "Processing..." : "Register This Group For Owner Rewards"}
+              {activeAction === "register" ? "Processing..." : "Register This Group For Owner Rewards"}
             </button>
           ) : groupRegistrationComplete ? (
             <div className="rounded-xl border border-emerald-200/30 bg-emerald-300/10 px-4 py-3 text-center text-sm font-semibold text-emerald-100">
@@ -830,7 +833,7 @@ export default function TelegramMiniAppPage() {
             onClick={handleLinkWallet}
             className="rounded-xl border border-cyan-200/40 bg-cyan-300/15 px-4 py-3 font-semibold text-cyan-50 transition hover:bg-cyan-300/25 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {busy ? "Processing..." : normalizedLinkedWallet ? "Update Linked Wallet" : "Link Wallet"}
+            {activeAction === "link" ? "Processing..." : normalizedLinkedWallet ? "Update Linked Wallet" : "Link Wallet"}
           </button>
 
           <button
@@ -839,7 +842,7 @@ export default function TelegramMiniAppPage() {
             onClick={handleDailyClaim}
             className="rounded-xl border border-emerald-200/40 bg-emerald-300/15 px-4 py-3 font-semibold text-emerald-50 transition hover:bg-emerald-300/25 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {busy ? "Submitting..." : "Request Daily Claim"}
+            {activeAction === "claim" ? "Submitting..." : "Request Daily Claim"}
           </button>
         </div>
 
