@@ -264,6 +264,23 @@ export default function TelegramMiniAppPage() {
       normalizedLinkedWallet &&
       normalizedConnectedWallet === normalizedLinkedWallet
   );
+  const claimOnCooldown = Boolean(nextClaimAt && nextClaimAt > Date.now());
+  const claimDisabled = busy || !canClaim || claimOnCooldown;
+
+  let claimDisabledReason = "";
+  if (claimOnCooldown) {
+    claimDisabledReason = `Next claim in ${remaining || "a while"}.`;
+  } else if (busy) {
+    claimDisabledReason = "Current action in progress. Complete wallet signature and wait for response.";
+  } else if (!initData) {
+    claimDisabledReason = "Open this page from Telegram Mini App to submit claims.";
+  } else if (!normalizedConnectedWallet) {
+    claimDisabledReason = "Connect your wallet first.";
+  } else if (!normalizedLinkedWallet) {
+    claimDisabledReason = "Link your wallet first.";
+  } else if (normalizedConnectedWallet !== normalizedLinkedWallet) {
+    claimDisabledReason = "Connected wallet must match linked wallet before claiming.";
+  }
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -884,12 +901,16 @@ export default function TelegramMiniAppPage() {
 
           <button
             type="button"
-            disabled={busy || !canClaim || Boolean(nextClaimAt && nextClaimAt > Date.now())}
+            disabled={claimDisabled}
             onClick={handleDailyClaim}
             className="rounded-xl border border-emerald-200/40 bg-emerald-300/15 px-4 py-3 font-semibold text-emerald-50 transition hover:bg-emerald-300/25 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {activeAction === "claim" ? "Submitting..." : "Request Daily Claim"}
           </button>
+
+          {claimDisabledReason ? (
+            <p className="text-center text-xs text-slate-300">{claimDisabledReason}</p>
+          ) : null}
         </div>
 
         {awaitingWalletSignature ? (
