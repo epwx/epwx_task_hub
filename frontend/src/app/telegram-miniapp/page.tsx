@@ -88,6 +88,7 @@ declare global {
 
 const BASE_DAILY_REWARD = 100000;
 const MINI_APP_FETCH_TIMEOUT_MS = 15000;
+const WALLET_SIGNATURE_TIMEOUT_MS = 45000;
 const TELEGRAM_BOT_ADD_GROUP_URL = "https://t.me/epwx_bot?startgroup=true";
 
 async function fetchWithTimeout(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
@@ -102,6 +103,24 @@ async function fetchWithTimeout(input: RequestInfo | URL, init?: RequestInit): P
   } finally {
     window.clearTimeout(timeoutId);
   }
+}
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, timeoutMessage: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timeoutId = window.setTimeout(() => {
+      reject(new Error(timeoutMessage));
+    }, timeoutMs);
+
+    promise
+      .then((value) => {
+        window.clearTimeout(timeoutId);
+        resolve(value);
+      })
+      .catch((error) => {
+        window.clearTimeout(timeoutId);
+        reject(error);
+      });
+  });
 }
 
 async function readApiError(response: Response, fallback: string): Promise<string> {
@@ -397,7 +416,11 @@ export default function TelegramMiniAppPage() {
 
   const signMessageForMiniApp = async (message: string): Promise<string> => {
     try {
-      return await signMessageAsync({ message });
+      return await withTimeout(
+        signMessageAsync({ message }),
+        WALLET_SIGNATURE_TIMEOUT_MS,
+        "Wallet signature timed out. Reopen in wallet browser and try again."
+      );
     } catch (error) {
       const rawMessage = getErrorMessage(error);
       const isChainSwitchIssue = /switch chain|switch network|unsupported chain|chain not configured/i.test(rawMessage);
@@ -408,7 +431,11 @@ export default function TelegramMiniAppPage() {
       const browserProvider = new ethers.BrowserProvider(window.ethereum as ethers.Eip1193Provider);
       await browserProvider.send("eth_requestAccounts", []);
       const signer = await browserProvider.getSigner();
-      return signer.signMessage(message);
+      return withTimeout(
+        signer.signMessage(message),
+        WALLET_SIGNATURE_TIMEOUT_MS,
+        "Wallet signature timed out. Reopen in wallet browser and try again."
+      );
     }
   };
 
@@ -498,6 +525,9 @@ export default function TelegramMiniAppPage() {
         setStatus("Wallet link timed out. Please try again.");
       } else {
         const rawMessage = getErrorMessage(error);
+        if (/signature timed out/i.test(rawMessage)) {
+          setStatus(rawMessage);
+        } else 
         if (/rejected|denied|cancelled|canceled/i.test(rawMessage)) {
           setStatus("Wallet signature was cancelled in your wallet app.");
         } else if (rawMessage) {
@@ -557,7 +587,12 @@ export default function TelegramMiniAppPage() {
       if ((error as Error)?.name === "AbortError") {
         setStatus("Daily claim timed out. Please try again.");
       } else {
-        setStatus("Daily claim failed. Please try again.");
+        const rawMessage = getErrorMessage(error);
+        if (/signature timed out/i.test(rawMessage)) {
+          setStatus(rawMessage);
+        } else {
+          setStatus("Daily claim failed. Please try again.");
+        }
       }
     } finally {
       setActiveAction(null);
