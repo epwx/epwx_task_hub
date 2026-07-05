@@ -244,6 +244,7 @@ export default function TelegramMiniAppPage() {
   const [linkedWallet, setLinkedWallet] = useState<string | null>(null);
   const [loadingAuth, setLoadingAuth] = useState<boolean>(true);
   const [activeAction, setActiveAction] = useState<ActiveAction | null>(null);
+  const [awaitingWalletSignature, setAwaitingWalletSignature] = useState<boolean>(false);
   const [status, setStatus] = useState<string>("");
   const [nextClaimAt, setNextClaimAt] = useState<number | null>(null);
   const [remaining, setRemaining] = useState<string>("");
@@ -460,6 +461,7 @@ export default function TelegramMiniAppPage() {
     }
 
     setActiveAction("link");
+    setAwaitingWalletSignature(false);
     setStatus("");
 
     try {
@@ -485,7 +487,10 @@ export default function TelegramMiniAppPage() {
         return;
       }
 
+      setAwaitingWalletSignature(true);
+      setStatus("Waiting for wallet signature. Open MetaMask/Coinbase Wallet, approve the signature, then return here.");
       const signature = await signMessageForMiniApp(nonceData.message);
+      setAwaitingWalletSignature(false);
 
       const connectRes = await fetchWithTimeout("/api/telegram-miniapp/wallet/connect", {
         method: "POST",
@@ -537,6 +542,7 @@ export default function TelegramMiniAppPage() {
         }
       }
     } finally {
+      setAwaitingWalletSignature(false);
       setActiveAction(null);
     }
   };
@@ -556,12 +562,16 @@ export default function TelegramMiniAppPage() {
     }
 
     setActiveAction("claim");
+    setAwaitingWalletSignature(false);
     setStatus("");
 
     try {
       const todayUtc = new Date().toISOString().slice(0, 10);
       const message = `EPWX Daily Claim for ${normalizedConnectedWallet} on ${todayUtc}`;
+      setAwaitingWalletSignature(true);
+      setStatus("Waiting for wallet signature. Open MetaMask/Coinbase Wallet, approve the signature, then return here.");
       const signature = await signMessageForMiniApp(message);
+      setAwaitingWalletSignature(false);
 
       const res = await fetchWithTimeout("/api/epwx/daily-claim", {
         method: "POST",
@@ -595,6 +605,7 @@ export default function TelegramMiniAppPage() {
         }
       }
     } finally {
+      setAwaitingWalletSignature(false);
       setActiveAction(null);
     }
   };
@@ -880,6 +891,15 @@ export default function TelegramMiniAppPage() {
             {activeAction === "claim" ? "Submitting..." : "Request Daily Claim"}
           </button>
         </div>
+
+        {awaitingWalletSignature ? (
+          <div className="mt-4 rounded-xl border border-amber-200/35 bg-amber-300/10 px-4 py-3 text-sm text-amber-100">
+            <p className="font-semibold">Action required in wallet app</p>
+            <p className="mt-1 text-amber-50/90">
+              This request is waiting for signature approval. Switch to MetaMask or Coinbase Wallet, approve the signature popup, then return to this page.
+            </p>
+          </div>
+        ) : null}
 
         {status ? (
           <div className="mt-4 rounded-xl border border-white/15 bg-white/10 px-3 py-3 text-sm text-slate-100">
