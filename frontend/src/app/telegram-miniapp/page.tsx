@@ -1065,7 +1065,7 @@ export default function TelegramMiniAppPage() {
   const handleAddBotToGroup = () => {
     try {
       const webApp = window.Telegram?.WebApp;
-      if (webApp?.openLink) {
+      if (isTelegramWebView && webApp?.openLink) {
         webApp.openLink(TELEGRAM_BOT_ADD_GROUP_URL, { try_instant_view: false });
         return;
       }
