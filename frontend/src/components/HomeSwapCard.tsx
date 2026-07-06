@@ -59,7 +59,11 @@ function formatAmountInput(value: number) {
   return value.toFixed(6).replace(/\.?0+$/, '');
 }
 
-export function HomeSwapCard() {
+type HomeSwapCardProps = {
+  compact?: boolean;
+};
+
+export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
   const { address } = useAccount();
   const { data: baseEthBalance } = useBalance({
     address,
@@ -197,20 +201,20 @@ export function HomeSwapCard() {
   };
 
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 p-8 shadow-2xl">
-      <div className="absolute left-0 top-0 h-48 w-48 rounded-full bg-white/10 blur-3xl" />
-      <div className="absolute bottom-0 right-0 h-56 w-56 rounded-full bg-white/10 blur-3xl" />
+    <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 shadow-2xl ${compact ? 'p-4 sm:p-5' : 'p-8'}`}>
+      <div className={`absolute left-0 top-0 rounded-full bg-white/10 blur-3xl ${compact ? 'h-32 w-32' : 'h-48 w-48'}`} />
+      <div className={`absolute bottom-0 right-0 rounded-full bg-white/10 blur-3xl ${compact ? 'h-40 w-40' : 'h-56 w-56'}`} />
 
       <div className="relative z-10">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-white/70">Base Swap</p>
-          <h2 className="mt-2 text-3xl font-black text-white">Swap ETH to EPWX</h2>
-          <p className="mt-3 max-w-2xl text-sm leading-7 text-white/80">
+          <p className={`font-semibold uppercase text-white/70 ${compact ? 'text-xs tracking-[0.2em]' : 'text-sm tracking-[0.3em]'}`}>Base Swap</p>
+          <h2 className={`mt-2 font-black text-white ${compact ? 'text-2xl' : 'text-3xl'}`}>Swap ETH to EPWX</h2>
+          <p className={`mt-3 max-w-2xl text-white/80 ${compact ? 'text-xs leading-6' : 'text-sm leading-7'}`}>
             Buying EPWX does more than add tokens to your wallet. It can upgrade your daily claim tier immediately and purchases above {CASHBACK_THRESHOLD.toLocaleString()} EPWX within 3 hours can unlock cashback.
           </p>
         </div>
 
-        <div className="mt-5 grid gap-3 lg:grid-cols-3">
+        <div className={`mt-5 grid gap-3 ${compact ? 'grid-cols-1' : 'lg:grid-cols-3'}`}>
           <div className="rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur-lg">
             <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Current daily tier</div>
             <div className="mt-2 text-2xl font-black text-white">{currentDailyReward.toLocaleString()} EPWX</div>
@@ -230,15 +234,17 @@ export function HomeSwapCard() {
               </>
             )}
           </div>
-          <div className="rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur-lg">
-            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Buyer cashback</div>
-            <div className="mt-2 text-2xl font-black text-white">100B+ EPWX buy</div>
-            <div className="mt-1 text-sm text-white/75">Qualifying purchases in the last 3 hours can be claimed in the cashback section.</div>
-            <a href="#cashback-rewards" className="mt-3 inline-flex text-sm font-semibold text-emerald-100 underline underline-offset-4 hover:text-white">Jump to cashback rewards</a>
-          </div>
+          {!compact ? (
+            <div className="rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur-lg">
+              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Buyer cashback</div>
+              <div className="mt-2 text-2xl font-black text-white">100B+ EPWX buy</div>
+              <div className="mt-1 text-sm text-white/75">Qualifying purchases in the last 3 hours can be claimed in the cashback section.</div>
+              <a href="#cashback-rewards" className="mt-3 inline-flex text-sm font-semibold text-emerald-100 underline underline-offset-4 hover:text-white">Jump to cashback rewards</a>
+            </div>
+          ) : null}
         </div>
 
-        <div className="mt-5 flex w-full flex-col gap-3 sm:flex-row sm:items-center">
+        <div className={`mt-5 flex w-full flex-col gap-3 ${compact ? '' : 'sm:flex-row sm:items-center'}`}>
           <div className="flex-1 rounded-2xl border border-white/20 bg-white/10 px-4 py-3 backdrop-blur-lg">
             <div className="text-xs font-semibold uppercase tracking-[0.25em] text-white/60">From</div>
             <div className="mt-1 text-xl font-black text-white">ETH</div>
@@ -255,7 +261,7 @@ export function HomeSwapCard() {
         </div>
 
         <div className="mt-6">
-          <div className="w-full rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-lg">
+          <div className={`w-full rounded-2xl border border-white/20 bg-white/10 backdrop-blur-lg ${compact ? 'p-4' : 'p-6'}`}>
             <label className="block text-sm font-semibold text-white/80" htmlFor="home-epwx-swap-amount">
               ETH amount on Base
             </label>

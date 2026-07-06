@@ -856,7 +856,9 @@ export default function TelegramMiniAppPage() {
           isOpen={openSections.swap}
           onToggle={() => toggleSection("swap")}
         >
-          <HomeSwapCard />
+          <div className="-mx-2 sm:mx-0">
+            <HomeSwapCard compact />
+          </div>
         </CollapsibleSection>
 
         <CollapsibleSection
