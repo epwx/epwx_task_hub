@@ -5,6 +5,7 @@ import { ConnectKitButton } from "connectkit";
 import { useAccount, useBalance, useSignMessage } from "wagmi";
 import { base } from "wagmi/chains";
 import { ethers } from "ethers";
+import { HomeSwapCard } from "@/components/HomeSwapCard";
 
 type TelegramMiniAppUser = {
   id: string;
@@ -312,12 +313,13 @@ export default function TelegramMiniAppPage() {
   const [groupRegistrationComplete, setGroupRegistrationComplete] = useState(false);
   const [isTelegramWebView, setIsTelegramWebView] = useState(false);
   const [shareableUrl, setShareableUrl] = useState<string>("");
-  const [openSections, setOpenSections] = useState<{ walletBalance: boolean; dailyClaim: boolean }>({
+  const [openSections, setOpenSections] = useState<{ walletBalance: boolean; swap: boolean; dailyClaim: boolean }>({
     walletBalance: true,
+    swap: true,
     dailyClaim: true,
   });
 
-  const toggleSection = (section: "walletBalance" | "dailyClaim") => {
+  const toggleSection = (section: "walletBalance" | "swap" | "dailyClaim") => {
     setOpenSections((current) => ({
       ...current,
       [section]: !current[section],
@@ -847,6 +849,15 @@ export default function TelegramMiniAppPage() {
         <p className="mt-2 text-center text-sm text-slate-300">
           Verify Telegram session, link or update wallet, then submit your daily EPWX claim.
         </p>
+
+        <CollapsibleSection
+          title="Swap ETH To EPWX"
+          description="Use the same swap flow from the dapp homepage directly inside the mini app."
+          isOpen={openSections.swap}
+          onToggle={() => toggleSection("swap")}
+        >
+          <HomeSwapCard />
+        </CollapsibleSection>
 
         <CollapsibleSection
           title="Wallet Connection & EPWX Balance"
