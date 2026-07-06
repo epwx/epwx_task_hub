@@ -119,6 +119,12 @@ declare global {
 }
 
 const BASE_DAILY_REWARD = 100000;
+const MID_TIER_DAILY_REWARD = 2_000_000;
+const BONUS_DAILY_REWARD = 5_000_000;
+const MEGA_DAILY_REWARD = 10_000_000;
+const MID_TIER_DAILY_REWARD_THRESHOLD = 10_000_000_000;
+const BONUS_DAILY_REWARD_THRESHOLD = 100_000_000_000;
+const MEGA_DAILY_REWARD_THRESHOLD = 1_000_000_000_000;
 const MINI_APP_FETCH_TIMEOUT_MS = 15000;
 const WALLET_SIGNATURE_TIMEOUT_MS = 45000;
 const TELEGRAM_BOT_ADD_GROUP_URL = "https://telegram.me/epwx_bot?startgroup=owner_setup";
@@ -406,8 +412,10 @@ export default function TelegramMiniAppPage() {
   const [groupRegistrationComplete, setGroupRegistrationComplete] = useState(false);
   const [isTelegramWebView, setIsTelegramWebView] = useState(false);
   const [shareableUrl, setShareableUrl] = useState<string>("");
+  const swapSectionRef = useRef<HTMLDivElement | null>(null);
   const walletConnectionSectionRef = useRef<HTMLDivElement | null>(null);
   const dailyClaimSectionRef = useRef<HTMLDivElement | null>(null);
+  const dailyDrawSectionRef = useRef<HTMLDivElement | null>(null);
   const didAutoFocusLaunchTargetRef = useRef(false);
   const [openSections, setOpenSections] = useState<{ walletBalance: boolean; swap: boolean; groupOwner: boolean; dailyClaim: boolean; dailyDraws: boolean }>({
     walletBalance: false,
@@ -429,6 +437,7 @@ export default function TelegramMiniAppPage() {
   const [latestDrawError, setLatestDrawError] = useState<string>("");
   const [nextDrawCountdown, setNextDrawCountdown] = useState<string>("Calculating...");
   const [nextDrawAtUtc, setNextDrawAtUtc] = useState<string>("");
+  const [showClaimUpgradePrompt, setShowClaimUpgradePrompt] = useState(false);
 
   const toggleSection = (section: "walletBalance" | "swap" | "groupOwner" | "dailyClaim" | "dailyDraws") => {
     setOpenSections((current) => ({
@@ -438,6 +447,7 @@ export default function TelegramMiniAppPage() {
   };
 
   let formattedConnectedWalletBalance = "0";
+  const normalizedConnectedWalletBalance = Number(epwxBalance?.formatted || 0);
   if (epwxBalance) {
     try {
       formattedConnectedWalletBalance = formatEpwxBalance(Number(epwxBalance.formatted));
@@ -448,6 +458,23 @@ export default function TelegramMiniAppPage() {
 
   const normalizedConnectedWallet = useMemo(() => normalizeWallet(address), [address]);
   const normalizedLinkedWallet = useMemo(() => normalizeWallet(linkedWallet || undefined), [linkedWallet]);
+  const nextTierTarget = normalizedConnectedWalletBalance >= MEGA_DAILY_REWARD_THRESHOLD
+    ? null
+    : normalizedConnectedWalletBalance >= BONUS_DAILY_REWARD_THRESHOLD
+      ? MEGA_DAILY_REWARD_THRESHOLD
+      : normalizedConnectedWalletBalance >= MID_TIER_DAILY_REWARD_THRESHOLD
+        ? BONUS_DAILY_REWARD_THRESHOLD
+        : MID_TIER_DAILY_REWARD_THRESHOLD;
+  const nextTierReward = nextTierTarget === MEGA_DAILY_REWARD_THRESHOLD
+    ? MEGA_DAILY_REWARD
+    : nextTierTarget === BONUS_DAILY_REWARD_THRESHOLD
+      ? BONUS_DAILY_REWARD
+      : nextTierTarget === MID_TIER_DAILY_REWARD_THRESHOLD
+        ? MID_TIER_DAILY_REWARD
+        : null;
+  const tokensToNextTier = nextTierTarget === null
+    ? 0
+    : Math.max(nextTierTarget - normalizedConnectedWalletBalance, 0);
   const busy = activeAction !== null;
   const canClaim = Boolean(
     initData &&
@@ -457,6 +484,17 @@ export default function TelegramMiniAppPage() {
   );
   const claimOnCooldown = Boolean(nextClaimAt && nextClaimAt > Date.now());
   const claimDisabled = busy || !canClaim || claimOnCooldown;
+
+  const openUpgradeAction = (section: "swap" | "dailyDraws") => {
+    setOpenSections((current) => ({
+      ...current,
+      [section]: true,
+    }));
+
+    const target = section === "swap" ? swapSectionRef.current : dailyDrawSectionRef.current;
+    target?.scrollIntoView({ block: "start", behavior: "smooth" });
+    setShowClaimUpgradePrompt(false);
+  };
 
   let claimDisabledReason = "";
   if (claimOnCooldown) {
@@ -894,6 +932,7 @@ export default function TelegramMiniAppPage() {
 
     setActiveAction("claim");
     setAwaitingWalletSignature(false);
+    setShowClaimUpgradePrompt(false);
     setStatus("");
 
     try {
@@ -924,6 +963,9 @@ export default function TelegramMiniAppPage() {
       const amount = Number(data.amount || BASE_DAILY_REWARD).toLocaleString();
       setStatus(`Claim submitted: ${amount} EPWX. ${data.message || ""}`.trim());
       setNextClaimAt(Date.now() + 24 * 60 * 60 * 1000);
+      if (nextTierTarget && nextTierReward) {
+        setShowClaimUpgradePrompt(true);
+      }
     } catch (error) {
       if ((error as Error)?.name === "AbortError") {
         setStatus("Daily claim timed out. Please try again.");
@@ -1073,16 +1115,18 @@ export default function TelegramMiniAppPage() {
           Verify Telegram session, link or update wallet, then submit your daily EPWX claim.
         </p>
 
-        <CollapsibleSection
-          title="Swap ETH To EPWX"
-          description="Use the same swap flow from the dapp homepage directly inside the mini app."
-          isOpen={openSections.swap}
-          onToggle={() => toggleSection("swap")}
-        >
-          <div className="-mx-2 sm:mx-0">
-            <HomeSwapCard compact />
-          </div>
-        </CollapsibleSection>
+        <div ref={swapSectionRef} className="scroll-mt-28 sm:scroll-mt-24">
+          <CollapsibleSection
+            title="Swap ETH To EPWX"
+            description="Use the same swap flow from the dapp homepage directly inside the mini app."
+            isOpen={openSections.swap}
+            onToggle={() => toggleSection("swap")}
+          >
+            <div className="-mx-2 sm:mx-0">
+              <HomeSwapCard compact />
+            </div>
+          </CollapsibleSection>
+        </div>
 
         <div ref={walletConnectionSectionRef} className="scroll-mt-28 sm:scroll-mt-24">
           <CollapsibleSection
@@ -1243,6 +1287,7 @@ export default function TelegramMiniAppPage() {
           </CollapsibleSection>
         </div>
 
+        <div ref={dailyDrawSectionRef} className="scroll-mt-28 sm:scroll-mt-24">
         <CollapsibleSection
           title="Daily Draws & Winners"
           description="Live draw details from the main dapp feed, including countdown and winner payouts."
@@ -1325,6 +1370,46 @@ export default function TelegramMiniAppPage() {
             </>
           ) : null}
         </CollapsibleSection>
+        </div>
+
+        {showClaimUpgradePrompt && nextTierTarget && nextTierReward ? (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+            <div className="relative w-full max-w-lg rounded-2xl border border-violet-200/20 bg-slate-950/95 p-6 text-white shadow-2xl">
+              <button
+                type="button"
+                className="absolute right-3 top-2 text-2xl font-bold text-white/60 hover:text-white"
+                onClick={() => setShowClaimUpgradePrompt(false)}
+                aria-label="Close"
+              >
+                &times;
+              </button>
+              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-200/80">Next tier unlocked by buying</div>
+              <h3 className="mt-3 text-2xl font-black text-white">Turn today&apos;s claim into a bigger claim tomorrow</h3>
+              <p className="mt-3 text-sm leading-7 text-white/80">
+                You claimed your daily reward. Buy or hold {formatEpwxBalance(tokensToNextTier)} more EPWX to move this wallet to the next tier and unlock {nextTierReward.toLocaleString()} EPWX per daily claim.
+              </p>
+              <p className="mt-2 text-sm leading-7 text-violet-100/90">
+                Target balance: {nextTierTarget.toLocaleString()} EPWX.
+              </p>
+              <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+                <button
+                  type="button"
+                  onClick={() => openUpgradeAction("swap")}
+                  className="inline-flex items-center justify-center rounded-2xl bg-violet-500 px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-violet-400"
+                >
+                  Buy EPWX Now
+                </button>
+                <button
+                  type="button"
+                  onClick={() => openUpgradeAction("dailyDraws")}
+                  className="inline-flex items-center justify-center rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-white/20"
+                >
+                  View Daily Draws
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
 
         <CollapsibleSection
           title="Telegram Group Owner Quick Setup"
