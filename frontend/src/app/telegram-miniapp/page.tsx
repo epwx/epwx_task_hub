@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from "react";
 import { ConnectKitButton } from "connectkit";
 import { useAccount, useBalance, useSignMessage } from "wagmi";
 import { base } from "wagmi/chains";
@@ -121,7 +121,7 @@ declare global {
 const BASE_DAILY_REWARD = 100000;
 const MINI_APP_FETCH_TIMEOUT_MS = 15000;
 const WALLET_SIGNATURE_TIMEOUT_MS = 45000;
-const TELEGRAM_BOT_ADD_GROUP_URL = "https://t.me/epwx_bot?startgroup=owner_setup";
+const TELEGRAM_BOT_ADD_GROUP_URL = "https://telegram.me/epwx_bot?startgroup=owner_setup";
 const LATEST_WINNERS_REFRESH_INTERVAL_MS = 60_000;
 const NEXT_DRAW_COUNTDOWN_REFRESH_INTERVAL_MS = 1_000;
 const DEFAULT_AUTO_DAILY_DRAW_TIME_UTC = "00:05";
@@ -1062,18 +1062,17 @@ export default function TelegramMiniAppPage() {
     }
   };
 
-  const handleAddBotToGroup = () => {
+  const handleAddBotToGroup = (event: MouseEvent<HTMLAnchorElement>) => {
     try {
       const webApp = window.Telegram?.WebApp;
       if (isTelegramWebView && webApp?.openLink) {
+        event.preventDefault();
         webApp.openLink(TELEGRAM_BOT_ADD_GROUP_URL, { try_instant_view: false });
         return;
       }
-
-      // Outside Telegram webview, direct navigation is the most reliable on mobile browsers.
-      window.location.assign(TELEGRAM_BOT_ADD_GROUP_URL);
     } catch {
-      setStatus("Unable to open Telegram add-bot flow automatically. Open https://t.me/epwx_bot?startgroup=owner_setup manually.");
+      event.preventDefault();
+      setStatus("Unable to open Telegram add-bot flow automatically. Open https://telegram.me/epwx_bot?startgroup=owner_setup manually.");
     }
   };
 
@@ -1358,13 +1357,13 @@ export default function TelegramMiniAppPage() {
             <p className="mt-2 text-xs font-semibold text-violet-100">
               Reward rule: Group owner receives 10,000 EPWX for each user who successfully submits a daily claim from that group context. This is a lifetime recurring reward model, so owners continue earning per eligible user, per day.
             </p>
-            <button
-              type="button"
+            <a
+              href={TELEGRAM_BOT_ADD_GROUP_URL}
               onClick={handleAddBotToGroup}
               className="mt-3 w-full rounded-xl border border-white/30 bg-gradient-to-r from-indigo-500/70 via-purple-500/70 to-fuchsia-500/70 px-4 py-3 text-sm font-bold text-white transition hover:opacity-90"
             >
               Add @epwx_bot To Group
-            </button>
+            </a>
 
             {registerGroupId && !groupRegistrationComplete ? (
               <button
