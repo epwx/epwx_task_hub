@@ -873,7 +873,17 @@ export default function TelegramMiniAppPage() {
           </div>
 
           <div className="flex justify-center">
-            <ConnectKitButton />
+            {isTelegramWebView ? (
+              <button
+                type="button"
+                onClick={handleOpenInExternalBrowser}
+                className="w-full rounded-xl border border-orange-200/40 bg-orange-300/15 px-4 py-3 text-sm font-semibold text-orange-50 transition hover:bg-orange-300/25"
+              >
+                Connect Wallet
+              </button>
+            ) : (
+              <ConnectKitButton />
+            )}
           </div>
         </CollapsibleSection>
 
