@@ -72,6 +72,36 @@ type DailyClaimListResponse = {
   claims?: Array<{ claimedAt: string }>;
 };
 
+type LatestDailyDraw = {
+  id: number;
+  drawDate: string;
+  winnerCount: number;
+  eligibleCount: number;
+  prizeAmount: string;
+};
+
+type LatestDailyDrawWinner = {
+  id: number;
+  wallet: string;
+  rank: number;
+  prizeAmount: string;
+  status: string;
+  txHash?: string | null;
+};
+
+type LatestDailyDrawPagination = {
+  page: number;
+  totalPages: number;
+  hasPrevPage: boolean;
+  hasNextPage: boolean;
+};
+
+type LatestDailyDrawResponse = {
+  draw?: LatestDailyDraw | null;
+  winners?: LatestDailyDrawWinner[];
+  pagination?: Partial<LatestDailyDrawPagination>;
+};
+
 type TelegramWebApp = {
   initData?: string;
   ready?: () => void;
@@ -92,6 +122,10 @@ const BASE_DAILY_REWARD = 100000;
 const MINI_APP_FETCH_TIMEOUT_MS = 15000;
 const WALLET_SIGNATURE_TIMEOUT_MS = 45000;
 const TELEGRAM_BOT_ADD_GROUP_URL = "https://t.me/epwx_bot?startgroup=true";
+const LATEST_WINNERS_REFRESH_INTERVAL_MS = 60_000;
+const NEXT_DRAW_COUNTDOWN_REFRESH_INTERVAL_MS = 1_000;
+const DEFAULT_AUTO_DAILY_DRAW_TIME_UTC = "00:05";
+const NEXT_PUBLIC_AUTO_DAILY_DRAW_TIME_UTC = String(process.env.NEXT_PUBLIC_AUTO_DAILY_DRAW_TIME_UTC || DEFAULT_AUTO_DAILY_DRAW_TIME_UTC).trim();
 const EPWX_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_EPWX_TOKEN as `0x${string}`) || "0xef5f5751cf3eca6cc3572768298b7783d33d60eb";
 
 async function fetchWithTimeout(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
@@ -159,6 +193,65 @@ function formatRemaining(ms: number): string {
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
   return `${hours}h ${minutes}m ${seconds}s`;
+}
+
+function formatDuration(msLeft: number): string {
+  if (msLeft <= 0) return "0m 0s";
+
+  const totalSeconds = Math.floor(msLeft / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (hours > 0) {
+    return `${hours}h ${minutes}m ${seconds}s`;
+  }
+
+  return `${minutes}m ${seconds}s`;
+}
+
+function parseUtcHourMinute(input: string) {
+  const matched = String(input || "").match(/^(\d{2}):(\d{2})$/);
+  if (!matched) {
+    return { hour: 0, minute: 5 };
+  }
+
+  const hour = Number.parseInt(matched[1], 10);
+  const minute = Number.parseInt(matched[2], 10);
+  if (!Number.isInteger(hour) || !Number.isInteger(minute) || hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+    return { hour: 0, minute: 5 };
+  }
+
+  return { hour, minute };
+}
+
+function getNextDrawAtUtc(now = new Date()) {
+  const { hour, minute } = parseUtcHourMinute(NEXT_PUBLIC_AUTO_DAILY_DRAW_TIME_UTC);
+  const next = new Date(Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate(),
+    hour,
+    minute,
+    0,
+    0,
+  ));
+
+  if (next.getTime() <= now.getTime()) {
+    next.setUTCDate(next.getUTCDate() + 1);
+  }
+
+  return next;
+}
+
+function formatUtcDateTime(date: Date) {
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  const hour = String(date.getUTCHours()).padStart(2, "0");
+  const minute = String(date.getUTCMinutes()).padStart(2, "0");
+  const second = String(date.getUTCSeconds()).padStart(2, "0");
+  return `${year}-${month}-${day} ${hour}:${minute}:${second} UTC`;
 }
 
 function shortenAddress(value: string): string {
@@ -316,14 +409,28 @@ export default function TelegramMiniAppPage() {
   const walletConnectionSectionRef = useRef<HTMLDivElement | null>(null);
   const dailyClaimSectionRef = useRef<HTMLDivElement | null>(null);
   const didAutoFocusLaunchTargetRef = useRef(false);
-  const [openSections, setOpenSections] = useState<{ walletBalance: boolean; swap: boolean; groupOwner: boolean; dailyClaim: boolean }>({
+  const [openSections, setOpenSections] = useState<{ walletBalance: boolean; swap: boolean; groupOwner: boolean; dailyClaim: boolean; dailyDraws: boolean }>({
     walletBalance: false,
     swap: false,
     groupOwner: false,
     dailyClaim: true,
+    dailyDraws: false,
   });
+  const [latestDraw, setLatestDraw] = useState<LatestDailyDraw | null>(null);
+  const [latestDrawWinners, setLatestDrawWinners] = useState<LatestDailyDrawWinner[]>([]);
+  const [drawPage, setDrawPage] = useState<number>(1);
+  const [drawPagination, setDrawPagination] = useState<LatestDailyDrawPagination>({
+    page: 1,
+    totalPages: 1,
+    hasPrevPage: false,
+    hasNextPage: false,
+  });
+  const [latestDrawLoading, setLatestDrawLoading] = useState<boolean>(true);
+  const [latestDrawError, setLatestDrawError] = useState<string>("");
+  const [nextDrawCountdown, setNextDrawCountdown] = useState<string>("Calculating...");
+  const [nextDrawAtUtc, setNextDrawAtUtc] = useState<string>("");
 
-  const toggleSection = (section: "walletBalance" | "swap" | "groupOwner" | "dailyClaim") => {
+  const toggleSection = (section: "walletBalance" | "swap" | "groupOwner" | "dailyClaim" | "dailyDraws") => {
     setOpenSections((current) => ({
       ...current,
       [section]: !current[section],
@@ -395,6 +502,7 @@ export default function TelegramMiniAppPage() {
         ...current,
         walletBalance: !hasConnectedWallet,
         dailyClaim: hasConnectedWallet,
+        dailyDraws: false,
       }));
 
       const targetSection = hasConnectedWallet ? dailyClaimSectionRef.current : walletConnectionSectionRef.current;
@@ -417,6 +525,7 @@ export default function TelegramMiniAppPage() {
         ...current,
         walletBalance: !hasConnectedWallet,
         dailyClaim: hasConnectedWallet,
+        dailyDraws: false,
       }));
 
       const targetSection = hasConnectedWallet ? dailyClaimSectionRef.current : walletConnectionSectionRef.current;
@@ -425,6 +534,84 @@ export default function TelegramMiniAppPage() {
 
     return () => window.clearTimeout(timeoutId);
   }, [normalizedConnectedWallet, isTelegramWebView, registerGroupId]);
+
+  useEffect(() => {
+    const updateCountdown = () => {
+      const now = new Date();
+      const nextDrawAt = getNextDrawAtUtc(now);
+      const msRemaining = Math.max(nextDrawAt.getTime() - now.getTime(), 0);
+      setNextDrawCountdown(formatDuration(msRemaining));
+      setNextDrawAtUtc(formatUtcDateTime(nextDrawAt));
+    };
+
+    updateCountdown();
+    const timerId = window.setInterval(updateCountdown, NEXT_DRAW_COUNTDOWN_REFRESH_INTERVAL_MS);
+    return () => window.clearInterval(timerId);
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchLatestDraws = async (silent = false) => {
+      if (!silent) {
+        setLatestDrawLoading(true);
+      }
+      setLatestDrawError("");
+
+      try {
+        const res = await fetchWithTimeout(`/api/epwx/daily-draws/latest?page=${drawPage}`, { cache: "no-store" });
+        if (!res.ok) {
+          throw new Error(await readApiError(res, "Failed to load latest daily draws."));
+        }
+
+        const data = (await res.json()) as LatestDailyDrawResponse;
+        if (!isMounted) {
+          return;
+        }
+
+        setLatestDraw(data.draw || null);
+        setLatestDrawWinners(Array.isArray(data.winners) ? data.winners : []);
+        const nextPagination: LatestDailyDrawPagination = {
+          page: Math.max(1, Number(data.pagination?.page || 1)),
+          totalPages: Math.max(1, Number(data.pagination?.totalPages || 1)),
+          hasPrevPage: Boolean(data.pagination?.hasPrevPage),
+          hasNextPage: Boolean(data.pagination?.hasNextPage),
+        };
+        setDrawPagination(nextPagination);
+        if (nextPagination.page !== drawPage) {
+          setDrawPage(nextPagination.page);
+        }
+      } catch (error) {
+        if (!isMounted) {
+          return;
+        }
+
+        setLatestDraw(null);
+        setLatestDrawWinners([]);
+        setDrawPagination({
+          page: 1,
+          totalPages: 1,
+          hasPrevPage: false,
+          hasNextPage: false,
+        });
+        setLatestDrawError(error instanceof Error ? error.message : "Failed to load latest daily draws.");
+      } finally {
+        if (isMounted && !silent) {
+          setLatestDrawLoading(false);
+        }
+      }
+    };
+
+    fetchLatestDraws();
+    const intervalId = window.setInterval(() => {
+      fetchLatestDraws(true);
+    }, LATEST_WINNERS_REFRESH_INTERVAL_MS);
+
+    return () => {
+      isMounted = false;
+      window.clearInterval(intervalId);
+    };
+  }, [drawPage]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -1069,6 +1256,89 @@ export default function TelegramMiniAppPage() {
             ) : null}
           </CollapsibleSection>
         </div>
+
+        <CollapsibleSection
+          title="Daily Draws & Winners"
+          description="Live draw details from the main dapp feed, including countdown and winner payouts."
+          isOpen={openSections.dailyDraws}
+          onToggle={() => toggleSection("dailyDraws")}
+        >
+          <div className="rounded-2xl border border-white/20 bg-white/10 p-4 text-sm text-white backdrop-blur-lg">
+            <div className="text-xs uppercase tracking-[0.2em] text-white/80">Next Draw Countdown</div>
+            <div className="mt-1 text-2xl font-black text-violet-100">{nextDrawCountdown}</div>
+            <div className="mt-1 text-xs text-white/85">Next scheduled run: {nextDrawAtUtc || "-"}</div>
+            <div className="mt-1 text-xs text-white/80">Schedule source: {NEXT_PUBLIC_AUTO_DAILY_DRAW_TIME_UTC} UTC</div>
+          </div>
+
+          {latestDrawLoading ? <div className="text-center text-sm text-white/90">Loading latest winners...</div> : null}
+          {!latestDrawLoading && latestDrawError ? <div className="text-center text-sm text-rose-100">{latestDrawError}</div> : null}
+          {!latestDrawLoading && !latestDrawError && !latestDraw ? <div className="text-center text-sm text-white/90">No draw has been completed yet.</div> : null}
+
+          {!latestDrawLoading && !latestDrawError && latestDraw ? (
+            <>
+              <div className="rounded-2xl border border-white/20 bg-white/10 p-4 text-sm text-white/95 backdrop-blur-lg">
+                <div className="text-xs uppercase tracking-[0.2em] text-white/80">Draw Date</div>
+                <div className="mt-1 text-xl font-black text-white">{latestDraw.drawDate}</div>
+                <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                  <div>Winners: <span className="font-bold text-white">{latestDraw.winnerCount}</span></div>
+                  <div>Eligible Wallets: <span className="font-bold text-white">{latestDraw.eligibleCount}</span></div>
+                  <div>Prize Per Winner: <span className="font-bold text-violet-100">{Number(latestDraw.prizeAmount || "0").toLocaleString()} EPWX</span></div>
+                </div>
+                <div className="mt-3 flex items-center justify-between rounded-xl border border-white/20 bg-white/10 px-3 py-2">
+                  <button
+                    type="button"
+                    onClick={() => setDrawPage((current) => Math.max(1, current - 1))}
+                    disabled={!drawPagination.hasPrevPage}
+                    className="rounded-lg border border-white/25 bg-white/10 px-3 py-1 text-xs font-semibold text-white transition hover:bg-white/20 disabled:opacity-40"
+                  >
+                    Prev Draw
+                  </button>
+                  <span className="text-xs font-semibold text-white/85">Draw Page {drawPagination.page} of {drawPagination.totalPages}</span>
+                  <button
+                    type="button"
+                    onClick={() => setDrawPage((current) => current + 1)}
+                    disabled={!drawPagination.hasNextPage}
+                    className="rounded-lg border border-white/25 bg-white/10 px-3 py-1 text-xs font-semibold text-white transition hover:bg-white/20 disabled:opacity-40"
+                  >
+                    Next Draw
+                  </button>
+                </div>
+              </div>
+
+              {latestDrawWinners.length === 0 ? (
+                <div className="text-center text-sm text-white/90">No winners available for this draw yet.</div>
+              ) : (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {latestDrawWinners
+                    .slice()
+                    .sort((a, b) => a.rank - b.rank)
+                    .map((winner) => (
+                      <div key={winner.id} className="rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur-lg">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="text-sm font-black text-white">Winner #{winner.rank}</div>
+                          <span className={`rounded-full border px-3 py-1 text-xs font-bold ${winner.status === "paid" ? "border-violet-200/40 bg-violet-400/20 text-violet-100" : "border-fuchsia-200/40 bg-fuchsia-400/20 text-fuchsia-100"}`}>
+                            {winner.status === "paid" ? "Paid" : "Pending"}
+                          </span>
+                        </div>
+                        <div className="mt-2 text-sm text-white/95">Wallet: <span className="font-mono text-xs">{shortenAddress(winner.wallet)}</span></div>
+                        <div className="mt-1 text-sm text-white/90">Prize: {Number(winner.prizeAmount || "0").toLocaleString()} EPWX</div>
+                        {winner.txHash ? (
+                          <a
+                            href={`https://basescan.org/tx/${winner.txHash}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-2 block break-all text-xs text-violet-100 underline decoration-violet-100/80 underline-offset-2 hover:text-white"
+                          >
+                            View Transaction
+                          </a>
+                        ) : null}
+                      </div>
+                    ))}
+                </div>
+              )}
+            </>
+          ) : null}
+        </CollapsibleSection>
 
         <CollapsibleSection
           title="Telegram Group Owner Quick Setup"
