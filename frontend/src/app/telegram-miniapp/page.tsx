@@ -849,8 +849,8 @@ export default function TelegramMiniAppPage() {
         </p>
 
         <CollapsibleSection
-          title="Connected Wallet EPWX Balance"
-          description="Uses the same EPWX balance implementation as the main dapp wallet balance."
+          title="Wallet Connection & EPWX Balance"
+          description="Connect wallet, open in external wallet browsers, and view EPWX balance using the main dapp implementation."
           isOpen={openSections.walletBalance}
           onToggle={() => toggleSection("walletBalance")}
         >
@@ -875,6 +875,40 @@ export default function TelegramMiniAppPage() {
           <div className="flex justify-center">
             <ConnectKitButton />
           </div>
+
+          {isTelegramWebView ? (
+            <div className="space-y-3 rounded-2xl border border-orange-300/30 bg-orange-300/10 p-4 text-sm text-orange-50">
+              <p>
+                Coinbase and MetaMask wallet connections can fail inside Telegram&apos;s in-app browser. If a wallet shows a smart-wallet or URL-scheme error, open this Mini App in an external browser or in the wallet&apos;s own browser instead.
+              </p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={handleOpenInExternalBrowser}
+                  className="rounded-xl border border-orange-200/40 bg-orange-300/15 px-4 py-3 font-semibold text-orange-50 transition hover:bg-orange-300/25"
+                >
+                  Open In External Browser
+                </button>
+                <button
+                  type="button"
+                  onClick={handleOpenInMetaMaskBrowser}
+                  className="rounded-xl border border-orange-200/40 bg-orange-300/15 px-4 py-3 font-semibold text-orange-50 transition hover:bg-orange-300/25"
+                >
+                  Open In MetaMask Browser
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCopyMiniAppLink}
+                  className="rounded-xl border border-orange-200/40 bg-orange-300/15 px-4 py-3 font-semibold text-orange-50 transition hover:bg-orange-300/25"
+                >
+                  Copy Mini App Link
+                </button>
+              </div>
+              <p className="text-xs text-orange-100/80">
+                For the cleanest test flow, open the copied link in MetaMask mobile browser, Coinbase Wallet browser, or an external browser, then connect and link the wallet there.
+              </p>
+            </div>
+          ) : null}
         </CollapsibleSection>
 
         <CollapsibleSection
@@ -928,40 +962,6 @@ export default function TelegramMiniAppPage() {
               </div>
             ) : null}
           </div>
-
-          {isTelegramWebView ? (
-            <div className="space-y-3 rounded-2xl border border-orange-300/30 bg-orange-300/10 p-4 text-sm text-orange-50">
-              <p>
-                Coinbase and MetaMask wallet connections can fail inside Telegram&apos;s in-app browser. If a wallet shows a smart-wallet or URL-scheme error, open this Mini App in an external browser or in the wallet&apos;s own browser instead.
-              </p>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <button
-                  type="button"
-                  onClick={handleOpenInExternalBrowser}
-                  className="rounded-xl border border-orange-200/40 bg-orange-300/15 px-4 py-3 font-semibold text-orange-50 transition hover:bg-orange-300/25"
-                >
-                  Open In External Browser
-                </button>
-                <button
-                  type="button"
-                  onClick={handleOpenInMetaMaskBrowser}
-                  className="rounded-xl border border-orange-200/40 bg-orange-300/15 px-4 py-3 font-semibold text-orange-50 transition hover:bg-orange-300/25"
-                >
-                  Open In MetaMask Browser
-                </button>
-                <button
-                  type="button"
-                  onClick={handleCopyMiniAppLink}
-                  className="rounded-xl border border-orange-200/40 bg-orange-300/15 px-4 py-3 font-semibold text-orange-50 transition hover:bg-orange-300/25"
-                >
-                  Copy Mini App Link
-                </button>
-              </div>
-              <p className="text-xs text-orange-100/80">
-                For the cleanest test flow, open the copied link in MetaMask mobile browser, Coinbase Wallet browser, or an external browser, then connect and link the wallet there.
-              </p>
-            </div>
-          ) : null}
 
           <div className="rounded-2xl border border-cyan-300/30 bg-cyan-300/10 p-4 text-sm text-cyan-50">
             <p className="font-semibold">Group owner quick setup</p>
