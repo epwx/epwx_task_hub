@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { ConnectKitButton } from "connectkit";
 import { useAccount, useBalance, useSignMessage } from "wagmi";
 import { base } from "wagmi/chains";
@@ -1062,20 +1062,6 @@ export default function TelegramMiniAppPage() {
     }
   };
 
-  const handleAddBotToGroup = (event: MouseEvent<HTMLAnchorElement>) => {
-    try {
-      const webApp = window.Telegram?.WebApp;
-      if (isTelegramWebView && webApp?.openLink) {
-        event.preventDefault();
-        webApp.openLink(TELEGRAM_BOT_ADD_GROUP_URL, { try_instant_view: false });
-        return;
-      }
-    } catch {
-      event.preventDefault();
-      setStatus("Unable to open Telegram add-bot flow automatically. Open https://telegram.me/epwx_bot?startgroup=owner_setup manually.");
-    }
-  };
-
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-950 via-indigo-950 to-slate-950 px-4 pb-8 pt-4 text-slate-100 sm:pt-6">
       <section className="relative mx-auto max-w-lg overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 p-6 pt-10 shadow-2xl sm:pt-9">
@@ -1359,8 +1345,7 @@ export default function TelegramMiniAppPage() {
             </p>
             <a
               href={TELEGRAM_BOT_ADD_GROUP_URL}
-              onClick={handleAddBotToGroup}
-              className="mt-3 w-full rounded-xl border border-white/30 bg-gradient-to-r from-indigo-500/70 via-purple-500/70 to-fuchsia-500/70 px-4 py-3 text-sm font-bold text-white transition hover:opacity-90"
+              className="mt-3 block w-full rounded-xl border border-white/30 bg-gradient-to-r from-indigo-500/70 via-purple-500/70 to-fuchsia-500/70 px-4 py-3 text-center text-sm font-bold text-white transition hover:opacity-90"
             >
               Add @epwx_bot To Group
             </a>
