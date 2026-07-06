@@ -313,8 +313,9 @@ export default function TelegramMiniAppPage() {
   const [groupRegistrationComplete, setGroupRegistrationComplete] = useState(false);
   const [isTelegramWebView, setIsTelegramWebView] = useState(false);
   const [shareableUrl, setShareableUrl] = useState<string>("");
+  const walletConnectionSectionRef = useRef<HTMLDivElement | null>(null);
   const dailyClaimSectionRef = useRef<HTMLDivElement | null>(null);
-  const didAutoFocusDailyClaimRef = useRef(false);
+  const didAutoFocusLaunchTargetRef = useRef(false);
   const [openSections, setOpenSections] = useState<{ walletBalance: boolean; swap: boolean; groupOwner: boolean; dailyClaim: boolean }>({
     walletBalance: false,
     swap: false,
@@ -383,17 +384,47 @@ export default function TelegramMiniAppPage() {
   }, []);
 
   useEffect(() => {
-    if (didAutoFocusDailyClaimRef.current || registerGroupId) {
+    if (didAutoFocusLaunchTargetRef.current || registerGroupId) {
       return;
     }
 
     const timeoutId = window.setTimeout(() => {
-      dailyClaimSectionRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
-      didAutoFocusDailyClaimRef.current = true;
+      const hasConnectedWallet = Boolean(normalizedConnectedWallet);
+
+      setOpenSections((current) => ({
+        ...current,
+        walletBalance: !hasConnectedWallet,
+        dailyClaim: hasConnectedWallet,
+      }));
+
+      const targetSection = hasConnectedWallet ? dailyClaimSectionRef.current : walletConnectionSectionRef.current;
+      targetSection?.scrollIntoView({ block: "start", behavior: "smooth" });
+      didAutoFocusLaunchTargetRef.current = true;
     }, 250);
 
     return () => window.clearTimeout(timeoutId);
-  }, [initData, registerGroupId]);
+  }, [initData, normalizedConnectedWallet, registerGroupId]);
+
+  useEffect(() => {
+    if (!isTelegramWebView || registerGroupId || !didAutoFocusLaunchTargetRef.current) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      const hasConnectedWallet = Boolean(normalizedConnectedWallet);
+
+      setOpenSections((current) => ({
+        ...current,
+        walletBalance: !hasConnectedWallet,
+        dailyClaim: hasConnectedWallet,
+      }));
+
+      const targetSection = hasConnectedWallet ? dailyClaimSectionRef.current : walletConnectionSectionRef.current;
+      targetSection?.scrollIntoView({ block: "start", behavior: "smooth" });
+    }, 150);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [normalizedConnectedWallet, isTelegramWebView, registerGroupId]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -877,12 +908,13 @@ export default function TelegramMiniAppPage() {
           </div>
         </CollapsibleSection>
 
-        <CollapsibleSection
-          title="Wallet Connection & EPWX Balance"
-          description="Connect wallet, open in external wallet browsers, and view EPWX balance using the main dapp implementation."
-          isOpen={openSections.walletBalance}
-          onToggle={() => toggleSection("walletBalance")}
-        >
+        <div ref={walletConnectionSectionRef}>
+          <CollapsibleSection
+            title="Wallet Connection & EPWX Balance"
+            description="Connect wallet, open in external wallet browsers, and view EPWX balance using the main dapp implementation."
+            isOpen={openSections.walletBalance}
+            onToggle={() => toggleSection("walletBalance")}
+          >
           <div className="space-y-3 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm">
             <div className="flex items-center justify-between gap-3">
               <span className="text-slate-300">Connected wallet</span>
@@ -938,7 +970,8 @@ export default function TelegramMiniAppPage() {
               </p>
             </div>
           ) : null}
-        </CollapsibleSection>
+          </CollapsibleSection>
+        </div>
 
         <div ref={dailyClaimSectionRef}>
           <CollapsibleSection
