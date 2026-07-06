@@ -891,11 +891,11 @@ export default function TelegramMiniAppPage() {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-950 via-indigo-950 to-slate-950 px-4 pb-8 pt-10 text-slate-100 sm:pt-8">
-      <section className="relative mx-auto max-w-lg overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 p-6 pt-8 shadow-2xl">
+      <section className="relative mx-auto max-w-lg overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 p-6 pt-12 shadow-2xl sm:pt-10">
         <div className="absolute -left-10 -top-12 h-40 w-40 rounded-full bg-white/15 blur-3xl" />
         <div className="absolute -bottom-12 -right-8 h-48 w-48 rounded-full bg-white/15 blur-3xl" />
         <div className="relative z-10">
-        <h1 className="pt-1 text-center text-3xl font-black leading-tight tracking-tight">Telegram Daily Claim</h1>
+        <h1 className="text-center text-3xl font-black leading-[1.2] tracking-tight">Telegram Daily Claim</h1>
         <p className="mt-2 text-center text-sm text-slate-300">
           Verify Telegram session, link or update wallet, then submit your daily EPWX claim.
         </p>
