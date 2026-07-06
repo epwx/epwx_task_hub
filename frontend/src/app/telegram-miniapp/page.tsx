@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { ConnectKitButton } from "connectkit";
-import { useAccount, useSignMessage } from "wagmi";
+import { useAccount, useBalance, useSignMessage } from "wagmi";
+import { base } from "wagmi/chains";
 import { ethers } from "ethers";
 
 type TelegramMiniAppUser = {
@@ -90,6 +91,7 @@ const BASE_DAILY_REWARD = 100000;
 const MINI_APP_FETCH_TIMEOUT_MS = 15000;
 const WALLET_SIGNATURE_TIMEOUT_MS = 45000;
 const TELEGRAM_BOT_ADD_GROUP_URL = "https://t.me/epwx_bot?startgroup=true";
+const EPWX_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_EPWX_TOKEN as `0x${string}`) || "0xef5f5751cf3eca6cc3572768298b7783d33d60eb";
 
 async function fetchWithTimeout(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   const controller = new AbortController();
@@ -233,6 +235,26 @@ function resolveQueryValueFromLocation(key: string): string {
   return "";
 }
 
+function formatEpwxBalance(normalized: number) {
+  if (!Number.isFinite(normalized) || normalized === 0) {
+    return "0";
+  }
+
+  if (normalized >= 1) {
+    return normalized.toLocaleString(undefined, { maximumFractionDigits: 4 });
+  }
+
+  if (normalized >= 0.0001) {
+    return normalized.toLocaleString(undefined, { maximumFractionDigits: 4 });
+  }
+
+  if (normalized >= 0.00000001) {
+    return normalized.toLocaleString(undefined, { maximumFractionDigits: 8 });
+  }
+
+  return "<0.00000001";
+}
+
 type CollapsibleSectionProps = {
   title: string;
   description?: string;
@@ -267,6 +289,11 @@ function CollapsibleSection({ title, description, isOpen, onToggle, children }: 
 export default function TelegramMiniAppPage() {
   const { address } = useAccount();
   const { signMessageAsync } = useSignMessage();
+  const { data: epwxBalance, isLoading: balanceLoading } = useBalance({
+    address,
+    token: EPWX_TOKEN_ADDRESS,
+    chainId: base.id,
+  });
 
   type ActiveAction = "link" | "claim" | "register";
 
@@ -285,14 +312,26 @@ export default function TelegramMiniAppPage() {
   const [groupRegistrationComplete, setGroupRegistrationComplete] = useState(false);
   const [isTelegramWebView, setIsTelegramWebView] = useState(false);
   const [shareableUrl, setShareableUrl] = useState<string>("");
-  const [openSections, setOpenSections] = useState<{ dailyClaim: boolean }>({ dailyClaim: true });
+  const [openSections, setOpenSections] = useState<{ walletBalance: boolean; dailyClaim: boolean }>({
+    walletBalance: true,
+    dailyClaim: true,
+  });
 
-  const toggleSection = (section: "dailyClaim") => {
+  const toggleSection = (section: "walletBalance" | "dailyClaim") => {
     setOpenSections((current) => ({
       ...current,
       [section]: !current[section],
     }));
   };
+
+  let formattedConnectedWalletBalance = "0";
+  if (epwxBalance) {
+    try {
+      formattedConnectedWalletBalance = formatEpwxBalance(Number(epwxBalance.formatted));
+    } catch {
+      formattedConnectedWalletBalance = "0";
+    }
+  }
 
   const normalizedConnectedWallet = useMemo(() => normalizeWallet(address), [address]);
   const normalizedLinkedWallet = useMemo(() => normalizeWallet(linkedWallet || undefined), [linkedWallet]);
@@ -810,6 +849,35 @@ export default function TelegramMiniAppPage() {
         </p>
 
         <CollapsibleSection
+          title="Connected Wallet EPWX Balance"
+          description="Uses the same EPWX balance implementation as the main dapp wallet balance."
+          isOpen={openSections.walletBalance}
+          onToggle={() => toggleSection("walletBalance")}
+        >
+          <div className="space-y-3 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-slate-300">Connected wallet</span>
+              <span
+                className="truncate text-right font-mono text-xs text-slate-200"
+                title={normalizedConnectedWallet || "-"}
+              >
+                {normalizedConnectedWallet ? shortenAddress(normalizedConnectedWallet) : "-"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-slate-300">EPWX balance</span>
+              <span className="text-lg font-bold text-emerald-300">
+                {normalizedConnectedWallet ? (balanceLoading ? "Loading..." : `${formattedConnectedWalletBalance} EPWX`) : "Connect wallet"}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex justify-center">
+            <ConnectKitButton />
+          </div>
+        </CollapsibleSection>
+
+        <CollapsibleSection
           title="Daily Claim"
           description="Collapse this section when not needed. New collapsible sections can be added with the same component."
           isOpen={openSections.dailyClaim}
@@ -913,10 +981,6 @@ export default function TelegramMiniAppPage() {
             >
               Add @epwx_bot To Group
             </button>
-          </div>
-
-          <div className="flex justify-center">
-            <ConnectKitButton />
           </div>
 
           <div className="grid gap-3">
