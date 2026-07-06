@@ -266,7 +266,7 @@ type CollapsibleSectionProps = {
 
 function CollapsibleSection({ title, description, isOpen, onToggle, children }: CollapsibleSectionProps) {
   return (
-    <section className="mt-6 rounded-2xl border border-white/10 bg-black/15 p-4">
+    <section className="mt-6 rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur-lg">
       <button
         type="button"
         onClick={onToggle}
@@ -275,9 +275,9 @@ function CollapsibleSection({ title, description, isOpen, onToggle, children }: 
       >
         <div>
           <h2 className="text-lg font-extrabold text-white">{title}</h2>
-          {description ? <p className="mt-1 text-xs text-slate-300">{description}</p> : null}
+          {description ? <p className="mt-1 text-xs text-white/80">{description}</p> : null}
         </div>
-        <span className="rounded-lg border border-white/15 bg-white/5 px-2 py-1 text-xs font-semibold text-slate-200">
+        <span className="rounded-lg border border-white/20 bg-white/10 px-2 py-1 text-xs font-semibold text-white/90">
           {isOpen ? "Collapse" : "Expand"}
         </span>
       </button>
@@ -890,8 +890,11 @@ export default function TelegramMiniAppPage() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-950 px-4 py-8 text-slate-100">
-      <section className="mx-auto max-w-lg rounded-3xl border border-cyan-300/20 bg-gradient-to-br from-cyan-900/50 via-slate-900 to-blue-950 p-6 shadow-2xl">
+    <main className="min-h-screen bg-gradient-to-b from-slate-950 via-indigo-950 to-slate-950 px-4 py-8 text-slate-100">
+      <section className="relative mx-auto max-w-lg overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 p-6 shadow-2xl">
+        <div className="absolute -left-10 -top-12 h-40 w-40 rounded-full bg-white/15 blur-3xl" />
+        <div className="absolute -bottom-12 -right-8 h-48 w-48 rounded-full bg-white/15 blur-3xl" />
+        <div className="relative z-10">
         <h1 className="text-center text-3xl font-black tracking-tight">Telegram Daily Claim</h1>
         <p className="mt-2 text-center text-sm text-slate-300">
           Verify Telegram session, link or update wallet, then submit your daily EPWX claim.
@@ -915,7 +918,7 @@ export default function TelegramMiniAppPage() {
             isOpen={openSections.walletBalance}
             onToggle={() => toggleSection("walletBalance")}
           >
-          <div className="space-y-3 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm">
+          <div className="space-y-3 rounded-2xl border border-white/20 bg-white/10 p-4 text-sm backdrop-blur-lg">
             <div className="flex items-center justify-between gap-3">
               <span className="text-slate-300">Connected wallet</span>
               <span
@@ -927,7 +930,7 @@ export default function TelegramMiniAppPage() {
             </div>
             <div className="flex items-center justify-between gap-3">
               <span className="text-slate-300">EPWX balance</span>
-              <span className="text-lg font-bold text-emerald-300">
+              <span className="text-lg font-bold text-violet-100">
                 {normalizedConnectedWallet ? (balanceLoading ? "Loading..." : `${formattedConnectedWalletBalance} EPWX`) : "Connect wallet"}
               </span>
             </div>
@@ -938,7 +941,7 @@ export default function TelegramMiniAppPage() {
           </div>
 
           {isTelegramWebView ? (
-            <div className="space-y-3 rounded-2xl border border-orange-300/30 bg-orange-300/10 p-4 text-sm text-orange-50">
+            <div className="space-y-3 rounded-2xl border border-violet-200/35 bg-violet-400/15 p-4 text-sm text-violet-50 backdrop-blur-lg">
               <p>
                 Coinbase and MetaMask wallet connections can fail inside Telegram&apos;s in-app browser. If a wallet shows a smart-wallet or URL-scheme error, open this Mini App in an external browser or in the wallet&apos;s own browser instead.
               </p>
@@ -946,26 +949,26 @@ export default function TelegramMiniAppPage() {
                 <button
                   type="button"
                   onClick={handleOpenInExternalBrowser}
-                  className="rounded-xl border border-orange-200/40 bg-orange-300/15 px-4 py-3 font-semibold text-orange-50 transition hover:bg-orange-300/25"
+                  className="rounded-xl border border-violet-200/40 bg-violet-400/20 px-4 py-3 font-semibold text-violet-50 transition hover:bg-violet-400/30"
                 >
                   Open In External Browser
                 </button>
                 <button
                   type="button"
                   onClick={handleOpenInMetaMaskBrowser}
-                  className="rounded-xl border border-orange-200/40 bg-orange-300/15 px-4 py-3 font-semibold text-orange-50 transition hover:bg-orange-300/25"
+                  className="rounded-xl border border-violet-200/40 bg-violet-400/20 px-4 py-3 font-semibold text-violet-50 transition hover:bg-violet-400/30"
                 >
                   Open In MetaMask Browser
                 </button>
                 <button
                   type="button"
                   onClick={handleCopyMiniAppLink}
-                  className="rounded-xl border border-orange-200/40 bg-orange-300/15 px-4 py-3 font-semibold text-orange-50 transition hover:bg-orange-300/25"
+                  className="rounded-xl border border-violet-200/40 bg-violet-400/20 px-4 py-3 font-semibold text-violet-50 transition hover:bg-violet-400/30"
                 >
                   Copy Mini App Link
                 </button>
               </div>
-              <p className="text-xs text-orange-100/80">
+              <p className="text-xs text-violet-100/85">
                 For the cleanest test flow, open the copied link in MetaMask mobile browser, Coinbase Wallet browser, or an external browser, then connect and link the wallet there.
               </p>
             </div>
@@ -980,10 +983,10 @@ export default function TelegramMiniAppPage() {
             isOpen={openSections.dailyClaim}
             onToggle={() => toggleSection("dailyClaim")}
           >
-          <div className="space-y-3 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm">
+          <div className="space-y-3 rounded-2xl border border-white/20 bg-white/10 p-4 text-sm backdrop-blur-lg">
             <div className="flex items-center justify-between">
               <span className="text-slate-300">Telegram</span>
-              <span className="font-semibold text-emerald-300">
+              <span className="font-semibold text-violet-100">
                 {loadingAuth ? "Checking..." : telegramUser ? "Verified" : "Not verified"}
               </span>
             </div>
@@ -1015,12 +1018,12 @@ export default function TelegramMiniAppPage() {
               </span>
             </div>
             {normalizedLinkedWallet && normalizedConnectedWallet && normalizedLinkedWallet !== normalizedConnectedWallet ? (
-              <div className="rounded-xl border border-orange-200/35 bg-orange-300/10 px-3 py-2 text-center text-orange-100">
+              <div className="rounded-xl border border-violet-200/35 bg-violet-400/15 px-3 py-2 text-center text-violet-100">
                 Connected wallet is different from linked wallet. Tap Update Linked Wallet to switch.
               </div>
             ) : null}
             {remaining ? (
-              <div className="rounded-xl border border-amber-300/30 bg-amber-300/10 px-3 py-2 text-center text-amber-100">
+              <div className="rounded-xl border border-purple-200/35 bg-purple-400/15 px-3 py-2 text-center text-purple-100">
                 Next claim in {remaining}
               </div>
             ) : null}
@@ -1031,7 +1034,7 @@ export default function TelegramMiniAppPage() {
               type="button"
               disabled={busy || !telegramUser || !normalizedConnectedWallet}
               onClick={handleLinkWallet}
-              className="rounded-xl border border-cyan-200/40 bg-cyan-300/15 px-4 py-3 font-semibold text-cyan-50 transition hover:bg-cyan-300/25 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-xl border border-white/30 bg-gradient-to-r from-indigo-500/70 via-purple-500/70 to-fuchsia-500/70 px-4 py-3 font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {activeAction === "link" ? "Processing..." : normalizedLinkedWallet ? "Update Linked Wallet" : "Link Wallet"}
             </button>
@@ -1040,7 +1043,7 @@ export default function TelegramMiniAppPage() {
               type="button"
               disabled={claimDisabled}
               onClick={handleDailyClaim}
-              className="rounded-xl border border-emerald-200/40 bg-emerald-300/15 px-4 py-3 font-semibold text-emerald-50 transition hover:bg-emerald-300/25 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-xl border border-white/30 bg-gradient-to-r from-purple-500/80 to-pink-500/80 px-4 py-3 font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {activeAction === "claim" ? "Submitting..." : "Request Daily Claim"}
             </button>
@@ -1051,9 +1054,9 @@ export default function TelegramMiniAppPage() {
           </div>
 
           {awaitingWalletSignature ? (
-            <div className="rounded-xl border border-amber-200/35 bg-amber-300/10 px-4 py-3 text-sm text-amber-100">
+            <div className="rounded-xl border border-purple-200/35 bg-purple-400/15 px-4 py-3 text-sm text-purple-100">
               <p className="font-semibold">Action required in wallet app</p>
-              <p className="mt-1 text-amber-50/90">
+              <p className="mt-1 text-purple-50/90">
                 This request is waiting for signature approval. Switch to MetaMask or Coinbase Wallet, approve the signature popup, then return to this page.
               </p>
             </div>
@@ -1073,21 +1076,21 @@ export default function TelegramMiniAppPage() {
           isOpen={openSections.groupOwner}
           onToggle={() => toggleSection("groupOwner")}
         >
-          <div className="rounded-2xl border border-cyan-300/30 bg-cyan-300/10 p-4 text-sm text-cyan-50">
+          <div className="rounded-2xl border border-white/25 bg-white/10 p-4 text-sm text-white backdrop-blur-lg">
             <p className="font-semibold">Group owner quick setup</p>
-            <p className="mt-1 text-xs text-cyan-100/90">
+            <p className="mt-1 text-xs text-white/85">
               Add @epwx_bot to your Telegram group first. Then promote it as admin and run /registergroup inside the group.
             </p>
-            <p className="mt-1 text-xs text-cyan-100/90">
+            <p className="mt-1 text-xs text-white/85">
               After registration, run /postdailyclaimbutton in the group and pin that Daily Claim post so members can claim easily.
             </p>
-            <p className="mt-2 text-xs font-semibold text-emerald-100">
+            <p className="mt-2 text-xs font-semibold text-violet-100">
               Reward rule: Group owner receives 10,000 EPWX for each user who successfully submits a daily claim from that group context. This is a lifetime recurring reward model, so owners continue earning per eligible user, per day.
             </p>
             <button
               type="button"
               onClick={handleAddBotToGroup}
-              className="mt-3 w-full rounded-xl border border-cyan-200/40 bg-cyan-300/20 px-4 py-3 text-sm font-bold text-cyan-50 transition hover:bg-cyan-300/30"
+              className="mt-3 w-full rounded-xl border border-white/30 bg-gradient-to-r from-indigo-500/70 via-purple-500/70 to-fuchsia-500/70 px-4 py-3 text-sm font-bold text-white transition hover:opacity-90"
             >
               Add @epwx_bot To Group
             </button>
@@ -1097,17 +1100,18 @@ export default function TelegramMiniAppPage() {
                 type="button"
                 disabled={busy || !telegramUser || !canClaim}
                 onClick={handleRegisterGroup}
-                className="mt-3 w-full rounded-xl border border-fuchsia-200/40 bg-fuchsia-300/15 px-4 py-3 font-semibold text-fuchsia-50 transition hover:bg-fuchsia-300/25 disabled:cursor-not-allowed disabled:opacity-50"
+                className="mt-3 w-full rounded-xl border border-white/30 bg-gradient-to-r from-purple-500/80 to-pink-500/80 px-4 py-3 font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {activeAction === "register" ? "Processing..." : "Register This Group For Owner Rewards"}
               </button>
             ) : groupRegistrationComplete ? (
-              <div className="mt-3 rounded-xl border border-emerald-200/30 bg-emerald-300/10 px-4 py-3 text-center text-sm font-semibold text-emerald-100">
+              <div className="mt-3 rounded-xl border border-violet-200/35 bg-violet-400/15 px-4 py-3 text-center text-sm font-semibold text-violet-100">
                 Group already registered for owner rewards.
               </div>
             ) : null}
           </div>
         </CollapsibleSection>
+        </div>
       </section>
     </main>
   );
