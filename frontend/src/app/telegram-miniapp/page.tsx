@@ -121,7 +121,7 @@ declare global {
 const BASE_DAILY_REWARD = 100000;
 const MINI_APP_FETCH_TIMEOUT_MS = 15000;
 const WALLET_SIGNATURE_TIMEOUT_MS = 45000;
-const TELEGRAM_BOT_ADD_GROUP_URL = "https://t.me/epwx_bot?startgroup=true";
+const TELEGRAM_BOT_ADD_GROUP_URL = "https://t.me/epwx_bot?startgroup=owner_setup";
 const LATEST_WINNERS_REFRESH_INTERVAL_MS = 60_000;
 const NEXT_DRAW_COUNTDOWN_REFRESH_INTERVAL_MS = 1_000;
 const DEFAULT_AUTO_DAILY_DRAW_TIME_UTC = "00:05";
@@ -1070,9 +1070,13 @@ export default function TelegramMiniAppPage() {
         return;
       }
 
-      window.open(TELEGRAM_BOT_ADD_GROUP_URL, "_blank", "noopener,noreferrer");
+      const newWindow = window.open(TELEGRAM_BOT_ADD_GROUP_URL, "_blank", "noopener,noreferrer");
+      if (!newWindow) {
+        // Popup blockers can block window.open on mobile browsers. Fallback to same-tab navigation.
+        window.location.assign(TELEGRAM_BOT_ADD_GROUP_URL);
+      }
     } catch {
-      setStatus("Unable to open Telegram add-bot flow automatically. Open https://t.me/epwx_bot?startgroup=true manually.");
+      setStatus("Unable to open Telegram add-bot flow automatically. Open https://t.me/epwx_bot?startgroup=owner_setup manually.");
     }
   };
 
