@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { ConnectKitButton } from "connectkit";
 import { useAccount, useBalance, useSignMessage } from "wagmi";
 import { base } from "wagmi/chains";
@@ -313,6 +313,8 @@ export default function TelegramMiniAppPage() {
   const [groupRegistrationComplete, setGroupRegistrationComplete] = useState(false);
   const [isTelegramWebView, setIsTelegramWebView] = useState(false);
   const [shareableUrl, setShareableUrl] = useState<string>("");
+  const dailyClaimSectionRef = useRef<HTMLDivElement | null>(null);
+  const didAutoFocusDailyClaimRef = useRef(false);
   const [openSections, setOpenSections] = useState<{ walletBalance: boolean; swap: boolean; groupOwner: boolean; dailyClaim: boolean }>({
     walletBalance: false,
     swap: false,
@@ -379,6 +381,19 @@ export default function TelegramMiniAppPage() {
     setSourceGroupId(resolveQueryValueFromLocation("sourceGroupId"));
     setShareableUrl(window.location.href);
   }, []);
+
+  useEffect(() => {
+    if (didAutoFocusDailyClaimRef.current || registerGroupId) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      dailyClaimSectionRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
+      didAutoFocusDailyClaimRef.current = true;
+    }, 250);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [initData, registerGroupId]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -925,12 +940,13 @@ export default function TelegramMiniAppPage() {
           ) : null}
         </CollapsibleSection>
 
-        <CollapsibleSection
-          title="Daily Claim"
-          description="Collapse this section when not needed. New collapsible sections can be added with the same component."
-          isOpen={openSections.dailyClaim}
-          onToggle={() => toggleSection("dailyClaim")}
-        >
+        <div ref={dailyClaimSectionRef}>
+          <CollapsibleSection
+            title="Daily Claim"
+            description="Collapse this section when not needed. New collapsible sections can be added with the same component."
+            isOpen={openSections.dailyClaim}
+            onToggle={() => toggleSection("dailyClaim")}
+          >
           <div className="space-y-3 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm">
             <div className="flex items-center justify-between">
               <span className="text-slate-300">Telegram</span>
@@ -1010,12 +1026,13 @@ export default function TelegramMiniAppPage() {
             </div>
           ) : null}
 
-          {status ? (
-            <div className="rounded-xl border border-white/15 bg-white/10 px-3 py-3 text-sm text-slate-100">
-              {status}
-            </div>
-          ) : null}
-        </CollapsibleSection>
+            {status ? (
+              <div className="rounded-xl border border-white/15 bg-white/10 px-3 py-3 text-sm text-slate-100">
+                {status}
+              </div>
+            ) : null}
+          </CollapsibleSection>
+        </div>
 
         <CollapsibleSection
           title="Telegram Group Owner Quick Setup"
