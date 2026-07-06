@@ -890,12 +890,12 @@ export default function TelegramMiniAppPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-950 via-indigo-950 to-slate-950 px-4 py-8 text-slate-100">
-      <section className="relative mx-auto max-w-lg overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 p-6 shadow-2xl">
+    <main className="min-h-screen bg-gradient-to-b from-slate-950 via-indigo-950 to-slate-950 px-4 pb-8 pt-10 text-slate-100 sm:pt-8">
+      <section className="relative mx-auto max-w-lg overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 p-6 pt-8 shadow-2xl">
         <div className="absolute -left-10 -top-12 h-40 w-40 rounded-full bg-white/15 blur-3xl" />
         <div className="absolute -bottom-12 -right-8 h-48 w-48 rounded-full bg-white/15 blur-3xl" />
         <div className="relative z-10">
-        <h1 className="text-center text-3xl font-black tracking-tight">Telegram Daily Claim</h1>
+        <h1 className="pt-1 text-center text-3xl font-black leading-tight tracking-tight">Telegram Daily Claim</h1>
         <p className="mt-2 text-center text-sm text-slate-300">
           Verify Telegram session, link or update wallet, then submit your daily EPWX claim.
         </p>
@@ -911,7 +911,7 @@ export default function TelegramMiniAppPage() {
           </div>
         </CollapsibleSection>
 
-        <div ref={walletConnectionSectionRef}>
+        <div ref={walletConnectionSectionRef} className="scroll-mt-28 sm:scroll-mt-24">
           <CollapsibleSection
             title="Wallet Connection & EPWX Balance"
             description="Connect wallet, open in external wallet browsers, and view EPWX balance using the main dapp implementation."
@@ -976,7 +976,7 @@ export default function TelegramMiniAppPage() {
           </CollapsibleSection>
         </div>
 
-        <div ref={dailyClaimSectionRef}>
+        <div ref={dailyClaimSectionRef} className="scroll-mt-28 sm:scroll-mt-24">
           <CollapsibleSection
             title="Daily Claim"
             description="Collapse this section when not needed. New collapsible sections can be added with the same component."
