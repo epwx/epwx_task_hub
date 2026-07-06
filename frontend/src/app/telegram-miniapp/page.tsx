@@ -1070,11 +1070,8 @@ export default function TelegramMiniAppPage() {
         return;
       }
 
-      const newWindow = window.open(TELEGRAM_BOT_ADD_GROUP_URL, "_blank", "noopener,noreferrer");
-      if (!newWindow) {
-        // Popup blockers can block window.open on mobile browsers. Fallback to same-tab navigation.
-        window.location.assign(TELEGRAM_BOT_ADD_GROUP_URL);
-      }
+      // Outside Telegram webview, direct navigation is the most reliable on mobile browsers.
+      window.location.assign(TELEGRAM_BOT_ADD_GROUP_URL);
     } catch {
       setStatus("Unable to open Telegram add-bot flow automatically. Open https://t.me/epwx_bot?startgroup=owner_setup manually.");
     }
