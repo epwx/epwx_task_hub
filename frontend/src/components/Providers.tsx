@@ -5,7 +5,7 @@ import { useAccount, useReconnect } from 'wagmi';
 import { base } from 'wagmi/chains';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ConnectKitProvider, getDefaultConfig, useModal } from 'connectkit';
-import { ReactNode, useEffect, useRef } from 'react';
+import { ReactNode, useCallback, useEffect, useRef } from 'react';
 
 const config = createConfig(
   getDefaultConfig({
@@ -30,26 +30,71 @@ function WalletReturnSync() {
   const { reconnect } = useReconnect();
   const { open, setOpen } = useModal();
   const wasConnectedRef = useRef(isConnected);
+  const reconnectBurstIntervalRef = useRef<number | null>(null);
+  const reconnectBurstTimeoutRef = useRef<number | null>(null);
+
+  const clearReconnectBurst = useCallback(() => {
+    if (reconnectBurstIntervalRef.current !== null) {
+      window.clearInterval(reconnectBurstIntervalRef.current);
+      reconnectBurstIntervalRef.current = null;
+    }
+    if (reconnectBurstTimeoutRef.current !== null) {
+      window.clearTimeout(reconnectBurstTimeoutRef.current);
+      reconnectBurstTimeoutRef.current = null;
+    }
+  }, []);
 
   useEffect(() => {
     const syncWalletState = () => {
       void reconnect();
     };
 
+    const startReconnectBurst = () => {
+      clearReconnectBurst();
+      syncWalletState();
+
+      // Telegram in-app browser can miss focus events after deep-link wallet flows.
+      // Retry briefly so connector state catches up without requiring a manual refresh.
+      reconnectBurstIntervalRef.current = window.setInterval(() => {
+        if (document.visibilityState === 'visible') {
+          syncWalletState();
+        }
+      }, 1200);
+
+      reconnectBurstTimeoutRef.current = window.setTimeout(() => {
+        clearReconnectBurst();
+      }, 9000);
+    };
+
     const onVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        syncWalletState();
+        startReconnectBurst();
       }
     };
 
-    window.addEventListener('focus', syncWalletState);
+    const onPageShow = () => {
+      startReconnectBurst();
+    };
+
+    startReconnectBurst();
+
+    window.addEventListener('focus', startReconnectBurst);
+    window.addEventListener('pageshow', onPageShow);
     document.addEventListener('visibilitychange', onVisibilityChange);
 
     return () => {
-      window.removeEventListener('focus', syncWalletState);
+      clearReconnectBurst();
+      window.removeEventListener('focus', startReconnectBurst);
+      window.removeEventListener('pageshow', onPageShow);
       document.removeEventListener('visibilitychange', onVisibilityChange);
     };
-  }, [reconnect]);
+  }, [clearReconnectBurst, reconnect]);
+
+  useEffect(() => {
+    if (isConnected) {
+      clearReconnectBurst();
+    }
+  }, [clearReconnectBurst, isConnected]);
 
   useEffect(() => {
     const justConnected = !wasConnectedRef.current && isConnected;
