@@ -313,13 +313,14 @@ export default function TelegramMiniAppPage() {
   const [groupRegistrationComplete, setGroupRegistrationComplete] = useState(false);
   const [isTelegramWebView, setIsTelegramWebView] = useState(false);
   const [shareableUrl, setShareableUrl] = useState<string>("");
-  const [openSections, setOpenSections] = useState<{ walletBalance: boolean; swap: boolean; dailyClaim: boolean }>({
+  const [openSections, setOpenSections] = useState<{ walletBalance: boolean; swap: boolean; groupOwner: boolean; dailyClaim: boolean }>({
     walletBalance: true,
     swap: true,
+    groupOwner: false,
     dailyClaim: true,
   });
 
-  const toggleSection = (section: "walletBalance" | "swap" | "dailyClaim") => {
+  const toggleSection = (section: "walletBalance" | "swap" | "groupOwner" | "dailyClaim") => {
     setOpenSections((current) => ({
       ...current,
       [section]: !current[section],
@@ -976,42 +977,7 @@ export default function TelegramMiniAppPage() {
             ) : null}
           </div>
 
-          <div className="rounded-2xl border border-cyan-300/30 bg-cyan-300/10 p-4 text-sm text-cyan-50">
-            <p className="font-semibold">Group owner quick setup</p>
-            <p className="mt-1 text-xs text-cyan-100/90">
-              Add @epwx_bot to your Telegram group first. Then promote it as admin and run /registergroup inside the group.
-            </p>
-            <p className="mt-1 text-xs text-cyan-100/90">
-              After registration, run /postdailyclaimbutton in the group and pin that Daily Claim post so members can claim easily.
-            </p>
-            <p className="mt-2 text-xs font-semibold text-emerald-100">
-              Reward rule: Group owner receives 10,000 EPWX for each user who successfully submits a daily claim from that group context. This is a lifetime recurring reward model, so owners continue earning per eligible user, per day.
-            </p>
-            <button
-              type="button"
-              onClick={handleAddBotToGroup}
-              className="mt-3 w-full rounded-xl border border-cyan-200/40 bg-cyan-300/20 px-4 py-3 text-sm font-bold text-cyan-50 transition hover:bg-cyan-300/30"
-            >
-              Add @epwx_bot To Group
-            </button>
-          </div>
-
           <div className="grid gap-3">
-            {registerGroupId && !groupRegistrationComplete ? (
-              <button
-                type="button"
-                disabled={busy || !telegramUser || !canClaim}
-                onClick={handleRegisterGroup}
-                className="rounded-xl border border-fuchsia-200/40 bg-fuchsia-300/15 px-4 py-3 font-semibold text-fuchsia-50 transition hover:bg-fuchsia-300/25 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {activeAction === "register" ? "Processing..." : "Register This Group For Owner Rewards"}
-              </button>
-            ) : groupRegistrationComplete ? (
-              <div className="rounded-xl border border-emerald-200/30 bg-emerald-300/10 px-4 py-3 text-center text-sm font-semibold text-emerald-100">
-                Group already registered for owner rewards.
-              </div>
-            ) : null}
-
             <button
               type="button"
               disabled={busy || !telegramUser || !normalizedConnectedWallet}
@@ -1049,6 +1015,48 @@ export default function TelegramMiniAppPage() {
               {status}
             </div>
           ) : null}
+        </CollapsibleSection>
+
+        <CollapsibleSection
+          title="Telegram Group Owner Quick Setup"
+          description="Owner-only setup for group registration and posting the daily claim button."
+          isOpen={openSections.groupOwner}
+          onToggle={() => toggleSection("groupOwner")}
+        >
+          <div className="rounded-2xl border border-cyan-300/30 bg-cyan-300/10 p-4 text-sm text-cyan-50">
+            <p className="font-semibold">Group owner quick setup</p>
+            <p className="mt-1 text-xs text-cyan-100/90">
+              Add @epwx_bot to your Telegram group first. Then promote it as admin and run /registergroup inside the group.
+            </p>
+            <p className="mt-1 text-xs text-cyan-100/90">
+              After registration, run /postdailyclaimbutton in the group and pin that Daily Claim post so members can claim easily.
+            </p>
+            <p className="mt-2 text-xs font-semibold text-emerald-100">
+              Reward rule: Group owner receives 10,000 EPWX for each user who successfully submits a daily claim from that group context. This is a lifetime recurring reward model, so owners continue earning per eligible user, per day.
+            </p>
+            <button
+              type="button"
+              onClick={handleAddBotToGroup}
+              className="mt-3 w-full rounded-xl border border-cyan-200/40 bg-cyan-300/20 px-4 py-3 text-sm font-bold text-cyan-50 transition hover:bg-cyan-300/30"
+            >
+              Add @epwx_bot To Group
+            </button>
+
+            {registerGroupId && !groupRegistrationComplete ? (
+              <button
+                type="button"
+                disabled={busy || !telegramUser || !canClaim}
+                onClick={handleRegisterGroup}
+                className="mt-3 w-full rounded-xl border border-fuchsia-200/40 bg-fuchsia-300/15 px-4 py-3 font-semibold text-fuchsia-50 transition hover:bg-fuchsia-300/25 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {activeAction === "register" ? "Processing..." : "Register This Group For Owner Rewards"}
+              </button>
+            ) : groupRegistrationComplete ? (
+              <div className="mt-3 rounded-xl border border-emerald-200/30 bg-emerald-300/10 px-4 py-3 text-center text-sm font-semibold text-emerald-100">
+                Group already registered for owner rewards.
+              </div>
+            ) : null}
+          </div>
         </CollapsibleSection>
       </section>
     </main>
