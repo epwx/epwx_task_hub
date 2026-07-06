@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { ConnectKitButton } from "connectkit";
 import { useAccount, useSignMessage } from "wagmi";
 import { ethers } from "ethers";
@@ -233,6 +233,37 @@ function resolveQueryValueFromLocation(key: string): string {
   return "";
 }
 
+type CollapsibleSectionProps = {
+  title: string;
+  description?: string;
+  isOpen: boolean;
+  onToggle: () => void;
+  children: ReactNode;
+};
+
+function CollapsibleSection({ title, description, isOpen, onToggle, children }: CollapsibleSectionProps) {
+  return (
+    <section className="mt-6 rounded-2xl border border-white/10 bg-black/15 p-4">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex w-full items-center justify-between gap-3 rounded-xl px-1 py-1 text-left"
+        aria-expanded={isOpen}
+      >
+        <div>
+          <h2 className="text-lg font-extrabold text-white">{title}</h2>
+          {description ? <p className="mt-1 text-xs text-slate-300">{description}</p> : null}
+        </div>
+        <span className="rounded-lg border border-white/15 bg-white/5 px-2 py-1 text-xs font-semibold text-slate-200">
+          {isOpen ? "Collapse" : "Expand"}
+        </span>
+      </button>
+
+      {isOpen ? <div className="mt-4 space-y-4">{children}</div> : null}
+    </section>
+  );
+}
+
 export default function TelegramMiniAppPage() {
   const { address } = useAccount();
   const { signMessageAsync } = useSignMessage();
@@ -254,6 +285,14 @@ export default function TelegramMiniAppPage() {
   const [groupRegistrationComplete, setGroupRegistrationComplete] = useState(false);
   const [isTelegramWebView, setIsTelegramWebView] = useState(false);
   const [shareableUrl, setShareableUrl] = useState<string>("");
+  const [openSections, setOpenSections] = useState<{ dailyClaim: boolean }>({ dailyClaim: true });
+
+  const toggleSection = (section: "dailyClaim") => {
+    setOpenSections((current) => ({
+      ...current,
+      [section]: !current[section],
+    }));
+  };
 
   const normalizedConnectedWallet = useMemo(() => normalizeWallet(address), [address]);
   const normalizedLinkedWallet = useMemo(() => normalizeWallet(linkedWallet || undefined), [linkedWallet]);
@@ -770,163 +809,170 @@ export default function TelegramMiniAppPage() {
           Verify Telegram session, link or update wallet, then submit your daily EPWX claim.
         </p>
 
-        <div className="mt-6 space-y-3 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-slate-300">Telegram</span>
-            <span className="font-semibold text-emerald-300">
-              {loadingAuth ? "Checking..." : telegramUser ? "Verified" : "Not verified"}
-            </span>
+        <CollapsibleSection
+          title="Daily Claim"
+          description="Collapse this section when not needed. New collapsible sections can be added with the same component."
+          isOpen={openSections.dailyClaim}
+          onToggle={() => toggleSection("dailyClaim")}
+        >
+          <div className="space-y-3 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-slate-300">Telegram</span>
+              <span className="font-semibold text-emerald-300">
+                {loadingAuth ? "Checking..." : telegramUser ? "Verified" : "Not verified"}
+              </span>
+            </div>
+            <div className="grid grid-cols-[auto,1fr] items-center gap-3">
+              <span className="text-slate-300">Telegram user</span>
+              <span
+                className="truncate text-right font-mono text-xs text-slate-200"
+                title={telegramUser?.username || telegramUser?.id || "-"}
+              >
+                {telegramUser?.username || telegramUser?.id || "-"}
+              </span>
+            </div>
+            <div className="grid grid-cols-[auto,1fr] items-center gap-3">
+              <span className="text-slate-300">Linked wallet</span>
+              <span
+                className="truncate text-right font-mono text-xs text-slate-200"
+                title={normalizedLinkedWallet || "-"}
+              >
+                {normalizedLinkedWallet ? shortenAddress(normalizedLinkedWallet) : "-"}
+              </span>
+            </div>
+            <div className="grid grid-cols-[auto,1fr] items-center gap-3">
+              <span className="text-slate-300">Connected wallet</span>
+              <span
+                className="truncate text-right font-mono text-xs text-slate-200"
+                title={normalizedConnectedWallet || "-"}
+              >
+                {normalizedConnectedWallet ? shortenAddress(normalizedConnectedWallet) : "-"}
+              </span>
+            </div>
+            {normalizedLinkedWallet && normalizedConnectedWallet && normalizedLinkedWallet !== normalizedConnectedWallet ? (
+              <div className="rounded-xl border border-orange-200/35 bg-orange-300/10 px-3 py-2 text-center text-orange-100">
+                Connected wallet is different from linked wallet. Tap Update Linked Wallet to switch.
+              </div>
+            ) : null}
+            {remaining ? (
+              <div className="rounded-xl border border-amber-300/30 bg-amber-300/10 px-3 py-2 text-center text-amber-100">
+                Next claim in {remaining}
+              </div>
+            ) : null}
           </div>
-          <div className="grid grid-cols-[auto,1fr] items-center gap-3">
-            <span className="text-slate-300">Telegram user</span>
-            <span
-              className="truncate text-right font-mono text-xs text-slate-200"
-              title={telegramUser?.username || telegramUser?.id || "-"}
-            >
-              {telegramUser?.username || telegramUser?.id || "-"}
-            </span>
-          </div>
-          <div className="grid grid-cols-[auto,1fr] items-center gap-3">
-            <span className="text-slate-300">Linked wallet</span>
-            <span
-              className="truncate text-right font-mono text-xs text-slate-200"
-              title={normalizedLinkedWallet || "-"}
-            >
-              {normalizedLinkedWallet ? shortenAddress(normalizedLinkedWallet) : "-"}
-            </span>
-          </div>
-          <div className="grid grid-cols-[auto,1fr] items-center gap-3">
-            <span className="text-slate-300">Connected wallet</span>
-            <span
-              className="truncate text-right font-mono text-xs text-slate-200"
-              title={normalizedConnectedWallet || "-"}
-            >
-              {normalizedConnectedWallet ? shortenAddress(normalizedConnectedWallet) : "-"}
-            </span>
-          </div>
-          {normalizedLinkedWallet && normalizedConnectedWallet && normalizedLinkedWallet !== normalizedConnectedWallet ? (
-            <div className="rounded-xl border border-orange-200/35 bg-orange-300/10 px-3 py-2 text-center text-orange-100">
-              Connected wallet is different from linked wallet. Tap Update Linked Wallet to switch.
+
+          {isTelegramWebView ? (
+            <div className="space-y-3 rounded-2xl border border-orange-300/30 bg-orange-300/10 p-4 text-sm text-orange-50">
+              <p>
+                Coinbase and MetaMask wallet connections can fail inside Telegram&apos;s in-app browser. If a wallet shows a smart-wallet or URL-scheme error, open this Mini App in an external browser or in the wallet&apos;s own browser instead.
+              </p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={handleOpenInExternalBrowser}
+                  className="rounded-xl border border-orange-200/40 bg-orange-300/15 px-4 py-3 font-semibold text-orange-50 transition hover:bg-orange-300/25"
+                >
+                  Open In External Browser
+                </button>
+                <button
+                  type="button"
+                  onClick={handleOpenInMetaMaskBrowser}
+                  className="rounded-xl border border-orange-200/40 bg-orange-300/15 px-4 py-3 font-semibold text-orange-50 transition hover:bg-orange-300/25"
+                >
+                  Open In MetaMask Browser
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCopyMiniAppLink}
+                  className="rounded-xl border border-orange-200/40 bg-orange-300/15 px-4 py-3 font-semibold text-orange-50 transition hover:bg-orange-300/25"
+                >
+                  Copy Mini App Link
+                </button>
+              </div>
+              <p className="text-xs text-orange-100/80">
+                For the cleanest test flow, open the copied link in MetaMask mobile browser, Coinbase Wallet browser, or an external browser, then connect and link the wallet there.
+              </p>
             </div>
           ) : null}
-          {remaining ? (
-            <div className="rounded-xl border border-amber-300/30 bg-amber-300/10 px-3 py-2 text-center text-amber-100">
-              Next claim in {remaining}
-            </div>
-          ) : null}
-        </div>
 
-        {isTelegramWebView ? (
-          <div className="mt-4 space-y-3 rounded-2xl border border-orange-300/30 bg-orange-300/10 p-4 text-sm text-orange-50">
-            <p>
-              Coinbase and MetaMask wallet connections can fail inside Telegram&apos;s in-app browser. If a wallet shows a smart-wallet or URL-scheme error, open this Mini App in an external browser or in the wallet&apos;s own browser instead.
+          <div className="rounded-2xl border border-cyan-300/30 bg-cyan-300/10 p-4 text-sm text-cyan-50">
+            <p className="font-semibold">Group owner quick setup</p>
+            <p className="mt-1 text-xs text-cyan-100/90">
+              Add @epwx_bot to your Telegram group first. Then promote it as admin and run /registergroup inside the group.
             </p>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <button
-                type="button"
-                onClick={handleOpenInExternalBrowser}
-                className="rounded-xl border border-orange-200/40 bg-orange-300/15 px-4 py-3 font-semibold text-orange-50 transition hover:bg-orange-300/25"
-              >
-                Open In External Browser
-              </button>
-              <button
-                type="button"
-                onClick={handleOpenInMetaMaskBrowser}
-                className="rounded-xl border border-orange-200/40 bg-orange-300/15 px-4 py-3 font-semibold text-orange-50 transition hover:bg-orange-300/25"
-              >
-                Open In MetaMask Browser
-              </button>
-              <button
-                type="button"
-                onClick={handleCopyMiniAppLink}
-                className="rounded-xl border border-orange-200/40 bg-orange-300/15 px-4 py-3 font-semibold text-orange-50 transition hover:bg-orange-300/25"
-              >
-                Copy Mini App Link
-              </button>
-            </div>
-            <p className="text-xs text-orange-100/80">
-              For the cleanest test flow, open the copied link in MetaMask mobile browser, Coinbase Wallet browser, or an external browser, then connect and link the wallet there.
+            <p className="mt-1 text-xs text-cyan-100/90">
+              After registration, run /postdailyclaimbutton in the group and pin that Daily Claim post so members can claim easily.
             </p>
-          </div>
-        ) : null}
-
-        <div className="mt-4 rounded-2xl border border-cyan-300/30 bg-cyan-300/10 p-4 text-sm text-cyan-50">
-          <p className="font-semibold">Group owner quick setup</p>
-          <p className="mt-1 text-xs text-cyan-100/90">
-            Add @epwx_bot to your Telegram group first. Then promote it as admin and run /registergroup inside the group.
-          </p>
-          <p className="mt-1 text-xs text-cyan-100/90">
-            After registration, run /postdailyclaimbutton in the group and pin that Daily Claim post so members can claim easily.
-          </p>
-          <p className="mt-2 text-xs font-semibold text-emerald-100">
-            Reward rule: Group owner receives 10,000 EPWX for each user who successfully submits a daily claim from that group context. This is a lifetime recurring reward model, so owners continue earning per eligible user, per day.
-          </p>
-          <button
-            type="button"
-            onClick={handleAddBotToGroup}
-            className="mt-3 w-full rounded-xl border border-cyan-200/40 bg-cyan-300/20 px-4 py-3 text-sm font-bold text-cyan-50 transition hover:bg-cyan-300/30"
-          >
-            Add @epwx_bot To Group
-          </button>
-        </div>
-
-        <div className="mt-6 flex justify-center">
-          <ConnectKitButton />
-        </div>
-
-        <div className="mt-4 grid gap-3">
-          {registerGroupId && !groupRegistrationComplete ? (
+            <p className="mt-2 text-xs font-semibold text-emerald-100">
+              Reward rule: Group owner receives 10,000 EPWX for each user who successfully submits a daily claim from that group context. This is a lifetime recurring reward model, so owners continue earning per eligible user, per day.
+            </p>
             <button
               type="button"
-              disabled={busy || !telegramUser || !canClaim}
-              onClick={handleRegisterGroup}
-              className="rounded-xl border border-fuchsia-200/40 bg-fuchsia-300/15 px-4 py-3 font-semibold text-fuchsia-50 transition hover:bg-fuchsia-300/25 disabled:cursor-not-allowed disabled:opacity-50"
+              onClick={handleAddBotToGroup}
+              className="mt-3 w-full rounded-xl border border-cyan-200/40 bg-cyan-300/20 px-4 py-3 text-sm font-bold text-cyan-50 transition hover:bg-cyan-300/30"
             >
-              {activeAction === "register" ? "Processing..." : "Register This Group For Owner Rewards"}
+              Add @epwx_bot To Group
             </button>
-          ) : groupRegistrationComplete ? (
-            <div className="rounded-xl border border-emerald-200/30 bg-emerald-300/10 px-4 py-3 text-center text-sm font-semibold text-emerald-100">
-              Group already registered for owner rewards.
+          </div>
+
+          <div className="flex justify-center">
+            <ConnectKitButton />
+          </div>
+
+          <div className="grid gap-3">
+            {registerGroupId && !groupRegistrationComplete ? (
+              <button
+                type="button"
+                disabled={busy || !telegramUser || !canClaim}
+                onClick={handleRegisterGroup}
+                className="rounded-xl border border-fuchsia-200/40 bg-fuchsia-300/15 px-4 py-3 font-semibold text-fuchsia-50 transition hover:bg-fuchsia-300/25 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {activeAction === "register" ? "Processing..." : "Register This Group For Owner Rewards"}
+              </button>
+            ) : groupRegistrationComplete ? (
+              <div className="rounded-xl border border-emerald-200/30 bg-emerald-300/10 px-4 py-3 text-center text-sm font-semibold text-emerald-100">
+                Group already registered for owner rewards.
+              </div>
+            ) : null}
+
+            <button
+              type="button"
+              disabled={busy || !telegramUser || !normalizedConnectedWallet}
+              onClick={handleLinkWallet}
+              className="rounded-xl border border-cyan-200/40 bg-cyan-300/15 px-4 py-3 font-semibold text-cyan-50 transition hover:bg-cyan-300/25 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {activeAction === "link" ? "Processing..." : normalizedLinkedWallet ? "Update Linked Wallet" : "Link Wallet"}
+            </button>
+
+            <button
+              type="button"
+              disabled={claimDisabled}
+              onClick={handleDailyClaim}
+              className="rounded-xl border border-emerald-200/40 bg-emerald-300/15 px-4 py-3 font-semibold text-emerald-50 transition hover:bg-emerald-300/25 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {activeAction === "claim" ? "Submitting..." : "Request Daily Claim"}
+            </button>
+
+            {claimDisabledReason ? (
+              <p className="text-center text-xs text-slate-300">{claimDisabledReason}</p>
+            ) : null}
+          </div>
+
+          {awaitingWalletSignature ? (
+            <div className="rounded-xl border border-amber-200/35 bg-amber-300/10 px-4 py-3 text-sm text-amber-100">
+              <p className="font-semibold">Action required in wallet app</p>
+              <p className="mt-1 text-amber-50/90">
+                This request is waiting for signature approval. Switch to MetaMask or Coinbase Wallet, approve the signature popup, then return to this page.
+              </p>
             </div>
           ) : null}
 
-          <button
-            type="button"
-            disabled={busy || !telegramUser || !normalizedConnectedWallet}
-            onClick={handleLinkWallet}
-            className="rounded-xl border border-cyan-200/40 bg-cyan-300/15 px-4 py-3 font-semibold text-cyan-50 transition hover:bg-cyan-300/25 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {activeAction === "link" ? "Processing..." : normalizedLinkedWallet ? "Update Linked Wallet" : "Link Wallet"}
-          </button>
-
-          <button
-            type="button"
-            disabled={claimDisabled}
-            onClick={handleDailyClaim}
-            className="rounded-xl border border-emerald-200/40 bg-emerald-300/15 px-4 py-3 font-semibold text-emerald-50 transition hover:bg-emerald-300/25 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {activeAction === "claim" ? "Submitting..." : "Request Daily Claim"}
-          </button>
-
-          {claimDisabledReason ? (
-            <p className="text-center text-xs text-slate-300">{claimDisabledReason}</p>
+          {status ? (
+            <div className="rounded-xl border border-white/15 bg-white/10 px-3 py-3 text-sm text-slate-100">
+              {status}
+            </div>
           ) : null}
-        </div>
-
-        {awaitingWalletSignature ? (
-          <div className="mt-4 rounded-xl border border-amber-200/35 bg-amber-300/10 px-4 py-3 text-sm text-amber-100">
-            <p className="font-semibold">Action required in wallet app</p>
-            <p className="mt-1 text-amber-50/90">
-              This request is waiting for signature approval. Switch to MetaMask or Coinbase Wallet, approve the signature popup, then return to this page.
-            </p>
-          </div>
-        ) : null}
-
-        {status ? (
-          <div className="mt-4 rounded-xl border border-white/15 bg-white/10 px-3 py-3 text-sm text-slate-100">
-            {status}
-          </div>
-        ) : null}
+        </CollapsibleSection>
       </section>
     </main>
   );
