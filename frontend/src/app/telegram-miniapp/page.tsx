@@ -314,8 +314,8 @@ export default function TelegramMiniAppPage() {
   const [isTelegramWebView, setIsTelegramWebView] = useState(false);
   const [shareableUrl, setShareableUrl] = useState<string>("");
   const [openSections, setOpenSections] = useState<{ walletBalance: boolean; swap: boolean; groupOwner: boolean; dailyClaim: boolean }>({
-    walletBalance: true,
-    swap: true,
+    walletBalance: false,
+    swap: false,
     groupOwner: false,
     dailyClaim: true,
   });
