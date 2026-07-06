@@ -890,8 +890,8 @@ export default function TelegramMiniAppPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-950 via-indigo-950 to-slate-950 px-4 pb-8 pt-10 text-slate-100 sm:pt-8">
-      <section className="relative mx-auto max-w-lg overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 p-6 pt-12 shadow-2xl sm:pt-10">
+    <main className="min-h-screen bg-gradient-to-b from-slate-950 via-indigo-950 to-slate-950 px-4 pb-8 pt-4 text-slate-100 sm:pt-6">
+      <section className="relative mx-auto max-w-lg overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 p-6 pt-10 shadow-2xl sm:pt-9">
         <div className="absolute -left-10 -top-12 h-40 w-40 rounded-full bg-white/15 blur-3xl" />
         <div className="absolute -bottom-12 -right-8 h-48 w-48 rounded-full bg-white/15 blur-3xl" />
         <div className="relative z-10">
