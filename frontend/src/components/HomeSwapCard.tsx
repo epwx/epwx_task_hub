@@ -64,7 +64,7 @@ type HomeSwapCardProps = {
 };
 
 export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
-  const { address } = useAccount();
+  const { address, connector } = useAccount();
   const { data: baseEthBalance } = useBalance({
     address,
     chainId: base.id,
@@ -173,12 +173,23 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
     setStatus(null);
 
     try {
-      if (!window.ethereum) {
-        throw new Error('A wallet with Base support is required to swap');
+      setSwapLoading(true);
+      const connectorProvider = connector ? await connector.getProvider() : null;
+      const injectedProvider = typeof window !== 'undefined' ? window.ethereum : null;
+      const activeProvider = connectorProvider || injectedProvider;
+
+      if (!activeProvider) {
+        throw new Error('No compatible wallet provider found. Reconnect your Base wallet and try again.');
       }
 
-      setSwapLoading(true);
-      const provider = new ethers.BrowserProvider(window.ethereum);
+      const provider = new ethers.BrowserProvider(activeProvider);
+
+      try {
+        await provider.send('wallet_switchEthereumChain', [{ chainId: '0x2105' }]);
+      } catch {
+        // Continue and let wallet/provider handle chain mismatch if auto-switch is unsupported.
+      }
+
       const accounts = await provider.send('eth_requestAccounts', []);
       const userAddress = accounts[0] || address;
 
