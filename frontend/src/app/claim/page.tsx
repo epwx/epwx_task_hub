@@ -33,6 +33,8 @@ function ClaimPage() {
   const [merchantError, setMerchantError] = useState<string | null>(null);
   const pageShellClass = "relative overflow-hidden bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-3xl shadow-2xl p-8";
   const centeredMessageClass = "max-w-2xl mx-auto py-16 px-6 text-center";
+  const statusViewportClass = "min-h-[calc(100vh-5rem)] px-4 py-10";
+  const statusCardClass = "mx-auto max-w-2xl rounded-2xl border border-white/15 bg-slate-950/80 px-6 py-5 text-center text-white shadow-xl";
 
   useEffect(() => {
     if (!partnerCode || typeof window === "undefined") {
@@ -92,13 +94,25 @@ function ClaimPage() {
   // ...existing code...
 
   if (merchantError) {
-    return <div className={`${centeredMessageClass} text-red-200`}>{merchantError}</div>;
+    return (
+      <div className={statusViewportClass}>
+        <div className={`${statusCardClass} text-red-200`}>{merchantError}</div>
+      </div>
+    );
   }
   if (partnerCode) {
-    return <div className={`${centeredMessageClass} text-white/80`}>Redirecting to daily claim...</div>;
+    return (
+      <div className={statusViewportClass}>
+        <div className={`${statusCardClass} text-white/80`}>Redirecting to daily claim...</div>
+      </div>
+    );
   }
   if (merchantLat === null || merchantLng === null) {
-    return <div className={`${centeredMessageClass} text-white/80`}>Loading merchant info...</div>;
+    return (
+      <div className={statusViewportClass}>
+        <div className={`${statusCardClass} text-white/80`}>Loading merchant info...</div>
+      </div>
+    );
   }
   const handleRetryLocation = () => {
     setGeoError(null);
@@ -151,10 +165,22 @@ function ClaimPage() {
     );
   }
   if (distance === null) {
-    return <div className={`${centeredMessageClass} text-white/80`}>Checking your location...</div>;
+    return (
+      <div className={statusViewportClass}>
+        <div className={`${statusCardClass} text-white/80`}>Checking your location...</div>
+      </div>
+    );
   }
   if (distance > 50) {
-    return <div className={`${centeredMessageClass} text-yellow-200`}>You must be at the merchant location to claim rewards.</div>;
+    return (
+      <div className={statusViewportClass}>
+        <div className="mx-auto max-w-lg rounded-2xl border border-amber-300 bg-amber-100 px-5 py-4 text-amber-900 shadow-sm">
+          <p className="text-base font-semibold leading-relaxed sm:text-lg">
+            You must be at the merchant location to claim rewards.
+          </p>
+        </div>
+      </div>
+    );
   }
   return (
     <div className="max-w-md mx-auto py-8">
