@@ -22,21 +22,24 @@ export async function generateReferralCode() {
 export async function registerPartner(partnerData) {
   const { name, walletAddress, telegramChannel, xProfile, verificationImagePath } = partnerData;
 
+  // Normalize wallet address to lowercase for consistency
+  const normalizedWallet = walletAddress.toLowerCase();
+
+  // Validate wallet address format
+  if (!/^0x[a-fA-F0-9]{40}$/.test(normalizedWallet)) {
+    throw new Error('Invalid wallet address format. Must be 0x followed by 40 hex characters.');
+  }
+
   // Check if partner already exists
-  const existing = await Partner.findOne({ where: { walletAddress: walletAddress.toLowerCase() } });
+  const existing = await Partner.findOne({ where: { walletAddress: normalizedWallet } });
   if (existing) {
-    throw new Error('Partner already registered with this wallet');
+    throw new Error('Partner already registered with this wallet address');
   }
 
   // Check if name is already taken
   const nameExists = await Partner.findOne({ where: { name } });
   if (nameExists) {
-    throw new Error('Partner name already exists');
-  }
-
-  // Validate wallet address format
-  if (!/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) {
-    throw new Error('Invalid wallet address format');
+    throw new Error('Partner name already exists. Please choose a different name.');
   }
 
   // Verification image is required
@@ -46,7 +49,7 @@ export async function registerPartner(partnerData) {
 
   const partner = await Partner.create({
     name,
-    walletAddress: walletAddress.toLowerCase(),
+    walletAddress: normalizedWallet,
     telegramChannel,
     xProfile,
     verificationImagePath,

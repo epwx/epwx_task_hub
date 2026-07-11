@@ -53,12 +53,20 @@ router.post('/register', upload.single('verificationImage'), async (req, res) =>
     const { name, walletAddress, telegramChannel, xProfile } = req.body;
     if (!name || !walletAddress) return res.status(400).json({ success: false, message: 'Name and wallet address are required' });
     if (!req.file) return res.status(400).json({ success: false, message: 'Twitter followers screenshot is required for verification' });
+    
+    // Validate wallet address format
+    if (!/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) {
+      return res.status(400).json({ success: false, message: 'Invalid wallet address format. Must be 0x followed by 40 hex characters.' });
+    }
+    
     const verificationImagePath = path.relative(process.cwd(), req.file.path);
     const partner = await registerPartner({ name, walletAddress, telegramChannel, xProfile, verificationImagePath });
     res.json({ success: true, message: 'Partner registered successfully. Awaiting admin verification.', partner: { id: partner.id, name: partner.name, walletAddress: partner.walletAddress, status: partner.status, totalEarnings: partner.totalEarnings } });
   } catch (error) {
     console.error('Partner registration error:', error);
-    res.status(400).json({ success: false, message: error.message });
+    // Extract meaningful error message
+    const message = error?.message || 'Failed to register partner';
+    res.status(400).json({ success: false, message });
   }
 });
 
