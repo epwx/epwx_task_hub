@@ -1,6 +1,12 @@
 const FRONTEND_URL = (process.env.FRONTEND_URL || "https://tasks.epowex.com").replace(/\/$/, "");
 const API_BASE_URL = (process.env.API_BASE_URL || "https://api.epowex.com").replace(/\/$/, "");
 const REQUEST_TIMEOUT_MS = Number.parseInt(process.env.SMOKE_TIMEOUT_MS || "20000", 10);
+const SMOKE_MAX_ATTEMPTS = Math.max(1, Number.parseInt(process.env.SMOKE_MAX_ATTEMPTS || "5", 10));
+const SMOKE_RETRY_DELAY_MS = Math.max(0, Number.parseInt(process.env.SMOKE_RETRY_DELAY_MS || "3000", 10));
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 function withTimeout(signal, timeoutMs) {
   if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
@@ -103,10 +109,54 @@ async function runCheck(check) {
   };
 }
 
+function shouldRetry(result) {
+  if (result.ok) {
+    return false;
+  }
+
+  if (typeof result.status !== "number") {
+    return true;
+  }
+
+  return result.status >= 500 || result.status === 429;
+}
+
+async function runCheckWithRetries(check) {
+  let lastResult;
+
+  for (let attempt = 1; attempt <= SMOKE_MAX_ATTEMPTS; attempt += 1) {
+    const result = await runCheck(check);
+    if (result.ok) {
+      return {
+        ...result,
+        attempts: attempt,
+      };
+    }
+
+    lastResult = {
+      ...result,
+      attempts: attempt,
+    };
+
+    if (attempt >= SMOKE_MAX_ATTEMPTS || !shouldRetry(result)) {
+      return lastResult;
+    }
+
+    console.log(
+      `       Retrying in ${SMOKE_RETRY_DELAY_MS}ms (attempt ${attempt + 1}/${SMOKE_MAX_ATTEMPTS}) due to: ${result.reason}`
+    );
+    await sleep(SMOKE_RETRY_DELAY_MS);
+  }
+
+  return lastResult;
+}
+
 async function main() {
   console.log(`Running post-deploy smoke checks`);
   console.log(`FRONTEND_URL=${FRONTEND_URL}`);
   console.log(`API_BASE_URL=${API_BASE_URL}`);
+  console.log(`SMOKE_MAX_ATTEMPTS=${SMOKE_MAX_ATTEMPTS}`);
+  console.log(`SMOKE_RETRY_DELAY_MS=${SMOKE_RETRY_DELAY_MS}`);
 
   const checks = [
     {
@@ -161,11 +211,12 @@ async function main() {
 
   const results = [];
   for (const check of checks) {
-    const result = await runCheck(check);
+    const result = await runCheckWithRetries(check);
     results.push(result);
     const prefix = result.ok ? "PASS" : "FAIL";
     const statusPart = result.status ? ` status=${result.status}` : "";
-    console.log(`[${prefix}] ${result.name}${statusPart} (${result.durationMs}ms)`);
+    const attemptPart = result.attempts > 1 ? ` attempts=${result.attempts}` : "";
+    console.log(`[${prefix}] ${result.name}${statusPart}${attemptPart} (${result.durationMs}ms)`);
     if (!result.ok) {
       console.log(`       ${result.reason}`);
     }
