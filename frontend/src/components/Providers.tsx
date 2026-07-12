@@ -32,6 +32,7 @@ function WalletReturnSync() {
   const wasConnectedRef = useRef(isConnected);
   const reconnectBurstIntervalRef = useRef<number | null>(null);
   const reconnectBurstTimeoutRef = useRef<number | null>(null);
+  const isTelegramWebView = typeof window !== 'undefined' && Boolean(window.Telegram?.WebApp);
 
   const clearReconnectBurst = useCallback(() => {
     if (reconnectBurstIntervalRef.current !== null) {
@@ -45,6 +46,10 @@ function WalletReturnSync() {
   }, []);
 
   useEffect(() => {
+    if (!isTelegramWebView) {
+      return;
+    }
+
     const syncWalletState = () => {
       void reconnect();
     };
@@ -88,7 +93,7 @@ function WalletReturnSync() {
       window.removeEventListener('pageshow', onPageShow);
       document.removeEventListener('visibilitychange', onVisibilityChange);
     };
-  }, [clearReconnectBurst, reconnect]);
+  }, [clearReconnectBurst, isTelegramWebView, reconnect]);
 
   useEffect(() => {
     if (isConnected) {
