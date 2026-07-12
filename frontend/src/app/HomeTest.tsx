@@ -1335,12 +1335,6 @@ export default function HomeTest() {
       return;
     }
 
-    const handleFocus = () => {
-      checkVerification();
-    };
-
-    window.addEventListener('focus', handleFocus);
-
     const intervalId = isTelegramVerified
       ? null
       : window.setInterval(checkVerification, TELEGRAM_VERIFICATION_RECHECK_INTERVAL_MS);
@@ -1349,7 +1343,6 @@ export default function HomeTest() {
       if (intervalId !== null) {
         window.clearInterval(intervalId);
       }
-      window.removeEventListener('focus', handleFocus);
     };
   }, [address, isTelegramVerified]);
 

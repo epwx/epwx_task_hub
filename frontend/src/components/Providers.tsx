@@ -32,7 +32,7 @@ function WalletReturnSync() {
   const wasConnectedRef = useRef(isConnected);
   const reconnectBurstIntervalRef = useRef<number | null>(null);
   const reconnectBurstTimeoutRef = useRef<number | null>(null);
-  const isTelegramWebView = typeof window !== 'undefined' && Boolean(window.Telegram?.WebApp);
+  const isTelegramWebView = typeof window !== 'undefined' && Boolean(window.Telegram?.WebApp?.initData);
 
   const clearReconnectBurst = useCallback(() => {
     if (reconnectBurstIntervalRef.current !== null) {
