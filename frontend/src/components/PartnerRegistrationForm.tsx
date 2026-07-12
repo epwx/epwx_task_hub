@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import toast from "react-hot-toast";
+import imageCompression from "browser-image-compression";
 
 interface PartnerRegistrationFormProps {
   walletAddress: string;
@@ -30,6 +31,7 @@ export default function PartnerRegistrationForm({
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -45,12 +47,24 @@ export default function PartnerRegistrationForm({
       return;
     }
 
-    setVerificationImage(file);
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setPreviewUrl(reader.result as string);
-    };
-    reader.readAsDataURL(file);
+    try {
+      const compressedFile = await imageCompression(file, {
+        maxSizeMB: 0.8,
+        maxWidthOrHeight: 1280,
+        useWebWorker: true,
+      });
+
+      setVerificationImage(compressedFile);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewUrl(reader.result as string);
+      };
+      reader.readAsDataURL(compressedFile);
+    } catch {
+      toast.error("Image compression failed. Please try another screenshot.");
+      setVerificationImage(null);
+      setPreviewUrl(null);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
