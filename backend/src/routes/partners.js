@@ -61,7 +61,7 @@ router.post('/register', upload.single('verificationImage'), async (req, res) =>
     
     const verificationImagePath = path.relative(process.cwd(), req.file.path);
     const partner = await registerPartner({ name, walletAddress, telegramChannel, xProfile, verificationImagePath });
-    res.json({ success: true, message: 'Partner registered successfully. Awaiting admin verification.', partner: { id: partner.id, name: partner.name, walletAddress: partner.walletAddress, status: partner.status, totalEarnings: partner.totalEarnings } });
+    res.json({ success: true, message: 'Partner registered successfully. Awaiting admin verification.', partner: { id: partner.id, name: partner.name, walletAddress: partner.walletAddress, status: partner.status, totalEarnings: partner.totalEarnings, createdAt: partner.createdAt } });
   } catch (error) {
     console.error('Partner registration error:', error);
     // Extract meaningful error message

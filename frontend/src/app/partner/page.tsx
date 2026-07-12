@@ -24,6 +24,13 @@ export default function PartnerPage() {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"register" | "dashboard">("register");
 
+  const getAppliedOnDate = (createdAt?: string) => {
+    if (!createdAt) return "-";
+    const parsedDate = new Date(createdAt);
+    if (Number.isNaN(parsedDate.getTime())) return "-";
+    return parsedDate.toLocaleDateString();
+  };
+
   // Check if wallet has a partner registered
   useEffect(() => {
     if (!isConnected || !address) {
@@ -133,7 +140,7 @@ export default function PartnerPage() {
                 <div>
                   <p className="text-slate-400">Applied on:</p>
                   <p className="mt-1 text-slate-300">
-                    {new Date(partner.createdAt).toLocaleDateString()}
+                    {getAppliedOnDate(partner.createdAt)}
                   </p>
                 </div>
               </div>
