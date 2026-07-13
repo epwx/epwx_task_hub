@@ -186,11 +186,10 @@ When asked to redesign EPWX UI, follow this document as the default blueprint un
 
 ### Latest Applied UI Work
 - Date: 2026-07-13
-- Status: Implemented and lint-clean
+- Status: Phase 4 non-home pages implemented, lint-clean, and build-clean
 - Commit sequence:
-  - 71a3e0f - feat(frontend): professionalize home UI and unify visual system
-  - a68fda3 - chore(frontend): align eslint with next14 and fix blocking lint issues
-  - 0ec3eaa - refactor(frontend): remove hook suppressions with callback-safe admin fetch patterns
+  - 3dce3a1 - feat(frontend): restyle tasks and cashback pages
+  - 1100fe8 - feat(frontend): restyle partner portal shell
 
 ### Files Updated In This UI Rollout
 - frontend/src/app/HomeTest.tsx
@@ -208,6 +207,9 @@ When asked to redesign EPWX UI, follow this document as the default blueprint un
 - frontend/src/app/admin/merchants.tsx
 - frontend/src/app/admin/partners/page.tsx
 - frontend/src/app/claim/page.tsx
+- frontend/src/app/tasks/page.tsx
+- frontend/src/app/partner/page.tsx
+- frontend/src/app/cashback/page.tsx
 - frontend/src/components/MerchantClaimsTable.tsx
 - frontend/src/components/PartnerRegistrationForm.tsx
 - frontend/src/app/user-guide/page.tsx
