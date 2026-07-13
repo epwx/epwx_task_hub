@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAccount } from 'wagmi';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -14,6 +14,21 @@ export function TwitterConnect() {
   const [isLoading, setIsLoading] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
 
+  const checkTwitterStatus = useCallback(async () => {
+    if (!address) return;
+
+    setIsChecking(true);
+    try {
+      const response = await axios.get(`${API_URL}/api/twitter/status/${address}`);
+      setIsConnected(response.data.connected);
+      setTwitterUsername(response.data.twitterUsername);
+    } catch (error) {
+      console.error('Error checking Twitter status:', error);
+    } finally {
+      setIsChecking(false);
+    }
+  }, [address]);
+
   // Check Twitter connection status on mount and when wallet changes
   useEffect(() => {
     if (address) {
@@ -23,7 +38,7 @@ export function TwitterConnect() {
       setTwitterUsername(null);
       setIsChecking(false);
     }
-  }, [address]);
+  }, [address, checkTwitterStatus]);
 
   // Check URL for OAuth callback success
   useEffect(() => {
@@ -38,22 +53,7 @@ export function TwitterConnect() {
       toast.error('Failed to connect X/Twitter account');
       window.history.replaceState({}, '', window.location.pathname);
     }
-  }, []);
-
-  const checkTwitterStatus = async () => {
-    if (!address) return;
-    
-    setIsChecking(true);
-    try {
-      const response = await axios.get(`${API_URL}/api/twitter/status/${address}`);
-      setIsConnected(response.data.connected);
-      setTwitterUsername(response.data.twitterUsername);
-    } catch (error) {
-      console.error('Error checking Twitter status:', error);
-    } finally {
-      setIsChecking(false);
-    }
-  };
+  }, [checkTwitterStatus]);
 
   const handleConnect = async () => {
     if (!address) {
@@ -162,7 +162,7 @@ export function TwitterConnect() {
         {isLoading ? 'Connecting...' : 'Connect X/Twitter Account'}
       </button>
       <p className="mt-3 text-xs text-gray-500 text-center">
-        We'll redirect you to X to authorize access. Your credentials are never stored.
+        We&apos;ll redirect you to X to authorize access. Your credentials are never stored.
       </p>
     </div>
   );

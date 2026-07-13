@@ -57,6 +57,7 @@ typechain-types/
 .cache/
 tmp/
 temp/
+*.tsbuildinfo
 
 # Private keys
 *.key
