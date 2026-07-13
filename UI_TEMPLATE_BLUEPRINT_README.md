@@ -61,6 +61,15 @@ This file captures the approved UI template direction and page-by-page mapping f
     - Home, Draws, Claims, Verify, Profile
   - Remaining destinations under "More"
 
+## Approved Interaction Direction
+- Desktop direction: crypto-native premium shell with a sticky secondary action strip for high-priority actions.
+- Mobile direction: minimal mobile-first bottom action dock for the same core actions.
+- Avoid reintroducing floating left/right edge rails for page actions on future pages.
+- Preferred action placement:
+  - Desktop: sticky utility/action strip below the main header
+  - Mobile: bottom dock with 3 to 5 high-frequency actions
+- Use in-content cards or section CTAs for secondary actions instead of persistent floating pills.
+
 ## Page-by-Page Mapping
 
 ### 1) Home
@@ -186,7 +195,7 @@ When asked to redesign EPWX UI, follow this document as the default blueprint un
 
 ### Latest Applied UI Work
 - Date: 2026-07-13
-- Status: Phase 4 non-home pages implemented, lint-clean, and build-clean
+- Status: Phase 4 non-home pages implemented, home action surface updated to desktop action strip plus mobile dock, lint-clean, and build-clean
 - Commit sequence:
   - 3dce3a1 - feat(frontend): restyle tasks and cashback pages
   - 1100fe8 - feat(frontend): restyle partner portal shell

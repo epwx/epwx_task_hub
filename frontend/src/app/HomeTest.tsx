@@ -1507,6 +1507,13 @@ export default function HomeTest() {
     { label: "Daily Claim", href: "#daily-claim" },
   ];
 
+  const shortcutActionItems: Array<{ section: HomeShortcutSection; label: string; href: string; eyebrow: string }> = [
+    { section: 'buy-epwx', label: 'Buy EPWX', href: '#buy-epwx', eyebrow: 'Swap' },
+    { section: 'burnt-supply', label: 'Burnt Supply', href: '#burnt-supply', eyebrow: 'Tokenomics' },
+    { section: 'latest-winners', label: 'Next Draw', href: '#latest-winners', eyebrow: 'Rewards' },
+    { section: 'daily-claim', label: 'Daily Claim', href: '#daily-claim', eyebrow: 'Claim' },
+  ];
+
   return (
     <div className="relative min-h-screen overflow-x-clip bg-slate-950 text-slate-100">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
@@ -1565,6 +1572,30 @@ export default function HomeTest() {
           </div>
         </div>
       </header>
+
+      <section className="sticky top-[73px] z-20 hidden border-b border-white/10 bg-slate-950/70 backdrop-blur-xl lg:block">
+        <div className="mx-auto flex w-full max-w-7xl items-center gap-4 px-4 py-3">
+          <div className="min-w-0">
+            <div className="text-[11px] font-black uppercase tracking-[0.22em] text-cyan-300">Quick Actions</div>
+            <div className="mt-1 text-sm text-slate-300">Use the desktop action strip instead of floating edge rails.</div>
+          </div>
+          <div className="ml-auto grid flex-1 grid-cols-4 gap-3">
+            {shortcutActionItems.map((item) => (
+              <a
+                key={item.section}
+                href={item.href}
+                onClick={() => setActiveShortcutSection(item.section)}
+                className={`rounded-2xl border px-4 py-3 text-left transition-colors ${activeShortcutSection === item.section ? 'border-emerald-300/40 bg-emerald-400/18 text-emerald-50' : 'border-white/10 bg-white/[0.04] text-white/85 hover:bg-white/[0.08]'}`}
+              >
+                <div className={`text-[10px] font-black uppercase tracking-[0.22em] ${activeShortcutSection === item.section ? 'text-emerald-100/80' : 'text-slate-400'}`}>
+                  {item.eyebrow}
+                </div>
+                <div className="mt-1 text-sm font-bold uppercase tracking-[0.08em]">{item.label}</div>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
 
       <main className="relative z-10 mx-auto grid w-full max-w-7xl flex-1 gap-8 px-4 pb-28 pt-8 lg:grid-cols-[220px_minmax(0,1fr)] lg:pb-12 lg:pt-10">
         <aside className="hidden lg:block">
@@ -2212,67 +2243,17 @@ export default function HomeTest() {
         </div>
       </footer>
       <div className="fixed inset-x-3 bottom-3 z-40 flex gap-2 overflow-x-auto rounded-2xl border border-white/15 bg-slate-950/88 p-2 shadow-[0_18px_40px_rgba(15,23,42,0.35)] backdrop-blur-md [scrollbar-width:none] lg:hidden">
-        <a
-          href="#buy-epwx"
-          onClick={() => setActiveShortcutSection('buy-epwx')}
-          className={`flex min-w-[112px] items-center justify-center rounded-xl px-3 py-2.5 text-center text-[11px] font-black uppercase tracking-[0.14em] text-white transition-colors ${activeShortcutSection === 'buy-epwx' ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-white/8 hover:bg-white/14'}`}
-        >
-          Buy EPWX
-        </a>
-        <a
-          href="#burnt-supply"
-          onClick={() => setActiveShortcutSection('burnt-supply')}
-          className={`flex min-w-[112px] items-center justify-center rounded-xl px-3 py-2.5 text-center text-[11px] font-black uppercase tracking-[0.14em] text-white transition-colors ${activeShortcutSection === 'burnt-supply' ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-white/8 hover:bg-white/14'}`}
-        >
-          90% Burnt
-        </a>
-        <a
-          href="#latest-winners"
-          onClick={() => setActiveShortcutSection('latest-winners')}
-          className={`flex min-w-[112px] items-center justify-center rounded-xl px-3 py-2.5 text-center text-[11px] font-black uppercase tracking-[0.14em] text-white transition-colors ${activeShortcutSection === 'latest-winners' ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-white/8 hover:bg-white/14'}`}
-        >
-          Next Draw
-        </a>
-        <a
-          href="#daily-claim"
-          onClick={() => setActiveShortcutSection('daily-claim')}
-          className={`flex min-w-[112px] items-center justify-center rounded-xl px-3 py-2.5 text-center text-[11px] font-black uppercase tracking-[0.14em] text-white transition-colors ${activeShortcutSection === 'daily-claim' ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-white/8 hover:bg-white/14'}`}
-        >
-          Daily Claim
-        </a>
+        {shortcutActionItems.map((item) => (
+          <a
+            key={item.section}
+            href={item.href}
+            onClick={() => setActiveShortcutSection(item.section)}
+            className={`flex min-w-[112px] items-center justify-center rounded-xl px-3 py-2.5 text-center text-[11px] font-black uppercase tracking-[0.14em] text-white transition-colors ${activeShortcutSection === item.section ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-white/8 hover:bg-white/14'}`}
+          >
+            {item.label === 'Burnt Supply' ? '90% Burnt' : item.label}
+          </a>
+        ))}
       </div>
-      <a
-        href="#buy-epwx"
-        onClick={() => setActiveShortcutSection('buy-epwx')}
-        className={`fixed left-4 top-[34%] z-40 hidden -translate-y-1/2 rounded-full border border-white/15 px-3 py-4 text-xs font-black uppercase tracking-[0.2em] text-white shadow-[0_18px_40px_rgba(15,23,42,0.35)] backdrop-blur-md transition-all hover:left-3 dark:border-white/10 lg:flex ${activeShortcutSection === 'buy-epwx' ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-slate-950/85 hover:bg-slate-900 dark:bg-slate-900/85'}`}
-        style={{ writingMode: 'vertical-rl' }}
-      >
-        Buy EPWX
-      </a>
-      <a
-        href="#burnt-supply"
-        onClick={() => setActiveShortcutSection('burnt-supply')}
-        className={`fixed left-4 top-[66%] z-40 hidden -translate-y-1/2 rounded-full border border-white/15 px-3 py-4 text-xs font-black uppercase tracking-[0.2em] text-white shadow-[0_18px_40px_rgba(15,23,42,0.35)] backdrop-blur-md transition-all hover:left-3 dark:border-white/10 lg:flex ${activeShortcutSection === 'burnt-supply' ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-slate-950/85 hover:bg-slate-900 dark:bg-slate-900/85'}`}
-        style={{ writingMode: 'vertical-rl' }}
-      >
-        90% Burnt
-      </a>
-      <a
-        href="#latest-winners"
-        onClick={() => setActiveShortcutSection('latest-winners')}
-        className={`fixed right-4 top-[34%] z-40 hidden -translate-y-1/2 rounded-full border border-white/15 px-3 py-4 text-xs font-black uppercase tracking-[0.2em] text-white shadow-[0_18px_40px_rgba(15,23,42,0.35)] backdrop-blur-md transition-all hover:right-3 dark:border-white/10 lg:flex ${activeShortcutSection === 'latest-winners' ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-slate-950/85 hover:bg-slate-900 dark:bg-slate-900/85'}`}
-        style={{ writingMode: 'vertical-rl' }}
-      >
-        Next Draw
-      </a>
-      <a
-        href="#daily-claim"
-        onClick={() => setActiveShortcutSection('daily-claim')}
-        className={`fixed right-4 top-[66%] z-40 hidden -translate-y-1/2 rounded-full border border-white/15 px-3 py-4 text-xs font-black uppercase tracking-[0.2em] text-white shadow-[0_18px_40px_rgba(15,23,42,0.35)] backdrop-blur-md transition-all hover:right-3 dark:border-white/10 lg:flex ${activeShortcutSection === 'daily-claim' ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-slate-950/85 hover:bg-slate-900 dark:bg-slate-900/85'}`}
-        style={{ writingMode: 'vertical-rl' }}
-      >
-        Daily Claim
-      </a>
     </div>
   );
 }
