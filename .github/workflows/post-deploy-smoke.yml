@@ -32,4 +32,6 @@ jobs:
         env:
           FRONTEND_URL: ${{ github.event.inputs.frontend_url || github.event.client_payload.frontend_url || 'https://tasks.epowex.com' }}
           API_BASE_URL: ${{ github.event.inputs.api_base_url || github.event.client_payload.api_base_url || 'https://api.epowex.com' }}
+          SMOKE_MAX_ATTEMPTS: '10'
+          SMOKE_RETRY_DELAY_MS: '5000'
         run: node scripts/post-deploy-smoke.mjs
