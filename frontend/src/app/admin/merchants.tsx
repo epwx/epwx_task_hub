@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useAccount } from "wagmi";
 import { ConnectKitButton } from "connectkit";
 
@@ -14,13 +14,17 @@ const getAdminWallets = () => {
 
 export default function MerchantAdminPage() {
   const { address } = useAccount();
+  const adminWallets = useMemo(() => getAdminWallets(), []);
+  const isAdmin = useMemo(() => {
+    return !!address && adminWallets.includes(address.toLowerCase());
+  }, [address, adminWallets]);
   const [form, setForm] = useState({ name: "", wallet: "", address: "", longitude: "", latitude: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [merchants, setMerchants] = useState<any[]>([]);
 
-  const fetchMerchants = async () => {
+  const fetchMerchants = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -31,14 +35,13 @@ export default function MerchantAdminPage() {
       setError(e?.message || "Failed to fetch merchants");
     }
     setLoading(false);
-  };
+  }, [address]);
 
   useEffect(() => {
-    const adminWallets = getAdminWallets();
-    if (address && adminWallets.includes(address.toLowerCase())) {
+    if (isAdmin) {
       fetchMerchants();
     }
-  }, [address]);
+  }, [fetchMerchants, isAdmin]);
 
   const handleChange = (e: any) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -69,8 +72,7 @@ export default function MerchantAdminPage() {
     setLoading(false);
   };
 
-  const adminWallets = getAdminWallets();
-  if (!address || !adminWallets.includes(address.toLowerCase())) {
+  if (!isAdmin) {
     return (
       <div className="flex flex-col items-center justify-center py-16">
         <div className="mb-4 text-lg text-gray-700 font-semibold">Please connect the admin wallet to access this page.</div>

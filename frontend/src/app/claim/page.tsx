@@ -140,6 +140,7 @@ function ClaimPage() {
           Please enable GPS/location services on your device and allow location access in your browser settings to claim your reward.
         </span>
         <div className="mt-4 flex flex-col items-center gap-4">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/enable-location-example.png" alt="Enable location example (Android)" className="max-w-xs rounded-2xl shadow-2xl border border-white/20" />
           <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-3 max-w-xs text-left text-sm text-white/90">
             <div className="font-semibold mb-1">iPhone (iOS) instructions:</div>

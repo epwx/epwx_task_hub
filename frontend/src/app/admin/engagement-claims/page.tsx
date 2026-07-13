@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ConnectKitButton } from "connectkit";
 import { useAccount, usePublicClient, useWriteContract } from "wagmi";
 import { ethers } from "ethers";
@@ -179,7 +179,7 @@ export default function AdminEngagementClaimsPage() {
     return `/claim/engagement?campaignId=${campaignId}`;
   };
 
-  const fetchClaims = async () => {
+  const fetchClaims = useCallback(async () => {
     if (!address || !isAdmin) {
       return;
     }
@@ -204,9 +204,9 @@ export default function AdminEngagementClaimsPage() {
     }
 
     setLoading(false);
-  };
+  }, [address, claimsTaskTypeFilter, isAdmin, statusFilter]);
 
-  const fetchCampaigns = async (page = campaignsPage) => {
+  const fetchCampaigns = useCallback(async (page = campaignsPage) => {
     if (!address || !isAdmin) {
       return;
     }
@@ -239,15 +239,15 @@ export default function AdminEngagementClaimsPage() {
     } catch (fetchError: any) {
       setError(fetchError?.message || "Failed to fetch engagement campaigns");
     }
-  };
+  }, [address, campaignsPage, campaignsStatusFilter, campaignsTaskTypeFilter, isAdmin]);
 
   useEffect(() => {
     fetchClaims();
-  }, [address, statusFilter, claimsTaskTypeFilter]);
+  }, [fetchClaims]);
 
   useEffect(() => {
     fetchCampaigns(campaignsPage);
-  }, [address, campaignsPage, campaignsTaskTypeFilter, campaignsStatusFilter]);
+  }, [campaignsPage, fetchCampaigns]);
 
   useEffect(() => {
     setClaimsPage(1);

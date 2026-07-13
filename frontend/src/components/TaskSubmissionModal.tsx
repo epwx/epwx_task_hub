@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAccount } from 'wagmi';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -32,19 +32,9 @@ export function TaskSubmissionModal({
   const [isTwitterConnected, setIsTwitterConnected] = useState(false);
   const [verifiedTwitterUsername, setVerifiedTwitterUsername] = useState<string | null>(null);
 
-  useEffect(() => {
-    checkTwitterStatus();
-    // Also check on URL change (OAuth callback)
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('twitter_connected') === 'true') {
-      checkTwitterStatus();
-      window.history.replaceState({}, '', window.location.pathname);
-    }
-  }, [address]);
-
-  const checkTwitterStatus = async () => {
+  const checkTwitterStatus = useCallback(async () => {
     if (!address) return;
-    
+
     setCheckingTwitter(true);
     try {
       const response = await axios.get(`${API_URL}/api/twitter/status/${address}`);
@@ -60,7 +50,17 @@ export function TaskSubmissionModal({
     } finally {
       setCheckingTwitter(false);
     }
-  };
+  }, [address]);
+
+  useEffect(() => {
+    checkTwitterStatus();
+    // Also check on URL change (OAuth callback)
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('twitter_connected') === 'true') {
+      checkTwitterStatus();
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [address, checkTwitterStatus]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

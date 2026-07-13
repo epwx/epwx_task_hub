@@ -145,6 +145,7 @@ export default function PartnerRegistrationForm({
           <div className="mt-2 space-y-3">
             {previewUrl ? (
               <div className="relative inline-block">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={previewUrl}
                   alt="Preview"

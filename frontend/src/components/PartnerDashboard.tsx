@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import PartnerEarningsTable from "./PartnerEarningsTable";
 import toast from "react-hot-toast";
 
@@ -51,7 +51,7 @@ export default function PartnerDashboard({
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       const response = await fetch(`/api/partners/${partner.id}/stats`);
       const data = await response.json();
@@ -68,13 +68,14 @@ export default function PartnerDashboard({
     } catch (error) {
       console.error("Error fetching stats:", error);
       toast.error("An error occurred while loading stats");
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [partner.id]);
 
   useEffect(() => {
     fetchStats();
-    setLoading(false);
-  }, [partner.id]);
+  }, [fetchStats]);
 
   const handleRefresh = async () => {
     setRefreshing(true);

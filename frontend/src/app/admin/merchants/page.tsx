@@ -1,6 +1,6 @@
 
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useWalletClient, useWriteContract, useAccount } from "wagmi";
 import { ethers } from "ethers";
 import { ConnectKitButton } from "connectkit";
@@ -69,10 +69,15 @@ export default function MerchantAdminPage() {
 
   // Use connected wallet address
   const { address } = useAccount();
-  const ADMIN_WALLETS = (process.env.NEXT_PUBLIC_ADMIN_WALLETS || "")
-    .split(",")
-    .map(w => w.trim().toLowerCase())
-    .filter(Boolean);
+  const ADMIN_WALLETS = useMemo(() => {
+    return (process.env.NEXT_PUBLIC_ADMIN_WALLETS || "")
+      .split(",")
+      .map(w => w.trim().toLowerCase())
+      .filter(Boolean);
+  }, []);
+  const isAdmin = useMemo(() => {
+    return !!address && ADMIN_WALLETS.includes(address.toLowerCase());
+  }, [address, ADMIN_WALLETS]);
 
   const [form, setForm] = useState({ name: "", wallet: "", address: "", latitude: "", longitude: "" });
   const [merchants, setMerchants] = useState<any[]>([]);
@@ -187,7 +192,7 @@ export default function MerchantAdminPage() {
     }
   ];
 
-  const fetchMerchants = async () => {
+  const fetchMerchants = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -198,13 +203,13 @@ export default function MerchantAdminPage() {
       setError(e?.message || "Failed to fetch merchants");
     }
     setLoading(false);
-  }
+  }, [address]);
 
   useEffect(() => {
-    if (address && ADMIN_WALLETS.includes(address.toLowerCase())) {
+    if (isAdmin) {
       fetchMerchants();
     }
-  }, [address]);
+  }, [fetchMerchants, isAdmin]);
 
   const handleChange = (e: any) => {
     setForm({ ...form, [e.target.name]: e.target.value });

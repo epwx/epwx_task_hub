@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAccount } from "wagmi";
 import toast from "react-hot-toast";
 
@@ -27,13 +27,7 @@ export default function AdminPartnerPage() {
 
   const isAdmin = address && ADMIN_WALLETS.includes(address.toLowerCase());
 
-  useEffect(() => {
-    if (isAdmin) {
-      fetchPendingPartners();
-    }
-  }, [isAdmin]);
-
-  const fetchPendingPartners = async () => {
+  const fetchPendingPartners = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch("/api/partners/admin/pending", {
@@ -55,7 +49,13 @@ export default function AdminPartnerPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [address]);
+
+  useEffect(() => {
+    if (isAdmin) {
+      fetchPendingPartners();
+    }
+  }, [fetchPendingPartners, isAdmin]);
 
   const handleApprove = async (partnerId: string) => {
     try {
@@ -231,6 +231,7 @@ export default function AdminPartnerPage() {
                           rel="noopener noreferrer"
                           className="inline-block"
                         >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={`/${partner.verificationImagePath}`}
                             alt="Verification"

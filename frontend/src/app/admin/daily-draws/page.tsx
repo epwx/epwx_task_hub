@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ConnectKitButton } from "connectkit";
 import { ethers } from "ethers";
 import { useAccount, usePublicClient, useWriteContract } from "wagmi";
@@ -143,7 +143,21 @@ export default function AdminDailyDrawsPage() {
     return winners.slice(start, start + WINNERS_PER_PAGE);
   }, [winners, winnersPage]);
 
-  const fetchDraws = async () => {
+  const fetchWinners = useCallback(async (drawId: number) => {
+    try {
+      const response = await fetch(`/api/epwx/daily-draws/${drawId}/winners`, { cache: "no-store" });
+      const data = await parseJsonResponse<{ draw?: DailyDraw; winners?: DailyDrawWinner[] }>(response, "Failed to fetch draw winners");
+      if (data.draw) {
+        setSelectedDraw(data.draw);
+      }
+      setWinners((data.winners || []).sort((a, b) => a.rank - b.rank));
+      setWinnersPage(1);
+    } catch (fetchError: any) {
+      setError(fetchError?.message || "Failed to fetch draw winners");
+    }
+  }, []);
+
+  const fetchDraws = useCallback(async () => {
     if (!address || !isAdmin) return;
 
     try {
@@ -173,25 +187,11 @@ export default function AdminDailyDrawsPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const fetchWinners = async (drawId: number) => {
-    try {
-      const response = await fetch(`/api/epwx/daily-draws/${drawId}/winners`, { cache: "no-store" });
-      const data = await parseJsonResponse<{ draw?: DailyDraw; winners?: DailyDrawWinner[] }>(response, "Failed to fetch draw winners");
-      if (data.draw) {
-        setSelectedDraw(data.draw);
-      }
-      setWinners((data.winners || []).sort((a, b) => a.rank - b.rank));
-      setWinnersPage(1);
-    } catch (fetchError: any) {
-      setError(fetchError?.message || "Failed to fetch draw winners");
-    }
-  };
+  }, [address, fetchWinners, isAdmin, selectedDraw]);
 
   useEffect(() => {
     fetchDraws();
-  }, [address, isAdmin]);
+  }, [fetchDraws]);
 
   useEffect(() => {
     if (drawsPage > totalDrawPages) {
