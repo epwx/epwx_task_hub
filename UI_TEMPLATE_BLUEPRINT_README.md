@@ -197,6 +197,7 @@ When asked to redesign EPWX UI, follow this document as the default blueprint un
 - Date: 2026-07-13
 - Status: Phase 4 non-home pages implemented, home action surface updated to desktop action strip plus mobile dock, lint-clean, and build-clean
 - Commit sequence:
+  - 61c54a0 - feat(frontend): replace floating home rails with action strip
   - 3dce3a1 - feat(frontend): restyle tasks and cashback pages
   - 1100fe8 - feat(frontend): restyle partner portal shell
 
