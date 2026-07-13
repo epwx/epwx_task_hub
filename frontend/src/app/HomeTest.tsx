@@ -1492,13 +1492,17 @@ export default function HomeTest() {
 
   const quickRailItems: Array<{ label: string; href: string }> = [
     { label: "Wallet", href: "#wallet-verification" },
-    { label: "Buy EPWX", href: "#buy-epwx" },
     { label: "Burnt Supply", href: "#burnt-supply" },
-    { label: "Daily Draw", href: "#latest-winners" },
-    { label: "Daily Claim", href: "#daily-claim" },
+    { label: "Cashback Rewards", href: "#cashback-rewards" },
   ];
 
   const shortcutActionItems: Array<{ section: HomeShortcutSection; label: string; href: string; eyebrow: string }> = [
+    { section: 'latest-winners', label: 'Next Draw', href: '#latest-winners', eyebrow: 'Rewards' },
+    { section: 'buy-epwx', label: 'Buy EPWX', href: '#buy-epwx', eyebrow: 'Swap' },
+    { section: 'daily-claim', label: 'Daily Claim', href: '#daily-claim', eyebrow: 'Claim' },
+  ];
+
+  const mobileShortcutActionItems: Array<{ section: HomeShortcutSection; label: string; href: string; eyebrow: string }> = [
     { section: 'latest-winners', label: 'Next Draw', href: '#latest-winners', eyebrow: 'Rewards' },
     { section: 'buy-epwx', label: 'Buy EPWX', href: '#buy-epwx', eyebrow: 'Swap' },
     { section: 'daily-claim', label: 'Daily Claim', href: '#daily-claim', eyebrow: 'Claim' },
@@ -2182,7 +2186,7 @@ export default function HomeTest() {
         </div>
       </footer>
       <div className="fixed inset-x-3 bottom-3 z-40 flex gap-2 overflow-x-auto rounded-2xl border border-white/15 bg-slate-950/88 p-2 shadow-[0_18px_40px_rgba(15,23,42,0.35)] backdrop-blur-md [scrollbar-width:none] lg:hidden">
-        {shortcutActionItems.map((item) => (
+        {mobileShortcutActionItems.map((item) => (
           <a
             key={item.section}
             href={item.href}
