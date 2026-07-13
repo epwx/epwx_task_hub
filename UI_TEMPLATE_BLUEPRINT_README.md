@@ -65,6 +65,7 @@ This file captures the approved UI template direction and page-by-page mapping f
 - Desktop direction: crypto-native premium shell with a sticky secondary action strip for high-priority actions.
 - Mobile direction: minimal mobile-first bottom action dock for the same core actions.
 - Avoid reintroducing floating left/right edge rails for page actions on future pages.
+- Use the shared app header as the only top-level navigation layer; page-level shells should not render a second full header/nav bar.
 - Preferred action placement:
   - Desktop: sticky utility/action strip below the main header
   - Mobile: bottom dock with 3 to 5 high-frequency actions

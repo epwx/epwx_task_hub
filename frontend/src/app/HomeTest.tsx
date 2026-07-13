@@ -1490,15 +1490,6 @@ export default function HomeTest() {
     },
   ];
 
-  const primaryNavItems: Array<{ label: string; href: string; external?: boolean }> = [
-    { label: "Home", href: "/" },
-    { label: "Whitepaper", href: "/whitepaper" },
-    { label: "Platform Stats", href: "/platform-stats" },
-    { label: "Daily Draws", href: "#latest-winners" },
-    { label: "Claim Center", href: "/claim" },
-    { label: "Merchant Admin", href: "/admin/merchants" },
-  ];
-
   const quickRailItems: Array<{ label: string; href: string }> = [
     { label: "Wallet", href: "#wallet-verification" },
     { label: "Buy EPWX", href: "#buy-epwx" },
@@ -1522,75 +1513,23 @@ export default function HomeTest() {
         <div className="absolute bottom-0 left-1/2 h-72 w-[42rem] -translate-x-1/2 rounded-full bg-emerald-400/10 blur-[150px]" />
       </div>
 
-      <header className="sticky top-0 z-30 border-b border-white/10 bg-slate-950/75 backdrop-blur-xl">
-        <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 py-3">
-          <Link href="/" className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2">
-            <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
-            <span className="text-xs font-black uppercase tracking-[0.2em] text-white/90">EPWX Task Hub</span>
-          </Link>
-          <nav className="hidden items-center gap-2 lg:flex">
-            {primaryNavItems.map((item) => (
-              item.external ? (
-                <a
-                  key={item.label}
-                  href={item.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-white/80 transition-colors hover:bg-white/10 hover:text-white"
-                >
-                  {item.label}
-                </a>
-              ) : item.href.startsWith("#") ? (
-                <a
-                  key={item.label}
-                  href={item.href}
-                  className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-white/80 transition-colors hover:bg-white/10 hover:text-white"
-                >
-                  {item.label}
-                </a>
-              ) : (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-white/80 transition-colors hover:bg-white/10 hover:text-white"
-                >
-                  {item.label}
-                </Link>
-              )
-            ))}
-          </nav>
-          <div className="hidden lg:block">
-            <ConnectKitButton />
-          </div>
-          <div className="lg:hidden">
-            <Link
-              href="#wallet-verification"
-              className="rounded-full border border-emerald-300/40 bg-emerald-400/20 px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-emerald-100"
-            >
-              Open Wallet
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      <section className="sticky top-[73px] z-20 hidden border-b border-white/10 bg-slate-950/70 backdrop-blur-xl lg:block">
-        <div className="mx-auto flex w-full max-w-7xl items-center gap-4 px-4 py-3">
-          <div className="min-w-0">
+      <section className="sticky top-[76px] z-20 hidden border-b border-white/10 bg-slate-950/70 backdrop-blur-xl lg:block">
+        <div className="mx-auto flex w-full max-w-7xl items-center gap-4 px-4 py-2.5">
+          <div className="min-w-0 pr-3">
             <div className="text-[11px] font-black uppercase tracking-[0.22em] text-cyan-300">Quick Actions</div>
-            <div className="mt-1 text-sm text-slate-300">Use the desktop action strip instead of floating edge rails.</div>
           </div>
-          <div className="ml-auto grid flex-1 grid-cols-4 gap-3">
+          <div className="ml-auto grid flex-1 grid-cols-4 gap-2">
             {shortcutActionItems.map((item) => (
               <a
                 key={item.section}
                 href={item.href}
                 onClick={() => setActiveShortcutSection(item.section)}
-                className={`rounded-2xl border px-4 py-3 text-left transition-colors ${activeShortcutSection === item.section ? 'border-emerald-300/40 bg-emerald-400/18 text-emerald-50' : 'border-white/10 bg-white/[0.04] text-white/85 hover:bg-white/[0.08]'}`}
+                className={`rounded-2xl border px-3 py-2.5 text-left transition-colors ${activeShortcutSection === item.section ? 'border-emerald-300/40 bg-emerald-400/18 text-emerald-50' : 'border-white/10 bg-white/[0.04] text-white/85 hover:bg-white/[0.08]'}`}
               >
                 <div className={`text-[10px] font-black uppercase tracking-[0.22em] ${activeShortcutSection === item.section ? 'text-emerald-100/80' : 'text-slate-400'}`}>
                   {item.eyebrow}
                 </div>
-                <div className="mt-1 text-sm font-bold uppercase tracking-[0.08em]">{item.label}</div>
+                <div className="mt-1 text-xs font-bold uppercase tracking-[0.08em] xl:text-sm">{item.label}</div>
               </a>
             ))}
           </div>
