@@ -122,9 +122,11 @@ function shouldRetry(result) {
 }
 
 async function runCheckWithRetries(check) {
+  const maxAttempts = Math.max(1, Number.parseInt(String(check.retryAttempts ?? SMOKE_MAX_ATTEMPTS), 10) || SMOKE_MAX_ATTEMPTS);
+  const retryDelayMs = Math.max(0, Number.parseInt(String(check.retryDelayMs ?? SMOKE_RETRY_DELAY_MS), 10) || SMOKE_RETRY_DELAY_MS);
   let lastResult;
 
-  for (let attempt = 1; attempt <= SMOKE_MAX_ATTEMPTS; attempt += 1) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     const result = await runCheck(check);
     if (result.ok) {
       return {
@@ -138,14 +140,14 @@ async function runCheckWithRetries(check) {
       attempts: attempt,
     };
 
-    if (attempt >= SMOKE_MAX_ATTEMPTS || !shouldRetry(result)) {
+    if (attempt >= maxAttempts || !shouldRetry(result)) {
       return lastResult;
     }
 
     console.log(
-      `       Retrying in ${SMOKE_RETRY_DELAY_MS}ms (attempt ${attempt + 1}/${SMOKE_MAX_ATTEMPTS}) due to: ${result.reason}`
+      `       Retrying in ${retryDelayMs}ms (attempt ${attempt + 1}/${maxAttempts}) due to: ${result.reason}`
     );
-    await sleep(SMOKE_RETRY_DELAY_MS);
+    await sleep(retryDelayMs);
   }
 
   return lastResult;
@@ -170,6 +172,8 @@ async function main() {
       name: "Telegram mini app route is reachable",
       method: "GET",
       url: `${FRONTEND_URL}/telegram-miniapp`,
+      retryAttempts: process.env.SMOKE_TELEGRAM_ROUTE_MAX_ATTEMPTS || "24",
+      retryDelayMs: process.env.SMOKE_TELEGRAM_ROUTE_RETRY_DELAY_MS || "5000",
       expectStatus: [200],
       assert: ({ text }) => (text && text.includes("Telegram Daily Claim")) || "Mini app page missing expected heading",
     },
@@ -219,6 +223,9 @@ async function main() {
     console.log(`[${prefix}] ${result.name}${statusPart}${attemptPart} (${result.durationMs}ms)`);
     if (!result.ok) {
       console.log(`       ${result.reason}`);
+      if (result.bodyPreview) {
+        console.log(`       body preview: ${result.bodyPreview.replace(/\s+/g, " ").trim()}`);
+      }
     }
   }
 
