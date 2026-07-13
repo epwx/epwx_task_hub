@@ -1500,9 +1500,9 @@ export default function HomeTest() {
 
   const shortcutActionItems: Array<{ section: HomeShortcutSection; label: string; href: string; eyebrow: string }> = [
     { section: 'buy-epwx', label: 'Buy EPWX', href: '#buy-epwx', eyebrow: 'Swap' },
-    { section: 'burnt-supply', label: 'Burnt Supply', href: '#burnt-supply', eyebrow: 'Tokenomics' },
     { section: 'latest-winners', label: 'Next Draw', href: '#latest-winners', eyebrow: 'Rewards' },
     { section: 'daily-claim', label: 'Daily Claim', href: '#daily-claim', eyebrow: 'Claim' },
+    { section: 'burnt-supply', label: 'Burnt Supply', href: '#burnt-supply', eyebrow: 'Tokenomics' },
   ];
 
   return (
