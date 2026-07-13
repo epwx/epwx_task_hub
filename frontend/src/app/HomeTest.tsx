@@ -2125,8 +2125,8 @@ export default function HomeTest() {
             ) : (
               <div className="flex flex-col items-center">
                 <div className="text-center text-white/80 font-semibold mb-2">Connect your wallet to claim daily rewards.</div>
-                <div className="max-w-sm rounded-2xl border border-white/15 bg-white/10 p-4 text-center text-sm text-white/80">
-                  Connecting identifies the wallet that will receive rewards. It does not move funds or grant token permissions.
+                <div className="mt-2">
+                  <ConnectKitButton />
                 </div>
               </div>
             )}
