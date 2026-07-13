@@ -127,10 +127,10 @@ export function TokenSupplyPieChart() {
   return (
     <section className="py-12">
       <div className="flex flex-col items-center">
-        <h2 className="text-2xl font-black mb-4 text-blue-700 text-center">Token Supply Breakdown</h2>
-        <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-3xl shadow-2xl p-5 sm:p-8 w-full max-w-4xl">
-          <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 left-0 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
+        <h2 className="text-2xl font-black mb-4 text-slate-100 text-center">Token Supply Breakdown</h2>
+        <div className="relative w-full max-w-4xl overflow-hidden rounded-3xl border border-white/10 bg-slate-900/70 p-5 shadow-[0_24px_65px_rgba(2,6,23,0.5)] backdrop-blur-xl sm:p-8">
+          <div className="absolute top-0 right-0 h-40 w-40 rounded-full bg-cyan-300/10 blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 h-40 w-40 rounded-full bg-emerald-300/10 blur-3xl"></div>
           <div className="relative z-10 grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
             <div className="min-w-0 flex flex-col items-center">
               {loading ? (

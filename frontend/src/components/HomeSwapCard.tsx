@@ -212,9 +212,9 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
   };
 
   return (
-    <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 shadow-2xl ${compact ? 'p-4 sm:p-5' : 'p-8'}`}>
-      <div className={`absolute left-0 top-0 rounded-full bg-white/10 blur-3xl ${compact ? 'h-32 w-32' : 'h-48 w-48'}`} />
-      <div className={`absolute bottom-0 right-0 rounded-full bg-white/10 blur-3xl ${compact ? 'h-40 w-40' : 'h-56 w-56'}`} />
+    <div className={`relative overflow-hidden rounded-3xl border border-white/10 bg-slate-900/70 shadow-[0_24px_65px_rgba(2,6,23,0.5)] backdrop-blur-xl ${compact ? 'p-4 sm:p-5' : 'p-8'}`}>
+      <div className={`absolute left-0 top-0 rounded-full bg-cyan-300/10 blur-3xl ${compact ? 'h-32 w-32' : 'h-48 w-48'}`} />
+      <div className={`absolute bottom-0 right-0 rounded-full bg-emerald-300/10 blur-3xl ${compact ? 'h-40 w-40' : 'h-56 w-56'}`} />
 
       <div className="relative z-10">
         <div>

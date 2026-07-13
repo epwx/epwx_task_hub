@@ -46,9 +46,9 @@ function LastFivePaidDailyClaims() {
   return <DailyClaimsTable claims={claims} isAdmin={false} />;
 }
 
-const themedSectionClass = "relative overflow-hidden bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-3xl shadow-2xl p-8";
-const themedInnerClass = "relative z-10 flex flex-col items-center";
-const glassPanelClass = "bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl";
+const themedSectionClass = "relative overflow-hidden rounded-3xl border border-white/10 bg-slate-900/70 p-6 shadow-[0_24px_65px_rgba(2,6,23,0.5)] backdrop-blur-xl sm:p-8";
+const themedInnerClass = "relative z-10";
+const glassPanelClass = "rounded-2xl border border-white/12 bg-white/[0.04] backdrop-blur-lg";
 const EPWX_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_EPWX_TOKEN as `0x${string}`) || "0xef5f5751cf3eca6cc3572768298b7783d33d60eb";
 const DEFAULT_DAILY_REWARD = 100_000;
 const MID_TIER_DAILY_REWARD = 2_000_000;
@@ -735,7 +735,7 @@ function LatestDailyWinnersBoard({ referralLink }: { referralLink?: string }) {
   return (
     <section id="latest-winners" className="py-12 scroll-mt-24">
       <div className="flex flex-col items-center">
-        <h2 className="text-2xl font-black mb-4 text-blue-700 text-center">Latest Daily Winners</h2>
+        <h2 className="text-2xl font-black mb-4 text-slate-100 text-center">Latest Daily Winners</h2>
         <div className={`${themedSectionClass} w-full max-w-5xl`}>
           <div className="absolute top-0 left-0 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
           <div className="relative z-10 text-white">
@@ -811,7 +811,7 @@ function LatestDailyWinnersBoard({ referralLink }: { referralLink?: string }) {
                         <div key={winner.id} className={`${glassPanelClass} p-4`}>
                           <div className="flex items-center justify-between gap-3">
                             <div className="text-sm font-black text-white">Winner #{winner.rank}</div>
-                            <span className={`rounded-full px-3 py-1 text-xs font-bold ${winner.status === 'paid' ? 'bg-emerald-400/20 text-emerald-100 border border-emerald-300/30' : 'bg-amber-400/20 text-amber-100 border border-amber-300/30'}`}>
+                            <span className={`ui-status ${winner.status === 'paid' ? 'ui-status-success' : 'ui-status-warning'}`}>
                               {winner.status === 'paid' ? 'Paid' : 'Pending'}
                             </span>
                           </div>
@@ -1490,15 +1490,123 @@ export default function HomeTest() {
     },
   ];
 
+  const primaryNavItems: Array<{ label: string; href: string; external?: boolean }> = [
+    { label: "Home", href: "/" },
+    { label: "Whitepaper", href: "/whitepaper" },
+    { label: "Platform Stats", href: "/platform-stats" },
+    { label: "Daily Draws", href: "#latest-winners" },
+    { label: "Claim Center", href: "/claim" },
+    { label: "Merchant Admin", href: "/admin/merchants" },
+  ];
+
+  const quickRailItems: Array<{ label: string; href: string }> = [
+    { label: "Wallet", href: "#wallet-verification" },
+    { label: "Buy EPWX", href: "#buy-epwx" },
+    { label: "Burnt Supply", href: "#burnt-supply" },
+    { label: "Daily Draw", href: "#latest-winners" },
+    { label: "Daily Claim", href: "#daily-claim" },
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:bg-gray-950 dark:bg-none flex flex-col">
-      <main className="container mx-auto flex-1 px-4 py-12 pb-28 lg:pb-12">
+    <div className="relative min-h-screen overflow-x-clip bg-slate-950 text-slate-100">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+        <div className="absolute -left-40 top-20 h-96 w-96 rounded-full bg-cyan-500/15 blur-[140px]" />
+        <div className="absolute -right-28 top-12 h-[28rem] w-[28rem] rounded-full bg-blue-600/20 blur-[150px]" />
+        <div className="absolute bottom-0 left-1/2 h-72 w-[42rem] -translate-x-1/2 rounded-full bg-emerald-400/10 blur-[150px]" />
+      </div>
+
+      <header className="sticky top-0 z-30 border-b border-white/10 bg-slate-950/75 backdrop-blur-xl">
+        <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 py-3">
+          <Link href="/" className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2">
+            <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
+            <span className="text-xs font-black uppercase tracking-[0.2em] text-white/90">EPWX Task Hub</span>
+          </Link>
+          <nav className="hidden items-center gap-2 lg:flex">
+            {primaryNavItems.map((item) => (
+              item.external ? (
+                <a
+                  key={item.label}
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+                >
+                  {item.label}
+                </a>
+              ) : item.href.startsWith("#") ? (
+                <a
+                  key={item.label}
+                  href={item.href}
+                  className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+                >
+                  {item.label}
+                </a>
+              ) : (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+                >
+                  {item.label}
+                </Link>
+              )
+            ))}
+          </nav>
+          <div className="hidden lg:block">
+            <ConnectKitButton />
+          </div>
+          <div className="lg:hidden">
+            <Link
+              href="#wallet-verification"
+              className="rounded-full border border-emerald-300/40 bg-emerald-400/20 px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-emerald-100"
+            >
+              Open Wallet
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      <main className="relative z-10 mx-auto grid w-full max-w-7xl flex-1 gap-8 px-4 pb-28 pt-8 lg:grid-cols-[220px_minmax(0,1fr)] lg:pb-12 lg:pt-10">
+        <aside className="hidden lg:block">
+          <div className="ui-surface-strong sticky top-24 p-4 shadow-[0_18px_40px_rgba(2,6,23,0.45)]">
+            <div className="mb-3 text-xs font-black uppercase tracking-[0.2em] text-white/50">Quick Navigate</div>
+            <div className="space-y-2">
+              {quickRailItems.map((item) => (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  className="ui-btn-muted block rounded-2xl px-3 py-2 text-xs uppercase tracking-[0.12em]"
+                >
+                  {item.label}
+                </a>
+              ))}
+            </div>
+          </div>
+        </aside>
+        <div className="min-w-0">
         {/* Wallet Connection & Verification Section */}
-        <section className="my-8">
-          <div className={`${themedSectionClass} mb-6 w-full max-w-lg mx-auto`}>
-            <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
+        <section id="wallet-verification" className="my-8 scroll-mt-24">
+          <div className={`${themedSectionClass} mb-6 w-full max-w-5xl mx-auto`}>
+            <div className="absolute -right-16 top-0 h-44 w-44 rounded-full bg-cyan-300/10 blur-3xl" />
+            <div className="absolute -left-16 bottom-0 h-52 w-52 rounded-full bg-emerald-400/10 blur-3xl" />
             <div className={themedInnerClass}>
-            <h2 className="text-2xl font-black mb-4 text-center text-white w-full">Wallet & Telegram Verification</h2>
+            <div className="mb-6 flex flex-col gap-4 border-b border-white/10 pb-5 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.24em] text-slate-400">Account Control</p>
+                <h2 className="mt-2 text-2xl font-black text-white sm:text-3xl">Wallet and verification</h2>
+                <p className="mt-2 text-sm text-slate-300">Use this panel to connect your wallet, verify Telegram access, and manage referral sharing.</p>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-slate-300">
+                  <div className="uppercase tracking-[0.14em] text-slate-400">Current Tier</div>
+                  <div className="mt-1 font-black text-emerald-200">{currentDailyReward.toLocaleString()} EPWX</div>
+                </div>
+                <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-slate-300">
+                  <div className="uppercase tracking-[0.14em] text-slate-400">Claim Window</div>
+                  <div className="mt-1 font-black text-cyan-200">{remainingClaimTime ? remainingClaimTime : "Available"}</div>
+                </div>
+              </div>
+            </div>
             {!address ? (
               <div className="flex flex-col items-center w-full">
                 <span className="mb-2 text-white/80 text-center">Please connect your wallet to access all features.</span>
@@ -1508,22 +1616,42 @@ export default function HomeTest() {
                 <ConnectKitButton />
               </div>
             ) : (
-              <div className="flex flex-col items-center w-full">
-                <div className={`mb-3 w-full flex flex-col items-center p-4 ${glassPanelClass}`}>
-                  <span className="text-white/80 font-medium text-center break-all w-full">
-                    Connected wallet:
-                    <span className="block text-xs text-white font-mono bg-white/10 rounded px-2 py-1 mt-1 w-full overflow-x-auto" style={{wordBreak: 'break-all'}}>{address}</span>
-                  </span>
-                </div>
-                <div className={`mb-3 w-full p-4 ${glassPanelClass}`}>
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-white/80 font-medium">EPWX balance</span>
-                    <span className="text-lg font-bold text-emerald-300">
-                      {balanceLoading ? "Loading..." : `${formattedBalance} EPWX`}
-                    </span>
+              <div className="w-full space-y-4">
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div className={`${glassPanelClass} p-4 sm:col-span-2`}>
+                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Connected wallet</div>
+                    <div className="mt-2 rounded-xl border border-white/10 bg-slate-950/40 px-3 py-2 text-xs font-mono text-slate-200 break-all" style={{wordBreak: 'break-all'}}>{address}</div>
+                  </div>
+                  <div className={`${glassPanelClass} p-4`}>
+                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Telegram status</div>
+                    {checkingVerification ? (
+                      <div className="mt-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm font-semibold text-slate-300">Checking...</div>
+                    ) : isTelegramVerified ? (
+                      <div className="ui-status ui-status-success mt-2">Verified</div>
+                    ) : isTelegramVerified === null ? (
+                      <div className="ui-status ui-status-warning mt-2">Unknown</div>
+                    ) : (
+                      <div className="ui-status ui-status-danger mt-2">Not verified</div>
+                    )}
                   </div>
                 </div>
-                <div className={`mb-3 w-full p-4 ${glassPanelClass}`}>
+
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div className={`${glassPanelClass} p-4`}>
+                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">EPWX balance</div>
+                    <div className="mt-2 text-xl font-black text-emerald-200">{balanceLoading ? "Loading..." : `${formattedBalance} EPWX`}</div>
+                  </div>
+                  <div className={`${glassPanelClass} p-4`}>
+                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Next tier target</div>
+                    <div className="mt-2 text-sm font-bold text-slate-100">{nextTierTarget ? `${nextTierTarget.toLocaleString()} EPWX` : "Top tier active"}</div>
+                  </div>
+                  <div className={`${glassPanelClass} p-4`}>
+                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Tokens to next tier</div>
+                    <div className="mt-2 text-sm font-bold text-cyan-200">{nextTierTarget ? `${formatEpwxBalance(tokensToNextTier)} EPWX` : "0 EPWX"}</div>
+                  </div>
+                </div>
+
+                <div className={`w-full p-4 ${glassPanelClass}`}>
                   {buyerBadge ? (
                     <div className="flex flex-col gap-3">
                       <div className="flex items-center justify-between gap-3">
@@ -1547,7 +1675,8 @@ export default function HomeTest() {
                     </div>
                   )}
                 </div>
-                <div className={`mb-3 w-full p-4 ${glassPanelClass}`}>
+
+                <div className={`w-full p-4 ${glassPanelClass}`}>
                   <div className="flex flex-col gap-3">
                     <div className="flex items-center justify-between gap-3">
                       <div>
@@ -1632,20 +1761,16 @@ export default function HomeTest() {
                     )}
                   </div>
                 </div>
-                {checkingVerification ? (
-                  <span className="text-white/70">Checking Telegram verification...</span>
-                ) : isTelegramVerified ? (
-                  <span className="bg-emerald-400/20 border border-emerald-300/30 text-emerald-100 font-bold py-3 px-4 rounded-xl mb-2 w-full text-center block">✅ Telegram membership verified</span>
-                ) : isTelegramVerified === null ? (
-                  <span className="bg-white/10 border border-white/20 text-white/80 font-medium py-3 px-4 rounded-xl mb-2 w-full text-center block">Unable to confirm Telegram verification right now. Refresh or try again in a moment.</span>
-                ) : (
+                {!checkingVerification && !isTelegramVerified ? (
                   <a
                     href={`https://t.me/${TELEGRAM_BOT_USERNAME}?start=${address}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="bg-white/15 hover:bg-white/20 border border-white/20 text-white font-bold py-3 px-4 rounded-xl mb-2 w-full text-center transition-colors"
-                  >Verify Telegram Membership</a>
-                )}
+                    className="ui-btn-primary inline-flex w-full items-center justify-center rounded-xl px-4 py-3 text-sm"
+                  >
+                    Verify Telegram Membership
+                  </a>
+                ) : null}
               </div>
             )}
             </div>
@@ -1665,7 +1790,7 @@ export default function HomeTest() {
         {/* Cashback Rewards Section */}
         <section id="cashback-rewards" className="py-12 scroll-mt-24">
           <div className="flex flex-col items-center">
-            <h2 className="text-2xl font-black mb-4 text-blue-700 text-center">Cashback Rewards</h2>
+            <h2 className="text-2xl font-black mb-4 text-slate-100 text-center">Cashback Rewards</h2>
             <div className={`${themedSectionClass} w-full max-w-xl`}>
               <EPWXCashbackClaim />
             </div>
@@ -2043,7 +2168,7 @@ export default function HomeTest() {
         {address && (
           <section className="py-12">
             <div className="flex flex-col items-center">
-              <h2 className="text-2xl font-black mb-4 text-blue-700 text-center">Your Daily Pending Claims</h2>
+              <h2 className="text-2xl font-black mb-4 text-slate-100 text-center">Your Daily Pending Claims</h2>
               <div className={`${themedSectionClass} w-full max-w-xl`}>
                 <UserDailyClaims address={address} />
               </div>
@@ -2054,63 +2179,64 @@ export default function HomeTest() {
         {/* Last 5 Paid Daily Claims Section */}
         <section className="py-12">
           <div className="flex flex-col items-center">
-            <h2 className="text-2xl font-black mb-4 text-blue-700 text-center">Last 5 Paid Daily Claims (All Wallets)</h2>
+            <h2 className="text-2xl font-black mb-4 text-slate-100 text-center">Last 5 Paid Daily Claims (All Wallets)</h2>
             <div className={`${themedSectionClass} w-full max-w-xl`}>
               <LastFivePaidDailyClaims />
             </div>
           </div>
         </section>
+        </div>
       </main>
 
       {/* Footer */}
-      <footer className="bg-white/80 backdrop-blur-xl border-t border-blue-100 text-gray-800 py-12 mt-20 dark:bg-gray-950/80 dark:text-gray-100 dark:border-gray-800">
+      <footer className="border-t border-white/10 bg-slate-950/70 py-12 text-slate-200 backdrop-blur-xl">
         <div className="container mx-auto px-4">
           <div className="text-center mb-8">
-            <h3 className="text-2xl font-bold mb-2 text-blue-700 dark:text-blue-300">EPWX Task Platform</h3>
-            <p className="text-gray-500 dark:text-gray-400">Earn tokens by completing campaigns on Base Network</p>
+            <h3 className="text-2xl font-bold mb-2 text-cyan-200">EPWX Task Platform</h3>
+            <p className="text-slate-400">Earn tokens by completing campaigns on Base Network</p>
           </div>
           <div className="flex flex-col md:flex-row justify-center items-center gap-6 mb-6">
-            <a href="https://epowex.com" target="_blank" rel="noopener noreferrer" className="hover:text-blue-600 transition-colors">Main Site</a>
-            <span className="hidden md:block text-blue-200 dark:text-gray-700">•</span>
-            <a href="/terms" className="hover:text-blue-600 transition-colors">Terms of Service</a>
-            <span className="hidden md:block text-blue-200 dark:text-gray-700">•</span>
-            <a href="/privacy" className="hover:text-blue-600 transition-colors">Privacy Policy</a>
-            <span className="hidden md:block text-blue-200 dark:text-gray-700">•</span>
-            <a href="/user-guide" className="hover:text-blue-600 transition-colors">User Guide</a>
-            <span className="hidden md:block text-blue-200 dark:text-gray-700">•</span>
-            <a href="https://twitter.com/epowex" target="_blank" rel="noopener noreferrer" className="hover:text-blue-600 transition-colors">Twitter</a>
+            <a href="https://epowex.com" target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-cyan-300">Main Site</a>
+            <span className="hidden md:block text-slate-600">•</span>
+            <a href="/terms" className="transition-colors hover:text-cyan-300">Terms of Service</a>
+            <span className="hidden md:block text-slate-600">•</span>
+            <a href="/privacy" className="transition-colors hover:text-cyan-300">Privacy Policy</a>
+            <span className="hidden md:block text-slate-600">•</span>
+            <a href="/user-guide" className="transition-colors hover:text-cyan-300">User Guide</a>
+            <span className="hidden md:block text-slate-600">•</span>
+            <a href="https://twitter.com/epowex" target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-cyan-300">Twitter</a>
           </div>
-          <div className="text-center text-gray-500 dark:text-gray-400 text-sm">
+          <div className="text-center text-sm text-slate-400">
             <p>&copy; 2025 EPWX Task Platform. All rights reserved.</p>
           </div>
         </div>
       </footer>
-      <div className="fixed inset-x-3 bottom-3 z-40 flex items-center justify-between gap-2 rounded-2xl border border-white/15 bg-slate-950/88 p-2 shadow-[0_18px_40px_rgba(15,23,42,0.35)] backdrop-blur-md lg:hidden">
+      <div className="fixed inset-x-3 bottom-3 z-40 flex gap-2 overflow-x-auto rounded-2xl border border-white/15 bg-slate-950/88 p-2 shadow-[0_18px_40px_rgba(15,23,42,0.35)] backdrop-blur-md [scrollbar-width:none] lg:hidden">
         <a
           href="#buy-epwx"
           onClick={() => setActiveShortcutSection('buy-epwx')}
-          className={`flex min-w-0 flex-1 items-center justify-center rounded-xl px-3 py-2 text-center text-[11px] font-black uppercase tracking-[0.14em] text-white transition-colors ${activeShortcutSection === 'buy-epwx' ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-white/8 hover:bg-white/14'}`}
+          className={`flex min-w-[112px] items-center justify-center rounded-xl px-3 py-2.5 text-center text-[11px] font-black uppercase tracking-[0.14em] text-white transition-colors ${activeShortcutSection === 'buy-epwx' ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-white/8 hover:bg-white/14'}`}
         >
           Buy EPWX
         </a>
         <a
           href="#burnt-supply"
           onClick={() => setActiveShortcutSection('burnt-supply')}
-          className={`flex min-w-0 flex-1 items-center justify-center rounded-xl px-3 py-2 text-center text-[11px] font-black uppercase tracking-[0.14em] text-white transition-colors ${activeShortcutSection === 'burnt-supply' ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-white/8 hover:bg-white/14'}`}
+          className={`flex min-w-[112px] items-center justify-center rounded-xl px-3 py-2.5 text-center text-[11px] font-black uppercase tracking-[0.14em] text-white transition-colors ${activeShortcutSection === 'burnt-supply' ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-white/8 hover:bg-white/14'}`}
         >
           90% Burnt
         </a>
         <a
           href="#latest-winners"
           onClick={() => setActiveShortcutSection('latest-winners')}
-          className={`flex min-w-0 flex-1 items-center justify-center rounded-xl px-3 py-2 text-center text-[11px] font-black uppercase tracking-[0.14em] text-white transition-colors ${activeShortcutSection === 'latest-winners' ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-white/8 hover:bg-white/14'}`}
+          className={`flex min-w-[112px] items-center justify-center rounded-xl px-3 py-2.5 text-center text-[11px] font-black uppercase tracking-[0.14em] text-white transition-colors ${activeShortcutSection === 'latest-winners' ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-white/8 hover:bg-white/14'}`}
         >
           Next Draw
         </a>
         <a
           href="#daily-claim"
           onClick={() => setActiveShortcutSection('daily-claim')}
-          className={`flex min-w-0 flex-1 items-center justify-center rounded-xl px-3 py-2 text-center text-[11px] font-black uppercase tracking-[0.14em] text-white transition-colors ${activeShortcutSection === 'daily-claim' ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-white/8 hover:bg-white/14'}`}
+          className={`flex min-w-[112px] items-center justify-center rounded-xl px-3 py-2.5 text-center text-[11px] font-black uppercase tracking-[0.14em] text-white transition-colors ${activeShortcutSection === 'daily-claim' ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-white/8 hover:bg-white/14'}`}
         >
           Daily Claim
         </a>

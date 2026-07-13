@@ -129,48 +129,48 @@ export function EPWXCashbackClaim() {
   const claimedTxs = transactions.filter((tx: any) => claimed[tx.txHash]);
 
   return (
-    <div className="bg-gradient-to-br from-white to-gray-100 rounded-xl shadow-lg p-4 mb-8 max-w-lg mx-auto">
-      <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">EPWX Cashback Rewards</h2>
-      <p className="mb-4 rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+    <div className="mx-auto mb-8 w-full max-w-3xl rounded-2xl border border-white/10 bg-slate-950/35 p-4 text-slate-100 shadow-[0_20px_55px_rgba(2,6,23,0.45)] sm:p-6">
+      <h2 className="mb-4 text-center text-2xl font-bold text-slate-100">EPWX Cashback Rewards</h2>
+      <p className="mb-4 rounded-lg border border-cyan-300/20 bg-cyan-400/10 px-4 py-3 text-sm text-cyan-100">
         Earn {cashbackRewardLabel} cashback on EPWX purchases above {cashbackThresholdLabel} made within the last 3 hours.
       </p>
       <div className="mb-4 grid gap-3 sm:grid-cols-3">
-        <div className="rounded-lg border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
-          <div className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">Step 1</div>
+        <div className="rounded-lg border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-slate-200">
+          <div className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200">Step 1</div>
           <div className="mt-1 font-semibold">Buy EPWX</div>
-          <div className="mt-1 text-emerald-800/80">Make a qualifying EPWX purchase on Base.</div>
+          <div className="mt-1 text-slate-300">Make a qualifying EPWX purchase on Base.</div>
         </div>
-        <div className="rounded-lg border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
-          <div className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">Step 2</div>
+        <div className="rounded-lg border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-slate-200">
+          <div className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200">Step 2</div>
           <div className="mt-1 font-semibold">Claim cashback</div>
-          <div className="mt-1 text-emerald-800/80">Eligible transactions appear here for the next 3 hours.</div>
+          <div className="mt-1 text-slate-300">Eligible transactions appear here for the next 3 hours.</div>
         </div>
-        <div className="rounded-lg border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
-          <div className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">Step 3</div>
+        <div className="rounded-lg border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-slate-200">
+          <div className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200">Step 3</div>
           <div className="mt-1 font-semibold">Upgrade claims</div>
-          <div className="mt-1 text-emerald-800/80">Holding more EPWX can move your wallet into a higher daily reward tier.</div>
+          <div className="mt-1 text-slate-300">Holding more EPWX can move your wallet into a higher daily reward tier.</div>
         </div>
       </div>
       {loading ? (
-        <div className="text-center py-8 text-gray-500">Loading eligible transactions...</div>
+        <div className="py-8 text-center text-slate-300">Loading eligible transactions...</div>
       ) : unclaimedTxs.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">No unclaimed EPWX purchases above {cashbackThresholdLabel} in the last 3 hours.</div>
+        <div className="py-8 text-center text-slate-300">No unclaimed EPWX purchases above {cashbackThresholdLabel} in the last 3 hours.</div>
       ) : (
         <div className="-mx-1 overflow-x-auto px-1 [webkit-overflow-scrolling:touch]">
-          <table className="min-w-[540px] w-full text-left border rounded-lg">
-            <thead className="bg-gray-50">
+          <table className="min-w-[540px] w-full rounded-lg border border-white/10 text-left">
+            <thead className="bg-white/[0.03]">
               <tr>
-                <th className="py-2 px-2 text-xs font-semibold text-gray-600">Tx Hash</th>
-                <th className="py-2 px-2 text-xs font-semibold text-gray-600">Amount</th>
-                <th className="py-2 px-2 text-xs font-semibold text-gray-600">Action</th>
+                <th className="px-2 py-2 text-xs font-semibold text-slate-300">Tx Hash</th>
+                <th className="px-2 py-2 text-xs font-semibold text-slate-300">Amount</th>
+                <th className="px-2 py-2 text-xs font-semibold text-slate-300">Action</th>
               </tr>
             </thead>
             <tbody>
               {unclaimedTxs.map((tx: any) => (
-                <tr key={tx.txHash} className="border-b last:border-none">
-                  <td className="bg-white py-2 px-2 font-mono text-xs whitespace-nowrap text-gray-900">{tx.txHash}</td>
-                  <td className="bg-white py-2 px-2 text-xs whitespace-nowrap text-gray-900">{tx.amount}</td>
-                  <td className="py-2 px-2">
+                <tr key={tx.txHash} className="border-b border-white/10 last:border-none">
+                  <td className="bg-transparent px-2 py-2 font-mono text-xs whitespace-nowrap text-slate-100">{tx.txHash}</td>
+                  <td className="bg-transparent px-2 py-2 text-xs whitespace-nowrap text-slate-100">{tx.amount}</td>
+                  <td className="px-2 py-2">
                     {(() => {
                       if (!address) return null;
                       const adminWallets = getAdminWallets();
@@ -281,20 +281,20 @@ export function EPWXCashbackClaim() {
       {/* Claimed transactions section */}
       {claimedTxs.length > 0 && (
         <div className="mt-8">
-          <h3 className="text-lg font-semibold mb-2 text-center text-gray-700">Claimed Transactions</h3>
+          <h3 className="mb-2 text-center text-lg font-semibold text-slate-200">Claimed Transactions</h3>
           <div className="-mx-1 overflow-x-auto px-1 [webkit-overflow-scrolling:touch]">
-            <table className="min-w-[420px] w-full text-left border rounded-lg">
-              <thead className="bg-gray-50">
+            <table className="min-w-[420px] w-full rounded-lg border border-white/10 text-left">
+              <thead className="bg-white/[0.03]">
                 <tr>
-                  <th className="py-2 px-2 text-xs font-semibold text-gray-600">Tx Hash</th>
-                  <th className="py-2 px-2 text-xs font-semibold text-gray-600">Amount</th>
+                  <th className="px-2 py-2 text-xs font-semibold text-slate-300">Tx Hash</th>
+                  <th className="px-2 py-2 text-xs font-semibold text-slate-300">Amount</th>
                 </tr>
               </thead>
               <tbody>
                 {claimedTxs.map((tx: any) => (
-                  <tr key={tx.txHash} className="border-b last:border-none">
-                    <td className="bg-white py-2 px-2 font-mono text-xs whitespace-nowrap text-gray-900">{tx.txHash}</td>
-                    <td className="bg-white py-2 px-2 text-xs whitespace-nowrap text-gray-900">{tx.amount}</td>
+                  <tr key={tx.txHash} className="border-b border-white/10 last:border-none">
+                    <td className="bg-transparent px-2 py-2 font-mono text-xs whitespace-nowrap text-slate-100">{tx.txHash}</td>
+                    <td className="bg-transparent px-2 py-2 text-xs whitespace-nowrap text-slate-100">{tx.amount}</td>
                   </tr>
                 ))}
               </tbody>
