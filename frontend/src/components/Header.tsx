@@ -256,13 +256,13 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
                 <div>
                   <div className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-400">Quick Actions</div>
                   <div className="mt-3 grid gap-2">
-                    <a
+                    <Link
                       href="/#buy-epwx"
                       className="rounded-2xl border border-emerald-300/35 bg-emerald-400/15 px-4 py-3 text-sm font-bold text-emerald-50 transition-colors hover:bg-emerald-400/25"
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       Buy EPWX
-                    </a>
+                    </Link>
                     {dashboardLinks.map((link) => (
                       <Link
                         key={link.href}
