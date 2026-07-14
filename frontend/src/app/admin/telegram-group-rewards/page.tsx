@@ -155,6 +155,8 @@ export default function TelegramGroupRewardsAdminPage() {
     return "ui-status ui-status-warning";
   };
 
+  const formatRewardAmount = (rewardAmount: string) => Number(rewardAmount || "0").toLocaleString();
+
   if (!isAdmin) {
     return (
       <div className="relative min-h-screen overflow-hidden bg-slate-950 px-4 py-10">
@@ -251,52 +253,107 @@ export default function TelegramGroupRewardsAdminPage() {
           ) : null}
 
           {!loading && rewards.length > 0 ? (
-            <div className="overflow-x-auto rounded-2xl border border-white/10">
-              <table className="min-w-full text-sm text-slate-100">
-                <thead className="bg-white/[0.03]">
-                  <tr>
-                    <th className="px-3 py-2 text-left text-slate-300">Created</th>
-                    <th className="px-3 py-2 text-left text-slate-300">Group</th>
-                    <th className="px-3 py-2 text-left text-slate-300">Owner</th>
-                    <th className="px-3 py-2 text-left text-slate-300">Claimant</th>
-                    <th className="px-3 py-2 text-left text-slate-300">Amount</th>
-                    <th className="px-3 py-2 text-left text-slate-300">Status</th>
-                    <th className="px-3 py-2 text-left text-slate-300">Tx Hash</th>
-                    <th className="px-3 py-2 text-left text-slate-300">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rewards.map((reward) => (
-                    <tr key={reward.id} className="border-t border-white/10">
-                      <td className="px-3 py-2 whitespace-nowrap">{new Date(reward.createdAt).toLocaleString()}</td>
-                      <td className="px-3 py-2 break-all">
-                        <div className="font-semibold text-white">{reward.groupOwner?.groupTitle || "(no title)"}</div>
-                        <div className="text-xs text-slate-400">{reward.groupId}</div>
-                      </td>
-                      <td className="px-3 py-2 break-all text-slate-200">{reward.ownerWallet}</td>
-                      <td className="px-3 py-2 break-all text-slate-200">{reward.claimantWallet}</td>
-                      <td className="px-3 py-2">{Number(reward.rewardAmount || "0").toLocaleString()} EPWX</td>
-                      <td className="px-3 py-2"><span className={statusClass(reward.status)}>{reward.status}</span></td>
-                      <td className="px-3 py-2 break-all text-xs text-slate-300">{reward.txHash || "-"}</td>
-                      <td className="px-3 py-2">
-                        {reward.status === "pending" ? (
-                          <button
-                            type="button"
-                            onClick={() => markPaid(reward)}
-                            disabled={markingId === reward.id}
-                            className="ui-btn-primary rounded-lg px-3 py-1.5 text-xs disabled:opacity-50"
-                          >
-                            {markingId === reward.id ? "Distributing..." : "Distribute"}
-                          </button>
-                        ) : (
-                          <span className="text-xs text-slate-500">-</span>
-                        )}
-                      </td>
+            <>
+              <div className="space-y-3 md:hidden">
+                {rewards.map((reward) => (
+                  <article key={reward.id} className="ui-surface p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Created</p>
+                        <p className="mt-1 text-sm text-slate-100">{new Date(reward.createdAt).toLocaleString()}</p>
+                      </div>
+                      <span className={statusClass(reward.status)}>{reward.status}</span>
+                    </div>
+
+                    <div className="mt-3 space-y-2 text-sm">
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.14em] text-slate-400">Group</p>
+                        <p className="mt-1 font-semibold text-white">{reward.groupOwner?.groupTitle || "(no title)"}</p>
+                        <p className="mt-0.5 break-all text-xs text-slate-400">{reward.groupId}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.14em] text-slate-400">Owner</p>
+                        <p className="mt-1 break-all text-slate-200">{reward.ownerWallet}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.14em] text-slate-400">Claimant</p>
+                        <p className="mt-1 break-all text-slate-200">{reward.claimantWallet}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.14em] text-slate-400">Amount</p>
+                        <p className="mt-1 font-semibold text-white">{formatRewardAmount(reward.rewardAmount)} EPWX</p>
+                      </div>
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.14em] text-slate-400">Tx Hash</p>
+                        <p className="mt-1 break-all text-xs text-slate-300">{reward.txHash || "-"}</p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4">
+                      {reward.status === "pending" ? (
+                        <button
+                          type="button"
+                          onClick={() => markPaid(reward)}
+                          disabled={markingId === reward.id}
+                          className="ui-btn-primary w-full rounded-lg px-3 py-2 text-sm disabled:opacity-50"
+                        >
+                          {markingId === reward.id ? "Distributing..." : "Distribute"}
+                        </button>
+                      ) : (
+                        <div className="rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2 text-center text-xs text-slate-500">No action available</div>
+                      )}
+                    </div>
+                  </article>
+                ))}
+              </div>
+
+              <div className="hidden overflow-x-auto rounded-2xl border border-white/10 md:block">
+                <table className="min-w-full text-sm text-slate-100">
+                  <thead className="bg-white/[0.03]">
+                    <tr>
+                      <th className="px-3 py-2 text-left text-slate-300">Created</th>
+                      <th className="px-3 py-2 text-left text-slate-300">Group</th>
+                      <th className="px-3 py-2 text-left text-slate-300">Owner</th>
+                      <th className="px-3 py-2 text-left text-slate-300">Claimant</th>
+                      <th className="px-3 py-2 text-left text-slate-300">Amount</th>
+                      <th className="px-3 py-2 text-left text-slate-300">Status</th>
+                      <th className="px-3 py-2 text-left text-slate-300">Tx Hash</th>
+                      <th className="px-3 py-2 text-left text-slate-300">Action</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {rewards.map((reward) => (
+                      <tr key={reward.id} className="border-t border-white/10">
+                        <td className="px-3 py-2 whitespace-nowrap">{new Date(reward.createdAt).toLocaleString()}</td>
+                        <td className="px-3 py-2 break-all">
+                          <div className="font-semibold text-white">{reward.groupOwner?.groupTitle || "(no title)"}</div>
+                          <div className="text-xs text-slate-400">{reward.groupId}</div>
+                        </td>
+                        <td className="px-3 py-2 break-all text-slate-200">{reward.ownerWallet}</td>
+                        <td className="px-3 py-2 break-all text-slate-200">{reward.claimantWallet}</td>
+                        <td className="px-3 py-2">{formatRewardAmount(reward.rewardAmount)} EPWX</td>
+                        <td className="px-3 py-2"><span className={statusClass(reward.status)}>{reward.status}</span></td>
+                        <td className="px-3 py-2 break-all text-xs text-slate-300">{reward.txHash || "-"}</td>
+                        <td className="px-3 py-2">
+                          {reward.status === "pending" ? (
+                            <button
+                              type="button"
+                              onClick={() => markPaid(reward)}
+                              disabled={markingId === reward.id}
+                              className="ui-btn-primary rounded-lg px-3 py-1.5 text-xs disabled:opacity-50"
+                            >
+                              {markingId === reward.id ? "Distributing..." : "Distribute"}
+                            </button>
+                          ) : (
+                            <span className="text-xs text-slate-500">-</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           ) : null}
         </section>
       </main>
