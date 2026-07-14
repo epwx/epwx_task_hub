@@ -31,12 +31,35 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage,
   fileFilter: (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|gif|webp|heic|heif/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
-    if (mimetype && extname) {
+    const allowedExtensions = new Set(['.jpg', '.jpeg', '.png', '.gif', '.webp', '.heic', '.heif', '.avif', '.jfif']);
+    const allowedMimeTypes = new Set([
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'image/gif',
+      'image/webp',
+      'image/heic',
+      'image/heif',
+      'image/heic-sequence',
+      'image/heif-sequence',
+      'image/avif'
+    ]);
+
+    const ext = path.extname(file.originalname || '').toLowerCase();
+    const mime = (file.mimetype || '').toLowerCase();
+    const hasAllowedExtension = allowedExtensions.has(ext);
+    const hasAllowedMime = allowedMimeTypes.has(mime);
+    const isGenericImageMime = mime.startsWith('image/');
+
+    // Some mobile browsers provide empty/odd extensions but still valid image MIME.
+    if (hasAllowedExtension || hasAllowedMime || (isGenericImageMime && !ext)) {
       cb(null, true);
     } else {
+      console.warn('Partner registration upload rejected:', {
+        originalname: file.originalname,
+        mimetype: file.mimetype,
+        extension: ext
+      });
       cb(new Error('Unsupported image format. Use JPG, PNG, GIF, WEBP, HEIC, or HEIF.'));
     }
   },
