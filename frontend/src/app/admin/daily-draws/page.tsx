@@ -143,6 +143,8 @@ export default function AdminDailyDrawsPage() {
     return winners.slice(start, start + WINNERS_PER_PAGE);
   }, [winners, winnersPage]);
 
+  const selectedDrawId = selectedDraw?.id ?? null;
+
   const fetchWinners = useCallback(async (drawId: number) => {
     try {
       const response = await fetch(`/api/epwx/daily-draws/${drawId}/winners`, { cache: "no-store" });
@@ -175,8 +177,7 @@ export default function AdminDailyDrawsPage() {
         return;
       }
 
-      const selectedStillExists = selectedDraw && nextDraws.some((draw) => draw.id === selectedDraw.id);
-      const drawToSelect = selectedStillExists ? selectedDraw : nextDraws[0];
+      const drawToSelect = nextDraws.find((draw) => draw.id === selectedDrawId) || nextDraws[0];
       setSelectedDraw(drawToSelect);
 
       if (drawToSelect) {
@@ -187,7 +188,7 @@ export default function AdminDailyDrawsPage() {
     } finally {
       setLoading(false);
     }
-  }, [address, fetchWinners, isAdmin, selectedDraw]);
+  }, [address, fetchWinners, isAdmin, selectedDrawId]);
 
   useEffect(() => {
     fetchDraws();
