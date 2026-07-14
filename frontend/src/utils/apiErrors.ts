@@ -1,4 +1,5 @@
 export const TEMPORARY_LIVE_DATA_MESSAGE = 'The entire homepage is temporarily unavailable. Please try again in a few minutes.';
+export const RATE_LIMITED_MESSAGE = 'Too many requests. Please wait a minute and try again.';
 
 type ErrorPayload = {
   error?: string;
@@ -24,7 +25,7 @@ export async function parseJsonResponse<T>(response: Response, fallbackMessage: 
 
   if (!bodyText) {
     if (!response.ok) {
-      throw new Error(rateLimited ? TEMPORARY_LIVE_DATA_MESSAGE : fallbackMessage);
+      throw new Error(rateLimited ? RATE_LIMITED_MESSAGE : fallbackMessage);
     }
 
     return {} as T;
@@ -35,11 +36,12 @@ export async function parseJsonResponse<T>(response: Response, fallbackMessage: 
   try {
     payload = JSON.parse(bodyText);
   } catch {
-    throw new Error(rateLimited ? TEMPORARY_LIVE_DATA_MESSAGE : fallbackMessage);
+    throw new Error(rateLimited ? RATE_LIMITED_MESSAGE : fallbackMessage);
   }
 
   if (!response.ok) {
-    throw new Error(rateLimited ? TEMPORARY_LIVE_DATA_MESSAGE : extractPayloadError(payload) || fallbackMessage);
+    const payloadError = extractPayloadError(payload);
+    throw new Error(rateLimited ? payloadError || RATE_LIMITED_MESSAGE : payloadError || fallbackMessage);
   }
 
   return payload as T;

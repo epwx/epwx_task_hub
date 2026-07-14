@@ -51,9 +51,16 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // Rate limiting
+const API_RATE_LIMIT_WINDOW_MS = Number.parseInt(String(process.env.API_RATE_LIMIT_WINDOW_MS || 15 * 60 * 1000), 10);
+const API_RATE_LIMIT_MAX = Number.parseInt(String(process.env.API_RATE_LIMIT_MAX || '600'), 10);
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
+  windowMs: Number.isFinite(API_RATE_LIMIT_WINDOW_MS) && API_RATE_LIMIT_WINDOW_MS > 0 ? API_RATE_LIMIT_WINDOW_MS : 15 * 60 * 1000,
+  max: Number.isFinite(API_RATE_LIMIT_MAX) && API_RATE_LIMIT_MAX > 0 ? API_RATE_LIMIT_MAX : 600,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    error: 'Too many requests. Please wait a minute and try again.',
+  },
 });
 app.use('/api/', limiter);
 
