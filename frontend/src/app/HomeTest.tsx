@@ -2000,7 +2000,7 @@ export default function HomeTest() {
                   <button
                     onClick={handleDailyClaim}
                     disabled={claiming || !agreed || !!remainingClaimTime}
-                    className={`px-6 py-3 rounded-lg font-bold text-white bg-green-600 hover:bg-green-700 transition-colors mb-4 ${claiming || !agreed || !!remainingClaimTime ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`block mx-auto px-6 py-3 rounded-lg font-bold text-white bg-green-600 hover:bg-green-700 transition-colors mb-4 ${claiming || !agreed || !!remainingClaimTime ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     {claiming ? 'Claiming...' : 'Claim Daily Reward'}
                   </button>
