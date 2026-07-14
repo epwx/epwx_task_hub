@@ -1191,6 +1191,7 @@ router.post('/daily-draws/run', async (req, res) => {
 router.post('/daily-draws/winners/:winnerId/mark-paid', async (req, res) => {
   const { admin, txHash } = req.body;
   const winnerId = Number.parseInt(String(req.params.winnerId), 10);
+  const txHashRaw = String(txHash || '').trim();
 
   if (!isAdminWallet(admin)) {
     return res.status(403).json({ error: 'Unauthorized' });
@@ -1200,7 +1201,7 @@ router.post('/daily-draws/winners/:winnerId/mark-paid', async (req, res) => {
     return res.status(400).json({ error: 'Invalid winner id.' });
   }
 
-  if (!txHash || !String(txHash).trim()) {
+  if (!txHashRaw) {
     return res.status(400).json({ error: 'txHash is required.' });
   }
 
@@ -1210,8 +1211,29 @@ router.post('/daily-draws/winners/:winnerId/mark-paid', async (req, res) => {
       return res.status(404).json({ error: 'Winner not found.' });
     }
 
+    if (winner.status === 'paid') {
+      return res.json({ success: true, winner, alreadyPaid: true });
+    }
+
+    if (winner.status !== 'pending') {
+      return res.status(400).json({ error: `Only pending winners can be marked paid. Current status: ${winner.status}` });
+    }
+
+    const provider = new ethers.JsonRpcProvider(process.env.BASE_RPC_URL || process.env.RPC_URL);
+    let receipt;
+
+    try {
+      receipt = await provider.getTransactionReceipt(txHashRaw);
+      if (!receipt || receipt.status !== 1) {
+        return res.status(400).json({ error: 'Transaction not found or failed.' });
+      }
+    } catch (err) {
+      console.error('[daily-draw mark-paid] Error fetching tx receipt:', err);
+      return res.status(500).json({ error: 'Failed to fetch transaction receipt.' });
+    }
+
     winner.status = 'paid';
-    winner.txHash = String(txHash).trim();
+    winner.txHash = txHashRaw;
     winner.paidAt = new Date();
     await winner.save();
 

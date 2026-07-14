@@ -286,11 +286,9 @@ export default function AdminDailyDrawsPage() {
         body: JSON.stringify({ admin: address, txHash }),
       });
 
-      const data = await parseJsonResponse<{ winner: DailyDrawWinner }>(response, "Failed to mark winner as paid");
+      await parseJsonResponse<{ winner: DailyDrawWinner }>(response, "Failed to mark winner as paid");
 
-      setWinners((current) =>
-        current.map((item) => (item.id === winner.id ? data.winner : item)).sort((a, b) => a.rank - b.rank)
-      );
+      await fetchWinners(winner.drawId);
       setSuccess(`Winner ${winner.wallet} marked as paid`);
     } catch (payError: any) {
       setError(payError?.message || "Failed to pay winner");
