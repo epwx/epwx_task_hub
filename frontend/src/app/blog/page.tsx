@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function BlogPage() {
   return (
     <main className="min-h-screen bg-slate-950 px-4 py-10 text-slate-100">
@@ -6,6 +8,12 @@ export default function BlogPage() {
         <h1 className="mt-3 text-3xl font-black leading-tight md:text-4xl">
           Telegram Group Owner Rewards: End-to-End Step-by-Step Flow
         </h1>
+        <div className="mt-4 rounded-xl border border-cyan-300/30 bg-cyan-300/10 p-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-cyan-200">New</p>
+          <Link href="/blog/x-daily-rewards" className="mt-1 inline-block text-sm font-bold text-cyan-100 underline decoration-cyan-300/60 underline-offset-4 hover:text-white">
+            Open X article with one-click Copy Article button
+          </Link>
+        </div>
         <p className="mt-4 text-sm leading-7 text-slate-300 md:text-base">
           This guide explains exactly how Telegram Group Owner Rewards work in EPWX Task Hub, from group registration to
           admin payout and ledger tracking.
