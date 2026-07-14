@@ -195,11 +195,12 @@ When asked to redesign EPWX UI, follow this document as the default blueprint un
 ## Implementation Tracking (Live)
 
 ### Latest Applied UI Work
-- Date: 2026-07-13
- Status: Phase 5 Telegram rewards and mobile menu polish implemented, lint-clean, and build-clean
+- Date: 2026-07-14
+ Status: Phase 5 Telegram rewards UX consistency and QA hardening polish implemented, lint-clean, and build-clean
 - Commit sequence:
   - b6bb799 - feat(frontend): refresh mobile header menu
   - 2870945 - feat(frontend): restyle telegram group rewards admin
+  - 717a3f6 - feat(frontend): polish Telegram rewards and mini app UX consistency
 
 ### Files Updated In This UI Rollout
 - frontend/src/app/HomeTest.tsx
@@ -225,6 +226,21 @@ When asked to redesign EPWX UI, follow this document as the default blueprint un
 - frontend/src/app/user-guide/page.tsx
 - frontend/src/app/admin/telegram-group-rewards/page.tsx
 - frontend/src/components/Header.tsx
+- frontend/src/app/telegram-miniapp/page.tsx
+
+### Production QA Checklist (Telegram Rewards + Mini App)
+1. Telegram Mini App auth and wallet link:
+  - Open /telegram-miniapp from Telegram, confirm Telegram auth resolves, and verify wallet link/update path completes with signature prompt handling.
+2. Daily claim guardrails:
+  - Validate disabled states for missing initData, disconnected wallet, mismatched linked wallet, and cooldown countdown messaging.
+3. Group owner setup path:
+  - Validate register flow with registerGroupId context, successful registration state, and mini app link copy/share behavior.
+4. Latest draw/winners reliability:
+  - Confirm draw countdown updates every second, winners list refreshes, and pagination buttons work without console errors.
+5. Admin Telegram group rewards payout flow:
+  - Open /admin/telegram-group-rewards, verify filter + refresh behavior, execute pending reward distribute action, and ensure status/tx hash update after confirmation.
+6. Mobile UX consistency:
+  - On small viewport, verify Telegram admin rewards render card layout with full action parity, and header mobile menu remains usable across Telegram routes.
 
 ### Ongoing Tracking Rule
 For every future UI phase:
