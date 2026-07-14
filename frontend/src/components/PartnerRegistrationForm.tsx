@@ -93,10 +93,19 @@ export default function PartnerRegistrationForm({
         body: formDataToSend,
       });
 
-      const data = await response.json();
+      const contentType = response.headers.get("content-type") || "";
+      const data = contentType.includes("application/json")
+        ? await response.json()
+        : null;
 
       if (!response.ok || !data.success) {
-        toast.error(data.message || "Failed to register partner");
+        const errorMessage =
+          data?.message ||
+          data?.error?.message ||
+          (response.status === 413
+            ? "Screenshot is too large. Please upload an image under 8MB."
+            : "Failed to register partner");
+        toast.error(errorMessage);
         return;
       }
 

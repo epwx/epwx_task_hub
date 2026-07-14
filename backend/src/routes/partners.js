@@ -31,10 +31,17 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage,
   fileFilter: (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|gif/;
+    const allowedTypes = /jpeg|jpg|png|gif|webp|heic|heif/;
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
     const mimetype = allowedTypes.test(file.mimetype);
-    if (mimetype && extname) { cb(null, true); } else { cb(new Error('Only image files are allowed')); }
+    if (mimetype && extname) {
+      cb(null, true);
+    } else {
+      cb(new Error('Unsupported image format. Use JPG, PNG, GIF, WEBP, HEIC, or HEIF.'));
+    }
+  },
+  limits: {
+    fileSize: 8 * 1024 * 1024
   }
 });
 
