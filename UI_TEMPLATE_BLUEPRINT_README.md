@@ -196,11 +196,10 @@ When asked to redesign EPWX UI, follow this document as the default blueprint un
 
 ### Latest Applied UI Work
 - Date: 2026-07-13
-- Status: Phase 4 non-home pages implemented, home action surface updated to desktop action strip plus mobile dock, lint-clean, and build-clean
+ Status: Phase 5 Telegram rewards and mobile menu polish implemented, lint-clean, and build-clean
 - Commit sequence:
-  - 61c54a0 - feat(frontend): replace floating home rails with action strip
-  - 3dce3a1 - feat(frontend): restyle tasks and cashback pages
-  - 1100fe8 - feat(frontend): restyle partner portal shell
+  - b6bb799 - feat(frontend): refresh mobile header menu
+  - 2870945 - feat(frontend): restyle telegram group rewards admin
 
 ### Files Updated In This UI Rollout
 - frontend/src/app/HomeTest.tsx
@@ -224,6 +223,8 @@ When asked to redesign EPWX UI, follow this document as the default blueprint un
 - frontend/src/components/MerchantClaimsTable.tsx
 - frontend/src/components/PartnerRegistrationForm.tsx
 - frontend/src/app/user-guide/page.tsx
+- frontend/src/app/admin/telegram-group-rewards/page.tsx
+- frontend/src/components/Header.tsx
 
 ### Ongoing Tracking Rule
 For every future UI phase:
