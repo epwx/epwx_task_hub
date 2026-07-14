@@ -165,6 +165,8 @@ async function main() {
       name: "Frontend home is reachable",
       method: "GET",
       url: `${FRONTEND_URL}/`,
+      retryAttempts: process.env.SMOKE_FRONTEND_MAX_ATTEMPTS || "24",
+      retryDelayMs: process.env.SMOKE_FRONTEND_RETRY_DELAY_MS || "5000",
       expectStatus: [200],
       assert: ({ text }) => (text && text.includes("EPWX")) || "Home page did not include expected marker 'EPWX'",
     },
