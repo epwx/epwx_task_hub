@@ -1895,8 +1895,7 @@ export default function HomeTest() {
               </div>
             </div>
             {address ? (
-              isTelegramVerified ? (
-                <>
+              <>
                   <div className={`${glassPanelClass} mb-5 w-full overflow-hidden text-sm text-white/90`}>
                     <div className="border-b border-white/15 bg-white/5 px-4 py-3 text-center sm:text-left">
                       <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Claim Rules</div>
@@ -2081,6 +2080,11 @@ export default function HomeTest() {
                   {claimStatus && (
                     <div className="text-center text-lg font-semibold text-white mb-2">{claimStatus}</div>
                   )}
+                  {!isTelegramVerified ? (
+                    <div className="mb-4 rounded-2xl border border-emerald-300/20 bg-emerald-500/10 p-4 text-sm text-emerald-100">
+                      Telegram verification is optional for daily claims right now. Connect your wallet, sign the claim, and continue.
+                    </div>
+                  ) : null}
                   <div className="mb-4 rounded-2xl border border-white/15 bg-white/10 p-4 text-sm text-white/80">
                     Daily claims use a wallet signature to confirm that you control this address. Signing this message does not transfer funds and does not create a token approval.
                   </div>
@@ -2123,9 +2127,6 @@ export default function HomeTest() {
                     </div>
                   )}
                 </>
-              ) : (
-                <div className="text-center text-red-200 font-semibold mb-2">Please verify your Telegram membership to claim daily rewards.</div>
-              )
             ) : (
               <div className="flex flex-col items-center">
                 <div className="text-center text-white/80 font-semibold mb-2">Connect your wallet to claim daily rewards.</div>

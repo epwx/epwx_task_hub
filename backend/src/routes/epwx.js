@@ -1327,14 +1327,10 @@ router.post('/daily-claim', async (req, res) => {
   }
 
   const user = await User.findOne({ where: { walletAddress: normalizedWallet } });
-  if (!user || !user.telegramVerified) {
-    return res.status(403).json({ error: 'Telegram not verified' });
-  }
-
-  if (!user.telegramUserId && TELEGRAM_GROUP_MEMBERSHIP_REQUIRED && !ALLOW_LEGACY_TELEGRAM_VERIFIED_CLAIMS) {
-    return res.status(403).json({
-      error: 'Please link your wallet from the EPWX Telegram Mini App and try again.',
-      code: 'TELEGRAM_WALLET_LINK_REQUIRED',
+  if (user && !user.telegramVerified) {
+    console.log('[daily-claim] allowing claim for wallet without telegram verification', {
+      wallet: normalizedWallet,
+      telegramUserId: user.telegramUserId || null,
     });
   }
 
