@@ -400,6 +400,7 @@ export default function TelegramMiniAppPage() {
   const [initData, setInitData] = useState<string>("");
   const [telegramUser, setTelegramUser] = useState<TelegramMiniAppUser | null>(null);
   const [linkedWallet, setLinkedWallet] = useState<string | null>(null);
+  const [officialGroupMember, setOfficialGroupMember] = useState<boolean | null>(null);
   const [loadingAuth, setLoadingAuth] = useState<boolean>(true);
   const [activeAction, setActiveAction] = useState<ActiveAction | null>(null);
   const [awaitingWalletSignature, setAwaitingWalletSignature] = useState<boolean>(false);
@@ -672,12 +673,14 @@ export default function TelegramMiniAppPage() {
           setStatus(data.error || "Telegram authentication failed.");
           setTelegramUser(null);
           setLinkedWallet(null);
+          setOfficialGroupMember(null);
           setLoadingAuth(false);
           return;
         }
 
         setTelegramUser(data.telegramUser);
         setLinkedWallet(data.linkedWallet || null);
+        setOfficialGroupMember(typeof data.officialGroupMember === "boolean" ? data.officialGroupMember : null);
         if (data.officialGroupMember === false) {
           setStatus("Join the official EPWX Telegram group first, then reopen this Mini App.");
         } else {
@@ -689,6 +692,7 @@ export default function TelegramMiniAppPage() {
         }
       } catch {
         setStatus("Unable to verify Telegram session right now.");
+        setOfficialGroupMember(null);
       } finally {
         setLoadingAuth(false);
       }
@@ -1211,6 +1215,11 @@ export default function TelegramMiniAppPage() {
                 {loadingAuth ? "Checking..." : telegramUser ? "Verified" : "Not verified"}
               </span>
             </div>
+            {officialGroupMember === false ? (
+              <div className="rounded-xl border border-amber-300/35 bg-amber-500/10 px-3 py-2 text-center text-amber-100">
+                Official Telegram group not verified. Daily rewards are paid at 50% until this wallet is group verified.
+              </div>
+            ) : null}
             <div className="grid grid-cols-[auto,1fr] items-center gap-3">
               <span className="text-slate-300">Telegram user</span>
               <span

@@ -510,6 +510,19 @@ function getDefaultDailyRewardDetails() {
   };
 }
 
+function getTelegramAdjustedDailyRewardAmount(amount, isOfficialGroupMember) {
+  const normalizedAmount = String(amount || '0');
+  if (isOfficialGroupMember) {
+    return normalizedAmount;
+  }
+
+  try {
+    return (BigInt(normalizedAmount) / 2n).toString();
+  } catch {
+    return normalizedAmount;
+  }
+}
+
 async function getDailyRewardDetails(wallet) {
   if (!epwxTokenContract) {
     return getDefaultDailyRewardDetails();
@@ -1334,6 +1347,8 @@ router.post('/daily-claim', async (req, res) => {
     });
   }
 
+  const officialGroupMembership = await isOfficialTelegramGroupMember(user?.telegramUserId);
+
   // Check for partner referral if referralCode is provided
   let partnerReferral = null;
   let partnerId = null;
@@ -1389,7 +1404,16 @@ router.post('/daily-claim', async (req, res) => {
 
   // TODO: Send EPWX to wallet here (call contract or queue for admin)
   const rewardDetails = await getDailyRewardDetails(normalizedWallet);
-  const amount = rewardDetails.amount;
+  const amount = getTelegramAdjustedDailyRewardAmount(rewardDetails.amount, officialGroupMembership.isMember);
+  if (!officialGroupMembership.isMember) {
+    console.log('[daily-claim] applying 50% reward for wallet without official Telegram group verification', {
+      wallet: normalizedWallet,
+      telegramUserId: user?.telegramUserId || null,
+      reason: officialGroupMembership.reason,
+      baseAmount: rewardDetails.amount,
+      adjustedAmount: amount,
+    });
+  }
   const claim = await DailyClaim.create({ 
     wallet: normalizedWallet, 
     ip, 

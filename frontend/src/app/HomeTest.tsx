@@ -2081,8 +2081,8 @@ export default function HomeTest() {
                     <div className="text-center text-lg font-semibold text-white mb-2">{claimStatus}</div>
                   )}
                   {!isTelegramVerified ? (
-                    <div className="mb-4 rounded-2xl border border-emerald-300/20 bg-emerald-500/10 p-4 text-sm text-emerald-100">
-                      Telegram verification is optional for daily claims right now. Connect your wallet, sign the claim, and continue.
+                    <div className="mb-4 rounded-2xl border border-amber-300/25 bg-amber-500/10 p-4 text-sm text-amber-100">
+                      Telegram group is not verified for this wallet yet. Daily rewards are paid at 50% of the current tier until group verification is complete.
                     </div>
                   ) : null}
                   <div className="mb-4 rounded-2xl border border-white/15 bg-white/10 p-4 text-sm text-white/80">
