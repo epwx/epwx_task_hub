@@ -1605,7 +1605,17 @@ export default function HomeTest() {
                     ) : isTelegramVerified === null ? (
                       <div className="ui-status ui-status-warning mt-2">Unknown</div>
                     ) : (
-                      <div className="ui-status ui-status-danger mt-2">Not verified</div>
+                      <div className="mt-2 space-y-3">
+                        <div className="ui-status ui-status-danger">Not verified</div>
+                        <a
+                          href={`https://t.me/${TELEGRAM_BOT_USERNAME}?start=${address}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="ui-btn-primary inline-flex w-full items-center justify-center rounded-xl px-4 py-3 text-sm"
+                        >
+                          Verify Telegram Membership
+                        </a>
+                      </div>
                     )}
                   </div>
                 </div>
