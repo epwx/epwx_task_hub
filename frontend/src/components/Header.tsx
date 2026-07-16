@@ -221,7 +221,7 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="md:hidden mt-4 animate-fadeIn">
-            <div className="ui-surface-strong overflow-hidden p-4 text-white shadow-[0_20px_45px_rgba(2,6,23,0.45)]">
+            <div className="ui-surface-strong max-h-[calc(100dvh-8rem)] overflow-x-hidden overflow-y-auto overscroll-contain p-4 text-white shadow-[0_20px_45px_rgba(2,6,23,0.45)] [scrollbar-width:thin] [-webkit-overflow-scrolling:touch]">
               <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/40 to-transparent" />
               <nav className="relative space-y-4">
                 <div>
