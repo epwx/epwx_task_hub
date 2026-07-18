@@ -1166,39 +1166,37 @@ export default function TelegramMiniAppPage() {
             <ConnectKitButton />
           </div>
 
-          {isTelegramWebView ? (
-            <div className="rounded-2xl border border-cyan-300/35 bg-cyan-500/10 p-4 text-sm text-cyan-50">
-              <p>
-                Coinbase and MetaMask wallet connections can fail inside Telegram&apos;s in-app browser. If a wallet shows a smart-wallet or URL-scheme error, open this Mini App in an external browser or in the wallet&apos;s own browser instead.
-              </p>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <button
-                  type="button"
-                  onClick={handleOpenInExternalBrowser}
-                  className="ui-btn-muted rounded-xl px-4 py-3"
-                >
-                  Open In External Browser
-                </button>
-                <button
-                  type="button"
-                  onClick={handleOpenInMetaMaskBrowser}
-                  className="ui-btn-muted rounded-xl px-4 py-3"
-                >
-                  Open In MetaMask Browser
-                </button>
-                <button
-                  type="button"
-                  onClick={handleCopyMiniAppLink}
-                  className="ui-btn-muted rounded-xl px-4 py-3"
-                >
-                  Copy Mini App Link
-                </button>
-              </div>
-              <p className="text-xs text-cyan-100/85">
-                For the cleanest test flow, open the copied link in MetaMask mobile browser, Coinbase Wallet browser, or an external browser, then connect and link the wallet there.
-              </p>
+          <div className="rounded-2xl border border-cyan-300/35 bg-cyan-500/10 p-4 text-sm text-cyan-50">
+            <p>
+              Coinbase and MetaMask wallet connections can fail inside Telegram&apos;s in-app browser. If a wallet shows a smart-wallet or URL-scheme error, open this Mini App in an external browser or in the wallet&apos;s own browser instead.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={handleOpenInExternalBrowser}
+                className="ui-btn-muted rounded-xl px-4 py-3"
+              >
+                Open In External Browser
+              </button>
+              <button
+                type="button"
+                onClick={handleOpenInMetaMaskBrowser}
+                className="ui-btn-muted rounded-xl px-4 py-3"
+              >
+                Open In MetaMask Browser
+              </button>
+              <button
+                type="button"
+                onClick={handleCopyMiniAppLink}
+                className="ui-btn-muted rounded-xl px-4 py-3"
+              >
+                Copy Mini App Link
+              </button>
             </div>
-          ) : null}
+            <p className="text-xs text-cyan-100/85">
+              For the cleanest test flow, open the copied link in MetaMask mobile browser, Coinbase Wallet browser, or an external browser, then connect and link the wallet there.
+            </p>
+          </div>
           </CollapsibleSection>
         </div>
 
