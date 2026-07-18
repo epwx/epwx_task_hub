@@ -797,8 +797,8 @@ export default function TelegramMiniAppPage() {
       );
     } catch (error) {
       const rawMessage = getErrorMessage(error);
-      const isChainSwitchIssue = /switch chain|switch network|unsupported chain|chain not configured/i.test(rawMessage);
-      if (!isChainSwitchIssue || !window.ethereum) {
+      const isRetryableViaProvider = /switch chain|switch network|unsupported chain|chain not configured|unknown rpc/i.test(rawMessage);
+      if (!isRetryableViaProvider || !window.ethereum) {
         throw error;
       }
 
@@ -905,9 +905,10 @@ export default function TelegramMiniAppPage() {
         const rawMessage = getErrorMessage(error);
         if (/signature timed out/i.test(rawMessage)) {
           setStatus(rawMessage);
-        } else 
-        if (/rejected|denied|cancelled|canceled/i.test(rawMessage)) {
+        } else if (/rejected|denied|cancelled|canceled/i.test(rawMessage)) {
           setStatus("Wallet signature was cancelled in your wallet app.");
+        } else if (/unknown rpc/i.test(rawMessage)) {
+          setStatus("Wallet link failed: signing not supported in this browser. Open the Mini App in MetaMask or Coinbase Wallet browser and try again.");
         } else if (rawMessage) {
           setStatus(`Wallet link failed: ${rawMessage}`);
         } else {
