@@ -419,9 +419,10 @@ export default function TelegramMiniAppPage() {
   const dailyClaimSectionRef = useRef<HTMLDivElement | null>(null);
   const dailyDrawSectionRef = useRef<HTMLDivElement | null>(null);
   const didAutoFocusLaunchTargetRef = useRef(false);
-  const [openSections, setOpenSections] = useState<{ walletBalance: boolean; swap: boolean; groupOwner: boolean; dailyClaim: boolean; dailyDraws: boolean }>({
+  const [openSections, setOpenSections] = useState<{ walletBalance: boolean; swap: boolean; onramp: boolean; groupOwner: boolean; dailyClaim: boolean; dailyDraws: boolean }>({
     walletBalance: false,
     swap: false,
+    onramp: false,
     groupOwner: false,
     dailyClaim: true,
     dailyDraws: false,
@@ -441,7 +442,7 @@ export default function TelegramMiniAppPage() {
   const [nextDrawAtUtc, setNextDrawAtUtc] = useState<string>("");
   const [showClaimUpgradePrompt, setShowClaimUpgradePrompt] = useState(false);
 
-  const toggleSection = (section: "walletBalance" | "swap" | "groupOwner" | "dailyClaim" | "dailyDraws") => {
+  const toggleSection = (section: "walletBalance" | "swap" | "onramp" | "groupOwner" | "dailyClaim" | "dailyDraws") => {
     setOpenSections((current) => ({
       ...current,
       [section]: !current[section],
@@ -541,6 +542,8 @@ export default function TelegramMiniAppPage() {
       setOpenSections((current) => ({
         ...current,
         walletBalance: !hasConnectedWallet,
+        swap: false,
+        onramp: false,
         dailyClaim: hasConnectedWallet,
         dailyDraws: false,
       }));
@@ -564,6 +567,8 @@ export default function TelegramMiniAppPage() {
       setOpenSections((current) => ({
         ...current,
         walletBalance: !hasConnectedWallet,
+        swap: false,
+        onramp: false,
         dailyClaim: hasConnectedWallet,
         dailyDraws: false,
       }));
