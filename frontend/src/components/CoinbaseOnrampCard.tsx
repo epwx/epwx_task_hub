@@ -21,38 +21,15 @@ export function CoinbaseOnrampCard({ compact = false }: CoinbaseOnrampCardProps)
     setIsLoading(true);
 
     try {
-      // Coinbase Onramp URL builder
-      const onrampParams = new URLSearchParams();
+      // Direct Coinbase Onramp link (no appId required)
+      // Format: https://pay.coinbase.com/buy?amount=USD_AMOUNT&crypto=ETH&address=WALLET&network=base
+      const coinbaseUrl = new URL('https://pay.coinbase.com/buy');
+      coinbaseUrl.searchParams.set('amount', usdAmount || '100');
+      coinbaseUrl.searchParams.set('crypto', 'ETH');
+      coinbaseUrl.searchParams.set('address', address);
+      coinbaseUrl.searchParams.set('network', 'base');
       
-      // Your app identifier (free, no signup needed)
-      onrampParams.set('appId', 'epwx-task-hub');
-      
-      // Destination wallet
-      onrampParams.set('destinationWallets', JSON.stringify([
-        {
-          address: address,
-          blockchains: ['base'],
-          assets: ['ETH', 'USDC']
-        }
-      ]));
-
-      // Amount in fiat (optional)
-      if (usdAmount && Number(usdAmount) > 0) {
-        onrampParams.set('fiatAmount', usdAmount);
-      }
-
-      // Currency
-      onrampParams.set('fiatCurrency', 'USD');
-
-      // Redirect back to this page after purchase
-      onrampParams.set('redirectUrl', window.location.href);
-
-      // Payment methods the user can use
-      onrampParams.set('paymentMethods', 'CARD,BANK_TRANSFER');
-
-      // Redirect to Coinbase Onramp
-      const coinbaseOnrampUrl = `https://pay.coinbase.com/buy/select-asset?${onrampParams.toString()}`;
-      window.open(coinbaseOnrampUrl, '_blank', 'width=500,height=700');
+      window.open(coinbaseUrl.toString(), '_blank', 'width=500,height=700');
     } catch (error) {
       console.error('Error opening Coinbase Onramp:', error);
       alert('Failed to open Coinbase Onramp');
