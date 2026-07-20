@@ -51,6 +51,9 @@ Verify.
 Claim.
 Repeat.
 
+Daily claim link:
+https://tasks.epowex.com/#daily-claim
+
 #EPWX #Base #Web3 #Crypto #DailyRewards #Onchain`;
 
 export default function XDailyRewardsArticlePage() {

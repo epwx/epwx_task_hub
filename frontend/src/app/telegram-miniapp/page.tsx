@@ -6,6 +6,7 @@ import { useAccount, useBalance, useSignMessage } from "wagmi";
 import { base } from "wagmi/chains";
 import { ethers } from "ethers";
 import { HomeSwapCard } from "@/components/HomeSwapCard";
+import { CoinbaseOnrampCard } from "@/components/CoinbaseOnrampCard";
 
 type TelegramMiniAppUser = {
   id: string;
@@ -1133,6 +1134,19 @@ export default function TelegramMiniAppPage() {
           >
             <div className="-mx-2 sm:mx-0">
               <HomeSwapCard compact />
+            </div>
+          </CollapsibleSection>
+        </div>
+
+        <div className="scroll-mt-28 sm:scroll-mt-24">
+          <CollapsibleSection
+            title="Buy EPWX with Card"
+            description="Use your debit or credit card to buy ETH or USDC on Base via Coinbase Pay."
+            isOpen={false}
+            onToggle={() => toggleSection("onramp")}
+          >
+            <div className="-mx-2 sm:mx-0">
+              <CoinbaseOnrampCard compact />
             </div>
           </CollapsibleSection>
         </div>

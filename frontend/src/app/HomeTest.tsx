@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { EPWXCashbackClaim } from "@/components/EPWXCashbackClaim_clean";
 import { HomeSwapCard } from "@/components/HomeSwapCard";
+import { CoinbaseOnrampCard } from "@/components/CoinbaseOnrampCard";
 import { TokenSupplyPieChart } from "@/components/TokenSupplyPieChart";
 import { parseJsonResponse } from "@/utils/apiErrors";
 import { Fragment, useState, useEffect } from "react";
@@ -1762,7 +1763,16 @@ export default function HomeTest() {
         </section>
 
         <section id="buy-epwx" className="py-8 scroll-mt-24">
-          <HomeSwapCard />
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div>
+              <h2 className="mb-4 text-2xl font-black text-slate-100">Buy EPWX</h2>
+              <HomeSwapCard />
+            </div>
+            <div>
+              <h2 className="mb-4 text-2xl font-black text-slate-100">Buy with Card</h2>
+              <CoinbaseOnrampCard />
+            </div>
+          </div>
         </section>
 
         <section id="burnt-supply" className="scroll-mt-24">
