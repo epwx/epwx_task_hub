@@ -4,7 +4,7 @@ import { EPWXCashbackClaim } from "@/components/EPWXCashbackClaim_clean";
 import { HomeSwapCard } from "@/components/HomeSwapCard";
 import { TokenSupplyPieChart } from "@/components/TokenSupplyPieChart";
 import { parseJsonResponse } from "@/utils/apiErrors";
-import { Fragment, useState, useEffect } from "react";
+import { Fragment, useCallback, useState, useEffect } from "react";
 import DailyClaimsTable from "@/components/DailyClaimsTable";
 import { useAccount, useBalance, useSignMessage } from "wagmi";
 import { base } from "wagmi/chains";
@@ -941,6 +941,8 @@ export default function HomeTest() {
   const [specialAgreed, setSpecialAgreed] = useState(false);
   const [showSpecialTerms, setShowSpecialTerms] = useState(false);
   const [checkingVerification, setCheckingVerification] = useState(false);
+  const [telegramVerificationLastCheckedAt, setTelegramVerificationLastCheckedAt] = useState<number | null>(null);
+  const [telegramVerificationError, setTelegramVerificationError] = useState<string | null>(null);
   const [activeShortcutSection, setActiveShortcutSection] = useState<HomeShortcutSection>('daily-claim');
 
   useEffect(() => {
@@ -1307,28 +1309,33 @@ export default function HomeTest() {
     };
   }, [address, claimStatus]);
 
-  useEffect(() => {
+  const checkVerification = useCallback(async () => {
     const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
+    if (!address) {
+      setIsTelegramVerified(false);
+      setTelegramVerificationLastCheckedAt(null);
+      setTelegramVerificationError(null);
+      return;
+    }
 
-    const checkVerification = async () => {
-      if (!address) {
-        setIsTelegramVerified(false);
-        return;
+    setCheckingVerification(true);
+    setTelegramVerificationError(null);
+    try {
+      const res = await fetch(`${API_URL}/api/epwx/telegram-verified?wallet=${address}`, { cache: 'no-store' });
+      if (!res.ok) {
+        throw new Error('Verification check failed');
       }
+      const data = await res.json();
+      setIsTelegramVerified(!!data.verified);
+      setTelegramVerificationLastCheckedAt(Date.now());
+    } catch {
+      setIsTelegramVerified((currentValue) => currentValue);
+      setTelegramVerificationError('Unable to refresh Telegram status right now. Try again.');
+    }
+    setCheckingVerification(false);
+  }, [address]);
 
-      setCheckingVerification(true);
-      try {
-        const res = await fetch(`${API_URL}/api/epwx/telegram-verified?wallet=${address}`, { cache: 'no-store' });
-        if (!res.ok) {
-          throw new Error('Verification check failed');
-        }
-        const data = await res.json();
-        setIsTelegramVerified(!!data.verified);
-      } catch {
-        setIsTelegramVerified((currentValue) => currentValue);
-      }
-      setCheckingVerification(false);
-    };
+  useEffect(() => {
 
     checkVerification();
 
@@ -1362,7 +1369,7 @@ export default function HomeTest() {
       window.removeEventListener('focus', handleFocus);
       window.removeEventListener('pageshow', handlePageShow);
     };
-  }, [address, isTelegramVerified]);
+  }, [checkVerification, isTelegramVerified]);
 
   useEffect(() => {
     const fetchLatestDailyClaim = async () => {
@@ -1635,6 +1642,25 @@ export default function HomeTest() {
                         </a>
                       </div>
                     )}
+                    <div className="mt-3 flex items-center justify-between gap-3 text-[11px] text-slate-400">
+                      <span>
+                        {telegramVerificationLastCheckedAt
+                          ? `Last checked: ${new Date(telegramVerificationLastCheckedAt).toLocaleTimeString()}`
+                          : 'Last checked: not yet'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          void checkVerification();
+                        }}
+                        className="rounded-lg border border-white/20 bg-white/10 px-2.5 py-1.5 font-semibold text-slate-100 transition-colors hover:bg-white/20"
+                      >
+                        Refresh Status
+                      </button>
+                    </div>
+                    {telegramVerificationError ? (
+                      <div className="mt-2 text-xs text-amber-200">{telegramVerificationError}</div>
+                    ) : null}
                   </div>
                 </div>
 
