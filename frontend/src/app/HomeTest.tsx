@@ -4,6 +4,7 @@ import { EPWXCashbackClaim } from "@/components/EPWXCashbackClaim_clean";
 import { HomeSwapCard } from "@/components/HomeSwapCard";
 import { TokenSupplyPieChart } from "@/components/TokenSupplyPieChart";
 import { parseJsonResponse } from "@/utils/apiErrors";
+import { getApiBaseUrl } from "@/utils/apiBaseUrl";
 import { Fragment, useCallback, useState, useEffect } from "react";
 import DailyClaimsTable from "@/components/DailyClaimsTable";
 import { useAccount, useBalance, useSignMessage } from "wagmi";
@@ -1310,7 +1311,7 @@ export default function HomeTest() {
   }, [address, claimStatus]);
 
   const checkVerification = useCallback(async () => {
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
+    const API_URL = getApiBaseUrl();
     if (!address) {
       setIsTelegramVerified(false);
       setTelegramVerificationLastCheckedAt(null);
