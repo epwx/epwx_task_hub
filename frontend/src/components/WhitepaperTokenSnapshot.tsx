@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { parseJsonResponse } from '@/utils/apiErrors';
+import { getApiBaseUrl } from '@/utils/apiBaseUrl';
 import {
   EPWX_TOKEN_ADDRESS,
   EPWX_WETH_PAIR_ADDRESS,
@@ -25,7 +26,7 @@ type SnapshotState = {
   loading: boolean;
 };
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
+const API_BASE_URL = getApiBaseUrl();
 
 async function fetchSupplySnapshot(): Promise<SupplySnapshot> {
   const [totalResponse, circulatingResponse, burnedResponse] = await Promise.all([

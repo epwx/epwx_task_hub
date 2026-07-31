@@ -56,9 +56,10 @@ interface MerchantClaimsTableProps {
 
 
 import React, { useState } from "react";
+import { getApiBaseUrl } from '@/utils/apiBaseUrl';
 
 // Use configured API base URL when provided, otherwise fall back to same-origin.
-const BACKEND_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
+const BACKEND_BASE_URL = getApiBaseUrl();
 
 const MerchantClaimsTable: React.FC<MerchantClaimsTableProps> = ({ claims, isAdmin = false, onDistribute, onReject, marking, context = 'merchant' }) => {
   const [rejectingId, setRejectingId] = useState<number | string | null>(null);

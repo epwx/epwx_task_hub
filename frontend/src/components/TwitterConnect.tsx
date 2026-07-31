@@ -4,8 +4,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAccount } from 'wagmi';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { getApiBaseUrl } from '@/utils/apiBaseUrl';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
+const API_URL = getApiBaseUrl();
 
 export function TwitterConnect() {
   const { address } = useAccount();

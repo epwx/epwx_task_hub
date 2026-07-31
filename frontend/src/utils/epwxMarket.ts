@@ -1,4 +1,5 @@
 import { parseJsonResponse } from '@/utils/apiErrors';
+import { withApiBase } from '@/utils/apiBaseUrl';
 
 export interface EpwxPriceData {
   priceUSD: number;
@@ -34,8 +35,7 @@ export const EPWX_SWAP_SLIPPAGE_BPS = 600;
 export const EPWX_SWAP_SLIPPAGE_PERCENT = EPWX_SWAP_SLIPPAGE_BPS / 100;
 
 export function getEpwxPriceApiUrl() {
-  const apiBase = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || '';
-  return apiBase ? `${apiBase}/api/price/epwx` : '/api/price/epwx';
+  return withApiBase('/api/price/epwx');
 }
 
 export async function fetchEpwxPriceData(): Promise<EpwxPriceData> {

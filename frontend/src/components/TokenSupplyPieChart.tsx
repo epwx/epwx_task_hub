@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { parseJsonResponse } from '@/utils/apiErrors';
+import { getApiBaseUrl } from '@/utils/apiBaseUrl';
 
 type SupplySnapshot = {
   totalSupply: number;
@@ -15,7 +16,7 @@ type SupplySlice = {
   color: string;
 };
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
+const API_BASE_URL = getApiBaseUrl();
 const REFRESH_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
 function polarToCartesian(cx: number, cy: number, radius: number, angle: number) {

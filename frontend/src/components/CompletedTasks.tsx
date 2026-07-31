@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
 import axios from 'axios';
+import { getApiBaseUrl } from '@/utils/apiBaseUrl';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
+const API_URL = getApiBaseUrl();
 
 interface CompletedTask {
   id: string;
