@@ -24,7 +24,8 @@ module.exports = {
       exec_mode: "fork",
       env: {
         NODE_ENV: "production",
-        PORT: 3000
+        PORT: 3000,
+        NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: process.env.NEXT_SERVER_ACTIONS_ENCRYPTION_KEY
       },
       error_file: "/home/deployer/.pm2/logs/epwx-frontend-error.log",
       out_file: "/home/deployer/.pm2/logs/epwx-frontend-out.log",

@@ -3,6 +3,7 @@ const path = require('path');
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  outputFileTracingRoot: __dirname,
   experimental: {
     // forceWebpackBuild: true, // Removed because it is not a valid Next.js option
   },
