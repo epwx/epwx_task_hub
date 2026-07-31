@@ -13,6 +13,7 @@ const config = createConfig(
     transports: {
       [base.id]: http(process.env.NEXT_PUBLIC_RPC_URL || 'https://mainnet.base.org'),
     },
+    multiInjectedProviderDiscovery: false,
     syncConnectedChain: false,
     // Use a placeholder WalletConnect project ID if not set
     walletConnectProjectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'a01e2f3b4c5d6e7f8g9h0i1j2k3l4m5n',
@@ -23,7 +24,17 @@ const config = createConfig(
   })
 );
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Reduce automatic request bursts when tab focus/network state changes.
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      retry: 1,
+      staleTime: 30_000,
+    },
+  },
+});
 
 function WalletReturnSync() {
   const { isConnected } = useAccount();
