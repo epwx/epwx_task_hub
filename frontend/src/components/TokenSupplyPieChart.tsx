@@ -15,7 +15,7 @@ type SupplySlice = {
   color: string;
 };
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.epowex.com';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
 const REFRESH_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
 function polarToCartesian(cx: number, cy: number, radius: number, angle: number) {

@@ -25,7 +25,7 @@ type SnapshotState = {
   loading: boolean;
 };
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.epowex.com';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 async function fetchSupplySnapshot(): Promise<SupplySnapshot> {
   const [totalResponse, circulatingResponse, burnedResponse] = await Promise.all([

@@ -57,8 +57,8 @@ interface MerchantClaimsTableProps {
 
 import React, { useState } from "react";
 
-// Set your backend API base URL here (should match production backend domain)
-const BACKEND_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.epowex.com";
+// Use configured API base URL when provided, otherwise fall back to same-origin.
+const BACKEND_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
 const MerchantClaimsTable: React.FC<MerchantClaimsTableProps> = ({ claims, isAdmin = false, onDistribute, onReject, marking, context = 'merchant' }) => {
   const [rejectingId, setRejectingId] = useState<number | string | null>(null);
