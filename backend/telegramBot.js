@@ -303,7 +303,6 @@ bot.onText(/\/verify/, async (msg) => {
     const status = res.data.result.status;
     console.log(`[BOT] Group membership status for user ${userId}: ${status}`);
     if (['member', 'administrator', 'creator'].includes(status)) {
-      bot.sendMessage(msg.chat.id, `✅ Verified! You are a member of the EPWX group. Your wallet: ${wallet}`);
       // Notify backend to set telegramVerified for this wallet
       try {
         // Ensure no double /api in the backend URL
@@ -315,10 +314,14 @@ bot.onText(/\/verify/, async (msg) => {
         } else {
           backendUrl = 'http://localhost:4000/api/epwx/telegram-verify';
         }
-        await axios.post(backendUrl, { wallet: wallet.toLowerCase() });
+        const verifyResponse = await axios.post(backendUrl, { wallet: wallet.toLowerCase() });
+        if (!verifyResponse?.data?.success) {
+          throw new Error('Backend did not confirm telegram verification.');
+        }
         console.log(`[BOT] Notified backend to set telegramVerified for wallet: ${wallet.toLowerCase()}`);
         delete walletRequests[userId];
         await saveWalletRequests();
+        bot.sendMessage(msg.chat.id, `✅ Verified! You are a member of the EPWX group, and your wallet is now synced: ${wallet}`);
       } catch (notifyErr) {
         console.error('[BOT] Failed to notify backend for telegram verification:', {
           backendUrl: process.env.API_URL || 'http://localhost:4000',
@@ -326,6 +329,7 @@ bot.onText(/\/verify/, async (msg) => {
           data: notifyErr?.response?.data || null,
           message: notifyErr?.message || 'Unknown error',
         });
+        bot.sendMessage(msg.chat.id, 'Verification check passed, but the backend update failed. Please try /verify again in a moment.');
       }
     } else {
       bot.sendMessage(msg.chat.id, '❌ You are not a member of the EPWX group. Please join at https://t.me/ePowerX_On_Base and try again.');

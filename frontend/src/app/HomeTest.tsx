@@ -1309,6 +1309,7 @@ export default function HomeTest() {
 
   useEffect(() => {
     const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
+
     const checkVerification = async () => {
       if (!address) {
         setIsTelegramVerified(false);
@@ -1331,8 +1332,22 @@ export default function HomeTest() {
 
     checkVerification();
 
+    const handleFocus = () => {
+      void checkVerification();
+    };
+
+    const handlePageShow = () => {
+      void checkVerification();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('pageshow', handlePageShow);
+
     if (!address) {
-      return;
+      return () => {
+        window.removeEventListener('focus', handleFocus);
+        window.removeEventListener('pageshow', handlePageShow);
+      };
     }
 
     const intervalId = isTelegramVerified
@@ -1343,6 +1358,9 @@ export default function HomeTest() {
       if (intervalId !== null) {
         window.clearInterval(intervalId);
       }
+
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('pageshow', handlePageShow);
     };
   }, [address, isTelegramVerified]);
 
