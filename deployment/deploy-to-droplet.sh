@@ -50,7 +50,7 @@ fi
 
 echo "🔧 Step 4: Setting up Frontend..."
 cd $APP_DIR/frontend
-npm install
+npm ci --include=dev
 
 # Create frontend .env.local if not exists
 if [ ! -f .env.local ]; then

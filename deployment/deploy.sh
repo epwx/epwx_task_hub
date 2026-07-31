@@ -127,7 +127,7 @@ cd ..
 
 # Frontend
 cd frontend
-npm install
+npm ci --include=dev
 npm run build
 cd ..
 
