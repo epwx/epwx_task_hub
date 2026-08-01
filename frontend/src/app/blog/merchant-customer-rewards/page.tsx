@@ -1,19 +1,27 @@
+import Image from "next/image";
+
 export default function MerchantCustomerRewardsArticlePage() {
   const customerFlow = [
     {
       title: "1. Scan the in-store QR code",
       copy: "Customer scans the merchant QR code and lands on the EPWX claim page with merchant details prefilled.",
       screenshotTag: "FLOW_01_QR_SCAN",
+      screenshotSrc: "/blog/merchant-flow-01-qr-scan.png",
+      screenshotAlt: "Merchant QR code card used by customers to start EPWX reward claim",
     },
     {
       title: "2. Allow location access",
       copy: "Customer allows location permission so EPWX can verify they are physically at the store.",
       screenshotTag: "FLOW_02_LOCATION_PERMISSION",
+      screenshotSrc: "/blog/merchant-flow-02-location-permission.png",
+      screenshotAlt: "Merchant claim screen asking user to enable GPS or location services",
     },
     {
       title: "3. Pass geofence verification",
       copy: "The system checks if the customer is within 50 meters of the merchant location before enabling claim actions.",
       screenshotTag: "FLOW_03_GEOFENCE_CHECK",
+      screenshotSrc: "/blog/merchant-flow-03-geofence-check.jpg",
+      screenshotAlt: "Claim page message indicating user is not at merchant location even with location enabled",
     },
     {
       title: "4. Connect wallet",
@@ -75,9 +83,21 @@ export default function MerchantCustomerRewardsArticlePage() {
                 <div key={flow.screenshotTag} className="rounded-2xl border border-white/10 bg-black/20 p-4">
                   <h3 className="text-lg font-bold text-white">{flow.title}</h3>
                   <p className="mt-2 text-slate-300">{flow.copy}</p>
-                  <div className="mt-4 rounded-xl border border-dashed border-cyan-300/50 bg-cyan-300/10 p-4 text-xs font-semibold uppercase tracking-[0.14em] text-cyan-200">
-                    Screenshot placeholder: {flow.screenshotTag}
-                  </div>
+                  {flow.screenshotSrc ? (
+                    <div className="mt-4 overflow-hidden rounded-xl border border-cyan-300/35 bg-cyan-300/5 p-2">
+                      <Image
+                        src={flow.screenshotSrc}
+                        alt={flow.screenshotAlt || flow.screenshotTag}
+                        width={768}
+                        height={1365}
+                        className="mx-auto h-auto w-full max-w-md rounded-lg"
+                      />
+                    </div>
+                  ) : (
+                    <div className="mt-4 rounded-xl border border-dashed border-cyan-300/50 bg-cyan-300/10 p-4 text-xs font-semibold uppercase tracking-[0.14em] text-cyan-200">
+                      Screenshot placeholder: {flow.screenshotTag}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
