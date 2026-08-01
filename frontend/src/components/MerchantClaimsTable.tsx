@@ -69,9 +69,10 @@ const MerchantClaimsTable: React.FC<MerchantClaimsTableProps> = ({ claims, isAdm
   // Helper to get absolute image URL
   const getImageUrl = (imgPath?: string | null) => {
     if (!imgPath) return '';
-    if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) return imgPath;
+    const normalizedPath = imgPath.replace(/\\+/g, '/').replace(/^\.\//, '');
+    if (normalizedPath.startsWith('http://') || normalizedPath.startsWith('https://')) return normalizedPath;
     // Ensure leading slash
-    const relPath = imgPath.startsWith('/') ? imgPath : `/${imgPath}`;
+    const relPath = normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`;
     return `${BACKEND_BASE_URL}${relPath}`;
   };
 

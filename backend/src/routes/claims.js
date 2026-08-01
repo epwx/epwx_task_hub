@@ -43,6 +43,10 @@ function getTwitterClaimType(taskType) {
   return TWITTER_TASK_TYPE_TO_CLAIM_TYPE[taskType] || null;
 }
 
+function toUrlPath(filePath) {
+  return String(filePath || '').replace(/\\+/g, '/');
+}
+
 
 
 function haversineDistance(lat1, lon1, lat2, lon2) {
@@ -64,7 +68,7 @@ router.post('/add', upload.single('receiptImage'), async (req, res) => {
   let receiptImagePath = null;
   if (req.file) {
     // Store relative path for portability
-    receiptImagePath = path.relative(process.cwd(), req.file.path);
+    receiptImagePath = toUrlPath(path.relative(process.cwd(), req.file.path));
   }
   if (!merchantId || !customer || lat == null || lng == null) {
     return res.status(400).json({ error: 'Missing required fields' });
@@ -156,7 +160,7 @@ async function createTwitterCampaignClaim(req, res, expectedTaskType) {
   let receiptImagePath = null;
 
   if (req.file) {
-    receiptImagePath = path.relative(process.cwd(), req.file.path);
+    receiptImagePath = toUrlPath(path.relative(process.cwd(), req.file.path));
   }
 
   if (!customer || !twitterCampaignId || !req.file) {
