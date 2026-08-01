@@ -60,6 +60,7 @@ import { getApiBaseUrl } from '@/utils/apiBaseUrl';
 
 // Use configured API base URL when provided, otherwise fall back to same-origin.
 const BACKEND_BASE_URL = getApiBaseUrl();
+const UPLOADS_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || BACKEND_BASE_URL;
 
 const MerchantClaimsTable: React.FC<MerchantClaimsTableProps> = ({ claims, isAdmin = false, onDistribute, onReject, marking, context = 'merchant' }) => {
   const [rejectingId, setRejectingId] = useState<number | string | null>(null);
@@ -73,6 +74,9 @@ const MerchantClaimsTable: React.FC<MerchantClaimsTableProps> = ({ claims, isAdm
     if (normalizedPath.startsWith('http://') || normalizedPath.startsWith('https://')) return normalizedPath;
     // Ensure leading slash
     const relPath = normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`;
+    if (relPath.startsWith('/uploads/')) {
+      return `${UPLOADS_BASE_URL}${relPath}`;
+    }
     return `${BACKEND_BASE_URL}${relPath}`;
   };
 
