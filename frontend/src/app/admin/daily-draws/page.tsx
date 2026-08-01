@@ -33,8 +33,9 @@ type DailyDrawWinner = {
   updatedAt: string;
 };
 
-const themedSectionClass = "relative overflow-hidden bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-3xl shadow-2xl p-8";
-const glassPanelClass = "bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl";
+const pageShellClass = "relative overflow-hidden rounded-3xl border border-white/10 bg-slate-900/70 p-6 shadow-[0_24px_65px_rgba(2,6,23,0.5)] backdrop-blur-xl sm:p-8";
+const glassPanelClass = "rounded-2xl border border-white/12 bg-white/[0.04] backdrop-blur-lg";
+const inputClassName = "mt-2 w-full rounded-2xl border border-white/15 bg-slate-950/40 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-cyan-300/40 focus:outline-none focus:ring-2 focus:ring-cyan-400/20";
 
 function getAdminWallets() {
   const env = process.env.NEXT_PUBLIC_ADMIN_WALLETS || "";
@@ -300,12 +301,21 @@ export default function AdminDailyDrawsPage() {
 
   if (!isAdmin) {
     return (
-      <div className="mx-auto max-w-xl px-4 py-16 text-center">
-        <div className={themedSectionClass}>
-          <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
-          <div className="relative z-10 flex flex-col items-center">
-            <div className="mb-4 text-lg font-semibold text-white">Connect an admin wallet to manage daily random draws.</div>
-            <ConnectKitButton />
+      <div className="relative min-h-screen overflow-hidden bg-slate-950 px-4 py-10 text-slate-100">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+          <div className="absolute -left-20 top-12 h-56 w-56 rounded-full bg-cyan-500/12 blur-[90px] sm:-left-32 sm:h-80 sm:w-80 sm:blur-[130px]" />
+          <div className="absolute -right-16 top-20 h-64 w-64 rounded-full bg-blue-600/16 blur-[100px] sm:-right-28 sm:h-96 sm:w-96 sm:blur-[150px]" />
+          <div className="absolute bottom-0 left-1/2 h-44 w-[20rem] -translate-x-1/2 rounded-full bg-emerald-400/10 blur-[90px] sm:h-72 sm:w-[38rem] sm:blur-[150px]" />
+        </div>
+        <div className="relative z-10 mx-auto max-w-2xl py-16 text-center">
+          <div className={pageShellClass}>
+            <div className="absolute -right-10 top-0 h-40 w-40 rounded-full bg-cyan-300/10 blur-3xl" />
+            <div className="relative z-10 flex flex-col items-center">
+              <div className="text-xs font-black uppercase tracking-[0.24em] text-slate-400">Admin Access</div>
+              <div className="mt-2 text-2xl font-black text-white">Connect the admin wallet</div>
+              <div className="mb-6 mt-3 max-w-lg text-sm text-slate-300">Manage daily winner draws, inspect results, and execute winner payouts from this admin panel.</div>
+              <ConnectKitButton />
+            </div>
           </div>
         </div>
       </div>
@@ -313,69 +323,101 @@ export default function AdminDailyDrawsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
+    <div className="relative min-h-screen overflow-hidden bg-slate-950 px-4 py-8 text-slate-100 sm:py-10">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+        <div className="absolute -left-20 top-12 h-56 w-56 rounded-full bg-cyan-500/12 blur-[90px] sm:-left-32 sm:h-80 sm:w-80 sm:blur-[130px]" />
+        <div className="absolute -right-16 top-20 h-64 w-64 rounded-full bg-blue-600/16 blur-[100px] sm:-right-28 sm:h-96 sm:w-96 sm:blur-[150px]" />
+        <div className="absolute bottom-0 left-1/2 h-44 w-[20rem] -translate-x-1/2 rounded-full bg-emerald-400/10 blur-[90px] sm:h-72 sm:w-[38rem] sm:blur-[150px]" />
+      </div>
+      <div className="relative z-10 mx-auto max-w-6xl min-w-0">
+      <section className={`${pageShellClass} mb-6`}>
+        <div className="absolute -right-16 top-0 h-44 w-44 rounded-full bg-cyan-300/10 blur-3xl" />
+        <div className="absolute -left-16 bottom-0 h-52 w-52 rounded-full bg-emerald-400/10 blur-3xl" />
+        <div className="relative z-10 flex min-w-0 flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div className="min-w-0">
+            <div className="text-xs font-black uppercase tracking-[0.24em] text-slate-400">Daily Draw Admin</div>
+            <h1 className="mt-2 text-3xl font-black text-white">Run draws and pay winners</h1>
+            <p className="mt-3 max-w-2xl text-sm text-slate-300">Select winners from verified daily claims, publish transparent draw history, and mark payouts with on-chain transaction hashes.</p>
+          </div>
+          <div className="grid min-w-0 gap-3 sm:grid-cols-3 lg:min-w-[360px]">
+            <div className={`${glassPanelClass} min-w-0 px-4 py-3`}>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Draws</div>
+              <div className="mt-2 text-2xl font-black text-white">{draws.length}</div>
+            </div>
+            <div className={`${glassPanelClass} min-w-0 px-4 py-3`}>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Winners</div>
+              <div className="mt-2 text-2xl font-black text-cyan-200">{winners.length}</div>
+            </div>
+            <div className={`${glassPanelClass} min-w-0 px-4 py-3`}>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Wallet</div>
+              <div className="mt-2 break-all text-sm font-bold text-emerald-200">{address}</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <div className="mb-8 grid gap-6 lg:grid-cols-[1.2fr_1fr]">
-        <form onSubmit={runDraw} className={themedSectionClass}>
-          <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
+        <form onSubmit={runDraw} className={pageShellClass}>
+          <div className="absolute top-0 right-0 h-40 w-40 rounded-full bg-cyan-300/10 blur-3xl" />
           <div className="relative z-10">
             <h2 className="text-2xl font-black text-white">Run Daily Winner Draw</h2>
-            <p className="mt-2 text-sm text-white/75">Select date and configuration, then run a random draw from unique daily claim wallets.</p>
+            <p className="mt-2 text-sm text-slate-300">Select date and configuration, then run a random draw from unique daily claim wallets.</p>
             <div className="mt-5 grid gap-4">
-              <label className="text-sm font-semibold text-white/85">
+              <label className="text-sm font-semibold text-slate-200">
                 Draw Date (UTC)
                 <input
                   type="date"
                   value={drawDate}
                   onChange={(event) => setDrawDate(event.target.value)}
-                  className="mt-2 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white"
+                  className={inputClassName}
                   required
                 />
               </label>
-              <label className="text-sm font-semibold text-white/85">
+              <label className="text-sm font-semibold text-slate-200">
                 Winner Count
                 <input
                   type="number"
                   min={1}
                   value={winnerCount}
                   onChange={(event) => setWinnerCount(event.target.value)}
-                  className="mt-2 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white"
+                  className={inputClassName}
                   required
                 />
               </label>
-              <label className="text-sm font-semibold text-white/85">
+              <label className="text-sm font-semibold text-slate-200">
                 Prize Amount (EPWX)
                 <input
                   type="number"
                   min={1}
                   value={prizeAmount}
                   onChange={(event) => setPrizeAmount(event.target.value)}
-                  className="mt-2 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white"
+                  className={inputClassName}
                   required
                 />
               </label>
-              <button type="submit" disabled={running} className="rounded-xl bg-green-600 px-4 py-3 text-sm font-bold text-white hover:bg-green-700 disabled:opacity-50">
+              <button type="submit" disabled={running} className="ui-btn-primary rounded-2xl px-4 py-3 text-sm font-bold disabled:opacity-50">
                 {running ? "Running Draw..." : "Run Draw"}
               </button>
             </div>
           </div>
         </form>
 
-        <div className={themedSectionClass}>
-          <div className="absolute bottom-0 left-0 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
+        <div className={pageShellClass}>
+          <div className="absolute bottom-0 left-0 h-40 w-40 rounded-full bg-emerald-400/10 blur-3xl" />
           <div className="relative z-10">
             <h2 className="text-2xl font-black text-white">Recent Draws</h2>
             <div className="mt-4 space-y-3">
-              {draws.length === 0 ? <div className="text-sm text-white/75">No draws yet.</div> : null}
+              {draws.length === 0 ? <div className="text-sm text-slate-300">No draws yet.</div> : null}
               {paginatedDraws.map((draw) => (
                 <button
                   key={draw.id}
                   type="button"
                   onClick={() => fetchWinners(draw.id)}
-                  className={`w-full rounded-xl border px-4 py-3 text-left transition-colors ${selectedDraw?.id === draw.id ? "border-white/40 bg-white/15" : "border-white/20 bg-white/5 hover:bg-white/10"}`}
+                  className={`w-full rounded-2xl border px-4 py-3 text-left transition-colors ${selectedDraw?.id === draw.id ? "border-emerald-300/35 bg-emerald-400/15" : "border-white/12 bg-white/[0.04] hover:bg-white/[0.08]"}`}
                 >
                   <div className="text-sm font-bold text-white">{draw.drawDate}</div>
-                  <div className="mt-1 text-xs text-white/70">Winners: {draw.winnerCount} | Eligible: {draw.eligibleCount}</div>
-                  <div className="text-xs text-white/70">Prize: {Number(draw.prizeAmount || "0").toLocaleString()} EPWX</div>
+                  <div className="mt-1 text-xs text-slate-300">Winners: {draw.winnerCount} | Eligible: {draw.eligibleCount}</div>
+                  <div className="text-xs text-slate-300">Prize: {Number(draw.prizeAmount || "0").toLocaleString()} EPWX</div>
                 </button>
               ))}
 
@@ -389,7 +431,7 @@ export default function AdminDailyDrawsPage() {
                   >
                     Prev
                   </button>
-                  <span className="text-xs font-semibold text-white/80">Page {drawsPage} of {totalDrawPages}</span>
+                  <span className="text-xs font-semibold text-slate-300">Page {drawsPage} of {totalDrawPages}</span>
                   <button
                     type="button"
                     onClick={() => setDrawsPage((page) => Math.min(totalDrawPages, page + 1))}
@@ -405,22 +447,22 @@ export default function AdminDailyDrawsPage() {
         </div>
       </div>
 
-      {error ? <div className="mb-4 rounded-2xl border border-red-200/20 bg-red-400/10 px-4 py-3 text-sm text-red-100">{error}</div> : null}
-      {success ? <div className="mb-4 rounded-2xl border border-emerald-200/20 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100">{success}</div> : null}
+      {error ? <div className="mb-4 rounded-2xl border border-rose-300/25 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">{error}</div> : null}
+      {success ? <div className="mb-4 rounded-2xl border border-emerald-300/25 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100">{success}</div> : null}
 
-      <div className={themedSectionClass}>
-        <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
+      <div className={pageShellClass}>
+        <div className="absolute top-0 right-0 h-40 w-40 rounded-full bg-cyan-300/10 blur-3xl" />
         <div className="relative z-10">
           <h1 className="text-3xl font-black text-white">Draw Winners{selectedDraw ? ` · ${selectedDraw.drawDate}` : ""}</h1>
-          <p className="mt-2 text-sm text-white/75">Pay winners and record transaction hashes for auditability.</p>
+          <p className="mt-2 text-sm text-slate-300">Pay winners and record transaction hashes for auditability.</p>
 
-          {loading ? <div className={`${glassPanelClass} mt-4 p-6 text-white/80`}>Loading draws...</div> : null}
-          {!loading && winners.length === 0 ? <div className={`${glassPanelClass} mt-4 p-6 text-sm text-white/75`}>No winners to display.</div> : null}
+          {loading ? <div className={`${glassPanelClass} mt-4 p-6 text-slate-200`}>Loading draws...</div> : null}
+          {!loading && winners.length === 0 ? <div className={`${glassPanelClass} mt-4 p-6 text-sm text-slate-300`}>No winners to display.</div> : null}
 
           {!loading && winners.length > 0 ? (
-            <div className="mt-4 overflow-x-auto">
-              <table className="min-w-full rounded-xl border border-white/15 bg-white/5 text-sm text-white">
-                <thead className="bg-white/10 text-white/90">
+            <div className="mt-4 overflow-x-auto rounded-2xl border border-white/12 bg-slate-950/45 shadow-[0_16px_40px_rgba(2,6,23,0.25)]">
+              <table className="min-w-full text-sm text-white">
+                <thead className="bg-white/[0.06] text-slate-300">
                   <tr>
                     <th className="px-4 py-3 text-left">Rank</th>
                     <th className="px-4 py-3 text-left">Wallet</th>
@@ -437,16 +479,16 @@ export default function AdminDailyDrawsPage() {
                       <td className="px-4 py-3 break-all">{winner.wallet}</td>
                       <td className="px-4 py-3">{Number(winner.prizeAmount || "0").toLocaleString()} EPWX</td>
                       <td className="px-4 py-3 capitalize">{winner.status}</td>
-                      <td className="px-4 py-3 break-all text-xs text-white/75">{winner.txHash || "-"}</td>
+                      <td className="px-4 py-3 break-all text-xs text-slate-400">{winner.txHash || "-"}</td>
                       <td className="px-4 py-3">
                         {winner.status === "paid" ? (
-                          <span className="rounded-full bg-emerald-500/20 px-3 py-1 text-xs font-semibold text-emerald-100">Paid</span>
+                          <span className="rounded-full border border-emerald-300/30 bg-emerald-400/15 px-3 py-1 text-xs font-semibold text-emerald-100">Paid</span>
                         ) : (
                           <button
                             type="button"
                             onClick={() => markWinnerPaid(winner)}
                             disabled={payingWinnerId === winner.id}
-                            className="rounded-lg border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold text-white hover:bg-white/20 disabled:opacity-50"
+                            className="rounded-lg border border-cyan-300/30 bg-cyan-400/10 px-3 py-1 text-xs font-semibold text-cyan-100 hover:bg-cyan-400/20 disabled:opacity-50"
                           >
                             {payingWinnerId === winner.id ? "Paying..." : "Pay Winner"}
                           </button>
@@ -467,7 +509,7 @@ export default function AdminDailyDrawsPage() {
                   >
                     Prev
                   </button>
-                  <span className="text-xs font-semibold text-white/80">Page {winnersPage} of {totalWinnersPages}</span>
+                  <span className="text-xs font-semibold text-slate-300">Page {winnersPage} of {totalWinnersPages}</span>
                   <button
                     type="button"
                     onClick={() => setWinnersPage((page) => Math.min(totalWinnersPages, page + 1))}
@@ -481,6 +523,7 @@ export default function AdminDailyDrawsPage() {
             </div>
           ) : null}
         </div>
+      </div>
       </div>
     </div>
   );
