@@ -100,6 +100,9 @@ export default function MerchantAdminPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const pageShellClass = "relative overflow-hidden rounded-3xl border border-white/10 bg-slate-900/70 p-6 shadow-[0_24px_65px_rgba(2,6,23,0.5)] backdrop-blur-xl sm:p-8";
+  const glassPanelClass = "rounded-2xl border border-white/12 bg-white/[0.04] backdrop-blur-lg";
+  const inputClassName = "w-full rounded-2xl border border-white/15 bg-slate-950/40 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-cyan-300/40 focus:outline-none focus:ring-2 focus:ring-cyan-400/20";
 
   const { data: walletClient } = useWalletClient();
   const { writeContractAsync } = useWriteContract();
@@ -317,15 +320,52 @@ export default function MerchantAdminPage() {
   };
   // Component render starts here
   return (
-    <div className="max-w-2xl mx-auto py-8">
+    <div className="relative min-h-screen overflow-x-clip bg-slate-950 px-4 py-8 text-slate-100 sm:py-10">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+        <div className="absolute -left-32 top-12 h-80 w-80 rounded-full bg-cyan-500/12 blur-[130px]" />
+        <div className="absolute -right-28 top-20 h-96 w-96 rounded-full bg-blue-600/16 blur-[150px]" />
+        <div className="absolute bottom-0 left-1/2 h-72 w-[38rem] -translate-x-1/2 rounded-full bg-emerald-400/10 blur-[150px]" />
+      </div>
+      <div className="relative z-10 mx-auto max-w-6xl">
       {notAdmin ? (
-        <div className="flex flex-col items-center justify-center py-16">
-          <div className="mb-4 text-lg text-gray-700 font-semibold">Please connect the admin wallet to access this page.</div>
-          <ConnectKitButton />
+        <div className="mx-auto max-w-2xl py-16">
+          <div className={`${pageShellClass} text-center`}>
+            <div className="absolute -right-10 top-0 h-40 w-40 rounded-full bg-cyan-300/10 blur-3xl" />
+            <div className="relative z-10 flex flex-col items-center">
+              <div className="text-xs font-black uppercase tracking-[0.24em] text-slate-400">Admin Access</div>
+              <div className="mt-2 text-2xl font-black text-white">Connect the admin wallet</div>
+              <div className="mt-3 mb-6 max-w-lg text-sm text-slate-300">This page manages merchant onboarding, merchant QR distribution, and reward-claim reviews. Connect an approved admin wallet to continue.</div>
+              <ConnectKitButton />
+            </div>
+          </div>
         </div>
       ) : (
         <>
-          <h2 className="text-2xl font-bold mb-4">Merchant Onboarding (Admin Only)</h2>
+          <section className={`${pageShellClass} mb-6`}>
+            <div className="absolute -right-16 top-0 h-44 w-44 rounded-full bg-cyan-300/10 blur-3xl" />
+            <div className="absolute -left-16 bottom-0 h-52 w-52 rounded-full bg-emerald-400/10 blur-3xl" />
+            <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+              <div>
+                <div className="text-xs font-black uppercase tracking-[0.24em] text-slate-400">Merchant Admin</div>
+                <h2 className="mt-2 text-3xl font-black text-white">Merchant onboarding and claims</h2>
+                <p className="mt-3 max-w-2xl text-sm text-slate-300">Register merchant locations, generate claim QR codes, and review receipt-based cashback claims from one admin surface.</p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-3 lg:min-w-[360px]">
+                <div className={`${glassPanelClass} px-4 py-3`}>
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Merchants</div>
+                  <div className="mt-2 text-2xl font-black text-white">{merchants.length}</div>
+                </div>
+                <div className={`${glassPanelClass} px-4 py-3`}>
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Expanded</div>
+                  <div className="mt-2 text-2xl font-black text-cyan-200">{Object.values(expanded).filter(Boolean).length}</div>
+                </div>
+                <div className={`${glassPanelClass} px-4 py-3`}>
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Wallet</div>
+                  <div className="mt-2 truncate text-sm font-bold text-emerald-200">{address}</div>
+                </div>
+              </div>
+            </div>
+          </section>
           <form onSubmit={e => {
             e.preventDefault();
             // Validate latitude and longitude
@@ -337,17 +377,30 @@ export default function MerchantAdminPage() {
             }
             setError(null);
             handleSubmit(e);
-          }} className="space-y-4 bg-white p-6 rounded shadow">
-            <input name="name" value={form.name} onChange={handleChange} placeholder="Merchant Name" className="w-full border rounded px-3 py-2 text-gray-700" required />
-            <input name="wallet" value={form.wallet} onChange={handleChange} placeholder="Merchant Wallet Address (optional)" className="w-full border rounded px-3 py-2 text-gray-700" />
-            <input name="address" value={form.address} onChange={handleChange} placeholder="Shop Address" className="w-full border rounded px-3 py-2 text-gray-700" required />
-            <input name="latitude" value={form.latitude} onChange={handleChange} placeholder="Latitude" className="w-full border rounded px-3 py-2 text-gray-700" required type="text" />
-            <input name="longitude" value={form.longitude} onChange={handleChange} placeholder="Longitude" className="w-full border rounded px-3 py-2 text-gray-700" required type="text" />
-            <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded font-semibold" disabled={loading}>{loading ? "Adding..." : "Add Merchant"}</button>
-            {error && <div className="text-red-600 mt-2">{error}</div>}
-            {success && <div className="text-green-600 mt-2">{success}</div>}
+          }} className={`${pageShellClass} space-y-5`}>
+            <div className="relative z-10">
+              <div className="mb-5 border-b border-white/10 pb-4">
+                <div className="text-xs font-black uppercase tracking-[0.22em] text-slate-400">Onboarding</div>
+                <div className="mt-2 text-2xl font-black text-white">Add merchant</div>
+                <div className="mt-2 text-sm text-slate-300">Create a claim endpoint tied to a merchant location and optional payout wallet.</div>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <input name="name" value={form.name} onChange={handleChange} placeholder="Merchant Name" className={inputClassName} required />
+                <input name="wallet" value={form.wallet} onChange={handleChange} placeholder="Merchant Wallet Address (optional)" className={inputClassName} />
+                <input name="address" value={form.address} onChange={handleChange} placeholder="Shop Address" className={`${inputClassName} md:col-span-2`} required />
+                <input name="latitude" value={form.latitude} onChange={handleChange} placeholder="Latitude" className={inputClassName} required type="text" />
+                <input name="longitude" value={form.longitude} onChange={handleChange} placeholder="Longitude" className={inputClassName} required type="text" />
+              </div>
+              <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
+                <button type="submit" className="ui-btn-primary rounded-2xl px-6 py-3 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-60" disabled={loading}>{loading ? "Adding..." : "Add Merchant"}</button>
+                <div className="text-xs text-slate-400">Coordinates are used to enforce the 50m proximity check on merchant receipt claims.</div>
+              </div>
+              {error && <div className="mt-4 rounded-2xl border border-rose-300/25 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">{error}</div>}
+              {success && <div className="mt-4 rounded-2xl border border-emerald-300/25 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100">{success}</div>}
+            </div>
           </form>
-          <h3 className="text-xl font-bold mt-8 mb-2">All Merchants</h3>
+          <div className="mt-8 mb-3 text-xs font-black uppercase tracking-[0.22em] text-slate-400">Merchant Directory</div>
+          <h3 className="text-2xl font-black text-white">All merchants</h3>
           {loading ? <div>Loading...</div> : (
             <div className="space-y-4 mt-2">
               {Array.isArray(merchants) && merchants.length > 0 ? (
@@ -356,32 +409,53 @@ export default function MerchantAdminPage() {
                     // Construct the merchant claim URL for QR code
                     const merchantUrl = `https://tasks.epowex.com/claim?merchant=${m.id}`;
                     return (
-                      <div key={String(m.id)} className="bg-white rounded shadow p-4 border flex flex-col text-sm text-gray-800">
-                        <div className="font-bold text-lg mb-2 text-gray-900">{m.name}</div>
-                        <div><span className="font-semibold text-gray-700">Wallet:</span> <span className="break-all text-gray-800">{m.wallet}</span></div>
-                        <div><span className="font-semibold text-gray-700">Address:</span> <span className="text-gray-800">{m.address}</span></div>
-                        <div><span className="font-semibold text-gray-700">Latitude:</span> <span className="text-gray-800">{m.latitude}</span></div>
-                        <div><span className="font-semibold text-gray-700">Longitude:</span> <span className="text-gray-800">{m.longitude}</span></div>
-                        {/* QR Code for merchant */}
-                        <div className="mt-4">
-                          <MerchantQRCode url={merchantUrl} merchantName={m.name} merchantAddress={m.address} />
-                        </div>
-                        <div className="flex flex-row gap-2 mt-2">
-                          <button className="text-blue-600 underline self-start" onClick={() => toggleClaims(m.id)}>
-                            {expanded[m.id] ? "Hide Claims" : "View Claims"}
-                          </button>
-                          <button className="text-green-600 underline self-start" onClick={() => openEditModal(m)}>
-                            Edit
-                          </button>
-                        </div>
+                      <div key={String(m.id)} className={`${pageShellClass} p-5 sm:p-6`}>
+                        <div className="relative z-10 flex flex-col gap-5">
+                          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                            <div>
+                              <div className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Merchant #{m.id}</div>
+                              <div className="mt-2 text-2xl font-black text-white">{m.name}</div>
+                            </div>
+                            <div className="grid gap-3 sm:grid-cols-2 lg:min-w-[320px]">
+                              <div className={`${glassPanelClass} px-4 py-3`}>
+                                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Latitude</div>
+                                <div className="mt-2 text-sm font-bold text-cyan-200">{m.latitude}</div>
+                              </div>
+                              <div className={`${glassPanelClass} px-4 py-3`}>
+                                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Longitude</div>
+                                <div className="mt-2 text-sm font-bold text-cyan-200">{m.longitude}</div>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_340px]">
+                            <div className="space-y-3">
+                              <div className={`${glassPanelClass} px-4 py-3 text-sm text-slate-200`}>
+                                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Wallet</div>
+                                <div className="mt-2 break-all font-semibold text-white">{m.wallet || "Not set"}</div>
+                              </div>
+                              <div className={`${glassPanelClass} px-4 py-3 text-sm text-slate-200`}>
+                                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Address</div>
+                                <div className="mt-2 font-semibold text-white">{m.address}</div>
+                              </div>
+                              <div className="flex flex-wrap gap-3 pt-1">
+                                <button className="rounded-full border border-cyan-300/30 bg-cyan-400/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-cyan-100 transition-colors hover:bg-cyan-400/20" onClick={() => toggleClaims(m.id)}>
+                                  {expanded[m.id] ? "Hide Claims" : "View Claims"}
+                                </button>
+                                <button className="rounded-full border border-emerald-300/30 bg-emerald-400/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-emerald-100 transition-colors hover:bg-emerald-400/20" onClick={() => openEditModal(m)}>
+                                  Edit Merchant
+                                </button>
+                              </div>
+                            </div>
+                            <MerchantQRCode url={merchantUrl} merchantName={m.name} merchantAddress={m.address} />
+                          </div>
                         {expanded[m.id] && (
-                            <div className="mt-2 w-full">
+                            <div className={`${glassPanelClass} mt-1 w-full p-4`}>
                               {claimsLoading[m.id] ? (
-                                <div>Loading claims...</div>
+                                <div className="text-sm text-slate-300">Loading claims...</div>
                               ) : (
                                 <>
                                   {claimsError[m.id] && (
-                                    <div className="text-red-600 mb-2">{claimsError[m.id]}</div>
+                                    <div className="mb-3 rounded-2xl border border-rose-300/25 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">{claimsError[m.id]}</div>
                                   )}
                                   {Array.isArray(claims[m.id]) && claims[m.id].length > 0 ? (
                                     <>
@@ -392,73 +466,76 @@ export default function MerchantAdminPage() {
                                         onReject={rejectClaim}
                                         marking={marking}
                                       />
-                                      <div className="flex justify-end items-center mt-2 space-x-2">
+                                      <div className="mt-3 flex items-center justify-end gap-2 text-sm text-slate-300">
                                         <button
-                                          className="px-2 py-1 border rounded bg-gray-100"
+                                          className="rounded-xl border border-white/15 bg-white/10 px-3 py-1.5 transition-colors hover:bg-white/15 disabled:opacity-40"
                                           disabled={(claimsPage[m.id] || 1) === 1}
                                           onClick={() => setClaimsPage(cp => ({ ...cp, [m.id]: (cp[m.id] || 1) - 1 }))}
                                         >Previous</button>
                                         <span>Page {(claimsPage[m.id] || 1)} of {getClaimsPageCount(m.id)}</span>
                                         <button
-                                          className="px-2 py-1 border rounded bg-gray-100"
+                                          className="rounded-xl border border-white/15 bg-white/10 px-3 py-1.5 transition-colors hover:bg-white/15 disabled:opacity-40"
                                           disabled={(claimsPage[m.id] || 1) === getClaimsPageCount(m.id)}
                                           onClick={() => setClaimsPage(cp => ({ ...cp, [m.id]: (cp[m.id] || 1) + 1 }))}
                                         >Next</button>
                                       </div>
                                     </>
                                   ) : (
-                                    <div className="text-gray-600">No claims for this merchant.</div>
+                                    <div className="text-sm text-slate-300">No claims for this merchant.</div>
                                   )}
                                 </>
                               )}
                             </div>
                         )}
+                        </div>
                       </div>
                     );
                   })}
                         {/* Edit Merchant Modal */}
                         {editState.open && (
-                          <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-                            <div className="bg-white rounded shadow-lg p-6 w-full max-w-md relative">
-                              <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-700" onClick={closeEditModal}>&times;</button>
-                              <h3 className="text-lg font-bold mb-4">Edit Merchant</h3>
+                          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-4">
+                            <div className="relative w-full max-w-md rounded-3xl border border-white/15 bg-slate-950/95 p-6 shadow-2xl backdrop-blur-xl">
+                              <button className="absolute right-4 top-3 text-2xl font-bold text-white/55 hover:text-white" onClick={closeEditModal}>&times;</button>
+                              <div className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Merchant Editor</div>
+                              <h3 className="mt-2 text-2xl font-black text-white">Edit Merchant</h3>
                               <form onSubmit={handleEditSubmit} className="space-y-4">
                                 <div>
-                                  <label className="block text-gray-700 text-sm font-semibold mb-1">Merchant ID</label>
-                                  <input value={editState.merchant?.id || ''} readOnly className="w-full border rounded px-3 py-2 text-gray-700 bg-gray-100 cursor-not-allowed" />
+                                  <label className="mb-1 block text-sm font-semibold text-slate-300">Merchant ID</label>
+                                  <input value={editState.merchant?.id || ''} readOnly className="w-full cursor-not-allowed rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300" />
                                 </div>
-                                <input name="name" value={editState.form.name} onChange={handleEditChange} placeholder="Merchant Name" className="w-full border rounded px-3 py-2 text-gray-700" required />
-                                <input name="wallet" value={editState.form.wallet} onChange={handleEditChange} placeholder="Merchant Wallet Address (optional)" className="w-full border rounded px-3 py-2 text-gray-700" />
-                                <input name="address" value={editState.form.address} onChange={handleEditChange} placeholder="Shop Address" className="w-full border rounded px-3 py-2 text-gray-700" required />
-                                <input name="latitude" value={editState.form.latitude} onChange={handleEditChange} placeholder="Latitude" className="w-full border rounded px-3 py-2 text-gray-700" required type="text" />
-                                <input name="longitude" value={editState.form.longitude} onChange={handleEditChange} placeholder="Longitude" className="w-full border rounded px-3 py-2 text-gray-700" required type="text" />
-                                <button type="submit" className="bg-green-600 text-white px-6 py-2 rounded font-semibold" disabled={editState.loading}>{editState.loading ? "Saving..." : "Save Changes"}</button>
-                                {editState.error && <div className="text-red-600 mt-2">{editState.error}</div>}
+                                <input name="name" value={editState.form.name} onChange={handleEditChange} placeholder="Merchant Name" className={inputClassName} required />
+                                <input name="wallet" value={editState.form.wallet} onChange={handleEditChange} placeholder="Merchant Wallet Address (optional)" className={inputClassName} />
+                                <input name="address" value={editState.form.address} onChange={handleEditChange} placeholder="Shop Address" className={inputClassName} required />
+                                <input name="latitude" value={editState.form.latitude} onChange={handleEditChange} placeholder="Latitude" className={inputClassName} required type="text" />
+                                <input name="longitude" value={editState.form.longitude} onChange={handleEditChange} placeholder="Longitude" className={inputClassName} required type="text" />
+                                <button type="submit" className="rounded-2xl bg-emerald-500 px-6 py-3 text-sm font-bold text-slate-950 transition-colors hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60" disabled={editState.loading}>{editState.loading ? "Saving..." : "Save Changes"}</button>
+                                {editState.error && <div className="mt-2 rounded-2xl border border-rose-300/25 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">{editState.error}</div>}
                               </form>
                             </div>
                           </div>
                         )}
-                  <div className="flex justify-end items-center mt-4 space-x-2">
+                  <div className="mt-4 flex items-center justify-end gap-2 text-sm text-slate-300">
                     <button
-                      className="px-2 py-1 border rounded bg-gray-100"
+                      className="rounded-xl border border-white/15 bg-white/10 px-3 py-1.5 transition-colors hover:bg-white/15 disabled:opacity-40"
                       disabled={merchantPage === 1}
                       onClick={() => setMerchantPage(merchantPage - 1)}
                     >Previous</button>
                     <span>Page {merchantPage} of {merchantPageCount}</span>
                     <button
-                      className="px-2 py-1 border rounded bg-gray-100"
+                      className="rounded-xl border border-white/15 bg-white/10 px-3 py-1.5 transition-colors hover:bg-white/15 disabled:opacity-40"
                       disabled={merchantPage === merchantPageCount}
                       onClick={() => setMerchantPage(merchantPage + 1)}
                     >Next</button>
                   </div>
                 </>
               ) : (
-                <div className="text-gray-600">No merchants found.</div>
+                <div className={`${glassPanelClass} px-4 py-5 text-sm text-slate-300`}>No merchants found.</div>
               )}
             </div>
           )}
         </>
       )}
+      </div>
     </div>
   );
 }

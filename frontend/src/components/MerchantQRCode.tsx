@@ -118,22 +118,23 @@ const MerchantQRCode: React.FC<MerchantQRCodeProps> = ({ url, merchantName, merc
   };
 
   return (
-    <div style={{ textAlign: 'center', margin: '2rem 0' }}>
-      {merchantName && <h3 style={{ marginBottom: '0.5rem' }}>{merchantName}</h3>}
-      {merchantAddress && <div style={{ marginBottom: '1rem', color: '#555', fontSize: 14 }}>{merchantAddress}</div>}
-      <div style={{ background: '#fff', padding: '16px', display: 'inline-block', border: '2px solid #0070f3', borderRadius: 16 }}>
+    <div className="rounded-2xl border border-white/12 bg-white/[0.04] p-5 text-center backdrop-blur-lg">
+      <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Claim QR</div>
+      {merchantName && <h3 className="mt-2 text-lg font-black text-white">{merchantName}</h3>}
+      {merchantAddress && <div className="mt-1 text-sm text-slate-300">{merchantAddress}</div>}
+      <div className="mt-4 inline-block rounded-2xl border-2 border-cyan-300/55 bg-white p-4 shadow-[0_12px_30px_rgba(34,211,238,0.15)]">
         {/* @ts-ignore: react-qr-code does not type ref, but it works */}
         <QRCode ref={svgRef} value={url} size={200} />
       </div>
-      <div style={{ marginTop: '1rem' }}>
+      <div className="mt-4">
         {!inApp ? (
-          <button onClick={downloadQR} style={{ padding: '8px 16px', borderRadius: 4, background: '#0070f3', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 600 }}>
+          <button onClick={downloadQR} className="rounded-full border border-cyan-300/30 bg-cyan-400/10 px-4 py-2 text-sm font-bold text-cyan-100 transition-colors hover:bg-cyan-400/20">
             Download QR Code
           </button>
         ) : (
-          <div style={{ color: '#b91c1c', fontWeight: 500, fontSize: 15, marginTop: 8, maxWidth: 260, marginLeft: 'auto', marginRight: 'auto' }}>
+          <div className="mx-auto mt-2 max-w-[260px] text-sm font-medium text-amber-100">
             <span>Download not supported in this browser.<br />
-            <span style={{ color: '#222' }}>Long-press the QR code above to save it as an image.</span></span>
+            <span className="text-slate-200">Long-press the QR code above to save it as an image.</span></span>
           </div>
         )}
       </div>
