@@ -34,6 +34,7 @@ function ClaimPage() {
   const centeredMessageClass = "max-w-2xl mx-auto py-16 px-6 text-center";
   const statusViewportClass = "relative min-h-[calc(100vh-5rem)] px-4 py-10";
   const statusCardClass = "mx-auto max-w-2xl rounded-2xl border border-white/15 bg-slate-950/80 px-6 py-5 text-center text-white shadow-xl";
+  const glassPanelClass = "rounded-2xl border border-white/12 bg-white/[0.04] backdrop-blur-lg";
 
   useEffect(() => {
     if (!partnerCode || typeof window === "undefined") {
@@ -189,22 +190,30 @@ function ClaimPage() {
     );
   }
   return (
-    <div className="relative bg-slate-950 px-4 py-8 sm:py-10">
+    <div className="relative min-h-screen overflow-x-clip bg-slate-950 px-4 py-8 text-slate-100 sm:py-10">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
         <div className="absolute -left-28 top-10 h-72 w-72 rounded-full bg-cyan-500/12 blur-[120px]" />
         <div className="absolute -right-32 top-16 h-80 w-80 rounded-full bg-blue-600/15 blur-[130px]" />
+        <div className="absolute bottom-0 left-1/2 h-64 w-[32rem] -translate-x-1/2 rounded-full bg-emerald-400/10 blur-[150px]" />
       </div>
       <div className="relative z-10 mx-auto max-w-2xl">
-      <div className="mb-4 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-xs text-slate-300 sm:text-sm">
+      <div className={`${glassPanelClass} mb-4 px-4 py-3 text-xs text-slate-300 sm:text-sm`}>
         <span className="font-semibold text-slate-100">Proximity check:</span> Claims are available only when your current location is within 50m of the merchant location.
       </div>
       <div className={pageShellClass}>
         <div className="absolute bottom-0 left-0 w-40 h-40 bg-cyan-300/10 rounded-full blur-3xl"></div>
+        <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-emerald-300/10 blur-3xl"></div>
         <div className="relative z-10">
-      <h2 className="text-3xl font-black mb-4 text-white text-center">Claim EPWX Reward</h2>
+      <div className="mb-6 border-b border-white/10 pb-5 text-center sm:text-left">
+        <div className="text-xs font-black uppercase tracking-[0.24em] text-slate-400">Merchant Claim</div>
+        <h2 className="mt-2 text-3xl font-black text-white">Claim EPWX Reward</h2>
+        <p className="mt-2 text-sm text-slate-300">
+          Upload your purchase receipt after the location check passes to submit a merchant cashback claim.
+        </p>
+      </div>
       {!address ? (
         <div className="mb-4 flex flex-col items-center">
-          <div className="text-white/80 mb-4">Connect your wallet to claim.</div>
+          <div className="mb-4 text-white/80">Connect your wallet to claim.</div>
           <div className="mb-4 max-w-sm rounded-2xl border border-white/15 bg-white/10 p-4 text-center text-sm text-white/80">
             Connecting lets EPWX read your public wallet address for eligibility and reward delivery. Connecting does not move funds or grant token spending permissions.
           </div>

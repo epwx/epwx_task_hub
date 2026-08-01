@@ -16,14 +16,15 @@ interface ReceiptUploadClaimProps {
 }
 
 const ReceiptUploadClaim: React.FC<ReceiptUploadClaimProps> = ({ merchantId, merchantInfo, wallet, lat, lng }) => {
+    const glassPanelClass = 'rounded-2xl border border-white/12 bg-white/[0.04] backdrop-blur-lg';
     // Display merchant info if available
     const renderMerchantInfo = () => {
       if (!merchantInfo) return null;
       return (
-        <div className="mb-4 p-2 border rounded bg-gray-50">
-          <div className="font-semibold text-gray-800">Merchant:</div>
-          <div className="text-gray-900 font-medium">{merchantInfo.name}</div>
-          <div className="text-sm text-gray-700">{merchantInfo.address}</div>
+        <div className={`${glassPanelClass} mb-4 p-4`}>
+          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Merchant</div>
+          <div className="mt-2 text-lg font-black text-white">{merchantInfo.name}</div>
+          <div className="mt-1 text-sm text-slate-300">{merchantInfo.address}</div>
         </div>
       );
     };
@@ -94,27 +95,43 @@ const ReceiptUploadClaim: React.FC<ReceiptUploadClaimProps> = ({ merchantId, mer
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-4 border rounded bg-white max-w-md mx-auto">
+    <form onSubmit={handleSubmit} className="mx-auto max-w-md space-y-4 text-left text-white">
       {renderMerchantInfo()}
-      <h2 className="text-lg font-bold mb-2 text-gray-900">Upload Store Receipt</h2>
-      <input
-        type="file"
-        accept="image/*"
-        onChange={handleFileChange}
-        className="mb-2"
-      />
+      <div className={`${glassPanelClass} p-4`}>
+        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Receipt Upload</div>
+        <h2 className="mt-2 text-xl font-black text-white">Upload store receipt</h2>
+        <p className="mt-2 text-sm text-slate-300">
+          Submit a clear receipt image to verify your in-store purchase and unlock the merchant reward.
+        </p>
+      </div>
+      <label className={`${glassPanelClass} block cursor-pointer p-4 transition-colors hover:bg-white/[0.07]`}>
+        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Receipt image</div>
+        <div className="mt-2 inline-flex rounded-full border border-cyan-300/30 bg-cyan-400/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-cyan-100">
+          Choose image
+        </div>
+        <div className="mt-3 text-sm text-slate-300">PNG, JPG, or WEBP. Large images are compressed automatically before upload.</div>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleFileChange}
+          className="sr-only"
+        />
+      </label>
       {file && (
-        <div className="mb-2 text-gray-900 font-medium break-all">Selected file: {file.name}</div>
+        <div className={`${glassPanelClass} p-4`}>
+          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Selected file</div>
+          <div className="mt-2 break-all text-sm font-semibold text-white">{file.name}</div>
+        </div>
       )}
       <button
         type="submit"
         disabled={loading}
-        className="bg-blue-600 text-white px-4 py-2 rounded"
+        className="ui-btn-primary w-full rounded-2xl px-4 py-3 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-60"
       >
         {loading ? 'Submitting...' : 'Submit Claim'}
       </button>
-      {success && <div className="text-green-600 mt-2">Claim submitted successfully!</div>}
-      {error && <div className="text-red-600 mt-2">{error}</div>}
+      {success && <div className="rounded-2xl border border-emerald-300/25 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100">Claim submitted successfully!</div>}
+      {error && <div className="rounded-2xl border border-rose-300/25 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">{error}</div>}
     </form>
   );
 };
