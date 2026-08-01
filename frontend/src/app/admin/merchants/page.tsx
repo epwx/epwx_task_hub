@@ -320,13 +320,13 @@ export default function MerchantAdminPage() {
   };
   // Component render starts here
   return (
-    <div className="relative min-h-screen overflow-x-clip bg-slate-950 px-4 py-8 text-slate-100 sm:py-10">
+    <div className="relative min-h-screen overflow-hidden bg-slate-950 px-4 py-8 text-slate-100 sm:py-10">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-32 top-12 h-80 w-80 rounded-full bg-cyan-500/12 blur-[130px]" />
-        <div className="absolute -right-28 top-20 h-96 w-96 rounded-full bg-blue-600/16 blur-[150px]" />
-        <div className="absolute bottom-0 left-1/2 h-72 w-[38rem] -translate-x-1/2 rounded-full bg-emerald-400/10 blur-[150px]" />
+        <div className="absolute -left-20 top-12 h-56 w-56 rounded-full bg-cyan-500/12 blur-[90px] sm:-left-32 sm:h-80 sm:w-80 sm:blur-[130px]" />
+        <div className="absolute -right-16 top-20 h-64 w-64 rounded-full bg-blue-600/16 blur-[100px] sm:-right-28 sm:h-96 sm:w-96 sm:blur-[150px]" />
+        <div className="absolute bottom-0 left-1/2 h-44 w-[20rem] -translate-x-1/2 rounded-full bg-emerald-400/10 blur-[90px] sm:h-72 sm:w-[38rem] sm:blur-[150px]" />
       </div>
-      <div className="relative z-10 mx-auto max-w-6xl">
+      <div className="relative z-10 mx-auto max-w-6xl min-w-0">
       {notAdmin ? (
         <div className="mx-auto max-w-2xl py-16">
           <div className={`${pageShellClass} text-center`}>
