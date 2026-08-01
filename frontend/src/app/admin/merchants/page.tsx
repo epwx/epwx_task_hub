@@ -344,24 +344,24 @@ export default function MerchantAdminPage() {
           <section className={`${pageShellClass} mb-6`}>
             <div className="absolute -right-16 top-0 h-44 w-44 rounded-full bg-cyan-300/10 blur-3xl" />
             <div className="absolute -left-16 bottom-0 h-52 w-52 rounded-full bg-emerald-400/10 blur-3xl" />
-            <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-              <div>
+            <div className="relative z-10 flex min-w-0 flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+              <div className="min-w-0">
                 <div className="text-xs font-black uppercase tracking-[0.24em] text-slate-400">Merchant Admin</div>
                 <h2 className="mt-2 text-3xl font-black text-white">Merchant onboarding and claims</h2>
                 <p className="mt-3 max-w-2xl text-sm text-slate-300">Register merchant locations, generate claim QR codes, and review receipt-based cashback claims from one admin surface.</p>
               </div>
-              <div className="grid gap-3 sm:grid-cols-3 lg:min-w-[360px]">
-                <div className={`${glassPanelClass} px-4 py-3`}>
+              <div className="grid min-w-0 gap-3 sm:grid-cols-3 lg:min-w-[360px]">
+                <div className={`${glassPanelClass} min-w-0 px-4 py-3`}>
                   <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Merchants</div>
                   <div className="mt-2 text-2xl font-black text-white">{merchants.length}</div>
                 </div>
-                <div className={`${glassPanelClass} px-4 py-3`}>
+                <div className={`${glassPanelClass} min-w-0 px-4 py-3`}>
                   <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Expanded</div>
                   <div className="mt-2 text-2xl font-black text-cyan-200">{Object.values(expanded).filter(Boolean).length}</div>
                 </div>
-                <div className={`${glassPanelClass} px-4 py-3`}>
+                <div className={`${glassPanelClass} min-w-0 px-4 py-3`}>
                   <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Wallet</div>
-                  <div className="mt-2 truncate text-sm font-bold text-emerald-200">{address}</div>
+                  <div className="mt-2 break-all text-sm font-bold text-emerald-200">{address}</div>
                 </div>
               </div>
             </div>
