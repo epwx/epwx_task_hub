@@ -14,6 +14,15 @@ export default function BlogPage() {
             Open X article with one-click Copy Article button
           </Link>
         </div>
+        <div className="mt-3 rounded-xl border border-emerald-300/30 bg-emerald-300/10 p-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-emerald-200">Marketing</p>
+          <Link
+            href="/blog/merchant-customer-rewards"
+            className="mt-1 inline-block text-sm font-bold text-emerald-100 underline decoration-emerald-300/60 underline-offset-4 hover:text-white"
+          >
+            Open Merchant Customer Reward Program article (with screenshot placeholders)
+          </Link>
+        </div>
         <p className="mt-4 text-sm leading-7 text-slate-300 md:text-base">
           This guide explains exactly how Telegram Group Owner Rewards work in EPWX Task Hub, from group registration to
           admin payout and ledger tracking.
