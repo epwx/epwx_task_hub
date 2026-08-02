@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useAccount, useBalance } from 'wagmi';
 import { base } from 'wagmi/chains';
@@ -13,10 +14,11 @@ import {
   type EpwxPriceData,
 } from '@/utils/epwxMarket';
 
+const REFRESH_INTERVAL_MS = 24 * 60 * 60 * 1000;
+
 export function EPWXStats() {
   const [priceData, setPriceData] = useState<EpwxPriceData | null>(null);
   const [loading, setLoading] = useState(true);
-  const REFRESH_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
   // Wallet connection
   const { address, isConnected } = useAccount();
@@ -176,12 +178,12 @@ export function EPWXStats() {
             <p className="mb-1 text-2xl font-black text-white">PancakeSwap</p>
             <div className="mt-2 flex flex-col gap-1">
               <p className="text-xs font-semibold text-slate-300">Base Network</p>
-              <a 
+              <Link
                 href="/#buy-epwx"
                 className="flex items-center gap-1 text-xs font-bold text-emerald-300 hover:text-emerald-200 group-hover:underline"
               >
                 Trade Now →
-              </a>
+              </Link>
             </div>
           </div>
         </div>
