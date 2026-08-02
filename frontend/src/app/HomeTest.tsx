@@ -1370,7 +1370,7 @@ export default function HomeTest() {
       window.removeEventListener('focus', handleFocus);
       window.removeEventListener('pageshow', handlePageShow);
     };
-  }, [checkVerification, isTelegramVerified]);
+  }, [address, checkVerification, isTelegramVerified]);
 
   useEffect(() => {
     const fetchLatestDailyClaim = async () => {
