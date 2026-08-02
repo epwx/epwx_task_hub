@@ -16,6 +16,7 @@ import {
 export function EPWXStats() {
   const [priceData, setPriceData] = useState<EpwxPriceData | null>(null);
   const [loading, setLoading] = useState(true);
+  const REFRESH_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
   // Wallet connection
   const { address, isConnected } = useAccount();
@@ -31,7 +32,7 @@ export function EPWXStats() {
 
   useEffect(() => {
     fetchPrice();
-    const interval = setInterval(fetchPrice, 30000); // Update every 30s
+    const interval = setInterval(fetchPrice, REFRESH_INTERVAL_MS); // Update every 24 hours
     return () => clearInterval(interval);
   }, []);
 
@@ -214,7 +215,7 @@ export function EPWXStats() {
         {/* Last updated indicator */}
         <div className="mt-6 flex items-center justify-center gap-2 text-xs text-slate-400">
           <div className="h-2 w-2 animate-pulse rounded-full bg-emerald-400"></div>
-          <span className="font-medium">Updates every 30 seconds</span>
+          <span className="font-medium">Updates every 24 hours</span>
         </div>
       </div>
     </section>
