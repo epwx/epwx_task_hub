@@ -36,6 +36,11 @@ export default function MerchantCustomerRewardsArticlePage() {
       title: "4. Connect wallet",
       copy: "Customer connects wallet to establish wallet-based identity for a secure and auditable reward flow.",
       screenshotTag: "FLOW_04_WALLET_CONNECT",
+      screenshotSrc: "/blog/merchant-flow-04-wallet-connect.jpg",
+      screenshotAlt: "Merchant claim screen prompting customer to connect wallet",
+      screenshotWidth: 784,
+      screenshotHeight: 1168,
+      screenshotClassName: "mx-auto h-auto w-full max-w-2xl rounded-lg",
     },
     {
       title: "5. Submit claim",
