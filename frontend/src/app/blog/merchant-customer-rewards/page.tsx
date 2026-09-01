@@ -51,6 +51,11 @@ export default function MerchantCustomerRewardsArticlePage() {
       title: "5. Submit claim",
       copy: "Customer submits claim details after purchase. The request is recorded for backend validation.",
       screenshotTag: "FLOW_05_CLAIM_SUBMIT",
+      screenshotSrc: "/blog/merchant-flow-05-claim-submit.jpg",
+      screenshotAlt: "Merchant claim screen for uploading receipt and submitting claim",
+      screenshotWidth: 784,
+      screenshotHeight: 1168,
+      screenshotClassName: "mx-auto h-auto w-full max-w-2xl rounded-lg",
     },
     {
       title: "6. Admin reviews and approves",
