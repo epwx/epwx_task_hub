@@ -8,8 +8,8 @@ export default function MerchantCustomerRewardsArticlePage() {
       screenshotTag: "FLOW_01_QR_SCAN",
       screenshotSrc: "/blog/merchant-flow-01-qr-scan.png",
       screenshotAlt: "Merchant QR code card used by customers to start EPWX reward claim",
-      screenshotWidth: 768,
-      screenshotHeight: 1152,
+      screenshotWidth: 784,
+      screenshotHeight: 1168,
       screenshotClassName: "mx-auto h-auto w-full max-w-2xl rounded-lg",
     },
     {
