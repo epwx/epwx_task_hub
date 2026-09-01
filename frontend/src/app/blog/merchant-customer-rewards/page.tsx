@@ -8,6 +8,9 @@ export default function MerchantCustomerRewardsArticlePage() {
       screenshotTag: "FLOW_01_QR_SCAN",
       screenshotSrc: "/blog/merchant-flow-01-qr-scan.png",
       screenshotAlt: "Merchant QR code card used by customers to start EPWX reward claim",
+      screenshotWidth: 768,
+      screenshotHeight: 1152,
+      screenshotClassName: "mx-auto h-auto w-full max-w-2xl rounded-lg",
     },
     {
       title: "2. Allow location access",
@@ -88,9 +91,9 @@ export default function MerchantCustomerRewardsArticlePage() {
                       <Image
                         src={flow.screenshotSrc}
                         alt={flow.screenshotAlt || flow.screenshotTag}
-                        width={768}
-                        height={1365}
-                        className="mx-auto h-auto w-full max-w-md rounded-lg"
+                        width={flow.screenshotWidth || 768}
+                        height={flow.screenshotHeight || 1365}
+                        className={flow.screenshotClassName || "mx-auto h-auto w-full max-w-md rounded-lg"}
                       />
                     </div>
                   ) : (
