@@ -61,6 +61,11 @@ export default function MerchantCustomerRewardsArticlePage() {
       title: "6. Admin reviews and approves",
       copy: "Admin reviews pending claims and approves valid requests using the admin panel workflow.",
       screenshotTag: "FLOW_06_ADMIN_APPROVAL",
+      screenshotSrc: "/blog/merchant-flow-06-admin-approval.jpg",
+      screenshotAlt: "Admin panel showing pending merchant claims with distribute and reject actions",
+      screenshotWidth: 784,
+      screenshotHeight: 1168,
+      screenshotClassName: "mx-auto h-auto w-full max-w-2xl rounded-lg",
     },
     {
       title: "7. Reward sent to customer wallet",
