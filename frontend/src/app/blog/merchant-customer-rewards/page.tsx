@@ -41,6 +41,11 @@ export default function MerchantCustomerRewardsArticlePage() {
       screenshotWidth: 784,
       screenshotHeight: 1168,
       screenshotClassName: "mx-auto h-auto w-full max-w-2xl rounded-lg",
+      secondaryScreenshotSrc: "/blog/merchant-flow-04-wallet-chooser.jpg",
+      secondaryScreenshotAlt: "Wallet chooser modal with available wallet options for connecting to EPWX",
+      secondaryScreenshotWidth: 784,
+      secondaryScreenshotHeight: 1168,
+      secondaryScreenshotClassName: "mx-auto mt-3 h-auto w-full max-w-2xl rounded-lg",
     },
     {
       title: "5. Submit claim",
@@ -106,6 +111,15 @@ export default function MerchantCustomerRewardsArticlePage() {
                         height={flow.screenshotHeight || 1365}
                         className={flow.screenshotClassName || "mx-auto h-auto w-full max-w-md rounded-lg"}
                       />
+                      {flow.secondaryScreenshotSrc ? (
+                        <Image
+                          src={flow.secondaryScreenshotSrc}
+                          alt={flow.secondaryScreenshotAlt || flow.screenshotTag}
+                          width={flow.secondaryScreenshotWidth || 768}
+                          height={flow.secondaryScreenshotHeight || 1365}
+                          className={flow.secondaryScreenshotClassName || "mx-auto mt-3 h-auto w-full max-w-md rounded-lg"}
+                        />
+                      ) : null}
                     </div>
                   ) : (
                     <div className="mt-4 rounded-xl border border-dashed border-cyan-300/50 bg-cyan-300/10 p-4 text-xs font-semibold uppercase tracking-[0.14em] text-cyan-200">
