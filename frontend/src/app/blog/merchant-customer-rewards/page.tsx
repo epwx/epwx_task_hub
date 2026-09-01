@@ -18,6 +18,9 @@ export default function MerchantCustomerRewardsArticlePage() {
       screenshotTag: "FLOW_02_LOCATION_PERMISSION",
       screenshotSrc: "/blog/merchant-flow-02-location-permission.png",
       screenshotAlt: "Merchant claim screen asking user to enable GPS or location services",
+      screenshotWidth: 784,
+      screenshotHeight: 1168,
+      screenshotClassName: "mx-auto h-auto w-full max-w-2xl rounded-lg",
     },
     {
       title: "3. Pass geofence verification",
