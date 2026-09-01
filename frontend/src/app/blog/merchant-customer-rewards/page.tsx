@@ -71,6 +71,11 @@ export default function MerchantCustomerRewardsArticlePage() {
       title: "7. Reward sent to customer wallet",
       copy: "Approved claims are paid from admin wallet directly to customer wallet, with status and tx tracking.",
       screenshotTag: "FLOW_07_REWARD_SENT",
+      screenshotSrc: "/blog/merchant-flow-07-reward-sent.jpg",
+      screenshotAlt: "Coinbase review screen showing EPWX reward delivery to customer wallet",
+      screenshotWidth: 784,
+      screenshotHeight: 1168,
+      screenshotClassName: "mx-auto h-auto w-full max-w-2xl rounded-lg",
     },
   ];
 
