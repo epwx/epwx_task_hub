@@ -28,6 +28,9 @@ export default function MerchantCustomerRewardsArticlePage() {
       screenshotTag: "FLOW_03_GEOFENCE_CHECK",
       screenshotSrc: "/blog/merchant-flow-03-geofence-check.jpg",
       screenshotAlt: "Claim page message indicating user is not at merchant location even with location enabled",
+      screenshotWidth: 784,
+      screenshotHeight: 1168,
+      screenshotClassName: "mx-auto h-auto w-full max-w-2xl rounded-lg",
     },
     {
       title: "4. Connect wallet",
