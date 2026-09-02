@@ -11,14 +11,6 @@ const posts = [
     borderClassName: "border-cyan-300/20 hover:border-cyan-300/50",
   },
   {
-    href: "/blog/x-daily-rewards",
-    tag: "New",
-    tagClassName: "text-cyan-200",
-    title: "Claim EPWX Daily, Build Long-Term Rewards",
-    description: "Ready-to-post X article with a one-click Copy Article button.",
-    borderClassName: "border-cyan-300/20 hover:border-cyan-300/50",
-  },
-  {
     href: "/blog/merchant-customer-rewards",
     tag: "Marketing",
     tagClassName: "text-emerald-200",
