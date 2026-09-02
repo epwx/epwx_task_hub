@@ -326,7 +326,7 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
 
             <div className="mt-5 rounded-2xl border border-white/10 bg-white/5 p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Estimated EPWX</p>
-              <p className="mt-2 text-2xl font-black text-white">
+              <p className="mt-2 break-all text-2xl font-black text-white">
                 {quoteLoading ? 'Loading...' : quoteOut ? Number(quoteOut).toLocaleString(undefined, { maximumFractionDigits: 4 }) : '--'}
               </p>
             </div>
