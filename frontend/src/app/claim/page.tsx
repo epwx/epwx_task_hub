@@ -1,9 +1,15 @@
 "use client";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 import { ConnectKitButton } from "connectkit";
 import { useSearchParams } from "next/navigation";
 import ReceiptUploadClaim from "../../components/ReceiptUploadClaim";
+
+const GEOLOCATION_OPTIONS: PositionOptions = {
+  enableHighAccuracy: true,
+  maximumAge: 0,
+  timeout: 20000,
+};
 
 function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
   // Haversine formula
@@ -28,12 +34,48 @@ function ClaimPage() {
   const [location, setLocation] = useState<GeolocationCoordinates | null>(null);
   const [distance, setDistance] = useState<number | null>(null);
   const [geoError, setGeoError] = useState<string | null>(null);
+  const [isRequestingLocation, setIsRequestingLocation] = useState(false);
   const { address } = useAccount();
   const [merchantError, setMerchantError] = useState<string | null>(null);
   const pageShellClass = "relative overflow-hidden rounded-3xl border border-white/10 bg-slate-900/70 p-6 shadow-[0_24px_65px_rgba(2,6,23,0.5)] backdrop-blur-xl sm:p-8";
   const statusViewportClass = "relative min-h-[calc(100vh-5rem)] px-4 py-10";
   const statusCardClass = "mx-auto max-w-2xl rounded-2xl border border-white/15 bg-slate-950/80 px-6 py-5 text-center text-white shadow-xl";
   const glassPanelClass = "rounded-2xl border border-white/12 bg-white/[0.04] backdrop-blur-lg";
+
+  const requestLocation = useCallback(() => {
+    if (merchantLat === null || merchantLng === null) {
+      return;
+    }
+
+    setGeoError(null);
+    setLocation(null);
+    setDistance(null);
+
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      setGeoError("Location is not available in this browser. Please open the claim link in Chrome or Safari and allow location access.");
+      return;
+    }
+
+    setIsRequestingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        setLocation(pos.coords);
+        const d = getDistance(
+          pos.coords.latitude,
+          pos.coords.longitude,
+          merchantLat,
+          merchantLng
+        );
+        setDistance(d);
+        setIsRequestingLocation(false);
+      },
+      err => {
+        setGeoError(err.message || "Unable to read your location. Please enable device location and browser location permission, then retry.");
+        setIsRequestingLocation(false);
+      },
+      GEOLOCATION_OPTIONS
+    );
+  }, [merchantLat, merchantLng]);
 
   useEffect(() => {
     if (!partnerCode || typeof window === "undefined") {
@@ -74,21 +116,9 @@ function ClaimPage() {
 
   useEffect(() => {
     if (merchantLat !== null && merchantLng !== null) {
-      navigator.geolocation.getCurrentPosition(
-        pos => {
-          setLocation(pos.coords);
-          const d = getDistance(
-            pos.coords.latitude,
-            pos.coords.longitude,
-            merchantLat,
-            merchantLng
-          );
-          setDistance(d);
-        },
-        err => setGeoError(err.message)
-      );
+      requestLocation();
     }
-  }, [merchantLat, merchantLng]);
+  }, [merchantLat, merchantLng, requestLocation]);
 
   // ...existing code...
 
@@ -117,22 +147,6 @@ function ClaimPage() {
       </div>
     );
   }
-  const handleRetryLocation = () => {
-    setGeoError(null);
-    navigator.geolocation.getCurrentPosition(
-      pos => {
-        setLocation(pos.coords);
-        const d = getDistance(
-          pos.coords.latitude,
-          pos.coords.longitude,
-          merchantLat!,
-          merchantLng!
-        );
-        setDistance(d);
-      },
-      err => setGeoError(err.message)
-    );
-  };
   if (geoError) {
     return (
       <div className={`${statusViewportClass} bg-slate-950 text-white`}>
@@ -164,24 +178,24 @@ function ClaimPage() {
                   />
                 </div>
                 <div className={`${glassPanelClass} p-4 text-left text-sm text-white/90`}>
-                  <div className="mb-1 font-semibold text-white">iPhone (iOS) instructions:</div>
+                  <div className="mb-1 font-semibold text-white">Android instructions:</div>
                   <ol className="list-decimal list-inside space-y-1">
-                    <li>Open the <b>Settings</b> app.</li>
-                    <li>Tap <b>Privacy &amp; Security</b>.</li>
-                    <li>Tap <b>Location Services</b>.</li>
-                    <li>Make sure <b>Location Services</b> is <span className="font-semibold text-emerald-200">ON</span>.</li>
-                    <li>Scroll down, tap your browser (e.g., Safari or Chrome).</li>
-                    <li>Select <b>While Using the App</b> or <b>Always</b>.</li>
-                    <li>(Optional) Enable <b>Precise Location</b> for best accuracy.</li>
+                    <li>Turn on device <b>Location</b> from Quick Settings or Settings.</li>
+                    <li>Open <b>Settings</b> and tap <b>Apps</b>.</li>
+                    <li>Select your browser, for example <b>Chrome</b>.</li>
+                    <li>Tap <b>Permissions</b>, then <b>Location</b>.</li>
+                    <li>Choose <b>Allow only while using the app</b>.</li>
+                    <li>Return to this page and tap <b>Retry Location</b>.</li>
                   </ol>
                 </div>
               </div>
 
               <button
                 className="ui-btn-primary mt-6 rounded-xl px-4 py-2"
-                onClick={handleRetryLocation}
+                disabled={isRequestingLocation}
+                onClick={requestLocation}
               >
-                Retry Location
+                {isRequestingLocation ? "Requesting location..." : "Retry Location"}
               </button>
             </div>
           </div>
