@@ -11,6 +11,9 @@ const GEOLOCATION_OPTIONS: PositionOptions = {
   timeout: 20000,
 };
 
+const LOCATION_PERMISSION_DENIED_MESSAGE = "Location permission is blocked for this site. Android will not show the browser popup again until you allow location for this site in your browser settings.";
+const LOCATION_UNAVAILABLE_MESSAGE = "Unable to read your location. Please enable device location and browser location permission, then retry.";
+
 function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
   // Haversine formula
   const R = 6371e3; // meters
@@ -35,6 +38,7 @@ function ClaimPage() {
   const [distance, setDistance] = useState<number | null>(null);
   const [geoError, setGeoError] = useState<string | null>(null);
   const [isRequestingLocation, setIsRequestingLocation] = useState(false);
+  const [isLocationPermissionDenied, setIsLocationPermissionDenied] = useState(false);
   const { address } = useAccount();
   const [merchantError, setMerchantError] = useState<string | null>(null);
   const pageShellClass = "relative overflow-hidden rounded-3xl border border-white/10 bg-slate-900/70 p-6 shadow-[0_24px_65px_rgba(2,6,23,0.5)] backdrop-blur-xl sm:p-8";
@@ -42,18 +46,33 @@ function ClaimPage() {
   const statusCardClass = "mx-auto max-w-2xl rounded-2xl border border-white/15 bg-slate-950/80 px-6 py-5 text-center text-white shadow-xl";
   const glassPanelClass = "rounded-2xl border border-white/12 bg-white/[0.04] backdrop-blur-lg";
 
-  const requestLocation = useCallback(() => {
+  const requestLocation = useCallback(async () => {
     if (merchantLat === null || merchantLng === null) {
       return;
     }
 
     setGeoError(null);
+    setIsLocationPermissionDenied(false);
     setLocation(null);
     setDistance(null);
 
     if (typeof navigator === "undefined" || !navigator.geolocation) {
       setGeoError("Location is not available in this browser. Please open the claim link in Chrome or Safari and allow location access.");
       return;
+    }
+
+    if (navigator.permissions?.query) {
+      try {
+        const permissionStatus = await navigator.permissions.query({ name: "geolocation" });
+
+        if (permissionStatus.state === "denied") {
+          setGeoError(LOCATION_PERMISSION_DENIED_MESSAGE);
+          setIsLocationPermissionDenied(true);
+          return;
+        }
+      } catch {
+        // Some mobile browsers do not support querying geolocation permission state.
+      }
     }
 
     setIsRequestingLocation(true);
@@ -70,7 +89,10 @@ function ClaimPage() {
         setIsRequestingLocation(false);
       },
       err => {
-        setGeoError(err.message || "Unable to read your location. Please enable device location and browser location permission, then retry.");
+        const permissionDenied = err.code === err.PERMISSION_DENIED;
+
+        setGeoError(permissionDenied ? LOCATION_PERMISSION_DENIED_MESSAGE : err.message || LOCATION_UNAVAILABLE_MESSAGE);
+        setIsLocationPermissionDenied(permissionDenied);
         setIsRequestingLocation(false);
       },
       GEOLOCATION_OPTIONS
@@ -154,14 +176,18 @@ function ClaimPage() {
             <div className="absolute top-0 right-0 h-48 w-48 rounded-full bg-cyan-300/10 blur-3xl"></div>
             <div className="relative z-10 text-center">
               <div className="text-xs font-black uppercase tracking-[0.24em] text-slate-400">Merchant Claim</div>
-              <h2 className="mt-2 text-2xl font-black text-white sm:text-3xl">Location access required</h2>
+              <h2 className="mt-2 text-2xl font-black text-white sm:text-3xl">
+                {isLocationPermissionDenied ? "Location permission blocked" : "Location access required"}
+              </h2>
               {geoError ? (
                 <div className="mt-4 rounded-2xl border border-rose-300/25 bg-rose-400/10 px-4 py-3 text-sm font-semibold text-rose-100">
-                  Location error: {geoError}
+                  {geoError}
                 </div>
               ) : null}
               <p className="mt-4 text-sm text-slate-300 sm:text-base">
-                Tap Retry Location to open your browser location request. Please enable GPS/location services on your device and allow location access in your browser settings to claim your reward.
+                {isLocationPermissionDenied
+                  ? "Allow location for this site in your browser settings, then return here and tap Retry Location."
+                  : "Tap Retry Location to open your browser location request. Please enable GPS/location services on your device and allow location access in your browser settings to claim your reward."}
               </p>
 
               <div className="mt-5 grid gap-4 sm:grid-cols-2 sm:items-start">
@@ -177,10 +203,10 @@ function ClaimPage() {
                   <div className="mb-1 font-semibold text-white">Android instructions:</div>
                   <ol className="list-decimal list-inside space-y-1">
                     <li>Turn on device <b>Location</b> from Quick Settings or Settings.</li>
-                    <li>Open <b>Settings</b> and tap <b>Apps</b>.</li>
-                    <li>Select your browser, for example <b>Chrome</b>.</li>
-                    <li>Tap <b>Permissions</b>, then <b>Location</b>.</li>
-                    <li>Choose <b>Allow only while using the app</b>.</li>
+                    <li>Tap the site controls icon beside the browser address bar.</li>
+                    <li>Tap <b>Permissions</b> or <b>Site settings</b>.</li>
+                    <li>Set <b>Location</b> to <b>Allow</b>.</li>
+                    <li>If needed, open Android <b>Settings</b>, tap <b>Apps</b>, choose your browser, then allow <b>Location</b>.</li>
                     <li>Return to this page and tap <b>Retry Location</b>.</li>
                   </ol>
                 </div>
