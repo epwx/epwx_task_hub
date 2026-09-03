@@ -114,12 +114,6 @@ function ClaimPage() {
     }
   }, [merchantId, searchParams]);
 
-  useEffect(() => {
-    if (merchantLat !== null && merchantLng !== null) {
-      requestLocation();
-    }
-  }, [merchantLat, merchantLng, requestLocation]);
-
   // ...existing code...
 
   if (merchantError) {
@@ -147,7 +141,7 @@ function ClaimPage() {
       </div>
     );
   }
-  if (geoError) {
+  if (geoError || distance === null) {
     return (
       <div className={`${statusViewportClass} bg-slate-950 text-white`}>
         <div aria-hidden="true" className="pointer-events-none absolute inset-0">
@@ -161,11 +155,13 @@ function ClaimPage() {
             <div className="relative z-10 text-center">
               <div className="text-xs font-black uppercase tracking-[0.24em] text-slate-400">Merchant Claim</div>
               <h2 className="mt-2 text-2xl font-black text-white sm:text-3xl">Location access required</h2>
-              <div className="mt-4 rounded-2xl border border-rose-300/25 bg-rose-400/10 px-4 py-3 text-sm font-semibold text-rose-100">
-                Location error: {geoError}
-              </div>
+              {geoError ? (
+                <div className="mt-4 rounded-2xl border border-rose-300/25 bg-rose-400/10 px-4 py-3 text-sm font-semibold text-rose-100">
+                  Location error: {geoError}
+                </div>
+              ) : null}
               <p className="mt-4 text-sm text-slate-300 sm:text-base">
-                Please enable GPS/location services on your device and allow location access in your browser settings to claim your reward.
+                Tap Retry Location to open your browser location request. Please enable GPS/location services on your device and allow location access in your browser settings to claim your reward.
               </p>
 
               <div className="mt-5 grid gap-4 sm:grid-cols-2 sm:items-start">
@@ -200,13 +196,6 @@ function ClaimPage() {
             </div>
           </div>
         </div>
-      </div>
-    );
-  }
-  if (distance === null) {
-    return (
-      <div className={`${statusViewportClass} bg-slate-950`}>
-        <div className={`${statusCardClass} text-white/80`}>Checking your location...</div>
       </div>
     );
   }
