@@ -1,6 +1,6 @@
 export const themedSectionClass = "relative overflow-hidden rounded-3xl border border-white/10 bg-slate-900/70 p-6 shadow-[0_24px_65px_rgba(2,6,23,0.5)] backdrop-blur-xl sm:p-8";
 export const themedInnerClass = "relative z-10";
-export const glassPanelClass = "rounded-2xl border border-white/12 bg-white/[0.04] backdrop-blur-lg";
+export const glassPanelClass = "rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-lg";
 export const EPWX_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_EPWX_TOKEN as `0x${string}`) || "0xef5f5751cf3eca6cc3572768298b7783d33d60eb";
 export const DEFAULT_DAILY_REWARD = 100_000;
 export const MID_TIER_DAILY_REWARD = 2_000_000;
