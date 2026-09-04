@@ -53,7 +53,7 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
     },
     {
       href: 'https://epowex.com',
-      label: 'Main Site',
+      label: 'Website',
       external: true,
       active: false,
     },
@@ -65,7 +65,7 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
     },
     {
       href: '/platform-stats',
-      label: 'Platform Stats',
+      label: 'Stats',
       external: false,
       active: pathname === '/platform-stats',
     },
@@ -77,7 +77,7 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
     },
     {
       href: 'https://t.me/ePowerX_On_Base',
-      label: 'Contact Us',
+      label: 'Contact',
       external: true,
       active: false,
     },
@@ -96,6 +96,7 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
       : isConnected
         ? [{ href: '/partner', label: 'Partner Portal', active: pathname === '/partner' }]
         : [];
+  const isAdminArea = dashboardLinks.some((link) => link.active);
   const desktopNavLinkClass = (active: boolean) =>
     `rounded-full px-4 py-2 text-sm font-semibold tracking-[0.01em] transition-all ${
       active
@@ -175,11 +176,39 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
               <Link href="/#buy-epwx" className={buyLinkClass}>
                 Buy EPWX
               </Link>
-              {dashboardLinks.map((link) => (
-                <Link key={link.href} href={link.href} className={desktopActionLinkClass(link.active)}>
-                  {link.label}
-                </Link>
-              ))}
+              {isAdmin ? (
+                <details className="group relative">
+                  <summary
+                    className={`${desktopActionLinkClass(isAdminArea)} flex cursor-pointer list-none items-center gap-2 [&::-webkit-details-marker]:hidden`}
+                  >
+                    Admin
+                    <svg className="h-4 w-4 transition-transform group-open:rotate-180" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 1.06l-4.25-4.51a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+                    </svg>
+                  </summary>
+                  <div className="absolute right-0 top-full z-20 mt-2 w-56 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+                    {dashboardLinks.map((link) => (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        className={`block rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors ${
+                          link.active
+                            ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-950'
+                            : 'text-slate-700 hover:bg-slate-100 hover:text-slate-950 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-white'
+                        }`}
+                      >
+                        {link.label}
+                      </Link>
+                    ))}
+                  </div>
+                </details>
+              ) : (
+                dashboardLinks.map((link) => (
+                  <Link key={link.href} href={link.href} className={desktopActionLinkClass(link.active)}>
+                    {link.label}
+                  </Link>
+                ))
+              )}
             </div>
           </div>
 
