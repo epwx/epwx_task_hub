@@ -225,6 +225,7 @@ export default function HomeTest() {
   };
 
   const [copied, setCopied] = useState(false);
+  const [walletCopied, setWalletCopied] = useState(false);
 
   const { signMessageAsync } = useSignMessage();
   const [claiming, setClaiming] = useState(false);
@@ -848,7 +849,7 @@ export default function HomeTest() {
           <div className="min-w-0 pr-3">
             <div className="text-[11px] font-black uppercase tracking-[0.22em] text-cyan-300">Quick Actions</div>
           </div>
-          <div className="ml-auto grid flex-1 grid-cols-4 gap-2">
+          <div className="ml-auto grid flex-1 grid-cols-3 gap-2">
             {shortcutActionItems.map((item) => (
               <a
                 key={item.section}
@@ -920,7 +921,23 @@ export default function HomeTest() {
                 <div className="grid gap-3 sm:grid-cols-3">
                   <div className={`${glassPanelClass} p-4 sm:col-span-2`}>
                     <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Connected wallet</div>
-                    <div className="mt-2 rounded-xl border border-white/10 bg-slate-950/40 px-3 py-2 text-xs font-mono text-slate-200 break-all" style={{wordBreak: 'break-all'}}>{address}</div>
+                    <div className="mt-2 flex items-center gap-2 rounded-xl border border-white/10 bg-slate-950/40 px-3 py-2">
+                      <span className="min-w-0 flex-1 truncate font-mono text-xs text-slate-200" title={address}>
+                        {address.slice(0, 6)}...{address.slice(-4)}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          void navigator.clipboard.writeText(address);
+                          setWalletCopied(true);
+                          window.setTimeout(() => setWalletCopied(false), 2000);
+                        }}
+                        className="shrink-0 rounded-lg border border-white/15 bg-white/[0.06] px-2.5 py-1.5 text-[11px] font-semibold text-slate-200 transition-colors hover:bg-white/[0.12]"
+                        aria-label="Copy wallet address"
+                      >
+                        {walletCopied ? "Copied" : "Copy"}
+                      </button>
+                    </div>
                   </div>
                   <div className={`${glassPanelClass} p-4`}>
                     <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Telegram status</div>
