@@ -1414,7 +1414,7 @@ export default function HomeTest() {
         <section className="py-12">
           <div className="flex flex-col items-center">
             <h2 className="text-2xl font-black mb-4 text-slate-100 text-center">Last 5 Paid Daily Claims (All Wallets)</h2>
-            <div className={`${themedSectionClass} w-full max-w-xl`}>
+            <div className={`${themedSectionClass} w-full max-w-5xl`}>
               <LastFivePaidDailyClaims />
             </div>
           </div>
