@@ -85,6 +85,10 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
 
   const availableBaseEth = Number(baseEthBalance?.formatted || 0);
   const maxSwapEth = Math.max(0, availableBaseEth - MAX_GAS_BUFFER_ETH);
+  const normalizedAmountEth = Number(amountEth.trim());
+  const amountExceedsBalance = Boolean(baseEthBalance) && (
+    !Number.isFinite(normalizedAmountEth) || normalizedAmountEth > maxSwapEth
+  );
   const normalizedEpwxBalance = Number(epwxBalance?.formatted || 0);
   const currentDailyReward = normalizedEpwxBalance >= MEGA_DAILY_REWARD_THRESHOLD
     ? MEGA_DAILY_REWARD
@@ -135,6 +139,13 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
         return;
       }
 
+      if (amountExceedsBalance) {
+        setQuoteOut('');
+        setMinimumOut('');
+        setQuoteError(`Enter ${formatAmountInput(maxSwapEth)} ETH or less to keep enough ETH for Base gas.`);
+        return;
+      }
+
       setQuoteLoading(true);
       setQuoteError(null);
 
@@ -167,10 +178,15 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
     return () => {
       cancelled = true;
     };
-  }, [amountEth]);
+  }, [amountEth, amountExceedsBalance, maxSwapEth]);
 
   const handleSwap = async () => {
     setStatus(null);
+
+    if (amountExceedsBalance) {
+      setStatus(`Enter ${formatAmountInput(maxSwapEth)} ETH or less to keep enough ETH for Base gas.`);
+      return;
+    }
 
     try {
       setSwapLoading(true);
@@ -311,6 +327,7 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
                 id="home-epwx-swap-amount"
                 type="number"
                 min="0"
+                max={maxSwapEth || undefined}
                 step="0.0001"
                 value={amountEth}
                 onChange={(event) => {
@@ -357,7 +374,7 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
             <button
               type="button"
               onClick={handleSwap}
-              disabled={swapLoading || quoteLoading || !quoteOut || !!quoteError}
+              disabled={swapLoading || quoteLoading || !quoteOut || !!quoteError || !baseEthBalance || amountExceedsBalance}
               className="mt-6 inline-flex w-full items-center justify-center rounded-2xl bg-green-600 px-5 py-3 text-base font-bold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {swapLoading ? 'Submitting swap...' : `Swap ${amountEth || '0'} ETH for EPWX`}
