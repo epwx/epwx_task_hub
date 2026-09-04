@@ -6,9 +6,12 @@ export default function UserGuide() {
   return (
     <>
 
-      <div className="max-w-2xl mx-auto py-12 px-4">
-        <h1 className="text-3xl font-bold mb-6 text-center">EPWX Task Platform User Guide</h1>
-        <ol className="list-decimal pl-6 space-y-6 text-lg">
+      <div className="min-h-screen bg-slate-950 px-4 py-10 text-slate-100 sm:py-14">
+        <main className="mx-auto max-w-4xl">
+          <div className="ui-surface-strong p-6 shadow-[0_24px_65px_rgba(2,6,23,0.5)] sm:p-10">
+        <p className="text-center text-xs font-black uppercase tracking-[0.28em] text-cyan-300">Getting started</p>
+        <h1 className="mt-3 mb-8 text-center text-3xl font-black text-white sm:text-4xl">EPWX Task Platform User Guide</h1>
+        <ol className="list-decimal space-y-6 pl-6 text-base leading-7 text-slate-300 sm:text-lg">
           <li>
             <strong>Connecting Your Wallet:</strong>
             <ul className="list-disc pl-6">
@@ -63,14 +66,16 @@ export default function UserGuide() {
             </ul>
           </li>
         </ol>
-        <div className="mt-10 text-base text-gray-600">
-          <b>Tips:</b>
+        <div className="mt-10 rounded-2xl border border-emerald-300/20 bg-emerald-400/10 p-5 text-base text-emerald-50">
+          <b className="text-emerald-200">Tips:</b>
           <ul className="list-disc pl-6 mt-2">
             <li>Make sure your wallet is connected and Telegram is verified for full access.</li>
             <li>If you encounter issues, refresh the page or reconnect your wallet.</li>
           </ul>
         </div>
-        <p className="mt-8 text-center text-indigo-700 font-semibold">Enjoy earning with EPWX Task Platform!</p>
+        <p className="mt-8 text-center font-semibold text-emerald-200">Enjoy earning with EPWX Task Platform!</p>
+          </div>
+        </main>
       </div>
       <Footer />
     </>
