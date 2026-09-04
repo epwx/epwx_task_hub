@@ -123,7 +123,7 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
     }`;
   const buyLinkClass =
     isHomePage
-      ? 'rounded-full bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_25px_rgba(15,23,42,0.18)] transition-all hover:-translate-y-0.5 hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-100'
+      ? 'rounded-full border border-emerald-500/60 bg-emerald-500/10 px-5 py-2.5 text-sm font-semibold text-emerald-700 shadow-sm transition-all hover:-translate-y-0.5 hover:bg-emerald-500/20 hover:shadow-md dark:border-emerald-300/50 dark:bg-emerald-400/10 dark:text-emerald-200 dark:hover:bg-emerald-400/20'
       : desktopActionClass;
 
   // Debug logs for troubleshooting
