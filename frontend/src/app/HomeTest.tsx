@@ -886,7 +886,7 @@ export default function HomeTest() {
         </aside>
         <div className="min-w-0">
         {/* Wallet Connection & Verification Section */}
-        <section id="wallet-verification" className="my-8 scroll-mt-24">
+        <section id="wallet-verification" className="my-8 scroll-mt-36">
           <div className={`${themedSectionClass} mb-6 w-full max-w-5xl mx-auto`}>
             <div className="absolute -right-16 top-0 h-44 w-44 rounded-full bg-cyan-300/10 blur-3xl" />
             <div className="absolute -left-16 bottom-0 h-52 w-52 rounded-full bg-emerald-400/10 blur-3xl" />
@@ -1126,18 +1126,18 @@ export default function HomeTest() {
           </div>
         </section>
 
-        <section id="buy-epwx" className="py-8 scroll-mt-24">
+        <section id="buy-epwx" className="py-8 scroll-mt-36">
           <HomeSwapCard />
         </section>
 
-        <section id="burnt-supply" className="scroll-mt-24">
+        <section id="burnt-supply" className="scroll-mt-36">
           <TokenSupplyPieChart />
         </section>
 
         <LatestDailyWinnersBoard referralLink={referralLink} />
 
         {/* Cashback Rewards Section */}
-        <section id="cashback-rewards" className="py-12 scroll-mt-24">
+        <section id="cashback-rewards" className="py-12 scroll-mt-36">
           <div className="flex flex-col items-center">
             <h2 className="text-2xl font-black mb-4 text-slate-100 text-center">Cashback Rewards</h2>
             <div className={`${themedSectionClass} w-full max-w-xl`}>
@@ -1190,7 +1190,7 @@ export default function HomeTest() {
         )}
 
         {/* Daily Claim Section */}
-        <section id="daily-claim" className="py-12 scroll-mt-24">
+        <section id="daily-claim" className="py-12 scroll-mt-36">
           <div className={`${themedSectionClass} w-full max-w-lg mx-auto`}>
             <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
             <div className={themedInnerClass}>

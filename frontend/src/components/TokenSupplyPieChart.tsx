@@ -132,7 +132,7 @@ export function TokenSupplyPieChart() {
         <div className="relative w-full max-w-4xl overflow-hidden rounded-3xl border border-white/10 bg-slate-900/70 p-5 shadow-[0_24px_65px_rgba(2,6,23,0.5)] backdrop-blur-xl sm:p-8">
           <div className="absolute top-0 right-0 h-40 w-40 rounded-full bg-cyan-300/10 blur-3xl"></div>
           <div className="absolute bottom-0 left-0 h-40 w-40 rounded-full bg-emerald-300/10 blur-3xl"></div>
-          <div className="relative z-10 grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+          <div className="relative z-10 grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
             <div className="min-w-0 flex flex-col items-center">
               {loading ? (
                 <div className="flex h-[260px] w-[260px] items-center justify-center rounded-full border border-white/15 bg-white/10 text-white/80">
