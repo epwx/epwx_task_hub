@@ -136,7 +136,7 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
   }, [address, merchantWallets, isMerchant]);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/88 shadow-[0_10px_35px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/85">
+    <header className="sticky top-0 z-50 max-w-full overflow-x-clip border-b border-slate-200/80 bg-white/88 shadow-[0_10px_35px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/85">
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between gap-4">
           {/* Logo */}
