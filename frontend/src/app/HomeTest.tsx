@@ -1140,7 +1140,7 @@ export default function HomeTest() {
         <section id="cashback-rewards" className="py-12 scroll-mt-36">
           <div className="flex flex-col items-center">
             <h2 className="text-2xl font-black mb-4 text-slate-100 text-center">Cashback Rewards</h2>
-            <div className={`${themedSectionClass} w-full max-w-xl`}>
+            <div className="w-full max-w-4xl">
               <EPWXCashbackClaim />
             </div>
           </div>
