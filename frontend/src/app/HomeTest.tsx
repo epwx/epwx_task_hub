@@ -1191,7 +1191,7 @@ export default function HomeTest() {
 
         {/* Daily Claim Section */}
         <section id="daily-claim" className="py-12 scroll-mt-36">
-          <div className={`${themedSectionClass} w-full max-w-lg mx-auto`}>
+          <div className={`${themedSectionClass} w-full max-w-4xl mx-auto`}>
             <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
             <div className={themedInnerClass}>
             <h2 className="text-2xl font-black mb-4 text-white">Daily Claim</h2>
