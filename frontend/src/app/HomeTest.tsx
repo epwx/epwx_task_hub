@@ -869,7 +869,7 @@ export default function HomeTest() {
 
       <main className="relative z-10 mx-auto grid w-full max-w-7xl flex-1 gap-8 px-4 pb-28 pt-8 lg:grid-cols-[220px_minmax(0,1fr)] lg:pb-12 lg:pt-10">
         <aside className="hidden lg:block">
-          <div className="ui-surface-strong sticky top-24 p-4 shadow-[0_18px_40px_rgba(2,6,23,0.45)]">
+          <div className="ui-surface-strong sticky top-[11rem] p-4 shadow-[0_18px_40px_rgba(2,6,23,0.45)]">
             <div className="mb-3 text-xs font-black uppercase tracking-[0.2em] text-white/50">Quick Navigate</div>
             <div className="space-y-2">
               {quickRailItems.map((item) => (

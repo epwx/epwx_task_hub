@@ -381,7 +381,7 @@ export default function LatestDailyWinnersBoard({ referralLink }: { referralLink
   }, [drawPage]);
 
   return (
-    <section id="latest-winners" className="py-12 scroll-mt-24">
+    <section id="latest-winners" className="py-12 scroll-mt-36">
       <div className="flex flex-col items-center">
         <h2 className="text-2xl font-black mb-4 text-slate-100 text-center">Latest Daily Winners</h2>
         <div className={`${themedSectionClass} w-full max-w-5xl`}>
@@ -389,7 +389,7 @@ export default function LatestDailyWinnersBoard({ referralLink }: { referralLink
           <div className="relative z-10 text-white">
             <div className="mb-6 text-center">
               <p className="text-sm uppercase tracking-[0.3em] text-white/80">Daily Draw Results</p>
-              <h3 className="mt-2 text-3xl font-black">Transparent winners for each daily draw</h3>
+              <h3 className="mt-2 text-2xl font-black sm:text-3xl">Transparent winners for each daily draw</h3>
               <p className="mt-3 text-sm text-white/90">Winners are selected randomly from unique daily claim wallets and listed below with payout status.</p>
               {lastUpdatedAt ? <p className="mt-2 text-xs text-white/85">Auto-refreshes every minute. Last updated: {lastUpdatedAt}</p> : null}
             </div>
