@@ -16,6 +16,8 @@ const steps = [
     title: "2. Join the EPWX Telegram group",
     copy:
       "Join the official EPWX Telegram community before claiming. The daily claim flow is built for active community members, so Telegram membership is part of the reward verification model.",
+    linkHref: "https://t.me/ePowerX_On_Base",
+    linkText: "Join our group: https://t.me/ePowerX_On_Base",
   },
   {
     title: "3. Verify via Telegram",
@@ -85,6 +87,18 @@ export default function DailyClaimStepByStepArticlePage() {
                 <div key={step.title} className="rounded-2xl border border-white/10 bg-black/20 p-4">
                   <h3 className="text-lg font-bold text-white">{step.title}</h3>
                   <p className="mt-2 text-slate-300">{step.copy}</p>
+                  {step.linkHref ? (
+                    <div className="mt-3">
+                      <a
+                        href={step.linkHref}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center font-semibold text-cyan-300 underline underline-offset-4 hover:text-cyan-200"
+                      >
+                        {step.linkText || step.linkHref}
+                      </a>
+                    </div>
+                  ) : null}
                   {step.screenshotSrc ? (
                     <div className="mt-4 overflow-hidden rounded-xl border border-cyan-300/35 bg-cyan-300/5 p-2">
                       <Image
