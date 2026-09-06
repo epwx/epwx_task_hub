@@ -2,6 +2,15 @@ import Link from "next/link";
 
 const posts = [
   {
+    href: "/blog/daily-claim-step-by-step",
+    tag: "Guide",
+    tagClassName: "text-cyan-200",
+    title: "Claim EPWX Daily: Step-by-Step Guide for Long-Term Rewards",
+    description:
+      "How to connect your wallet, verify through Telegram, complete eligibility checks, and claim your daily EPWX reward.",
+    borderClassName: "border-cyan-300/20 hover:border-cyan-300/50",
+  },
+  {
     href: "/blog/telegram-group-owner-rewards",
     tag: "Guide",
     tagClassName: "text-cyan-200",
