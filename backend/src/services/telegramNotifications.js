@@ -152,7 +152,7 @@ export function buildDailyClaimPaidMessage({ wallet, amount, claimedAt, txHash, 
 
 
   if (safeTotalDailyClaimsCount) {
-    lines.push(`<b>Total Claims Today</b>: ${safeTotalDailyClaimsCount}`);
+    lines.push(`<b>Total Rewards Sent Today</b>: ${safeTotalDailyClaimsCount}`);
   }
 
   if (isNewWallet) {

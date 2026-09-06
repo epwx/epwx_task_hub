@@ -143,6 +143,17 @@ async function getTodayDailyClaimsCount() {
   });
 }
 
+async function getTodayPaidDailyClaimsCount() {
+  const now = new Date();
+  const startOfTodayUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  return DailyClaim.count({
+    where: {
+      status: 'paid',
+      claimedAt: { [Op.gte]: startOfTodayUtc },
+    },
+  });
+}
+
 function normalizeWallet(wallet) {
   if (typeof wallet !== 'string') {
     return '';
@@ -1287,7 +1298,7 @@ router.post('/daily-claims/mark-paid', async (req, res) => {
     }
 
     const rewardDetails = findDailyRewardTierByAmount(claim.amount) || await getDailyRewardDetails(claim.wallet);
-    const totalDailyClaimsCount = await getTodayDailyClaimsCount();
+    const totalDailyClaimsCount = await getTodayPaidDailyClaimsCount();
     const walletClaimCount = await DailyClaim.count({ where: { wallet: claim.wallet } });
     const notificationResult = await notifyDailyClaimPaid({
       wallet: claim.wallet,
@@ -1454,7 +1465,7 @@ router.post('/daily-claim', async (req, res) => {
         console.error('[daily-claim] Failed to increment distributed stats:', statsErr);
       }
 
-      const totalDailyClaimsCount = await getTodayDailyClaimsCount();
+      const totalDailyClaimsCount = await getTodayPaidDailyClaimsCount();
       const walletClaimCount = await DailyClaim.count({ where: { wallet: claim.wallet } });
       const notificationResult = await notifyDailyClaimPaid({
         wallet: claim.wallet,
