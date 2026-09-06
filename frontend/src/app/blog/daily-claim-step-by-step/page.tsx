@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 const steps = [
@@ -5,6 +6,10 @@ const steps = [
     title: "1. Connect your wallet",
     copy:
       "Start by opening EPWX Task Hub and connecting the wallet you want to use for daily participation. Wallet-based identity helps keep each claim auditable and tied to a real user account.",
+    screenshotSrc: "/blog/daily-claim-01-wallet-connect.png",
+    screenshotAlt: "EPWX account control panel prompting the user to connect wallet before daily claim",
+    screenshotWidth: 768,
+    screenshotHeight: 1152,
   },
   {
     title: "2. Join the EPWX Telegram group",
@@ -64,6 +69,17 @@ export default function DailyClaimStepByStepArticlePage() {
                 <div key={step.title} className="rounded-2xl border border-white/10 bg-black/20 p-4">
                   <h3 className="text-lg font-bold text-white">{step.title}</h3>
                   <p className="mt-2 text-slate-300">{step.copy}</p>
+                  {step.screenshotSrc ? (
+                    <div className="mt-4 overflow-hidden rounded-xl border border-cyan-300/35 bg-cyan-300/5 p-2">
+                      <Image
+                        src={step.screenshotSrc}
+                        alt={step.screenshotAlt || step.title}
+                        width={step.screenshotWidth || 784}
+                        height={step.screenshotHeight || 1168}
+                        className="mx-auto h-auto w-full max-w-2xl rounded-lg"
+                      />
+                    </div>
+                  ) : null}
                 </div>
               ))}
             </div>
