@@ -41,6 +41,11 @@ const steps = [
     title: "5. Claim your daily EPWX reward",
     copy:
       "Once connected, verified, and eligible, submit your daily claim. Make daily claiming part of your routine: connect, verify, claim, and repeat.",
+    screenshotSrc: "/blog/daily-claim-step-05-claim-reward.jpg",
+    screenshotAlt: "Daily claim screen showing Claim Daily Reward button and terms agreement checkbox",
+    screenshotWidth: 1152,
+    screenshotHeight: 1728,
+    screenshotClassName: "mx-auto h-auto w-full max-w-2xl rounded-lg",
   },
 ];
 
