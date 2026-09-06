@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 
 const steps = [
@@ -6,10 +5,6 @@ const steps = [
     title: "1. Connect your wallet",
     copy:
       "Start by opening EPWX Task Hub and connecting the wallet you want to use for daily participation. Wallet-based identity helps keep each claim auditable and tied to a real user account.",
-    screenshotSrc: "/blog/daily-claim-01-wallet-connect.png",
-    screenshotAlt: "EPWX account control panel prompting the user to connect wallet before daily claim",
-    screenshotWidth: 768,
-    screenshotHeight: 1152,
   },
   {
     title: "2. Join the EPWX Telegram group",
@@ -20,14 +15,6 @@ const steps = [
     title: "3. Verify via Telegram",
     copy:
       "Complete Telegram verification so EPWX can connect your wallet activity with your community account. This helps confirm that claims come from real members, not anonymous repeat attempts.",
-    screenshotSrc: "/blog/daily-claim-02-telegram-verify-part-1.png",
-    screenshotAlt: "EPWX account control panel showing connected wallet and Telegram membership verification prompt",
-    screenshotWidth: 768,
-    screenshotHeight: 1152,
-    secondaryScreenshotSrc: "/blog/daily-claim-03-telegram-verify-part-2.png",
-    secondaryScreenshotAlt: "EPWX Telegram bot showing the daily claim Mini App and legacy verification instructions",
-    secondaryScreenshotWidth: 768,
-    secondaryScreenshotHeight: 1152,
   },
   {
     title: "4. Complete eligibility checks",
@@ -38,10 +25,6 @@ const steps = [
     title: "5. Claim your daily EPWX reward",
     copy:
       "Once connected, verified, and eligible, submit your daily claim. Make daily claiming part of your routine: connect, verify, claim, and repeat.",
-    screenshotSrc: "/blog/daily-claim-05-claim-reward.png",
-    screenshotAlt: "EPWX daily claim screen showing the claim daily reward button and wallet signature note",
-    screenshotWidth: 768,
-    screenshotHeight: 1152,
   },
 ];
 
@@ -81,26 +64,6 @@ export default function DailyClaimStepByStepArticlePage() {
                 <div key={step.title} className="rounded-2xl border border-white/10 bg-black/20 p-4">
                   <h3 className="text-lg font-bold text-white">{step.title}</h3>
                   <p className="mt-2 text-slate-300">{step.copy}</p>
-                  {step.screenshotSrc ? (
-                    <div className="mt-4 overflow-hidden rounded-xl border border-cyan-300/35 bg-cyan-300/5 p-2">
-                      <Image
-                        src={step.screenshotSrc}
-                        alt={step.screenshotAlt || step.title}
-                        width={step.screenshotWidth || 784}
-                        height={step.screenshotHeight || 1168}
-                        className="mx-auto h-auto w-full max-w-2xl rounded-lg"
-                      />
-                      {step.secondaryScreenshotSrc ? (
-                        <Image
-                          src={step.secondaryScreenshotSrc}
-                          alt={step.secondaryScreenshotAlt || step.title}
-                          width={step.secondaryScreenshotWidth || 784}
-                          height={step.secondaryScreenshotHeight || 1168}
-                          className="mx-auto mt-3 h-auto w-full max-w-2xl rounded-lg"
-                        />
-                      ) : null}
-                    </div>
-                  ) : null}
                 </div>
               ))}
             </div>
