@@ -20,6 +20,14 @@ const steps = [
     title: "3. Verify via Telegram",
     copy:
       "Complete Telegram verification so EPWX can connect your wallet activity with your community account. This helps confirm that claims come from real members, not anonymous repeat attempts.",
+    screenshotSrc: "/blog/daily-claim-02-telegram-verify-part-1.png",
+    screenshotAlt: "EPWX account control panel showing connected wallet and Telegram membership verification prompt",
+    screenshotWidth: 768,
+    screenshotHeight: 1152,
+    secondaryScreenshotSrc: "/blog/daily-claim-03-telegram-verify-part-2.png",
+    secondaryScreenshotAlt: "EPWX Telegram bot showing the daily claim Mini App and legacy verification instructions",
+    secondaryScreenshotWidth: 768,
+    secondaryScreenshotHeight: 1152,
   },
   {
     title: "4. Complete eligibility checks",
@@ -78,6 +86,15 @@ export default function DailyClaimStepByStepArticlePage() {
                         height={step.screenshotHeight || 1168}
                         className="mx-auto h-auto w-full max-w-2xl rounded-lg"
                       />
+                      {step.secondaryScreenshotSrc ? (
+                        <Image
+                          src={step.secondaryScreenshotSrc}
+                          alt={step.secondaryScreenshotAlt || step.title}
+                          width={step.secondaryScreenshotWidth || 784}
+                          height={step.secondaryScreenshotHeight || 1168}
+                          className="mx-auto mt-3 h-auto w-full max-w-2xl rounded-lg"
+                        />
+                      ) : null}
                     </div>
                   ) : null}
                 </div>
