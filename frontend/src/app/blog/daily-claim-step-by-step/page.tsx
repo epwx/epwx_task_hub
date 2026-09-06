@@ -26,6 +26,11 @@ const steps = [
     screenshotWidth: 1152,
     screenshotHeight: 1728,
     screenshotClassName: "mx-auto h-auto w-full max-w-2xl rounded-lg",
+    secondaryScreenshotSrc: "/blog/daily-claim-step-03-verify-telegram-part2.jpg",
+    secondaryScreenshotAlt: "ePowerXBot Telegram chat showing /start command and Open Daily Claim Mini App button",
+    secondaryScreenshotWidth: 1152,
+    secondaryScreenshotHeight: 1728,
+    secondaryScreenshotClassName: "mx-auto mt-3 h-auto w-full max-w-2xl rounded-lg",
   },
   {
     title: "4. Complete eligibility checks",
