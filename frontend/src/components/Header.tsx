@@ -28,6 +28,7 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
   const { address, isConnected } = useAccount();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [adminMenuOpen, setAdminMenuOpen] = useState(false);
+  const [openNavGroup, setOpenNavGroup] = useState<string | null>(null);
   const adminMenuRef = useRef<HTMLDetailsElement>(null);
   const pathname = usePathname();
 
@@ -157,6 +158,7 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
 
   useEffect(() => {
     setAdminMenuOpen(false);
+    setOpenNavGroup(null);
   }, [pathname]);
 
   useEffect(() => {
@@ -225,8 +227,15 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
                 )
               )}
               {navGroups.map((group) => (
-                <details key={group.label} className="group relative">
-                  <summary className={desktopMenuSummaryClass(isGroupActive(group))}>
+                <details key={group.label} open={openNavGroup === group.label} className="group relative">
+                  <summary
+                    onClick={(event) => {
+                      event.preventDefault();
+                      setAdminMenuOpen(false);
+                      setOpenNavGroup((currentGroup) => currentGroup === group.label ? null : group.label);
+                    }}
+                    className={desktopMenuSummaryClass(isGroupActive(group))}
+                  >
                     {group.label}
                     <svg className="h-4 w-4 transition-transform group-open:rotate-180" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                       <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 1.06l-4.25-4.51a.75.75 0 01.02-1.06z" clipRule="evenodd" />
@@ -240,12 +249,18 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
                           href={item.href}
                           target="_blank"
                           rel="noopener noreferrer"
+                          onClick={() => setOpenNavGroup(null)}
                           className={desktopDropdownLinkClass(false)}
                         >
                           {item.label}
                         </a>
                       ) : (
-                        <Link key={item.label} href={item.href} className={desktopDropdownLinkClass(isActiveHref(item.href))}>
+                        <Link
+                          key={item.label}
+                          href={item.href}
+                          onClick={() => setOpenNavGroup(null)}
+                          className={desktopDropdownLinkClass(isActiveHref(item.href))}
+                        >
                           {item.label}
                         </Link>
                       )
@@ -263,6 +278,7 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
                   <summary
                     onClick={(event) => {
                       event.preventDefault();
+                      setOpenNavGroup(null);
                       setAdminMenuOpen((prev) => !prev);
                     }}
                     className={`${desktopActionLinkClass(isAdminArea)} flex cursor-pointer list-none items-center gap-2 [&::-webkit-details-marker]:hidden`}
