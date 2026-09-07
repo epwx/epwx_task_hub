@@ -179,7 +179,7 @@ export function EPWXStats() {
             <div className="mt-2 flex flex-col gap-1">
               <p className="text-xs font-semibold text-slate-300">Base Network</p>
               <Link
-                href="/#buy-epwx"
+                href="/buy-epwx"
                 className="flex items-center gap-1 text-xs font-bold text-emerald-300 hover:text-emerald-200 group-hover:underline"
               >
                 Trade Now →

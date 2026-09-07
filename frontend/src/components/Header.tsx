@@ -56,7 +56,6 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
 
   const isAdmin = address && adminWallets.includes(address.toLowerCase());
   const isMerchant = address && merchantWallets.includes(address.toLowerCase());
-  const isHomePage = pathname === '/';
   const primaryLinks: NavItem[] = [
     {
       href: '/',
@@ -73,6 +72,7 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
       label: 'Earn',
       items: [
         { href: '/#daily-claim', label: 'Daily Claim' },
+        { href: '/referrals', label: 'Referral Rewards' },
         { href: '/cashback', label: 'Cashback Rewards' },
         { href: '/tasks', label: 'Campaign Tasks' },
         { href: '/claim/twitter-retweet', label: 'Twitter Retweet Claim' },
@@ -153,10 +153,7 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
         ? 'border-cyan-300/35 bg-cyan-400/15 text-cyan-50'
         : 'border-white/10 bg-slate-950/50 text-white hover:bg-white/[0.08]'
     }`;
-  const buyLinkClass =
-    isHomePage
-      ? 'rounded-full border border-emerald-500/60 bg-emerald-500/10 px-5 py-2.5 text-sm font-semibold text-emerald-700 shadow-sm transition-all hover:-translate-y-0.5 hover:bg-emerald-500/20 hover:shadow-md dark:border-emerald-300/50 dark:bg-emerald-400/10 dark:text-emerald-200 dark:hover:bg-emerald-400/20'
-      : desktopActionClass;
+  const buyLinkClass = desktopActionLinkClass(pathname === '/buy-epwx');
 
   useEffect(() => {
     setAdminMenuOpen(false);
@@ -258,7 +255,7 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
               ))}
             </nav>
             <div className="flex items-center gap-2">
-              <Link href="/#buy-epwx" className={buyLinkClass}>
+              <Link href="/buy-epwx" className={buyLinkClass}>
                 Buy EPWX
               </Link>
               {isAdmin ? (
@@ -407,7 +404,7 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
                   <div className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-400">Quick Actions</div>
                   <div className="mt-3 grid gap-2">
                     <Link
-                      href="/#buy-epwx"
+                      href="/buy-epwx"
                       className="rounded-2xl border border-emerald-300/35 bg-emerald-400/15 px-4 py-3 text-sm font-bold text-emerald-50 transition-colors hover:bg-emerald-400/25"
                       onClick={() => setMobileMenuOpen(false)}
                     >
