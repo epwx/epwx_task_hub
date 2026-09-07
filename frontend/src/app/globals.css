@@ -32,6 +32,70 @@ body {
     rgb(var(--background-start-rgb));
 }
 
+html.dark {
+  color-scheme: dark;
+}
+
+html:not(.dark) {
+  color-scheme: light;
+  --foreground-rgb: 15, 23, 42;
+  --background-start-rgb: 248, 250, 252;
+  --background-end-rgb: 241, 245, 249;
+}
+
+html:not(.dark) body {
+  background: linear-gradient(180deg, #f8fafc 0%, #eef6ff 48%, #f8fafc 100%);
+}
+
+html:not(.dark) [class*="bg-slate-950"] {
+  background-color: #f8fafc !important;
+}
+
+html:not(.dark) [class*="bg-slate-900"] {
+  background-color: rgba(255, 255, 255, 0.92) !important;
+}
+
+html:not(.dark) [class*="bg-slate-800"] {
+  background-color: rgba(241, 245, 249, 0.92) !important;
+}
+
+html:not(.dark) [class*="bg-white/"] {
+  background-color: rgba(255, 255, 255, 0.7) !important;
+}
+
+html:not(.dark) [class*="border-white"] {
+  border-color: rgba(15, 23, 42, 0.12) !important;
+}
+
+html:not(.dark) [class*="text-slate-100"],
+html:not(.dark) [class*="text-slate-200"] {
+  color: #0f172a !important;
+}
+
+html:not(.dark) [class*="text-slate-300"] {
+  color: #334155 !important;
+}
+
+html:not(.dark) [class*="text-white"]:not([class*="bg-blue"]):not([class*="bg-cyan"]):not([class*="bg-emerald"]):not([class*="bg-green"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-yellow"]):not([class*="bg-amber"]):not([class*="bg-purple"]):not([class*="bg-pink"]) {
+  color: #0f172a !important;
+}
+
+html:not(.dark) .ui-surface,
+html:not(.dark) .ui-surface-strong {
+  border-color: rgba(15, 23, 42, 0.12);
+  background: rgba(255, 255, 255, 0.78);
+}
+
+html:not(.dark) .ui-btn-muted {
+  border-color: rgba(15, 23, 42, 0.14);
+  background: rgba(255, 255, 255, 0.86);
+  color: #0f172a;
+}
+
+html:not(.dark) .ui-btn-muted:hover {
+  background: rgba(226, 232, 240, 0.86);
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;

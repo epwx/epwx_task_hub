@@ -326,9 +326,9 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
             <button
               onClick={() => setDarkMode(!darkMode)}
               className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
-              aria-label="Toggle dark mode"
+              aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
             >
-              {darkMode ? 'Dark' : 'Light'}
+              {darkMode ? 'Light' : 'Dark'}
             </button>
           </div>
 
@@ -451,9 +451,9 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
                       setMobileMenuOpen(false);
                     }}
                     className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm font-bold text-slate-100 transition-colors hover:bg-white/[0.08]"
-                    aria-label="Toggle dark mode"
+                    aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
                   >
-                    {darkMode ? 'Dark Mode' : 'Light Mode'}
+                    {darkMode ? 'Light Mode' : 'Dark Mode'}
                   </button>
                 </div>
 
