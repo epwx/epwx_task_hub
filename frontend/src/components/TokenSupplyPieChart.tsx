@@ -123,6 +123,14 @@ export function TokenSupplyPieChart() {
     return slices.find((slice) => slice.label === selectedSliceLabel) || slices[0];
   }, [selectedSliceLabel, slices]);
 
+  const selectableSlices = useMemo(() => {
+    if (!selectedSlice) {
+      return slices;
+    }
+
+    return slices.filter((slice) => slice.label !== selectedSlice.label);
+  }, [selectedSlice, slices]);
+
   let currentAngle = 0;
 
   return (
@@ -195,7 +203,7 @@ export function TokenSupplyPieChart() {
               ) : null}
 
               <div className="grid gap-3">
-                {slices.map((slice) => {
+                {selectableSlices.map((slice) => {
                   const percentage = totalSupply > 0 ? (slice.value / totalSupply) * 100 : 0;
                   const isSelected = selectedSlice?.label === slice.label;
                   return (
