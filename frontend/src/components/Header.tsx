@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ConnectKitButton } from 'connectkit';
 import { useAccount } from 'wagmi';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 
 
@@ -16,6 +16,8 @@ type HeaderProps = {
 export default function Header({ darkMode, setDarkMode }: HeaderProps) {
   const { address, isConnected } = useAccount();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [adminMenuOpen, setAdminMenuOpen] = useState(false);
+  const adminMenuRef = useRef<HTMLDetailsElement>(null);
   const pathname = usePathname();
 
 
@@ -126,6 +128,30 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
       ? 'rounded-full border border-emerald-500/60 bg-emerald-500/10 px-5 py-2.5 text-sm font-semibold text-emerald-700 shadow-sm transition-all hover:-translate-y-0.5 hover:bg-emerald-500/20 hover:shadow-md dark:border-emerald-300/50 dark:bg-emerald-400/10 dark:text-emerald-200 dark:hover:bg-emerald-400/20'
       : desktopActionClass;
 
+  useEffect(() => {
+    setAdminMenuOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!adminMenuOpen) return;
+    const handlePointerDown = (event: MouseEvent | TouchEvent) => {
+      if (adminMenuRef.current && !adminMenuRef.current.contains(event.target as Node)) {
+        setAdminMenuOpen(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setAdminMenuOpen(false);
+    };
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('touchstart', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('touchstart', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [adminMenuOpen]);
+
   // Debug logs for troubleshooting
   useEffect(() => {
     if (address) {
@@ -177,8 +203,12 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
                 Buy EPWX
               </Link>
               {isAdmin ? (
-                <details className="group relative">
+                <details ref={adminMenuRef} open={adminMenuOpen} className="group relative">
                   <summary
+                    onClick={(event) => {
+                      event.preventDefault();
+                      setAdminMenuOpen((prev) => !prev);
+                    }}
                     className={`${desktopActionLinkClass(isAdminArea)} flex cursor-pointer list-none items-center gap-2 [&::-webkit-details-marker]:hidden`}
                   >
                     Admin
@@ -191,6 +221,7 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
                       <Link
                         key={link.href}
                         href={link.href}
+                        onClick={() => setAdminMenuOpen(false)}
                         className={`block rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors ${
                           link.active
                             ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-950'
