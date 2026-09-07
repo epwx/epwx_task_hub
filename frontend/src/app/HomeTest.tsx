@@ -522,13 +522,13 @@ export default function HomeTest() {
   }
 
   const shortcutActionItems: Array<{ section: HomeShortcutSection; label: string; href: string; eyebrow: string }> = [
-    { section: 'latest-winners', label: 'Next Draw', href: '#latest-winners', eyebrow: 'Rewards' },
     { section: 'daily-claim', label: 'Daily Claim', href: '#daily-claim', eyebrow: 'Claim' },
+    { section: 'latest-winners', label: 'Next Draw', href: '#latest-winners', eyebrow: 'Rewards' },
   ];
 
   const mobileShortcutActionItems: Array<{ section: HomeShortcutSection; label: string; href: string; eyebrow: string }> = [
-    { section: 'latest-winners', label: 'Next Draw', href: '#latest-winners', eyebrow: 'Rewards' },
     { section: 'daily-claim', label: 'Daily Claim', href: '#daily-claim', eyebrow: 'Claim' },
+    { section: 'latest-winners', label: 'Next Draw', href: '#latest-winners', eyebrow: 'Rewards' },
   ];
 
   return (
@@ -724,8 +724,6 @@ export default function HomeTest() {
             </div>
           </div>
         </section>
-
-        <LatestDailyWinnersBoard referralLink={referralLink} />
 
         {/* Daily Claim Section */}
         <section id="daily-claim" className="py-12 scroll-mt-36">
@@ -935,6 +933,8 @@ export default function HomeTest() {
             </div>
           </div>
         </section>
+
+        <LatestDailyWinnersBoard referralLink={referralLink} />
 
         {/* User Daily Claims Table Section */}
         {address && (
