@@ -521,14 +521,16 @@ export default function HomeTest() {
     }
   }
 
-  const shortcutActionItems: Array<{ section: HomeShortcutSection; label: string; href: string; eyebrow: string }> = [
+  const shortcutActionItems: Array<{ section?: HomeShortcutSection; label: string; href: string; eyebrow: string }> = [
     { section: 'daily-claim', label: 'Daily Claim', href: '#daily-claim', eyebrow: 'Claim' },
     { section: 'latest-winners', label: 'Next Draw', href: '#latest-winners', eyebrow: 'Rewards' },
+    { label: '90% Burnt', href: '/platform-stats', eyebrow: 'Token' },
   ];
 
-  const mobileShortcutActionItems: Array<{ section: HomeShortcutSection; label: string; href: string; eyebrow: string }> = [
+  const mobileShortcutActionItems: Array<{ section?: HomeShortcutSection; label: string; href: string; eyebrow: string }> = [
     { section: 'daily-claim', label: 'Daily Claim', href: '#daily-claim', eyebrow: 'Claim' },
     { section: 'latest-winners', label: 'Next Draw', href: '#latest-winners', eyebrow: 'Rewards' },
+    { label: '90% Burnt', href: '/platform-stats', eyebrow: 'Token' },
   ];
 
   return (
@@ -547,12 +549,14 @@ export default function HomeTest() {
           <div className="ml-auto grid flex-1 grid-cols-3 gap-2">
             {shortcutActionItems.map((item) => (
               <a
-                key={item.section}
+                key={item.href}
                 href={item.href}
-                onClick={() => setActiveShortcutSection(item.section)}
-                className={`rounded-2xl border px-3 py-2.5 text-left transition-colors ${activeShortcutSection === item.section ? 'border-emerald-300/40 bg-emerald-400/18 text-emerald-50' : 'border-white/10 bg-white/[0.04] text-white/85 hover:bg-white/[0.08]'}`}
+                onClick={() => {
+                  if (item.section) setActiveShortcutSection(item.section);
+                }}
+                className={`rounded-2xl border px-3 py-2.5 text-left transition-colors ${item.section && activeShortcutSection === item.section ? 'border-emerald-300/40 bg-emerald-400/18 text-emerald-50' : 'border-white/10 bg-white/[0.04] text-white/85 hover:bg-white/[0.08]'}`}
               >
-                <div className={`text-[10px] font-black uppercase tracking-[0.22em] ${activeShortcutSection === item.section ? 'text-emerald-100/80' : 'text-slate-400'}`}>
+                <div className={`text-[10px] font-black uppercase tracking-[0.22em] ${item.section && activeShortcutSection === item.section ? 'text-emerald-100/80' : 'text-slate-400'}`}>
                   {item.eyebrow}
                 </div>
                 <div className="mt-1 text-xs font-bold uppercase tracking-[0.08em] xl:text-sm">{item.label}</div>
@@ -983,13 +987,15 @@ export default function HomeTest() {
           </div>
         </div>
       </footer>
-      <div className="fixed inset-x-3 bottom-3 z-40 flex gap-2 overflow-x-auto rounded-2xl border border-white/15 bg-slate-950/88 p-2 shadow-[0_18px_40px_rgba(15,23,42,0.35)] backdrop-blur-md [scrollbar-width:none] lg:hidden">
+      <div className="fixed inset-x-3 bottom-3 z-40 flex justify-center gap-2 overflow-x-auto rounded-2xl border border-white/15 bg-slate-950/88 p-2 shadow-[0_18px_40px_rgba(15,23,42,0.35)] backdrop-blur-md [scrollbar-width:none] lg:hidden">
         {mobileShortcutActionItems.map((item) => (
           <a
-            key={item.section}
+            key={item.href}
             href={item.href}
-            onClick={() => setActiveShortcutSection(item.section)}
-            className={`flex min-w-[112px] items-center justify-center rounded-xl px-3 py-2.5 text-center text-[11px] font-black uppercase tracking-[0.14em] text-white transition-colors ${activeShortcutSection === item.section ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-white/8 hover:bg-white/14'}`}
+            onClick={() => {
+              if (item.section) setActiveShortcutSection(item.section);
+            }}
+            className={`flex min-w-[96px] flex-1 items-center justify-center rounded-xl px-3 py-2.5 text-center text-[11px] font-black uppercase tracking-[0.14em] text-white transition-colors ${item.section && activeShortcutSection === item.section ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-white/8 hover:bg-white/14'}`}
           >
             {item.label}
           </a>
