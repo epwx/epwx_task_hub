@@ -524,13 +524,13 @@ export default function HomeTest() {
   const shortcutActionItems: Array<{ section?: HomeShortcutSection; label: string; href: string; eyebrow: string }> = [
     { section: 'daily-claim', label: 'Daily Claim', href: '#daily-claim', eyebrow: 'Claim' },
     { section: 'latest-winners', label: 'Next Draw', href: '#latest-winners', eyebrow: 'Rewards' },
-    { label: '90% Burnt', href: '/platform-stats', eyebrow: 'Token' },
+    { label: '90% Burnt', href: '/platform-stats#token-supply', eyebrow: 'Token' },
   ];
 
   const mobileShortcutActionItems: Array<{ section?: HomeShortcutSection; label: string; href: string; eyebrow: string }> = [
     { section: 'daily-claim', label: 'Daily Claim', href: '#daily-claim', eyebrow: 'Claim' },
     { section: 'latest-winners', label: 'Next Draw', href: '#latest-winners', eyebrow: 'Rewards' },
-    { label: '90% Burnt', href: '/platform-stats', eyebrow: 'Token' },
+    { label: '90% Burnt', href: '/platform-stats#token-supply', eyebrow: 'Token' },
   ];
 
   return (

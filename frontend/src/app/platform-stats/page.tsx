@@ -1,4 +1,5 @@
 import { EPWXStats } from "@/components/EPWXStats";
+import { TokenSupplyPieChart } from "@/components/TokenSupplyPieChart";
 
 export default function PlatformStatsPage() {
   return (
@@ -23,6 +24,10 @@ export default function PlatformStatsPage() {
         </section>
 
         <EPWXStats />
+
+        <section id="token-supply" className="mt-8 scroll-mt-32">
+          <TokenSupplyPieChart />
+        </section>
       </main>
     </div>
   );
