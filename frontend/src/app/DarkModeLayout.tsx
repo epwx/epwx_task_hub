@@ -27,7 +27,9 @@ export default function DarkModeLayout({ children }: { children: React.ReactNode
   return (
     <>
       <Header darkMode={darkMode} setDarkMode={setDarkMode} />
-      {children}
+      <div className="pt-[72px] sm:pt-[76px]">
+        {children}
+      </div>
     </>
   );
 }
