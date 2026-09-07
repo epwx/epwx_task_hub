@@ -1,8 +1,6 @@
 "use client";
 import Link from "next/link";
-import { EPWXCashbackClaim } from "@/components/EPWXCashbackClaim_clean";
 import { HomeSwapCard } from "@/components/HomeSwapCard";
-import { TokenSupplyPieChart } from "@/components/TokenSupplyPieChart";
 import { getApiBaseUrl } from "@/utils/apiBaseUrl";
 import { Fragment, useCallback, useState, useEffect } from "react";
 import { useAccount, useBalance, useSignMessage } from "wagmi";
@@ -176,53 +174,9 @@ export default function HomeTest() {
     ? 0
     : Math.max(nextTierTarget - normalizedEpwxBalance, 0);
 
-  const [specialEligible, setSpecialEligible] = useState(false);
-  const [specialClaiming, setSpecialClaiming] = useState(false);
-  const [specialClaimStatus, setSpecialClaimStatus] = useState<string | null>(null);
   const [referralStats, setReferralStats] = useState<ReferralStatsResponse | null>(null);
   const [referralStatus, setReferralStatus] = useState<string | null>(null);
   const [referralLink, setReferralLink] = useState("");
-  useEffect(() => {
-    const checkSpecialClaim = async () => {
-      if (!address) {
-        setSpecialEligible(false);
-        return;
-      }
-      try {
-        const res = await fetch(`/api/epwx/special-claim/status?wallet=${address}`);
-        const data = await res.json();
-        setSpecialEligible(!!data.eligible);
-      } catch (e) {
-        setSpecialEligible(false);
-      }
-    };
-    checkSpecialClaim();
-  }, [address]);
-
-  const handleSpecialClaim = async () => {
-    setSpecialClaiming(true);
-    setSpecialClaimStatus(null);
-    try {
-      const res = await fetch("/api/epwx/special-claim/claim", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ wallet: address }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        setSpecialClaimStatus("Special claim submitted. Pending admin approval.");
-        setSpecialEligible(false);
-        toast.success("Special claim submitted! Pending admin approval.");
-      } else {
-        setSpecialClaimStatus(data.error || "Special claim failed");
-        toast.error(data.error || "Special claim failed");
-      }
-    } catch (e) {
-      setSpecialClaimStatus("Special claim failed");
-      toast.error("Special claim failed");
-    }
-    setSpecialClaiming(false);
-  };
 
   const [copied, setCopied] = useState(false);
   const [walletCopied, setWalletCopied] = useState(false);
@@ -240,8 +194,6 @@ export default function HomeTest() {
   const [isTelegramVerified, setIsTelegramVerified] = useState<boolean | null>(null);
   const [agreed, setAgreed] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
-  const [specialAgreed, setSpecialAgreed] = useState(false);
-  const [showSpecialTerms, setShowSpecialTerms] = useState(false);
   const [checkingVerification, setCheckingVerification] = useState(false);
   const [telegramVerificationLastCheckedAt, setTelegramVerificationLastCheckedAt] = useState<number | null>(null);
   const [telegramVerificationError, setTelegramVerificationError] = useState<string | null>(null);
@@ -817,12 +769,6 @@ export default function HomeTest() {
     },
   ];
 
-  const quickRailItems: Array<{ label: string; href: string }> = [
-    { label: "Wallet", href: "#wallet-verification" },
-    { label: "Burnt Supply", href: "#burnt-supply" },
-    { label: "Cashback Rewards", href: "#cashback-rewards" },
-  ];
-
   const shortcutActionItems: Array<{ section: HomeShortcutSection; label: string; href: string; eyebrow: string }> = [
     { section: 'latest-winners', label: 'Next Draw', href: '#latest-winners', eyebrow: 'Rewards' },
     { section: 'buy-epwx', label: 'Buy EPWX', href: '#buy-epwx', eyebrow: 'Swap' },
@@ -833,7 +779,6 @@ export default function HomeTest() {
     { section: 'latest-winners', label: 'Next Draw', href: '#latest-winners', eyebrow: 'Rewards' },
     { section: 'buy-epwx', label: 'Buy EPWX', href: '#buy-epwx', eyebrow: 'Swap' },
     { section: 'daily-claim', label: 'Daily Claim', href: '#daily-claim', eyebrow: 'Claim' },
-    { section: 'burnt-supply', label: 'Burnt Supply', href: '#burnt-supply', eyebrow: 'Tokenomics' },
   ];
 
   return (
@@ -867,23 +812,7 @@ export default function HomeTest() {
         </div>
       </section>
 
-      <main className="relative z-10 mx-auto grid w-full max-w-7xl flex-1 gap-8 px-4 pb-28 pt-8 lg:grid-cols-[220px_minmax(0,1fr)] lg:pb-12 lg:pt-10">
-        <aside className="hidden lg:block">
-          <div className="ui-surface-strong sticky top-[11rem] p-4 shadow-[0_18px_40px_rgba(2,6,23,0.45)]">
-            <div className="mb-3 text-xs font-black uppercase tracking-[0.2em] text-white/50">Quick Navigate</div>
-            <div className="space-y-2">
-              {quickRailItems.map((item) => (
-                <a
-                  key={item.href}
-                  href={item.href}
-                  className="ui-btn-muted block rounded-2xl px-3 py-2 text-xs uppercase tracking-[0.12em]"
-                >
-                  {item.label}
-                </a>
-              ))}
-            </div>
-          </div>
-        </aside>
+      <main className="relative z-10 mx-auto w-full max-w-6xl flex-1 px-4 pb-28 pt-8 lg:pb-12 lg:pt-10">
         <div className="min-w-0">
         {/* Wallet Connection & Verification Section */}
         <section id="wallet-verification" className="my-8 scroll-mt-36">
@@ -1130,64 +1059,7 @@ export default function HomeTest() {
           <HomeSwapCard />
         </section>
 
-        <section id="burnt-supply" className="scroll-mt-36">
-          <TokenSupplyPieChart />
-        </section>
-
         <LatestDailyWinnersBoard referralLink={referralLink} />
-
-        {/* Cashback Rewards Section */}
-        <section id="cashback-rewards" className="py-12 scroll-mt-36">
-          <div className="flex flex-col items-center">
-            <h2 className="text-2xl font-black mb-4 text-slate-100 text-center">Cashback Rewards</h2>
-            <div className="w-full max-w-4xl">
-              <EPWXCashbackClaim />
-            </div>
-          </div>
-        </section>
-
-        {/* Special EPWX Claim Section */}
-        {address && isTelegramVerified && specialEligible && (
-          <section className="py-12">
-            <div className={`${themedSectionClass} w-full max-w-lg mx-auto`}>
-              <div className="absolute bottom-0 left-0 w-40 h-40 bg-yellow-300/20 rounded-full blur-3xl"></div>
-              <div className={themedInnerClass}>
-              <h2 className="text-2xl font-black mb-4 text-white">Special Claim</h2>
-              <p className="mb-4 text-white/85 text-center">You are eligible for a <b>Special 1,000,000 EPWX</b> reward!</p>
-              <div className="flex items-center mb-4">
-                <input
-                  id="special-terms-checkbox"
-                  type="checkbox"
-                  checked={specialAgreed}
-                  onChange={e => setSpecialAgreed(e.target.checked)}
-                  className="mr-2"
-                />
-                <label htmlFor="special-terms-checkbox" className="text-sm text-white/85">
-                  I agree to the{' '}
-                  <button
-                    type="button"
-                    className="text-emerald-200 underline hover:text-white"
-                    onClick={() => setShowSpecialTerms(true)}
-                  >
-                    terms and conditions
-                  </button>
-                </label>
-              </div>
-              <button
-                onClick={handleSpecialClaim}
-                disabled={specialClaiming || !specialAgreed}
-                className={`px-6 py-3 rounded-lg font-bold text-white bg-yellow-500 hover:bg-yellow-600 transition-colors mb-4 ${specialClaiming || !specialAgreed ? 'opacity-50 cursor-not-allowed' : ''}`}
-              >
-                {specialClaiming ? 'Claiming...' : 'Claim Special 1,000,000 EPWX'}
-              </button>
-              <TermsAndConditionsModal open={showSpecialTerms} onClose={() => setShowSpecialTerms(false)} />
-              {specialClaimStatus && (
-                <div className="text-center text-lg font-semibold text-white mb-2">{specialClaimStatus}</div>
-              )}
-              </div>
-            </div>
-          </section>
-        )}
 
         {/* Daily Claim Section */}
         <section id="daily-claim" className="py-12 scroll-mt-36">
@@ -1267,12 +1139,12 @@ export default function HomeTest() {
                               >
                                 Buy EPWX To Reach Next Tier
                               </a>
-                              <a
-                                href="#cashback-rewards"
+                              <Link
+                                href="/cashback"
                                 className="inline-flex items-center justify-center rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-white/20"
                               >
                                 Check Buyer Cashback
-                              </a>
+                              </Link>
                             </div>
                           </>
                         ) : (
@@ -1374,13 +1246,13 @@ export default function HomeTest() {
                           >
                             Buy EPWX Now
                           </a>
-                          <a
-                            href="#cashback-rewards"
+                          <Link
+                            href="/cashback"
                             onClick={() => setShowClaimUpgradePrompt(false)}
                             className="inline-flex items-center justify-center rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-white/20"
                           >
                             View Cashback Rewards
-                          </a>
+                          </Link>
                         </div>
                       </div>
                     </div>
@@ -1453,7 +1325,7 @@ export default function HomeTest() {
             onClick={() => setActiveShortcutSection(item.section)}
             className={`flex min-w-[112px] items-center justify-center rounded-xl px-3 py-2.5 text-center text-[11px] font-black uppercase tracking-[0.14em] text-white transition-colors ${activeShortcutSection === item.section ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-white/8 hover:bg-white/14'}`}
           >
-            {item.label === 'Burnt Supply' ? '90% Burnt' : item.label}
+            {item.label}
           </a>
         ))}
       </div>

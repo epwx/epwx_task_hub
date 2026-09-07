@@ -17,7 +17,7 @@ export const NEXT_PUBLIC_AUTO_DAILY_DRAW_TIME_UTC = String(process.env.NEXT_PUBL
 export const TELEGRAM_BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "epwx_bot";
 export const PENDING_REFERRAL_STORAGE_KEY = "epwx-pending-referrer";
 export const PENDING_PARTNER_REFERRAL_CODE_STORAGE_KEY = "epwx-pending-partner-referral-code";
-export const HOME_SHORTCUT_SECTIONS = ['buy-epwx', 'burnt-supply', 'latest-winners', 'daily-claim'] as const;
+export const HOME_SHORTCUT_SECTIONS = ['latest-winners', 'buy-epwx', 'daily-claim'] as const;
 export const DAILY_REWARD_TIERS = [
   {
     walletBalanceLabel: `At least ${MEGA_DAILY_REWARD_THRESHOLD.toLocaleString()} EPWX`,

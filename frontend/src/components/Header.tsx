@@ -13,6 +13,17 @@ type HeaderProps = {
   setDarkMode: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
+type NavItem = {
+  href: string;
+  label: string;
+  external?: boolean;
+};
+
+type NavGroup = {
+  label: string;
+  items: NavItem[];
+};
+
 export default function Header({ darkMode, setDarkMode }: HeaderProps) {
   const { address, isConnected } = useAccount();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -46,44 +57,57 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
   const isAdmin = address && adminWallets.includes(address.toLowerCase());
   const isMerchant = address && merchantWallets.includes(address.toLowerCase());
   const isHomePage = pathname === '/';
-  const desktopLinks = [
+  const primaryLinks: NavItem[] = [
     {
       href: '/',
       label: 'Home',
-      external: false,
-      active: pathname === '/',
     },
     {
       href: 'https://epowex.com',
       label: 'Website',
       external: true,
-      active: false,
-    },
-    {
-      href: '/whitepaper',
-      label: 'Whitepaper',
-      external: false,
-      active: pathname === '/whitepaper',
-    },
-    {
-      href: '/platform-stats',
-      label: 'Stats',
-      external: false,
-      active: pathname === '/platform-stats',
-    },
-    {
-      href: '/blog',
-      label: 'Blog',
-      external: false,
-      active: pathname === '/blog',
-    },
-    {
-      href: 'https://t.me/ePowerX_On_Base',
-      label: 'Contact',
-      external: true,
-      active: false,
     },
   ];
+  const navGroups: NavGroup[] = [
+    {
+      label: 'Earn',
+      items: [
+        { href: '/#daily-claim', label: 'Daily Claim' },
+        { href: '/cashback', label: 'Cashback Rewards' },
+        { href: '/tasks', label: 'Campaign Tasks' },
+        { href: '/claim/twitter-retweet', label: 'Twitter Retweet Claim' },
+        { href: '/claim/engagement', label: 'Engagement Claim' },
+        { href: '/telegram-miniapp', label: 'Telegram Mini App' },
+      ],
+    },
+    {
+      label: 'Stats',
+      items: [
+        { href: '/platform-stats', label: 'Platform Stats' },
+        { href: '/whitepaper', label: 'Whitepaper' },
+        { href: '/#latest-winners', label: 'Reward Activity' },
+      ],
+    },
+    {
+      label: 'Partners',
+      items: [
+        { href: '/partner', label: 'Partner Portal' },
+        { href: '/advertise', label: 'Advertise' },
+      ],
+    },
+    {
+      label: 'Learn',
+      items: [
+        { href: '/blog', label: 'Blog' },
+        { href: '/user-guide', label: 'User Guide' },
+        { href: '/terms', label: 'Terms' },
+        { href: '/privacy', label: 'Privacy' },
+        { href: 'https://t.me/ePowerX_On_Base', label: 'Contact', external: true },
+      ],
+    },
+  ];
+  const isActiveHref = (href: string) => href.startsWith('/#') ? false : pathname === href;
+  const isGroupActive = (group: NavGroup) => group.items.some((item) => !item.external && isActiveHref(item.href));
   const dashboardLinks = isAdmin
     ? [
         { href: '/admin', label: 'Admin Dashboard', active: pathname === '/admin' },
@@ -95,9 +119,7 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
       ]
     : isMerchant
       ? [{ href: '/admin/reward-ledger', label: 'Reward Ledger', active: pathname === '/admin/reward-ledger' }]
-      : isConnected
-        ? [{ href: '/partner', label: 'Partner Portal', active: pathname === '/partner' }]
-        : [];
+      : [];
   const isAdminArea = dashboardLinks.some((link) => link.active);
   const desktopNavLinkClass = (active: boolean) =>
     `rounded-full px-4 py-2 text-sm font-semibold tracking-[0.01em] transition-all ${
@@ -111,6 +133,14 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
     active
       ? 'rounded-full border border-slate-900 bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-md transition-all dark:border-white dark:bg-white dark:text-slate-950'
       : desktopActionClass;
+  const desktopMenuSummaryClass = (active: boolean) =>
+    `${desktopNavLinkClass(active)} flex cursor-pointer list-none items-center gap-2 [&::-webkit-details-marker]:hidden`;
+  const desktopDropdownLinkClass = (active: boolean) =>
+    `block rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors ${
+      active
+        ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-950'
+        : 'text-slate-700 hover:bg-slate-100 hover:text-slate-950 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-white'
+    }`;
   const mobileNavLinkClass = (active: boolean) =>
     `rounded-2xl border px-4 py-3 text-sm font-semibold transition-colors ${
       active
@@ -180,23 +210,52 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
           {/* Desktop Navigation */}
           <div className="hidden md:flex flex-1 items-center justify-end gap-3">
             <nav className="flex items-center gap-1 rounded-full border border-slate-200 bg-white/70 p-1 shadow-sm dark:border-slate-800 dark:bg-slate-900/80">
-              {desktopLinks.map((link) =>
+              {primaryLinks.map((link) =>
                 link.external ? (
                   <a
                     key={link.label}
                     href={link.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={desktopNavLinkClass(link.active)}
+                    className={desktopNavLinkClass(false)}
                   >
                     {link.label}
                   </a>
                 ) : (
-                  <Link key={link.label} href={link.href} className={desktopNavLinkClass(link.active)}>
+                  <Link key={link.label} href={link.href} className={desktopNavLinkClass(isActiveHref(link.href))}>
                     {link.label}
                   </Link>
                 )
               )}
+              {navGroups.map((group) => (
+                <details key={group.label} className="group relative">
+                  <summary className={desktopMenuSummaryClass(isGroupActive(group))}>
+                    {group.label}
+                    <svg className="h-4 w-4 transition-transform group-open:rotate-180" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 1.06l-4.25-4.51a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+                    </svg>
+                  </summary>
+                  <div className="absolute left-0 top-full z-20 mt-2 w-60 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+                    {group.items.map((item) =>
+                      item.external ? (
+                        <a
+                          key={item.label}
+                          href={item.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={desktopDropdownLinkClass(false)}
+                        >
+                          {item.label}
+                        </a>
+                      ) : (
+                        <Link key={item.label} href={item.href} className={desktopDropdownLinkClass(isActiveHref(item.href))}>
+                          {item.label}
+                        </Link>
+                      )
+                    )}
+                  </div>
+                </details>
+              ))}
             </nav>
             <div className="flex items-center gap-2">
               <Link href="/#buy-epwx" className={buyLinkClass}>
@@ -287,14 +346,14 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
                 <div>
                   <div className="text-[11px] font-black uppercase tracking-[0.24em] text-cyan-300">Navigation</div>
                   <div className="mt-3 grid gap-2">
-                    {desktopLinks.map((link) =>
+                    {primaryLinks.map((link) =>
                       link.external ? (
                         <a
                           key={link.label}
                           href={link.href}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className={mobileNavLinkClass(link.active)}
+                          className={mobileNavLinkClass(false)}
                           onClick={() => setMobileMenuOpen(false)}
                         >
                           {link.label}
@@ -303,7 +362,7 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
                         <Link
                           key={link.label}
                           href={link.href}
-                          className={mobileNavLinkClass(link.active)}
+                          className={mobileNavLinkClass(isActiveHref(link.href))}
                           onClick={() => setMobileMenuOpen(false)}
                         >
                           {link.label}
@@ -312,6 +371,37 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
                     )}
                   </div>
                 </div>
+
+                {navGroups.map((group) => (
+                  <div key={group.label}>
+                    <div className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-400">{group.label}</div>
+                    <div className="mt-3 grid gap-2">
+                      {group.items.map((item) =>
+                        item.external ? (
+                          <a
+                            key={item.label}
+                            href={item.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={mobileNavLinkClass(false)}
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            {item.label}
+                          </a>
+                        ) : (
+                          <Link
+                            key={item.label}
+                            href={item.href}
+                            className={mobileNavLinkClass(isActiveHref(item.href))}
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            {item.label}
+                          </Link>
+                        )
+                      )}
+                    </div>
+                  </div>
+                ))}
 
                 <div>
                   <div className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-400">Quick Actions</div>

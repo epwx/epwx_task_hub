@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { ethers } from 'ethers';
 import { useAccount, useBalance } from 'wagmi';
 import { base } from 'wagmi/chains';
@@ -266,7 +267,7 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
               <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Buyer cashback</div>
               <div className="mt-2 text-2xl font-black text-white">100B+ EPWX buy</div>
               <div className="mt-1 text-sm text-white/75">Qualifying purchases in the last 3 hours can be claimed in the cashback section.</div>
-              <a href="#cashback-rewards" className="mt-3 inline-flex text-sm font-semibold text-emerald-100 underline underline-offset-4 hover:text-white">Jump to cashback rewards</a>
+              <Link href="/cashback" className="mt-3 inline-flex text-sm font-semibold text-emerald-100 underline underline-offset-4 hover:text-white">Open cashback rewards</Link>
             </div>
           ) : null}
         </div>
