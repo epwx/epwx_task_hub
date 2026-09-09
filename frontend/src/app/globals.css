@@ -37,6 +37,10 @@ html.dark {
   background-color: #020617;
 }
 
+html.dark body {
+  background: linear-gradient(180deg, #020617 0%, #0f172a 48%, #020617 100%);
+}
+
 html:not(.dark) {
   color-scheme: light;
   --foreground-rgb: 15, 23, 42;
