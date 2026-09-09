@@ -527,11 +527,20 @@ export default function HomeTest() {
     { label: '90% Burnt', href: '/platform-stats#token-supply', eyebrow: 'Token' },
   ];
 
-  const mobileShortcutActionItems: Array<{ section?: HomeShortcutSection; label: string; href: string; eyebrow: string }> = [
-    { section: 'daily-claim', label: 'Daily Claim', href: '#daily-claim', eyebrow: 'Claim' },
-    { section: 'latest-winners', label: 'Next Draw', href: '#latest-winners', eyebrow: 'Rewards' },
-    { label: '90% Burnt', href: '/platform-stats#token-supply', eyebrow: 'Token' },
+  const mobileShortcutActionItems: Array<{ section?: HomeShortcutSection; label: string; href: string; icon: 'home' | 'claim' | 'trophy' | 'wallet' | 'chart' }> = [
+    { section: 'daily-claim', label: 'Claim', href: '#daily-claim', icon: 'claim' },
+    { section: 'latest-winners', label: 'Winners', href: '#latest-winners', icon: 'trophy' },
+    { label: 'Wallet', href: '#wallet-verification', icon: 'wallet' },
+    { label: 'Stats', href: '/platform-stats#token-supply', icon: 'chart' },
   ];
+
+  const mobileTabIconPaths: Record<'home' | 'claim' | 'trophy' | 'wallet' | 'chart', string> = {
+    home: 'M3 11.2 12 4l9 7.2M5.5 9.8V19a1 1 0 0 0 1 1H9.5v-5a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v5h3a1 1 0 0 0 1-1V9.8',
+    claim: 'M12 3v10.5m0 0 3.5-3.5M12 13.5 8.5 10M5 15.5v3a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3',
+    trophy: 'M7 4h10v3a5 5 0 0 1-5 5 5 5 0 0 1-5-5V4Zm0 0H4v1.5A3.5 3.5 0 0 0 7.5 9M17 4h3v1.5A3.5 3.5 0 0 1 16.5 9M10 12v3h4v-3M9 20h6M11 15h2v5h-2z',
+    wallet: 'M4 7.5A2.5 2.5 0 0 1 6.5 5H18a1 1 0 0 1 1 1v1.2M4 7.5V17a2 2 0 0 0 2 2h13a1 1 0 0 0 1-1v-3M4 7.5 4 7.5M16.5 13.2h2.3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1h-2.3a2 2 0 0 0 0 4Z',
+    chart: 'M4 20V10m5 10V4m5 16v-7m5 7V8',
+  };
 
   return (
     <div className="relative min-h-screen overflow-x-clip bg-slate-950 text-slate-100">
@@ -540,6 +549,40 @@ export default function HomeTest() {
         <div className="absolute -right-28 top-12 h-[28rem] w-[28rem] rounded-full bg-blue-600/20 blur-[150px]" />
         <div className="absolute bottom-0 left-1/2 h-72 w-[42rem] -translate-x-1/2 rounded-full bg-emerald-400/10 blur-[150px]" />
       </div>
+
+      {/* Mobile app-style summary hero */}
+      <section className="relative z-10 px-3 pt-4 lg:hidden">
+        <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.03] to-transparent p-4 shadow-[0_10px_30px_rgba(2,6,23,0.35)]">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <div className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">EPWX Balance</div>
+              <div className="mt-1 truncate text-2xl font-black text-white">
+                {!address ? '—' : balanceLoading ? 'Loading...' : formattedBalance}
+              </div>
+            </div>
+            <div className="shrink-0 text-right">
+              <div className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Daily Tier</div>
+              <div className="mt-1 text-sm font-black text-emerald-300">{currentDailyReward.toLocaleString()}</div>
+            </div>
+          </div>
+          <div className="mt-3 flex items-center gap-2">
+            <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em] ${isTelegramVerified ? 'border-emerald-300/30 bg-emerald-400/10 text-emerald-200' : 'border-amber-300/30 bg-amber-400/10 text-amber-200'}`}>
+              <span className={`h-1.5 w-1.5 rounded-full ${isTelegramVerified ? 'bg-emerald-300' : 'bg-amber-300'}`} />
+              {isTelegramVerified ? 'Telegram Verified' : 'Telegram Unverified'}
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-300/30 bg-cyan-400/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em] text-cyan-200">
+              {remainingClaimTime ? `Next claim: ${remainingClaimTime}` : 'Claim Ready'}
+            </span>
+          </div>
+          <a
+            href="#daily-claim"
+            onClick={() => setActiveShortcutSection('daily-claim')}
+            className="mt-3 flex items-center justify-center rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-black uppercase tracking-[0.08em] text-slate-950 transition-colors hover:bg-emerald-400"
+          >
+            {remainingClaimTime ? 'View Claim Status' : 'Claim Daily Reward'}
+          </a>
+        </div>
+      </section>
 
       <section className="sticky top-[76px] z-20 hidden border-b border-white/10 bg-slate-950/70 backdrop-blur-xl lg:block">
         <div className="mx-auto flex w-full max-w-7xl items-center gap-4 px-4 py-2.5">
@@ -987,20 +1030,29 @@ export default function HomeTest() {
           </div>
         </div>
       </footer>
-      <div className="fixed inset-x-3 bottom-3 z-40 flex justify-center gap-2 overflow-x-auto rounded-2xl border border-white/15 bg-slate-950/88 p-2 shadow-[0_18px_40px_rgba(15,23,42,0.35)] backdrop-blur-md [scrollbar-width:none] lg:hidden">
-        {mobileShortcutActionItems.map((item) => (
-          <a
-            key={item.href}
-            href={item.href}
-            onClick={() => {
-              if (item.section) setActiveShortcutSection(item.section);
-            }}
-            className={`flex min-w-[96px] flex-1 items-center justify-center rounded-xl px-3 py-2.5 text-center text-[11px] font-black uppercase tracking-[0.14em] text-white transition-colors ${item.section && activeShortcutSection === item.section ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-white/8 hover:bg-white/14'}`}
-          >
-            {item.label}
-          </a>
-        ))}
-      </div>
+      <nav
+        className="fixed inset-x-2 bottom-2 z-40 flex justify-between gap-1 rounded-3xl border border-white/15 bg-slate-950/92 px-1.5 py-2 shadow-[0_18px_40px_rgba(15,23,42,0.45)] backdrop-blur-xl lg:hidden"
+        style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}
+      >
+        {mobileShortcutActionItems.map((item) => {
+          const isActive = item.section ? activeShortcutSection === item.section : false;
+          return (
+            <a
+              key={item.href}
+              href={item.href}
+              onClick={() => {
+                if (item.section) setActiveShortcutSection(item.section);
+              }}
+              className={`flex flex-1 flex-col items-center gap-0.5 rounded-2xl px-2 py-1.5 text-center transition-colors ${isActive ? 'bg-emerald-500/90 text-slate-950' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={isActive ? 2.4 : 2} strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+                <path d={mobileTabIconPaths[item.icon]} />
+              </svg>
+              <span className={`text-[10px] font-black uppercase tracking-[0.08em] ${isActive ? 'text-slate-950' : 'text-white/70'}`}>{item.label}</span>
+            </a>
+          );
+        })}
+      </nav>
     </div>
   );
 }
