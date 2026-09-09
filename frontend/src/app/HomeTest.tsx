@@ -1031,7 +1031,7 @@ export default function HomeTest() {
         </div>
       </footer>
       <nav
-        className="fixed inset-x-2 bottom-2 z-40 flex justify-between gap-1 rounded-3xl border border-white/15 bg-slate-950/92 px-1.5 py-2 shadow-[0_18px_40px_rgba(15,23,42,0.45)] backdrop-blur-xl lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 flex justify-between gap-1 border-t border-white/15 bg-slate-950/92 px-1.5 pt-2 shadow-[0_-8px_30px_rgba(2,6,23,0.45)] backdrop-blur-xl lg:hidden"
         style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))', backgroundColor: 'rgba(2, 6, 23, 0.92)' }}
       >
         {mobileShortcutActionItems.map((item) => {
