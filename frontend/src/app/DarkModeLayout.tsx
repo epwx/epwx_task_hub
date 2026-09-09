@@ -6,9 +6,9 @@ import MobileTabBar from "@/components/MobileTabBar";
 
 export default function DarkModeLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  // Home renders its own contextual mobile action bar; admin/partner dashboards and the
-  // embedded Telegram mini app have their own navigation, so skip the global tab bar there.
-  const excludedTabBarPrefixes = ["/admin", "/partner", "/telegram-miniapp"];
+  // Home renders its own contextual mobile action bar; the embedded Telegram mini app
+  // has its own navigation, so skip the global tab bar there.
+  const excludedTabBarPrefixes = ["/telegram-miniapp"];
   const showMobileTabBar = pathname !== "/" && !excludedTabBarPrefixes.some((prefix) => pathname.startsWith(prefix));
 
   // On mount, read theme from localStorage or system, default to dark

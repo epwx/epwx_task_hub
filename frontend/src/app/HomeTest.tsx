@@ -609,7 +609,7 @@ export default function HomeTest() {
         </div>
       </section>
 
-      <main className="relative z-10 mx-auto w-full max-w-6xl flex-1 px-4 pb-28 pt-8 lg:pb-12 lg:pt-10">
+      <main className="relative z-10 mx-auto w-full max-w-6xl flex-1 px-4 pb-16 pt-8 lg:pb-12 lg:pt-10">
         <div className="min-w-0">
         {/* Wallet Connection & Verification Section */}
         <section id="wallet-verification" className="my-8 scroll-mt-36">
