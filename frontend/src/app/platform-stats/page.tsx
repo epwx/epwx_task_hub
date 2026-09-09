@@ -9,7 +9,7 @@ export default function PlatformStatsPage() {
         <div className="absolute -right-32 top-20 h-96 w-96 rounded-full bg-blue-600/18 blur-[150px]" />
       </div>
 
-      <main className="relative z-10 mx-auto w-full max-w-7xl px-4 py-10 sm:py-14">
+      <main className="relative z-10 mx-auto w-full max-w-7xl px-4 pt-10 sm:pt-14">
         <section className="mb-6 rounded-3xl border border-white/10 bg-white/[0.03] p-6 shadow-[0_18px_45px_rgba(2,6,23,0.45)] backdrop-blur-sm sm:p-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>

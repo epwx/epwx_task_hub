@@ -134,7 +134,7 @@ export function TokenSupplyPieChart() {
   let currentAngle = 0;
 
   return (
-    <section className="py-12">
+    <section className="pt-12 pb-4">
       <div className="flex flex-col items-center">
         <h2 className="text-2xl font-black mb-4 text-slate-100 text-center">Token Supply Breakdown</h2>
         <div className="relative w-full max-w-4xl overflow-hidden rounded-3xl border border-white/10 bg-slate-900/70 p-5 shadow-[0_24px_65px_rgba(2,6,23,0.5)] backdrop-blur-xl sm:p-8">
