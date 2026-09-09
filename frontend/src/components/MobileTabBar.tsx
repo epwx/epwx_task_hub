@@ -26,7 +26,7 @@ export default function MobileTabBar() {
   return (
     <nav
       className="fixed inset-x-2 bottom-2 z-40 flex justify-between gap-1 rounded-3xl border border-white/15 bg-slate-950/92 px-1.5 py-2 shadow-[0_18px_40px_rgba(15,23,42,0.45)] backdrop-blur-xl lg:hidden"
-      style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+      style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))", backgroundColor: "rgba(2, 6, 23, 0.92)" }}
     >
       {TAB_ITEMS.map((item) => {
         const isActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
