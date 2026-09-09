@@ -1008,7 +1008,7 @@ export default function HomeTest() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-white/10 bg-slate-950/70 py-12 text-slate-200 backdrop-blur-xl">
+      <footer className="border-t border-white/10 bg-slate-950/70 pb-24 pt-12 text-slate-200 backdrop-blur-xl lg:pb-12">
         <div className="container mx-auto px-4">
           <div className="text-center mb-8">
             <h3 className="text-2xl font-bold mb-2 text-cyan-200">EPWX Task Platform</h3>

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import Footer from "@/components/Footer";
 import { WhitepaperTokenSnapshot } from "@/components/WhitepaperTokenSnapshot";
 
 const utilityPillClass = "rounded-full border border-sky-200/70 bg-sky-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-sky-700 dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-100";
@@ -328,7 +327,6 @@ export default function WhitepaperPage() {
           </div>
         </section>
       </main>
-      <Footer />
     </>
   );
 }

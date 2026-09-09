@@ -3,13 +3,15 @@ import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Header from "@/components/Header";
 import MobileTabBar from "@/components/MobileTabBar";
+import Footer from "@/components/Footer";
 
 export default function DarkModeLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  // Home renders its own contextual mobile action bar; the embedded Telegram mini app
-  // has its own navigation, so skip the global tab bar there.
+  // Home renders its own contextual mobile action bar and footer; the embedded Telegram
+  // mini app has its own navigation, so skip the global tab bar and footer there.
   const excludedTabBarPrefixes = ["/telegram-miniapp"];
   const showMobileTabBar = pathname !== "/" && !excludedTabBarPrefixes.some((prefix) => pathname.startsWith(prefix));
+  const showFooter = pathname !== "/" && pathname !== "/telegram-miniapp";
 
   // On mount, read theme from localStorage or system, default to dark
   const [darkMode, setDarkMode] = useState(() => {
@@ -37,6 +39,7 @@ export default function DarkModeLayout({ children }: { children: React.ReactNode
       <Header darkMode={darkMode} setDarkMode={setDarkMode} />
       <div className={`pt-[72px] sm:pt-[76px] ${showMobileTabBar ? 'pb-4 lg:pb-0' : ''}`}>
         {children}
+        {showFooter ? <Footer /> : null}
       </div>
       {showMobileTabBar ? <MobileTabBar /> : null}
     </>

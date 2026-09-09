@@ -1,6 +1,5 @@
 "use client";
 import React from "react";
-import Footer from "@/components/Footer";
 
 export default function UserGuide() {
   return (
@@ -77,7 +76,6 @@ export default function UserGuide() {
           </div>
         </main>
       </div>
-      <Footer />
     </>
   );
 }
