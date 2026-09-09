@@ -320,7 +320,7 @@ export default function MerchantAdminPage() {
   };
   // Component render starts here
   return (
-    <div className="relative min-h-screen overflow-hidden bg-slate-950 px-4 py-8 text-slate-100 sm:py-10">
+    <div className="relative overflow-hidden bg-slate-950 px-4 py-8 text-slate-100 sm:py-10">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
         <div className="absolute -left-20 top-12 h-56 w-56 rounded-full bg-cyan-500/12 blur-[90px] sm:-left-32 sm:h-80 sm:w-80 sm:blur-[130px]" />
         <div className="absolute -right-16 top-20 h-64 w-64 rounded-full bg-blue-600/16 blur-[100px] sm:-right-28 sm:h-96 sm:w-96 sm:blur-[150px]" />

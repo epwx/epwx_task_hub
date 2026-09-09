@@ -3,7 +3,7 @@ import React from "react";
 export default function TermsPage() {
   return (
     <>
-      <div className="min-h-screen bg-slate-950 px-4 py-10 text-slate-100 sm:py-14">
+      <div className="bg-slate-950 px-4 py-10 text-slate-100 sm:py-14">
         <main className="mx-auto max-w-4xl">
           <div className="ui-surface-strong p-6 shadow-[0_24px_65px_rgba(2,6,23,0.5)] sm:p-10">
         <p className="text-xs font-black uppercase tracking-[0.28em] text-cyan-300">Platform policy</p>

@@ -131,7 +131,7 @@ export default function AdminPartnerPage() {
 
   if (!isAdmin) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
+      <div className="bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
         <main className="mx-auto max-w-6xl px-4 py-8">
           <div className="flex flex-col items-center justify-center rounded-lg border border-red-500/30 bg-red-500/10 p-12 text-center">
             <p className="text-lg font-semibold text-red-100">Access Denied</p>
@@ -145,7 +145,7 @@ export default function AdminPartnerPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
+    <div className="bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
       <main className="mx-auto max-w-6xl px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white">Partner Verification</h1>

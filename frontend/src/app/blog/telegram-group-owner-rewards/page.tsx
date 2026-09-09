@@ -1,6 +1,6 @@
 export default function TelegramGroupOwnerRewardsArticlePage() {
   return (
-    <main className="min-h-screen bg-slate-950 px-4 py-10 text-slate-100">
+    <main className="bg-slate-950 px-4 py-10 text-slate-100">
       <section className="mx-auto max-w-4xl rounded-3xl border border-cyan-300/20 bg-gradient-to-br from-cyan-900/45 via-slate-900 to-blue-950 p-6 shadow-2xl md:p-10">
         <p className="text-xs font-bold uppercase tracking-[0.22em] text-cyan-300">EPWX Blog</p>
         <h1 className="mt-3 text-3xl font-black leading-tight md:text-4xl">

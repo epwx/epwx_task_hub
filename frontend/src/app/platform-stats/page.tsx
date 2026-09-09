@@ -3,7 +3,7 @@ import { TokenSupplyPieChart } from "@/components/TokenSupplyPieChart";
 
 export default function PlatformStatsPage() {
   return (
-    <div className="relative min-h-screen overflow-x-clip bg-slate-950 text-slate-100">
+    <div className="relative overflow-x-clip bg-slate-950 text-slate-100">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
         <div className="absolute -left-36 top-12 h-80 w-80 rounded-full bg-cyan-500/15 blur-[130px]" />
         <div className="absolute -right-32 top-20 h-96 w-96 rounded-full bg-blue-600/18 blur-[150px]" />

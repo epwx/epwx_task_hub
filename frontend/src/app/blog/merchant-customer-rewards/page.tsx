@@ -80,7 +80,7 @@ export default function MerchantCustomerRewardsArticlePage() {
   ];
 
   return (
-    <main className="min-h-screen bg-slate-950 px-4 py-10 text-slate-100">
+    <main className="bg-slate-950 px-4 py-10 text-slate-100">
       <section className="mx-auto max-w-5xl rounded-3xl border border-emerald-300/20 bg-gradient-to-br from-emerald-900/40 via-slate-900 to-cyan-950 p-6 shadow-2xl md:p-10">
         <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-300">EPWX Merchant Campaign</p>
         <h1 className="mt-3 text-3xl font-black leading-tight md:text-5xl">Merchant Customer Rewards: Turn Every Store Visit into an On-Chain Loyalty Moment</h1>

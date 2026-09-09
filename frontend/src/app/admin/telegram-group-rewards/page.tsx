@@ -159,7 +159,7 @@ export default function TelegramGroupRewardsAdminPage() {
 
   if (!isAdmin) {
     return (
-      <div className="relative min-h-screen overflow-hidden bg-slate-950 px-4 py-10">
+      <div className="relative overflow-hidden bg-slate-950 px-4 py-10">
         <div aria-hidden="true" className="pointer-events-none absolute inset-0">
           <div className="absolute -left-24 top-16 h-72 w-72 rounded-full bg-cyan-500/12 blur-[120px]" />
           <div className="absolute -right-20 top-20 h-80 w-80 rounded-full bg-blue-600/12 blur-[130px]" />
@@ -181,7 +181,7 @@ export default function TelegramGroupRewardsAdminPage() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-slate-950 px-4 py-8 sm:py-10">
+    <div className="relative overflow-hidden bg-slate-950 px-4 py-8 sm:py-10">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
         <div className="absolute -left-24 top-16 h-72 w-72 rounded-full bg-cyan-500/12 blur-[120px]" />
         <div className="absolute -right-20 top-20 h-80 w-80 rounded-full bg-blue-600/12 blur-[130px]" />
