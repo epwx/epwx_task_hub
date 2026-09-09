@@ -161,7 +161,7 @@ export function WhitepaperTokenSnapshot() {
   }, [state.priceData, state.supplyData]);
 
   return (
-    <section className="mx-auto max-w-6xl px-4 py-10 md:px-6 md:py-14">
+    <section className="mx-auto max-w-6xl px-4 pt-6 pb-10 md:px-6 md:pt-8 md:pb-14">
       <div className="rounded-[2rem] border border-slate-200/80 bg-white/95 p-6 shadow-sm shadow-slate-200/50 dark:border-slate-800 dark:bg-slate-900/90 dark:shadow-none md:p-8">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>

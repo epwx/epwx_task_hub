@@ -118,7 +118,7 @@ export default function WhitepaperPage() {
     <>
       <main className="bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.14),_transparent_36%),linear-gradient(180deg,_#f8fbff_0%,_#eef5ff_48%,_#f8fafc_100%)] text-slate-900 dark:bg-[radial-gradient(circle_at_top,_rgba(14,165,233,0.16),_transparent_30%),linear-gradient(180deg,_#020617_0%,_#0f172a_55%,_#020617_100%)] dark:text-slate-100">
         <section className="border-b border-slate-200/70 bg-white/75 backdrop-blur dark:border-slate-800 dark:bg-slate-950/70">
-          <div className="mx-auto max-w-6xl px-4 py-16 md:px-6 md:py-20">
+          <div className="mx-auto max-w-6xl px-4 pt-16 pb-8 md:px-6 md:pt-20 md:pb-10">
             <div className="flex flex-wrap gap-3">
               <span className={utilityPillClass}>Official Whitepaper</span>
               <span className={utilityPillClass}>Base Network</span>
