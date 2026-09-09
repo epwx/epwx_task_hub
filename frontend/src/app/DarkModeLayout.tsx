@@ -1,8 +1,16 @@
 "use client";
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import Header from "@/components/Header";
+import MobileTabBar from "@/components/MobileTabBar";
 
 export default function DarkModeLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  // Home renders its own contextual mobile action bar; admin/partner dashboards and the
+  // embedded Telegram mini app have their own navigation, so skip the global tab bar there.
+  const excludedTabBarPrefixes = ["/admin", "/partner", "/telegram-miniapp"];
+  const showMobileTabBar = pathname !== "/" && !excludedTabBarPrefixes.some((prefix) => pathname.startsWith(prefix));
+
   // On mount, read theme from localStorage or system, default to dark
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -27,9 +35,10 @@ export default function DarkModeLayout({ children }: { children: React.ReactNode
   return (
     <>
       <Header darkMode={darkMode} setDarkMode={setDarkMode} />
-      <div className="pt-[72px] sm:pt-[76px]">
+      <div className={`pt-[72px] sm:pt-[76px] ${showMobileTabBar ? 'pb-24 lg:pb-0' : ''}`}>
         {children}
       </div>
+      {showMobileTabBar ? <MobileTabBar /> : null}
     </>
   );
 }
