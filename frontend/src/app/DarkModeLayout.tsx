@@ -35,7 +35,7 @@ export default function DarkModeLayout({ children }: { children: React.ReactNode
   return (
     <>
       <Header darkMode={darkMode} setDarkMode={setDarkMode} />
-      <div className={`pt-[72px] sm:pt-[76px] ${showMobileTabBar ? 'pb-24 lg:pb-0' : ''}`}>
+      <div className={`pt-[72px] sm:pt-[76px] ${showMobileTabBar ? 'pb-4 lg:pb-0' : ''}`}>
         {children}
       </div>
       {showMobileTabBar ? <MobileTabBar /> : null}
