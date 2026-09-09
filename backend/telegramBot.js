@@ -4,7 +4,6 @@ dotenv.config();
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import TelegramBot from 'node-telegram-bot-api';
 import axios from 'axios';
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '<YOUR_BOT_TOKEN_HERE>';
@@ -12,7 +11,78 @@ const GROUP_ID = process.env.TELEGRAM_GROUP_ID || '-1001970739822'; // Replace w
 const BOT_USERNAME_FALLBACK = (process.env.TELEGRAM_BOT_USERNAME || 'ePowerXBot').replace(/^@/, '');
 const FRONTEND_URL = process.env.FRONTEND_URL || 'https://tasks.epowex.com';
 const MINI_APP_URL = process.env.TELEGRAM_MINIAPP_URL || `${FRONTEND_URL.replace(/\/$/, '')}/telegram-miniapp`;
-const bot = new TelegramBot(BOT_TOKEN, { polling: true });
+const TELEGRAM_API_URL = `https://api.telegram.org/bot${BOT_TOKEN}`;
+const TELEGRAM_API_TIMEOUT_MS = Number(process.env.TELEGRAM_API_TIMEOUT_MS || 8000);
+
+class TelegramBotClient {
+  constructor() {
+    this.offset = 0;
+    this.handlers = [];
+    this.polling = false;
+    this.pollUpdates();
+  }
+
+  async call(method, payload = {}) {
+    const response = await axios.post(`${TELEGRAM_API_URL}/${method}`, payload, {
+      timeout: TELEGRAM_API_TIMEOUT_MS,
+    });
+    return response.data.result;
+  }
+
+  getMe() {
+    return this.call('getMe');
+  }
+
+  setMyCommands(commands) {
+    return this.call('setMyCommands', { commands });
+  }
+
+  sendMessage(chatId, text, options = {}) {
+    return this.call('sendMessage', { chat_id: chatId, text, ...options });
+  }
+
+  onText(pattern, handler) {
+    this.handlers.push({ pattern, handler });
+  }
+
+  async pollUpdates() {
+    if (this.polling) {
+      return;
+    }
+
+    this.polling = true;
+    try {
+      const updates = await this.call('getUpdates', {
+        offset: this.offset,
+        timeout: 25,
+        allowed_updates: ['message'],
+      });
+
+      for (const update of updates || []) {
+        this.offset = update.update_id + 1;
+        const message = update.message;
+        if (!message?.text) {
+          continue;
+        }
+
+        for (const { pattern, handler } of this.handlers) {
+          pattern.lastIndex = 0;
+          const match = pattern.exec(message.text);
+          if (match) {
+            await handler(message, match);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('[BOT] Telegram polling failed:', error?.response?.data || error.message);
+    } finally {
+      this.polling = false;
+      setImmediate(() => this.pollUpdates());
+    }
+  }
+}
+
+const bot = new TelegramBotClient();
 let resolvedBotUsername = BOT_USERNAME_FALLBACK;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
