@@ -85,6 +85,84 @@ html:not(.dark) [class*="text-white"]:not([class*="bg-blue"]):not([class*="bg-cy
   color: #0f172a !important;
 }
 
+/* Pale accent text (designed for dark backgrounds) is unreadable on light-mode
+   surfaces, e.g. stat numbers and pill-style buttons/links. Darken to a
+   readable shade of the same hue instead of hiding text on light surfaces. */
+html:not(.dark) [class*="text-cyan-100"],
+html:not(.dark) [class*="text-cyan-200"] {
+  color: #0e7490 !important;
+}
+
+html:not(.dark) [class*="text-sky-100"],
+html:not(.dark) [class*="text-sky-200"] {
+  color: #0369a1 !important;
+}
+
+html:not(.dark) [class*="text-teal-100"],
+html:not(.dark) [class*="text-teal-200"] {
+  color: #0f766e !important;
+}
+
+html:not(.dark) [class*="text-emerald-100"],
+html:not(.dark) [class*="text-emerald-200"] {
+  color: #047857 !important;
+}
+
+html:not(.dark) [class*="text-green-100"],
+html:not(.dark) [class*="text-green-200"] {
+  color: #15803d !important;
+}
+
+html:not(.dark) [class*="text-amber-100"],
+html:not(.dark) [class*="text-amber-200"] {
+  color: #b45309 !important;
+}
+
+html:not(.dark) [class*="text-yellow-100"],
+html:not(.dark) [class*="text-yellow-200"] {
+  color: #a16207 !important;
+}
+
+html:not(.dark) [class*="text-rose-100"],
+html:not(.dark) [class*="text-rose-200"] {
+  color: #be123c !important;
+}
+
+html:not(.dark) [class*="text-red-100"],
+html:not(.dark) [class*="text-red-200"] {
+  color: #b91c1c !important;
+}
+
+html:not(.dark) [class*="text-blue-100"],
+html:not(.dark) [class*="text-blue-200"] {
+  color: #1d4ed8 !important;
+}
+
+html:not(.dark) [class*="text-indigo-100"],
+html:not(.dark) [class*="text-indigo-200"] {
+  color: #4338ca !important;
+}
+
+html:not(.dark) [class*="text-violet-100"],
+html:not(.dark) [class*="text-violet-200"] {
+  color: #6d28d9 !important;
+}
+
+html:not(.dark) [class*="text-purple-100"],
+html:not(.dark) [class*="text-purple-200"] {
+  color: #7e22ce !important;
+}
+
+html:not(.dark) [class*="text-fuchsia-100"],
+html:not(.dark) [class*="text-fuchsia-200"] {
+  color: #a21caf !important;
+}
+
+html:not(.dark) [class*="text-pink-100"],
+html:not(.dark) [class*="text-pink-200"] {
+  color: #be185d !important;
+}
+
 html:not(.dark) .ui-surface,
 html:not(.dark) .ui-surface-strong {
   border-color: rgba(15, 23, 42, 0.12);
@@ -99,6 +177,17 @@ html:not(.dark) .ui-btn-muted {
 
 html:not(.dark) .ui-btn-muted:hover {
   background: rgba(226, 232, 240, 0.86);
+}
+
+html:not(.dark) .ui-btn-primary {
+  border-color: rgba(13, 148, 136, 0.35);
+  background: rgba(45, 212, 191, 0.16);
+  color: #0f766e;
+}
+
+html:not(.dark) .ui-btn-primary:hover {
+  background: rgba(45, 212, 191, 0.28);
+  border-color: rgba(13, 148, 136, 0.5);
 }
 
 @layer utilities {
