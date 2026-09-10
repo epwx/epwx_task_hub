@@ -88,76 +88,91 @@ html:not(.dark) [class*="text-white"]:not([class*="bg-blue"]):not([class*="bg-cy
 /* Pale accent text (designed for dark backgrounds) is unreadable on light-mode
    surfaces, e.g. stat numbers and pill-style buttons/links. Darken to a
    readable shade of the same hue instead of hiding text on light surfaces. */
+html:not(.dark) [class*="text-cyan-50"],
 html:not(.dark) [class*="text-cyan-100"],
 html:not(.dark) [class*="text-cyan-200"] {
   color: #0e7490 !important;
 }
 
+html:not(.dark) [class*="text-sky-50"],
 html:not(.dark) [class*="text-sky-100"],
 html:not(.dark) [class*="text-sky-200"] {
   color: #0369a1 !important;
 }
 
+html:not(.dark) [class*="text-teal-50"],
 html:not(.dark) [class*="text-teal-100"],
 html:not(.dark) [class*="text-teal-200"] {
   color: #0f766e !important;
 }
 
+html:not(.dark) [class*="text-emerald-50"],
 html:not(.dark) [class*="text-emerald-100"],
 html:not(.dark) [class*="text-emerald-200"] {
   color: #047857 !important;
 }
 
+html:not(.dark) [class*="text-green-50"],
 html:not(.dark) [class*="text-green-100"],
 html:not(.dark) [class*="text-green-200"] {
   color: #15803d !important;
 }
 
+html:not(.dark) [class*="text-amber-50"],
 html:not(.dark) [class*="text-amber-100"],
 html:not(.dark) [class*="text-amber-200"] {
   color: #b45309 !important;
 }
 
+html:not(.dark) [class*="text-yellow-50"],
 html:not(.dark) [class*="text-yellow-100"],
 html:not(.dark) [class*="text-yellow-200"] {
   color: #a16207 !important;
 }
 
+html:not(.dark) [class*="text-rose-50"],
 html:not(.dark) [class*="text-rose-100"],
 html:not(.dark) [class*="text-rose-200"] {
   color: #be123c !important;
 }
 
+html:not(.dark) [class*="text-red-50"],
 html:not(.dark) [class*="text-red-100"],
 html:not(.dark) [class*="text-red-200"] {
   color: #b91c1c !important;
 }
 
+html:not(.dark) [class*="text-blue-50"],
 html:not(.dark) [class*="text-blue-100"],
 html:not(.dark) [class*="text-blue-200"] {
   color: #1d4ed8 !important;
 }
 
+html:not(.dark) [class*="text-indigo-50"],
 html:not(.dark) [class*="text-indigo-100"],
 html:not(.dark) [class*="text-indigo-200"] {
   color: #4338ca !important;
 }
 
+html:not(.dark) [class*="text-violet-50"],
 html:not(.dark) [class*="text-violet-100"],
 html:not(.dark) [class*="text-violet-200"] {
   color: #6d28d9 !important;
 }
 
+html:not(.dark) [class*="text-purple-50"],
 html:not(.dark) [class*="text-purple-100"],
 html:not(.dark) [class*="text-purple-200"] {
   color: #7e22ce !important;
 }
 
+html:not(.dark) [class*="text-fuchsia-50"],
 html:not(.dark) [class*="text-fuchsia-100"],
 html:not(.dark) [class*="text-fuchsia-200"] {
   color: #a21caf !important;
 }
 
+html:not(.dark) [class*="text-pink-50"],
 html:not(.dark) [class*="text-pink-100"],
 html:not(.dark) [class*="text-pink-200"] {
   color: #be185d !important;
