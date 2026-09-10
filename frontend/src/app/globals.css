@@ -190,6 +190,34 @@ html:not(.dark) .ui-btn-primary:hover {
   border-color: rgba(13, 148, 136, 0.5);
 }
 
+/* Disabled buttons rely on opacity to fade an already dark-mode-tuned color;
+   force a legible muted state instead of letting it wash out to near-white. */
+html:not(.dark) .ui-btn-primary:disabled,
+html:not(.dark) .ui-btn-muted:disabled {
+  opacity: 1 !important;
+  color: #64748b !important;
+  background: rgba(148, 163, 184, 0.16) !important;
+  border-color: rgba(100, 116, 139, 0.25) !important;
+}
+
+html:not(.dark) .ui-status-success {
+  border-color: rgba(16, 185, 129, 0.35);
+  background: rgba(16, 185, 129, 0.14);
+  color: #047857;
+}
+
+html:not(.dark) .ui-status-warning {
+  border-color: rgba(245, 158, 11, 0.4);
+  background: rgba(245, 158, 11, 0.14);
+  color: #b45309;
+}
+
+html:not(.dark) .ui-status-danger {
+  border-color: rgba(244, 63, 94, 0.4);
+  background: rgba(244, 63, 94, 0.14);
+  color: #be123c;
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;
