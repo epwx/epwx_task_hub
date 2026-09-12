@@ -21,6 +21,7 @@
   - [x] Support confirmations for automatic payouts and claims marked paid by an administrator.
   - [x] Secure unsubscribe flow that disables reminder and success emails.
   - [x] Enrollment rate limiting and duplicate success-email protection.
+  - [x] Wallet-authenticated masked email status, change-email flow, and reminder/confirmation controls.
   Implemented, awaiting production timing validation:
   - [ ] Daily claim-ready reminder after the 24-hour claim cooldown.
   - [ ] Confirm scheduler delivery occurs within the configured 15-minute interval after eligibility.
@@ -32,5 +33,5 @@
   - [ ] Optional weekly summary covering claimed days, missed days, EPWX earned, and streaks.
   - [ ] Inactive-user re-engagement after several missed days instead of repeated daily emails.
   - [ ] Separate user preferences for daily reminders, streak alerts, and weekly summaries.
-  - [ ] User-facing email preference management and timezone-aware scheduling controls.
+  - [ ] User-facing timezone-aware scheduling controls.
   - [ ] Email delivery audit log, bounce handling, and suppression monitoring.

@@ -64,6 +64,8 @@ const {
   verifyWalletSignature,
   buildDailyClaimMessages,
   buildEmailEnrollmentMessages,
+  buildEmailStatusMessages,
+  buildEmailPreferenceMessages,
 } = dailyClaimSignatureUtils;
 
 function getAdminWallets() {
@@ -182,6 +184,24 @@ function isValidEmail(email) {
 
 function hashEmailToken(token) {
   return createHash('sha256').update(String(token || '')).digest('hex');
+}
+
+function maskEmail(email) {
+  const [localPart, domain] = String(email || '').split('@');
+  if (!localPart || !domain) return '';
+  if (localPart.length <= 2) return `${localPart[0] || '*'}***@${domain}`;
+  return `${localPart.slice(0, 2)}${'*'.repeat(Math.min(Math.max(localPart.length - 3, 3), 10))}${localPart.slice(-1)}@${domain}`;
+}
+
+function serializeEmailPreference(preference) {
+  return {
+    enrolled: true,
+    emailMasked: maskEmail(preference.email),
+    verified: Boolean(preference.emailVerifiedAt),
+    remindersEnabled: Boolean(preference.remindersEnabled),
+    successEmailsEnabled: Boolean(preference.successEmailsEnabled),
+    unsubscribed: Boolean(preference.unsubscribedAt),
+  };
 }
 
 function getUtcDateString(date = new Date()) {
@@ -1414,6 +1434,71 @@ router.post('/daily-claim/email/enroll', dailyClaimEmailEnrollmentLimiter, async
   } catch (error) {
     console.error('[daily-claim/email] Enrollment failed:', error);
     return res.status(500).json({ error: 'Unable to save email notification preferences' });
+  }
+});
+
+router.post('/daily-claim/email/status', async (req, res) => {
+  const { wallet, signature } = req.body;
+  const rawWallet = typeof wallet === 'string' ? wallet.trim() : '';
+  const normalizedWallet = normalizeWallet(wallet);
+  if (!normalizedWallet || !signature || !ethers.isAddress(normalizedWallet)) {
+    return res.status(400).json({ error: 'A valid wallet and signature are required' });
+  }
+
+  const messages = buildEmailStatusMessages(rawWallet, normalizedWallet, getUtcDateString());
+  if (!await verifyWalletSignature(messages, signature, normalizedWallet)) {
+    return res.status(401).json({ error: 'Signature does not match wallet' });
+  }
+
+  try {
+    const preference = await DailyClaimEmailPreference.findOne({ where: { wallet: normalizedWallet } });
+    return res.json(preference ? serializeEmailPreference(preference) : { enrolled: false });
+  } catch (error) {
+    console.error('[daily-claim/email] Status lookup failed:', error);
+    return res.status(500).json({ error: 'Unable to load email notification preferences' });
+  }
+});
+
+router.put('/daily-claim/email/preferences', async (req, res) => {
+  const { wallet, signature, remindersEnabled, successEmailsEnabled } = req.body;
+  const rawWallet = typeof wallet === 'string' ? wallet.trim() : '';
+  const normalizedWallet = normalizeWallet(wallet);
+  if (!normalizedWallet || !signature || !ethers.isAddress(normalizedWallet)) {
+    return res.status(400).json({ error: 'A valid wallet and signature are required' });
+  }
+  if (typeof remindersEnabled !== 'boolean' || typeof successEmailsEnabled !== 'boolean') {
+    return res.status(400).json({ error: 'Both email preference values are required' });
+  }
+
+  const messages = buildEmailPreferenceMessages(
+    rawWallet,
+    normalizedWallet,
+    remindersEnabled,
+    successEmailsEnabled,
+    getUtcDateString(),
+  );
+  if (!await verifyWalletSignature(messages, signature, normalizedWallet)) {
+    return res.status(401).json({ error: 'Signature does not match wallet or preferences' });
+  }
+
+  try {
+    const preference = await DailyClaimEmailPreference.findOne({ where: { wallet: normalizedWallet } });
+    if (!preference) return res.status(404).json({ error: 'No email enrollment found for this wallet' });
+
+    preference.remindersEnabled = remindersEnabled;
+    preference.successEmailsEnabled = successEmailsEnabled;
+    preference.unsubscribedAt = remindersEnabled || successEmailsEnabled ? null : new Date();
+    await preference.save();
+    return res.json({
+      success: true,
+      message: remindersEnabled || successEmailsEnabled
+        ? 'Email preferences updated.'
+        : 'All Daily Claim emails disabled.',
+      preference: serializeEmailPreference(preference),
+    });
+  } catch (error) {
+    console.error('[daily-claim/email] Preference update failed:', error);
+    return res.status(500).json({ error: 'Unable to update email notification preferences' });
   }
 });
 

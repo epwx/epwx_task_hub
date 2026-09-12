@@ -96,8 +96,26 @@ function buildEmailEnrollmentMessages(walletInput, normalizedWallet, email, date
   );
 }
 
+function buildEmailStatusMessages(walletInput, normalizedWallet, dateString) {
+  return buildWalletMessageVariants(
+    walletInput,
+    normalizedWallet,
+    (walletAddress) => `EPWX Daily Claim Email Status\nWallet: ${walletAddress}\nDate: ${dateString}`,
+  );
+}
+
+function buildEmailPreferenceMessages(walletInput, normalizedWallet, remindersEnabled, successEmailsEnabled, dateString) {
+  return buildWalletMessageVariants(
+    walletInput,
+    normalizedWallet,
+    (walletAddress) => `EPWX Daily Claim Email Preferences\nWallet: ${walletAddress}\nClaim-ready reminders: ${Boolean(remindersEnabled)}\nPayment confirmations: ${Boolean(successEmailsEnabled)}\nDate: ${dateString}`,
+  );
+}
+
 module.exports = {
   verifyWalletSignature,
   buildDailyClaimMessages,
   buildEmailEnrollmentMessages,
+  buildEmailStatusMessages,
+  buildEmailPreferenceMessages,
 };

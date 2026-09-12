@@ -3,6 +3,8 @@ const {
   verifyWalletSignature,
   buildDailyClaimMessages,
   buildEmailEnrollmentMessages,
+  buildEmailStatusMessages,
+  buildEmailPreferenceMessages,
 } = require('../src/utils/dailyClaimSignature.cjs');
 
 function createWalletWithCaseDifference() {
@@ -74,5 +76,43 @@ describe('Daily claim signature regression', () => {
 
     const otherEmailVariants = buildEmailEnrollmentMessages(checksumWallet, normalizedWallet, 'other@example.com', date);
     expect(await verifyWalletSignature(otherEmailVariants, signature, normalizedWallet)).toBe(false);
+  });
+
+  it('authorizes status viewing without exposing preference changes', async () => {
+    const wallet = createWalletWithCaseDifference();
+    const normalizedWallet = wallet.address.toLowerCase();
+    const date = '2026-09-12';
+    const statusMessage = `EPWX Daily Claim Email Status\nWallet: ${normalizedWallet}\nDate: ${date}`;
+    const signature = await wallet.signMessage(statusMessage);
+
+    expect(await verifyWalletSignature(
+      buildEmailStatusMessages(normalizedWallet, normalizedWallet, date),
+      signature,
+      normalizedWallet,
+    )).toBe(true);
+    expect(await verifyWalletSignature(
+      buildEmailPreferenceMessages(normalizedWallet, normalizedWallet, true, false, date),
+      signature,
+      normalizedWallet,
+    )).toBe(false);
+  });
+
+  it('binds preference updates to both requested settings', async () => {
+    const wallet = createWalletWithCaseDifference();
+    const normalizedWallet = wallet.address.toLowerCase();
+    const date = '2026-09-12';
+    const message = `EPWX Daily Claim Email Preferences\nWallet: ${normalizedWallet}\nClaim-ready reminders: true\nPayment confirmations: false\nDate: ${date}`;
+    const signature = await wallet.signMessage(message);
+
+    expect(await verifyWalletSignature(
+      buildEmailPreferenceMessages(normalizedWallet, normalizedWallet, true, false, date),
+      signature,
+      normalizedWallet,
+    )).toBe(true);
+    expect(await verifyWalletSignature(
+      buildEmailPreferenceMessages(normalizedWallet, normalizedWallet, false, false, date),
+      signature,
+      normalizedWallet,
+    )).toBe(false);
   });
 });
