@@ -13,15 +13,24 @@
 ## Daily Claim Notifications
 
 - [ ] Add email notifications for recurring user Daily Claims (not merchant claims):
-  Include:
-  - Daily claim ready notification when the reward unlocks.
-  - Reminder and last-chance emails only while the claim remains unclaimed.
-  - Successful claim confirmation with EPWX earned, updated balance, and next claim time.
-  - Claim failure email with the reason and a secure retry link.
-  - Claim streak milestone and streak-at-risk notifications.
-  - Bonus reward day announcements and eligibility-change notices.
-  - Optional weekly summary covering claimed days, missed days, EPWX earned, and streaks.
-  - Inactive-user re-engagement after several missed days instead of repeated daily emails.
-  - Separate user preferences for daily reminders, streak alerts, and weekly summaries.
-  - Automatic reminder suppression immediately after a successful claim.
-  - Frequency limits, timezone-aware scheduling, unsubscribe support, and secure deep links.
+  Implemented and production-tested:
+  - [x] Wallet-signed email enrollment for existing wallet-only users.
+  - [x] Verification email with expiring, hashed verification tokens.
+  - [x] SendGrid delivery through SMTP port 2525 with authenticated domain sending.
+  - [x] Successful paid-claim confirmation with EPWX earned and next claim time.
+  - [x] Support confirmations for automatic payouts and claims marked paid by an administrator.
+  - [x] Secure unsubscribe flow that disables reminder and success emails.
+  - [x] Enrollment rate limiting and duplicate success-email protection.
+  Implemented, awaiting production timing validation:
+  - [ ] Daily claim-ready reminder after the 24-hour claim cooldown.
+  - [ ] Confirm scheduler delivery occurs within the configured 15-minute interval after eligibility.
+  Future enhancements:
+  - [ ] Last-chance emails only while the claim remains unclaimed.
+  - [ ] Claim failure email with the reason and a secure retry link.
+  - [ ] Claim streak milestone and streak-at-risk notifications.
+  - [ ] Bonus reward day announcements and eligibility-change notices.
+  - [ ] Optional weekly summary covering claimed days, missed days, EPWX earned, and streaks.
+  - [ ] Inactive-user re-engagement after several missed days instead of repeated daily emails.
+  - [ ] Separate user preferences for daily reminders, streak alerts, and weekly summaries.
+  - [ ] User-facing email preference management and timezone-aware scheduling controls.
+  - [ ] Email delivery audit log, bounce handling, and suppression monitoring.
