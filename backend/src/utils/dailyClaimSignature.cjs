@@ -62,7 +62,7 @@ async function verifyWalletSignature(messageOrMessages, signature, walletAddress
   }
 }
 
-function buildDailyClaimMessages(walletInput, normalizedWallet, dateString) {
+function buildWalletMessageVariants(walletInput, normalizedWallet, buildMessage) {
   const candidates = [normalizedWallet];
   const rawWallet = typeof walletInput === 'string' ? walletInput.trim() : '';
   if (rawWallet) {
@@ -76,10 +76,28 @@ function buildDailyClaimMessages(walletInput, normalizedWallet, dateString) {
   }
 
   const uniqueWallets = [...new Set(candidates.filter((value) => typeof value === 'string' && value.trim()))];
-  return uniqueWallets.map((walletAddress) => `EPWX Daily Claim for ${walletAddress} on ${dateString}`);
+  return uniqueWallets.map(buildMessage);
+}
+
+function buildDailyClaimMessages(walletInput, normalizedWallet, dateString) {
+  return buildWalletMessageVariants(
+    walletInput,
+    normalizedWallet,
+    (walletAddress) => `EPWX Daily Claim for ${walletAddress} on ${dateString}`,
+  );
+}
+
+function buildEmailEnrollmentMessages(walletInput, normalizedWallet, email, dateString) {
+  const normalizedEmail = String(email || '').trim().toLowerCase();
+  return buildWalletMessageVariants(
+    walletInput,
+    normalizedWallet,
+    (walletAddress) => `EPWX Daily Claim Email Enrollment\nWallet: ${walletAddress}\nEmail: ${normalizedEmail}\nDate: ${dateString}`,
+  );
 }
 
 module.exports = {
   verifyWalletSignature,
   buildDailyClaimMessages,
+  buildEmailEnrollmentMessages,
 };

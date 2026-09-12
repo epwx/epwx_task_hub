@@ -2,6 +2,7 @@ const { ethers } = require('ethers');
 const {
   verifyWalletSignature,
   buildDailyClaimMessages,
+  buildEmailEnrollmentMessages,
 } = require('../src/utils/dailyClaimSignature.cjs');
 
 function createWalletWithCaseDifference() {
@@ -56,5 +57,22 @@ describe('Daily claim signature regression', () => {
 
     const valid = await verifyWalletSignature(messageVariants, signature, normalizedWallet);
     expect(valid).toBe(true);
+  });
+
+  it('binds an email enrollment signature to the wallet, email, and date', async () => {
+    const wallet = createWalletWithCaseDifference();
+    const checksumWallet = wallet.address;
+    const normalizedWallet = checksumWallet.toLowerCase();
+    const email = 'Claims@Example.com';
+    const date = '2026-09-12';
+    const message = `EPWX Daily Claim Email Enrollment\nWallet: ${checksumWallet}\nEmail: claims@example.com\nDate: ${date}`;
+    const signature = await wallet.signMessage(message);
+
+    const messageVariants = buildEmailEnrollmentMessages(checksumWallet, normalizedWallet, email, date);
+    expect(messageVariants).toContain(message);
+    expect(await verifyWalletSignature(messageVariants, signature, normalizedWallet)).toBe(true);
+
+    const otherEmailVariants = buildEmailEnrollmentMessages(checksumWallet, normalizedWallet, 'other@example.com', date);
+    expect(await verifyWalletSignature(otherEmailVariants, signature, normalizedWallet)).toBe(false);
   });
 });

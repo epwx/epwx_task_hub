@@ -20,6 +20,7 @@ import PartnerReferral from './PartnerReferral.js';
 import PartnerEarning from './PartnerEarning.js';
 import TelegramGroupOwner from './TelegramGroupOwner.js';
 import TelegramGroupReward from './TelegramGroupReward.js';
+import DailyClaimEmailPreference from './DailyClaimEmailPreference.js';
 
 const RewardDistributionLedger = RewardDistributionLedgerDef(sequelize, DataTypes);
 
@@ -57,4 +58,4 @@ TelegramGroupReward.belongsTo(TelegramGroupOwner, { foreignKey: 'groupOwnerId', 
 DailyClaim.hasOne(TelegramGroupReward, { foreignKey: 'dailyClaimId', as: 'telegramGroupReward' });
 TelegramGroupReward.belongsTo(DailyClaim, { foreignKey: 'dailyClaimId', as: 'dailyClaim' });
 
-export { User, Campaign, TaskSubmission, CashbackClaim, DailyClaim, DailyDraw, DailyDrawWinner, SpecialClaim, Merchant, Claim, TwitterCampaign, RewardDistributionLedger, WalletReferral, PlatformStats, Partner, PartnerReferral, PartnerEarning, TelegramGroupOwner, TelegramGroupReward };
+export { User, Campaign, TaskSubmission, CashbackClaim, DailyClaim, DailyDraw, DailyDrawWinner, SpecialClaim, Merchant, Claim, TwitterCampaign, RewardDistributionLedger, WalletReferral, PlatformStats, Partner, PartnerReferral, PartnerEarning, TelegramGroupOwner, TelegramGroupReward, DailyClaimEmailPreference };

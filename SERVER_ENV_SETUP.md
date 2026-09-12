@@ -145,6 +145,38 @@ If you're using GitHub Actions for deployment:
 
 ---
 
+## Hostinger Daily Claim Email
+
+Create a dedicated mailbox in Hostinger, then add the following values to the backend `.env` file. Use the exact SMTP hostname shown by Hostinger under **Connect Apps & Devices** if it differs from the default below.
+
+```env
+SMTP_HOST=smtp.hostinger.com
+SMTP_PORT=465
+SMTP_SECURE=true
+SMTP_USER=notifications@epowex.com
+SMTP_PASS=your_hostinger_mailbox_password
+EMAIL_FROM_NAME=EPWX Daily Claims
+EMAIL_FROM_ADDRESS=notifications@epowex.com
+EMAIL_REPLY_TO=support@epowex.com
+
+# Leave disabled until the migration and a verification email have been tested.
+DAILY_CLAIM_EMAIL_REMINDERS_ENABLED=false
+DAILY_CLAIM_EMAIL_REMINDER_INTERVAL_MINUTES=15
+DAILY_CLAIM_EMAIL_REMINDER_LOCK_KEY=90412023
+```
+
+Before enabling reminders:
+
+1. Confirm SPF, DKIM, and DMARC for `epowex.com` in Hostinger.
+2. Run `npm run migrate` from the backend directory.
+3. Restart the backend with updated environment variables.
+4. Connect a wallet, enroll an email from the Daily Claim section, and verify the message arrives.
+5. Set `DAILY_CLAIM_EMAIL_REMINDERS_ENABLED=true` and restart the backend.
+
+Never commit `SMTP_PASS` to the repository.
+
+---
+
 ## Security Best Practices
 
 ### ✅ DO:

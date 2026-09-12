@@ -88,6 +88,7 @@ import { runDailyDraw } from './routes/epwx.js';
 import { DailyDraw } from './models/index.js';
 import { getPendingEarningsForSettlement, updatePartnerEarningStatus } from './services/partnerService.js';
 import { epwxTokenWithSigner } from './services/blockchain.js';
+import { sendReadyDailyClaimReminders } from './services/emailNotifications.js';
 
 const AUTO_DAILY_DRAW_ENABLED = ['1', 'true', 'yes', 'on'].includes(String(process.env.AUTO_DAILY_DRAW_ENABLED || 'false').toLowerCase());
 const AUTO_DAILY_DRAW_TIME_UTC = String(process.env.AUTO_DAILY_DRAW_TIME_UTC || '00:05').trim();
@@ -105,6 +106,9 @@ const AUTO_PARTNER_SETTLEMENT_INTERVAL_MINUTES = Number.parseInt(String(process.
 const AUTO_PARTNER_SETTLEMENT_MIN_AGE_HOURS = Number.parseInt(String(process.env.AUTO_PARTNER_SETTLEMENT_MIN_AGE_HOURS || '168'), 10);
 const AUTO_PARTNER_SETTLEMENT_BATCH_SIZE = Number.parseInt(String(process.env.AUTO_PARTNER_SETTLEMENT_BATCH_SIZE || '100'), 10);
 const AUTO_PARTNER_SETTLEMENT_LOCK_KEY = Number.parseInt(String(process.env.AUTO_PARTNER_SETTLEMENT_LOCK_KEY || '90412022'), 10);
+const DAILY_CLAIM_EMAIL_REMINDERS_ENABLED = ['1', 'true', 'yes', 'on'].includes(String(process.env.DAILY_CLAIM_EMAIL_REMINDERS_ENABLED || 'false').toLowerCase());
+const DAILY_CLAIM_EMAIL_REMINDER_INTERVAL_MINUTES = Number.parseInt(String(process.env.DAILY_CLAIM_EMAIL_REMINDER_INTERVAL_MINUTES || '15'), 10);
+const DAILY_CLAIM_EMAIL_REMINDER_LOCK_KEY = Number.parseInt(String(process.env.DAILY_CLAIM_EMAIL_REMINDER_LOCK_KEY || '90412023'), 10);
 
 function normalizePositiveInt(value, fallback) {
   return Number.isInteger(value) && value > 0 ? value : fallback;
@@ -357,6 +361,55 @@ function startAutoPartnerSettlementScheduler() {
   executeAutoPartnerSettlement().finally(scheduleNextRun);
 }
 
+async function executeDailyClaimEmailReminders() {
+  const rows = await DailyDraw.sequelize.query(
+    'SELECT pg_try_advisory_lock(:lockKey) AS acquired',
+    {
+      replacements: { lockKey: DAILY_CLAIM_EMAIL_REMINDER_LOCK_KEY },
+      type: QueryTypes.SELECT,
+    }
+  );
+  const acquired = [true, 't', 1].includes(rows?.[0]?.acquired);
+  if (!acquired) return;
+
+  try {
+    const result = await sendReadyDailyClaimReminders();
+    if (result.sent || result.failed) {
+      console.log(`[daily-claim-email] Reminder run complete. checked=${result.checked}, sent=${result.sent}, failed=${result.failed}`);
+    }
+  } catch (error) {
+    console.error('[daily-claim-email] Reminder run failed:', error);
+  } finally {
+    try {
+      await DailyDraw.sequelize.query(
+        'SELECT pg_advisory_unlock(:lockKey)',
+        {
+          replacements: { lockKey: DAILY_CLAIM_EMAIL_REMINDER_LOCK_KEY },
+          type: QueryTypes.SELECT,
+        }
+      );
+    } catch (error) {
+      console.error('[daily-claim-email] Failed to release reminder scheduler lock:', error);
+    }
+  }
+}
+
+function startDailyClaimEmailReminderScheduler() {
+  if (!DAILY_CLAIM_EMAIL_REMINDERS_ENABLED) {
+    console.log('[daily-claim-email] Reminder scheduler disabled.');
+    return;
+  }
+
+  const intervalMinutes = normalizePositiveInt(DAILY_CLAIM_EMAIL_REMINDER_INTERVAL_MINUTES, 15);
+  const intervalMs = intervalMinutes * 60 * 1000;
+  const scheduleNextRun = () => setTimeout(async () => {
+    await executeDailyClaimEmailReminders();
+    scheduleNextRun();
+  }, intervalMs);
+
+  executeDailyClaimEmailReminders().finally(scheduleNextRun);
+}
+
 app.use('/api/auth', authRouter);
 app.use('/api/campaigns', campaignsRouter);
 app.use('/api/tasks', tasksRouter);
@@ -396,6 +449,7 @@ app.listen(PORT, () => {
   console.log(`Environment: ${process.env.NODE_ENV}`);
   startAutoDailyDrawScheduler();
   startAutoPartnerSettlementScheduler();
+  startDailyClaimEmailReminderScheduler();
 });
 
 export default app;

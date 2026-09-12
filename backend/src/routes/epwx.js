@@ -1,12 +1,14 @@
 
 import express from 'express';
-import { randomInt } from 'crypto';
+import rateLimit from 'express-rate-limit';
+import { createHash, randomBytes, randomInt } from 'crypto';
 import jwt from 'jsonwebtoken';
-import { User, DailyClaim, DailyDraw, DailyDrawWinner, CashbackClaim, SpecialClaim, Claim, RewardDistributionLedger, Merchant, WalletReferral, PlatformStats, PartnerReferral, Partner, PartnerEarning, TelegramGroupOwner, TelegramGroupReward } from '../models/index.js';
+import { User, DailyClaim, DailyDraw, DailyDrawWinner, CashbackClaim, SpecialClaim, Claim, RewardDistributionLedger, Merchant, WalletReferral, PlatformStats, PartnerReferral, Partner, PartnerEarning, TelegramGroupOwner, TelegramGroupReward, DailyClaimEmailPreference } from '../models/index.js';
 import { Op } from 'sequelize';
 // import { ethers } from 'ethers'; // Removed duplicate import
 import { getEPWXPurchaseTransactions } from '../services/epwxCashback.js';
 import { notifyDailyClaimPaid } from '../services/telegramNotifications.js';
+import { notifyDailyClaimSuccess, sendDailyClaimVerificationEmail } from '../services/emailNotifications.js';
 import { recordPartnerEarning } from '../services/partnerService.js';
 import { ethers } from 'ethers';
 import { epwxTokenContract, epwxTokenWithSigner } from '../services/blockchain.js';
@@ -51,9 +53,17 @@ const ALLOW_LEGACY_TELEGRAM_VERIFIED_CLAIMS = ['1', 'true', 'yes', 'on'].include
 const TELEGRAM_API_TIMEOUT_MS = Number(process.env.TELEGRAM_API_TIMEOUT_MS || 8000);
 const TELEGRAM_GROUP_OWNER_REWARD_AMOUNT = String(process.env.TELEGRAM_GROUP_OWNER_REWARD_AMOUNT || '10000').trim();
 const TELEGRAM_GROUP_CONTEXT_SECRET = process.env.TELEGRAM_GROUP_CONTEXT_SECRET || process.env.JWT_SECRET || 'epwx-group-context-dev-secret';
+const dailyClaimEmailEnrollmentLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many verification emails requested. Please try again later.' },
+});
 const {
   verifyWalletSignature,
   buildDailyClaimMessages,
+  buildEmailEnrollmentMessages,
 } = dailyClaimSignatureUtils;
 
 function getAdminWallets() {
@@ -160,6 +170,18 @@ function normalizeWallet(wallet) {
   }
 
   return wallet.trim().toLowerCase();
+}
+
+function normalizeEmail(email) {
+  return typeof email === 'string' ? email.trim().toLowerCase() : '';
+}
+
+function isValidEmail(email) {
+  return email.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function hashEmailToken(token) {
+  return createHash('sha256').update(String(token || '')).digest('hex');
 }
 
 function getUtcDateString(date = new Date()) {
@@ -1310,12 +1332,17 @@ router.post('/daily-claims/mark-paid', async (req, res) => {
       totalDailyClaimsCount,
       isNewWallet: walletClaimCount <= 1,
     });
+    const emailNotificationResult = wasAlreadyPaid
+      ? { sent: false, reason: 'already_paid' }
+      : await notifyDailyClaimSuccess(claim);
 
     res.json({
       success: true,
       claim,
       telegramNotified: notificationResult.sent,
       telegramReason: notificationResult.reason,
+      emailNotified: emailNotificationResult.sent,
+      emailReason: emailNotificationResult.reason,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -1329,6 +1356,109 @@ router.get('/reward-ledger', async (req, res) => {
     res.json({ ledger: entries });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/daily-claim/email/enroll', dailyClaimEmailEnrollmentLimiter, async (req, res) => {
+  const { wallet, email, signature, remindersEnabled = true, successEmailsEnabled = true, timezone = 'UTC' } = req.body;
+  const rawWallet = typeof wallet === 'string' ? wallet.trim() : '';
+  const normalizedWallet = normalizeWallet(wallet);
+  const normalizedEmail = normalizeEmail(email);
+  if (!normalizedWallet || !normalizedEmail || !signature) {
+    return res.status(400).json({ error: 'wallet, email, and signature are required' });
+  }
+  if (!ethers.isAddress(normalizedWallet) || !isValidEmail(normalizedEmail)) {
+    return res.status(400).json({ error: 'Enter a valid wallet and email address' });
+  }
+
+  const todayUtc = getUtcDateString();
+  const messages = buildEmailEnrollmentMessages(rawWallet, normalizedWallet, normalizedEmail, todayUtc);
+  if (!await verifyWalletSignature(messages, signature, normalizedWallet)) {
+    return res.status(401).json({ error: 'Signature does not match wallet or email' });
+  }
+
+  try {
+    const verificationToken = randomBytes(32).toString('hex');
+    const unsubscribeToken = randomBytes(32).toString('hex');
+    const [preference] = await DailyClaimEmailPreference.findOrCreate({
+      where: { wallet: normalizedWallet },
+      defaults: {
+        email: normalizedEmail,
+        unsubscribeTokenHash: hashEmailToken(unsubscribeToken),
+      },
+    });
+
+    preference.email = normalizedEmail;
+    preference.emailVerifiedAt = null;
+    preference.verificationTokenHash = hashEmailToken(verificationToken);
+    preference.verificationExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    preference.unsubscribeTokenHash = hashEmailToken(unsubscribeToken);
+    preference.remindersEnabled = Boolean(remindersEnabled);
+    preference.successEmailsEnabled = Boolean(successEmailsEnabled);
+    preference.timezone = typeof timezone === 'string' && timezone.length <= 64 ? timezone : 'UTC';
+    preference.unsubscribedAt = null;
+    await preference.save();
+
+    const emailResult = await sendDailyClaimVerificationEmail({ email: normalizedEmail, verificationToken });
+    if (!emailResult.sent) {
+      console.error('[daily-claim/email] Verification email failed:', emailResult.error || emailResult.reason);
+    }
+
+    return res.status(202).json({
+      success: true,
+      message: emailResult.sent
+        ? 'Check your inbox to verify Daily Claim notifications.'
+        : 'Email preference saved, but the verification email could not be sent.',
+      emailSent: emailResult.sent,
+    });
+  } catch (error) {
+    console.error('[daily-claim/email] Enrollment failed:', error);
+    return res.status(500).json({ error: 'Unable to save email notification preferences' });
+  }
+});
+
+router.get('/daily-claim/email/verify', async (req, res) => {
+  const token = typeof req.query.token === 'string' ? req.query.token : '';
+  if (!token) return res.status(400).json({ error: 'Verification token is required' });
+
+  try {
+    const preference = await DailyClaimEmailPreference.findOne({
+      where: {
+        verificationTokenHash: hashEmailToken(token),
+        verificationExpiresAt: { [Op.gt]: new Date() },
+      },
+    });
+    if (!preference) return res.status(400).json({ error: 'Verification link is invalid or expired' });
+
+    preference.emailVerifiedAt = new Date();
+    preference.verificationTokenHash = null;
+    preference.verificationExpiresAt = null;
+    await preference.save();
+    return res.json({ success: true, message: 'Daily Claim email notifications are now active.' });
+  } catch (error) {
+    console.error('[daily-claim/email] Verification failed:', error);
+    return res.status(500).json({ error: 'Unable to verify email notifications' });
+  }
+});
+
+router.post('/daily-claim/email/unsubscribe', async (req, res) => {
+  const token = typeof req.body?.token === 'string' ? req.body.token : '';
+  if (!token) return res.status(400).json({ error: 'Unsubscribe token is required' });
+
+  try {
+    const preference = await DailyClaimEmailPreference.findOne({
+      where: { unsubscribeTokenHash: hashEmailToken(token) },
+    });
+    if (!preference) return res.status(400).json({ error: 'Unsubscribe link is invalid' });
+
+    preference.remindersEnabled = false;
+    preference.successEmailsEnabled = false;
+    preference.unsubscribedAt = new Date();
+    await preference.save();
+    return res.json({ success: true, message: 'You have been unsubscribed from Daily Claim emails.' });
+  } catch (error) {
+    console.error('[daily-claim/email] Unsubscribe failed:', error);
+    return res.status(500).json({ error: 'Unable to update email preferences' });
   }
 });
 
@@ -1480,6 +1610,11 @@ router.post('/daily-claim', async (req, res) => {
 
       if (!notificationResult.sent) {
         console.error('[daily-claim] Telegram notification failed:', notificationResult.error || notificationResult.reason);
+      }
+
+      const emailNotificationResult = await notifyDailyClaimSuccess(claim);
+      if (!emailNotificationResult.sent && !['email_not_enrolled', 'already_sent'].includes(emailNotificationResult.reason)) {
+        console.error('[daily-claim] Email notification failed:', emailNotificationResult.error || emailNotificationResult.reason);
       }
     }
   } catch (error) {

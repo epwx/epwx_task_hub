@@ -10,6 +10,7 @@ import TermsAndConditionsModal from "@/components/TermsAndConditionsModal";
 import UserDailyClaims from "@/components/UserDailyClaims";
 import LastFivePaidDailyClaims from "@/components/LastFivePaidDailyClaims";
 import LatestDailyWinnersBoard from "@/components/LatestDailyWinnersBoard";
+import DailyClaimEmailSignup from "@/components/DailyClaimEmailSignup";
 import { BuyerBadgeChip, type BuyerBadge } from "@/components/BuyerBadge";
 import { formatEpwxBalance, formatDuration } from "@/utils/homeFormat";
 import {
@@ -929,6 +930,9 @@ export default function HomeTest() {
                   ) : null}
                   <div className="mb-4 rounded-2xl border border-white/15 bg-white/10 p-4 text-sm text-white/80">
                     Daily claims use a wallet signature to confirm that you control this address. Signing this message does not transfer funds and does not create a token approval.
+                  </div>
+                  <div className={`${glassPanelClass} mb-4 p-4`}>
+                    <DailyClaimEmailSignup wallet={address} />
                   </div>
                   {showClaimUpgradePrompt && nextTierTarget && nextTierReward && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 px-4">
