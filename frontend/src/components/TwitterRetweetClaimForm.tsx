@@ -99,50 +99,55 @@ const TwitterRetweetClaimForm: React.FC<TwitterRetweetClaimFormProps> = ({ walle
   };
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-3xl border border-white/20 bg-white/10 p-6 text-white backdrop-blur-xl shadow-2xl">
-      <div className="mb-5 rounded-2xl border border-white/15 bg-black/10 p-4">
-        <div className="text-xs uppercase tracking-[0.25em] text-white/60">Engagement Proof Submission</div>
-        <h2 className="mt-2 text-2xl font-black">{title || `Upload your ${getTaskLabel(taskType)} screenshot`}</h2>
-        <p className="mt-2 text-sm text-white/75">
+    <form onSubmit={handleSubmit} className="ui-surface-strong p-5 text-white sm:p-6">
+      <div className="mb-6 flex flex-col gap-4 border-b border-white/10 pb-6 sm:flex-row sm:items-start sm:justify-between">
+        <div className="max-w-2xl">
+          <div className="text-xs font-black uppercase tracking-[0.22em] text-cyan-300">Proof Submission</div>
+          <h2 className="mt-2 text-2xl font-black text-white">Upload your {getTaskLabel(taskType)} screenshot</h2>
+          <p className="mt-2 text-sm leading-6 text-slate-300">
           After you complete the task on X, upload a clear screenshot here. Admin will review your submission and may approve or reject it based on eligibility and compliance checks.
-        </p>
-        <div className="mt-3 text-sm text-white/70">Campaign: {campaignCode}</div>
-        <div className="mt-1 text-sm text-white/70">Reward: {Number(rewardAmount || '100000').toLocaleString()} EPWX</div>
+          </p>
+        </div>
+        <div className="ui-surface shrink-0 px-4 py-3 text-sm">
+          <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Campaign</div>
+          <div className="mt-1 max-w-48 break-words font-bold text-white">{campaignCode || title}</div>
+          <div className="mt-1 font-semibold text-emerald-200">{Number(rewardAmount || '100000').toLocaleString()} EPWX</div>
+        </div>
       </div>
 
-        {claimStatus === 'pending' ? (
-          <div className="mb-5 rounded-2xl border border-amber-300/30 bg-amber-400/15 p-4 text-sm text-amber-100">
-            You already submitted this {getTaskLabel(taskType)} screenshot. Your claim is pending admin review, so no new upload is needed right now.
-          </div>
-        ) : null}
+      {claimStatus === 'pending' ? (
+        <div className="mb-5 rounded-2xl border border-amber-300/25 bg-amber-400/10 p-4 text-sm text-amber-100">
+          You already submitted this {getTaskLabel(taskType)} screenshot. Your claim is pending admin review, so no new upload is needed right now.
+        </div>
+      ) : null}
 
-      <label className="mb-2 block text-sm font-semibold text-white/85">Twitter username (optional)</label>
+      <label className="mb-2 block text-sm font-bold text-slate-200">X username <span className="font-normal text-slate-500">(optional)</span></label>
       <input
         type="text"
         value={twitterUsername}
         onChange={(event) => setTwitterUsername(event.target.value)}
         placeholder="@yourhandle"
-          disabled={claimStatus === 'pending'}
-        className="mb-4 w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-white placeholder:text-white/45 focus:border-emerald-300 focus:outline-none"
+        disabled={claimStatus === 'pending'}
+        className="mb-5 w-full rounded-xl border border-white/10 bg-slate-950/60 px-4 py-3 text-white outline-none placeholder:text-slate-600 focus:border-cyan-300/50 focus:ring-2 focus:ring-cyan-300/10 disabled:cursor-not-allowed disabled:opacity-50"
       />
 
-      <label className="mb-2 block text-sm font-semibold text-white/85">{taskType === 'comment' ? 'Comment screenshot' : taskType === 'poll' ? 'Poll vote screenshot' : 'Retweet screenshot'}</label>
+      <label className="mb-2 block text-sm font-bold text-slate-200">{taskType === 'comment' ? 'Comment screenshot' : taskType === 'poll' ? 'Poll vote screenshot' : 'Repost screenshot'}</label>
       <input
         type="file"
         accept="image/*"
         onChange={handleFileChange}
         disabled={claimStatus === 'pending'}
-        className="mb-3 block w-full text-sm text-white file:mr-4 file:rounded-xl file:border-0 file:bg-white/15 file:px-4 file:py-2 file:font-semibold file:text-white hover:file:bg-white/20"
+        className="mb-3 block w-full rounded-xl border border-dashed border-white/15 bg-slate-950/40 p-3 text-sm text-slate-300 file:mr-4 file:rounded-lg file:border-0 file:bg-cyan-400/10 file:px-4 file:py-2 file:font-bold file:text-cyan-100 hover:file:bg-cyan-400/15 disabled:cursor-not-allowed disabled:opacity-50"
       />
-      {file ? <div className="mb-4 text-sm text-white/80">Selected file: {file.name}</div> : null}
+      {file ? <div className="mb-4 text-sm text-cyan-100">Selected file: {file.name}</div> : null}
 
-      <label className="mb-5 flex items-start gap-3 text-sm text-white/80">
+      <label className="mb-5 flex items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm leading-6 text-slate-300">
         <input
           type="checkbox"
           checked={agreed}
           onChange={(event) => setAgreed(event.target.checked)}
           disabled={claimStatus === 'pending'}
-          className="mt-1"
+          className="mt-1 h-4 w-4 accent-emerald-400"
         />
         <span>I confirm this screenshot is from my own account activity, complies with platform rules, and I understand this submission is manually reviewed for eligibility.</span>
       </label>
@@ -150,13 +155,13 @@ const TwitterRetweetClaimForm: React.FC<TwitterRetweetClaimFormProps> = ({ walle
       <button
         type="submit"
         disabled={claimStatus === 'pending' || loading || !agreed}
-        className={`w-full rounded-2xl px-4 py-3 font-bold text-white ${claimStatus === 'pending' || loading || !agreed ? 'cursor-not-allowed bg-white/10 opacity-50' : 'bg-green-600 hover:bg-green-700'}`}
+        className={`min-h-12 w-full rounded-xl px-4 py-3 font-black transition-colors ${claimStatus === 'pending' || loading || !agreed ? 'cursor-not-allowed border border-white/10 bg-white/[0.04] text-slate-500' : 'bg-emerald-500 text-slate-950 hover:bg-emerald-400'}`}
       >
         {claimStatus === 'pending' ? 'Claim Pending Review' : loading ? 'Submitting...' : 'Submit Proof For Review'}
       </button>
 
-      {success ? <div className="mt-4 text-sm text-emerald-200">Your screenshot was submitted and is now pending admin approval.</div> : null}
-      {error ? <div className="mt-4 text-sm text-red-200">{error}</div> : null}
+      {success ? <div className="mt-4 rounded-xl border border-emerald-300/25 bg-emerald-400/10 p-4 text-sm text-emerald-100">Your screenshot was submitted and is now pending admin approval.</div> : null}
+      {error ? <div className="mt-4 rounded-xl border border-rose-300/25 bg-rose-400/10 p-4 text-sm text-rose-100">{error}</div> : null}
     </form>
   );
 };
