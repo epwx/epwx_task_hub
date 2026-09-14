@@ -19,7 +19,7 @@ const implementationRows = [
     title: "Live utility now",
     items: [
       "Daily claims with wallet-signature verification and 24-hour cooldown checks",
-      "Twitter/X campaign creation, screenshot submission, and anti-duplicate claim rules",
+      "Social engagement campaign creation, screenshot submission, and anti-duplicate claim rules",
       "Telegram verification for gated claim flows",
       "Cashback claim recording for qualifying EPWX purchase transactions",
       "Public total, circulating, and burned supply APIs",

@@ -169,7 +169,7 @@ async function createTwitterCampaignClaim(req, res, expectedTaskType) {
 
   const campaignId = Number.parseInt(String(twitterCampaignId), 10);
   if (!Number.isInteger(campaignId) || campaignId <= 0) {
-    return res.status(400).json({ error: 'Invalid Twitter campaign.' });
+    return res.status(400).json({ error: 'Invalid social campaign.' });
   }
 
   const normalizedTaskType = normalizeTwitterTaskType(expectedTaskType);

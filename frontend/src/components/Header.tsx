@@ -76,8 +76,7 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
         { href: '/referrals', label: 'Referral Rewards' },
         { href: '/cashback', label: 'Cashback Rewards' },
         { href: '/tasks', label: 'Campaign Tasks' },
-        { href: '/claim/twitter-retweet', label: 'Twitter Retweet Claim' },
-        { href: '/claim/engagement', label: 'Engagement Claim' },
+        { href: '/claim/engagement', label: 'Social Engagement Claim' },
         { href: '/telegram-miniapp', label: 'Telegram Mini App' },
       ],
     },
@@ -113,7 +112,7 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
     ? [
         { href: '/admin', label: 'Admin Dashboard', active: pathname === '/admin' },
         { href: '/admin/daily-draws', label: 'Daily Draws', active: pathname === '/admin/daily-draws' },
-        { href: '/admin/engagement-claims', label: 'X Engagement Claims', active: pathname === '/admin/engagement-claims' },
+        { href: '/admin/engagement-claims', label: 'Social Engagement Claims', active: pathname === '/admin/engagement-claims' },
         { href: '/admin/merchants', label: 'Merchant Admin', active: pathname === '/admin/merchants' },
         { href: '/admin/partners', label: 'Partner Verification', active: pathname === '/admin/partners' },
         { href: '/admin/telegram-group-rewards', label: 'Telegram Group Rewards', active: pathname === '/admin/telegram-group-rewards' },

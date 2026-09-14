@@ -18,7 +18,20 @@ type TwitterCampaign = {
 };
 
 function getTaskIntentUrl(tweetUrl: string, taskType: 'retweet' | 'comment' | 'poll') {
-  const match = tweetUrl.match(/status\/(\d+)/i);
+  let parsedUrl: URL;
+
+  try {
+    parsedUrl = new URL(tweetUrl);
+  } catch {
+    return tweetUrl;
+  }
+
+  const hostname = parsedUrl.hostname.toLowerCase();
+  const isXPost = hostname === 'x.com'
+    || hostname.endsWith('.x.com')
+    || hostname === 'twitter.com'
+    || hostname.endsWith('.twitter.com');
+  const match = isXPost ? parsedUrl.pathname.match(/status\/(\d+)/i) : null;
 
   if (match?.[1]) {
     if (taskType === 'comment') {
@@ -70,7 +83,7 @@ function TwitterRetweetClaimPage() {
 
     if (!Number.isInteger(campaignId) || campaignId <= 0) {
       setCampaign(null);
-      setError("Invalid Twitter campaign link.");
+      setError("Invalid social campaign link.");
       setLoading(false);
       return;
     }
@@ -125,7 +138,7 @@ function TwitterRetweetClaimPage() {
           <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/40 to-transparent" />
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl">
-              <p className="text-xs font-black uppercase tracking-[0.24em] text-cyan-300">X Engagement Reward</p>
+              <p className="text-xs font-black uppercase tracking-[0.24em] text-cyan-300">Social Engagement Reward</p>
               <h1 className="mt-3 break-words text-3xl font-black text-white sm:text-4xl">{campaign.title}</h1>
               <p className="mt-3 text-sm leading-7 text-slate-300 sm:text-base">
                 View the campaign post, {getTaskVerb(campaign.taskType)}, and submit clear proof for manual review.
@@ -149,7 +162,7 @@ function TwitterRetweetClaimPage() {
             </div>
             <div className="ui-surface p-4">
               <div className="text-xs font-black uppercase tracking-[0.2em] text-cyan-300">Step 2</div>
-              <div className="mt-2 font-bold text-white">Complete the X action</div>
+              <div className="mt-2 font-bold text-white">Complete the social action</div>
               <p className="mt-1 text-sm text-slate-400">Use your own account and follow platform rules.</p>
             </div>
             <div className="ui-surface p-4">
@@ -170,7 +183,7 @@ function TwitterRetweetClaimPage() {
             </div>
           ) : null}
 
-          <p className="mt-5 text-xs leading-5 text-slate-500">Participation must comply with X platform rules and applicable laws. This program is not sponsored by, endorsed by, or affiliated with X.</p>
+          <p className="mt-5 text-xs leading-5 text-slate-500">Participation must comply with the selected platform&apos;s rules and applicable laws. Campaigns are independently operated by EPWX.</p>
         </section>
 
         {!address ? (

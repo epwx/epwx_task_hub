@@ -466,7 +466,7 @@ export default function AdminEngagementClaimsPage() {
               <option value="comment">Comment campaign</option>
               <option value="poll">Poll campaign</option>
             </select>
-            <input name="tweetUrl" value={campaignForm.tweetUrl} onChange={handleCampaignFormChange} placeholder="https://x.com/..." className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/50" required />
+            <input name="tweetUrl" value={campaignForm.tweetUrl} onChange={handleCampaignFormChange} placeholder="https://social-platform.example/post" className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/50" required />
             <input name="rewardAmount" value={campaignForm.rewardAmount} onChange={handleCampaignFormChange} placeholder="100000" className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/50" required />
             <input name="expiresAt" type="datetime-local" value={campaignForm.expiresAt} onChange={handleCampaignFormChange} className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white" />
             <div className="text-xs text-white/65">Leave expiry empty if this campaign should stay active until you disable it manually.</div>
@@ -490,7 +490,7 @@ export default function AdminEngagementClaimsPage() {
                 className={`w-full ${selectClass}`}
               >
                 <option value="all">All</option>
-                <option value="retweet">Retweet</option>
+                <option value="retweet">Repost</option>
                 <option value="comment">Comment</option>
                 <option value="poll">Poll</option>
               </select>
@@ -619,7 +619,7 @@ export default function AdminEngagementClaimsPage() {
         <div>
           <h1 className="text-3xl font-black text-white">Engagement {getClaimsTaskLabel(claimsTaskTypeFilter)} Submissions</h1>
           <p className="mt-2 text-sm text-white/75">Review uploaded proof for users who {getClaimsTaskInstruction(claimsTaskTypeFilter)}, then approve eligible rewards or reject with a reason.</p>
-          <p className="mt-1 text-xs text-white/65">This program is not sponsored by, endorsed by, or affiliated with X.</p>
+          <p className="mt-1 text-xs text-white/65">Campaigns must comply with the selected platform&apos;s rules and applicable laws.</p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
         <div>

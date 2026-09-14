@@ -116,9 +116,9 @@ export default function EngagementCampaignBoard({ wallet }: { wallet?: string })
         <div className="relative z-10">
           <div className="mb-6 text-center text-white">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-200/80">Community Engagement Rewards</p>
-            <h2 className="mt-2 text-3xl font-black">Active X Campaigns</h2>
+            <h2 className="mt-2 text-3xl font-black">Active Social Campaigns</h2>
             <p className="mx-auto mt-3 max-w-3xl text-sm text-white/75">
-              Open a campaign, complete its X task, and upload a clear screenshot for manual review.
+              Open a campaign, complete the requested social task, and upload a clear screenshot for manual review.
             </p>
           </div>
 

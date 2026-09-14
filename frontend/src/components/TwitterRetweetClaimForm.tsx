@@ -18,7 +18,7 @@ function getTaskLabel(taskType: 'retweet' | 'comment' | 'poll') {
     case 'poll':
       return 'poll vote';
     default:
-      return 'retweet';
+      return 'repost';
   }
 }
 
@@ -105,7 +105,7 @@ const TwitterRetweetClaimForm: React.FC<TwitterRetweetClaimFormProps> = ({ walle
           <div className="text-xs font-black uppercase tracking-[0.22em] text-cyan-300">Proof Submission</div>
           <h2 className="mt-2 text-2xl font-black text-white">Upload your {getTaskLabel(taskType)} screenshot</h2>
           <p className="mt-2 text-sm leading-6 text-slate-300">
-          After you complete the task on X, upload a clear screenshot here. Admin will review your submission and may approve or reject it based on eligibility and compliance checks.
+          After you complete the task on the selected social platform, upload a clear screenshot here. Admin will review your submission and may approve or reject it based on eligibility and compliance checks.
           </p>
         </div>
         <div className="ui-surface shrink-0 px-4 py-3 text-sm">
@@ -121,7 +121,7 @@ const TwitterRetweetClaimForm: React.FC<TwitterRetweetClaimFormProps> = ({ walle
         </div>
       ) : null}
 
-      <label className="mb-2 block text-sm font-bold text-slate-200">X username <span className="font-normal text-slate-500">(optional)</span></label>
+      <label className="mb-2 block text-sm font-bold text-slate-200">Social username <span className="font-normal text-slate-500">(optional)</span></label>
       <input
         type="text"
         value={twitterUsername}
