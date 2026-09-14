@@ -123,6 +123,7 @@ echo "📦 Installing dependencies..."
 # Backend
 cd backend
 npm install
+npm run migrate
 cd ..
 
 # Frontend

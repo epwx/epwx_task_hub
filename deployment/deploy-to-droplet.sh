@@ -154,6 +154,11 @@ sudo systemctl restart nginx
 echo "🚀 Step 7: Starting applications with PM2..."
 cd $APP_DIR
 
+# Apply pending database migrations before starting the API.
+cd backend
+npm run migrate
+cd $APP_DIR
+
 # Start backend
 pm2 start backend/src/index.js --name epwx-api --cwd $APP_DIR/backend
 
