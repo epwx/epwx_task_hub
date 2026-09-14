@@ -7,13 +7,6 @@ const FIXED_TWITTER_REWARD_AMOUNT = '100000';
 const SUPPORTED_TASK_TYPES = new Set(['retweet', 'comment', 'poll']);
 const TWITTER_CLAIM_TYPES = ['twitter_retweet', 'twitter_comment', 'twitter_poll'];
 
-function xEngagementProgramPaused(res) {
-  return res.status(410).json({
-    error: 'X engagement campaigns are paused. Use daily claim programs instead.',
-    code: 'X_ENGAGEMENT_PAUSED',
-  });
-}
-
 function normalizeTaskType(taskType) {
   const normalized = String(taskType || 'retweet').trim().toLowerCase();
   return SUPPORTED_TASK_TYPES.has(normalized) ? normalized : null;
@@ -128,8 +121,6 @@ async function getWalletClaimStatusByCampaignId(wallet) {
 }
 
 router.post('/add', requireAdmin, async (req, res) => {
-  return xEngagementProgramPaused(res);
-
   const { code, title, tweetUrl, expiresAt, taskType } = req.body;
 
   if (!code || !title || !tweetUrl) {
@@ -164,8 +155,6 @@ router.post('/add', requireAdmin, async (req, res) => {
 });
 
 router.get('/list', requireAdmin, async (req, res) => {
-  return xEngagementProgramPaused(res);
-
   try {
     const taskType = req.query.taskType ? normalizeTaskType(req.query.taskType) : null;
     if (req.query.taskType && !taskType) {
@@ -207,8 +196,6 @@ router.get('/list', requireAdmin, async (req, res) => {
 });
 
 router.get('/active', async (req, res) => {
-  return xEngagementProgramPaused(res);
-
   try {
     const wallet = typeof req.query.wallet === 'string' ? req.query.wallet.trim().toLowerCase() : '';
     const taskType = req.query.taskType ? normalizeTaskType(req.query.taskType) : null;
@@ -271,8 +258,6 @@ router.get('/active', async (req, res) => {
 });
 
 router.put('/:id', requireAdmin, async (req, res) => {
-  return xEngagementProgramPaused(res);
-
   try {
     const campaign = await TwitterCampaign.findByPk(req.params.id);
     if (!campaign) {
@@ -307,8 +292,6 @@ router.put('/:id', requireAdmin, async (req, res) => {
 });
 
 router.get('/:id', async (req, res) => {
-  return xEngagementProgramPaused(res);
-
   try {
     const campaign = await TwitterCampaign.findByPk(req.params.id);
     if (!campaign) {

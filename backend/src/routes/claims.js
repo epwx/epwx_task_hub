@@ -226,16 +226,9 @@ async function createTwitterCampaignClaim(req, res, expectedTaskType) {
   }
 }
 
-const xEngagementProgramPaused = (_req, res) => {
-  return res.status(410).json({
-    error: 'X engagement claims are paused. Use daily claim programs instead.',
-    code: 'X_ENGAGEMENT_PAUSED',
-  });
-};
-
-router.post('/twitter-retweet', upload.single('receiptImage'), xEngagementProgramPaused);
-router.post('/twitter-comment', upload.single('receiptImage'), xEngagementProgramPaused);
-router.post('/twitter-poll', upload.single('receiptImage'), xEngagementProgramPaused);
+router.post('/twitter-retweet', upload.single('receiptImage'), async (req, res) => createTwitterCampaignClaim(req, res, 'retweet'));
+router.post('/twitter-comment', upload.single('receiptImage'), async (req, res) => createTwitterCampaignClaim(req, res, 'comment'));
+router.post('/twitter-poll', upload.single('receiptImage'), async (req, res) => createTwitterCampaignClaim(req, res, 'poll'));
 
 // POST /api/claims/:id/mark-status - Update claim status (admin only)
 router.post('/:id/mark-status', async (req, res) => {
