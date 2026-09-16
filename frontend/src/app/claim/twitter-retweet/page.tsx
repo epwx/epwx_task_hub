@@ -10,14 +10,14 @@ type TwitterCampaign = {
   id: number;
   code: string;
   title: string;
-  taskType: 'retweet' | 'comment' | 'poll';
+  taskType: 'retweet' | 'comment' | 'poll' | 'rating';
   tweetUrl: string;
   rewardAmount: string;
   expiresAt?: string | null;
   claimStatus?: 'pending' | 'paid' | null;
 };
 
-function getTaskIntentUrl(tweetUrl: string, taskType: 'retweet' | 'comment' | 'poll') {
+function getTaskIntentUrl(tweetUrl: string, taskType: 'retweet' | 'comment' | 'poll' | 'rating') {
   let parsedUrl: URL;
 
   try {
@@ -38,7 +38,7 @@ function getTaskIntentUrl(tweetUrl: string, taskType: 'retweet' | 'comment' | 'p
       return `https://twitter.com/intent/tweet?in_reply_to=${match[1]}`;
     }
 
-    if (taskType === 'poll') {
+    if (taskType === 'poll' || taskType === 'rating') {
       return tweetUrl;
     }
 
@@ -48,23 +48,27 @@ function getTaskIntentUrl(tweetUrl: string, taskType: 'retweet' | 'comment' | 'p
   return tweetUrl;
 }
 
-function getTaskVerb(taskType: 'retweet' | 'comment' | 'poll') {
+function getTaskVerb(taskType: 'retweet' | 'comment' | 'poll' | 'rating') {
   switch (taskType) {
     case 'comment':
       return 'complete the comment task';
     case 'poll':
       return 'complete the poll task';
+    case 'rating':
+      return 'complete the rating task';
     default:
       return 'complete the repost task';
   }
 }
 
-function getTaskCta(taskType: 'retweet' | 'comment' | 'poll') {
+function getTaskCta(taskType: 'retweet' | 'comment' | 'poll' | 'rating') {
   switch (taskType) {
     case 'comment':
       return 'Open Comment Task';
     case 'poll':
       return 'Open Poll Task';
+    case 'rating':
+      return 'Open Rating Task';
     default:
       return 'Open Repost Task';
   }

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { parseJsonResponse } from "@/utils/apiErrors";
 
-type EngagementTaskType = "retweet" | "comment" | "poll";
+type EngagementTaskType = "retweet" | "comment" | "poll" | "rating";
 
 type EngagementCampaign = {
   id: number;
@@ -32,6 +32,8 @@ function getTaskLabel(taskType: EngagementTaskType) {
       return "Comment";
     case "poll":
       return "Poll";
+    case "rating":
+      return "Rating";
     default:
       return "Repost";
   }
@@ -43,6 +45,8 @@ function getTaskAction(taskType: EngagementTaskType) {
       return "Comment & Upload Screenshot";
     case "poll":
       return "Vote & Upload Screenshot";
+    case "rating":
+      return "Rate & Upload Screenshot";
     default:
       return "Repost & Upload Screenshot";
   }

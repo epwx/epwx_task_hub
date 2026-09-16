@@ -20,7 +20,7 @@ type TwitterClaim = {
   twitterUsername?: string;
 };
 
-type TwitterTaskType = "retweet" | "comment" | "poll";
+type TwitterTaskType = "retweet" | "comment" | "poll" | "rating";
 type ClaimsTaskTypeFilter = TwitterTaskType | "all";
 type CampaignTaskTypeFilter = TwitterTaskType | "all";
 
@@ -54,6 +54,7 @@ const TASK_TYPE_TO_CLAIM_TYPE: Record<TwitterTaskType, string> = {
   retweet: "twitter_retweet",
   comment: "twitter_comment",
   poll: "twitter_poll",
+  rating: "twitter_rating",
 };
 
 function getTaskLabel(taskType: TwitterTaskType) {
@@ -62,6 +63,8 @@ function getTaskLabel(taskType: TwitterTaskType) {
       return "Comment";
     case "poll":
       return "Poll";
+    case "rating":
+      return "Rating";
     default:
       return "Repost";
   }
@@ -73,6 +76,8 @@ function getTaskInstruction(taskType: TwitterTaskType) {
       return "complete the comment task";
     case "poll":
       return "complete the poll task";
+    case "rating":
+      return "complete the rating task";
     default:
       return "complete the repost task";
   }
@@ -487,6 +492,7 @@ export default function AdminEngagementClaimsPage() {
               <option value="retweet">Repost campaign</option>
               <option value="comment">Comment campaign</option>
               <option value="poll">Poll campaign</option>
+              <option value="rating">Rating campaign</option>
             </select>
             <input name="tweetUrl" value={campaignForm.tweetUrl} onChange={handleCampaignFormChange} placeholder="https://social-platform.example/post" className={inputClass} required />
             <input name="rewardAmount" value={campaignForm.rewardAmount} onChange={handleCampaignFormChange} placeholder="100000" className={inputClass} required />
@@ -515,6 +521,7 @@ export default function AdminEngagementClaimsPage() {
                 <option value="retweet">Repost</option>
                 <option value="comment">Comment</option>
                 <option value="poll">Poll</option>
+                <option value="rating">Rating</option>
               </select>
             </div>
             <div>
@@ -555,6 +562,7 @@ export default function AdminEngagementClaimsPage() {
                           <option value="retweet">Repost campaign</option>
                           <option value="comment">Comment campaign</option>
                           <option value="poll">Poll campaign</option>
+                          <option value="rating">Rating campaign</option>
                         </select>
                         <input name="tweetUrl" value={editCampaignForm.tweetUrl} onChange={handleEditCampaignFormChange} className={inputClass} />
                         <input name="rewardAmount" value={editCampaignForm.rewardAmount} onChange={handleEditCampaignFormChange} className={inputClass} />
@@ -655,6 +663,7 @@ export default function AdminEngagementClaimsPage() {
             <option value="retweet" className={selectOptionClass}>Repost</option>
             <option value="comment" className={selectOptionClass}>Comment</option>
             <option value="poll" className={selectOptionClass}>Poll</option>
+            <option value="rating" className={selectOptionClass}>Rating</option>
           </select>
         </div>
         <div>

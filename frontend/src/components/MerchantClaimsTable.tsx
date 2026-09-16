@@ -25,6 +25,10 @@ function getTwitterClaimFallbackLabel(claimType?: string) {
     return 'twitter-poll';
   }
 
+  if (claimType === 'twitter_rating') {
+    return 'twitter-rating';
+  }
+
   return 'twitter-retweet';
 }
 
@@ -35,6 +39,10 @@ function getTwitterTaskTypeLabel(claimType?: string): string {
 
   if (claimType === 'twitter_poll') {
     return 'Poll';
+  }
+
+  if (claimType === 'twitter_rating') {
+    return 'Rating';
   }
 
   if (claimType === 'twitter_retweet') {

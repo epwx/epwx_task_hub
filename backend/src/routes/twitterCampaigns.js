@@ -4,8 +4,8 @@ import { Claim, TwitterCampaign } from '../models/index.js';
 
 const router = express.Router();
 const FIXED_TWITTER_REWARD_AMOUNT = '100000';
-const SUPPORTED_TASK_TYPES = new Set(['retweet', 'comment', 'poll']);
-const TWITTER_CLAIM_TYPES = ['twitter_retweet', 'twitter_comment', 'twitter_poll'];
+const SUPPORTED_TASK_TYPES = new Set(['retweet', 'comment', 'poll', 'rating']);
+const TWITTER_CLAIM_TYPES = ['twitter_retweet', 'twitter_comment', 'twitter_poll', 'twitter_rating'];
 
 function normalizeTaskType(taskType) {
   const normalized = String(taskType || 'retweet').trim().toLowerCase();
@@ -18,6 +18,8 @@ function getClaimTypeForTaskType(taskType) {
       return 'twitter_comment';
     case 'poll':
       return 'twitter_poll';
+    case 'rating':
+      return 'twitter_rating';
     default:
       return 'twitter_retweet';
   }
