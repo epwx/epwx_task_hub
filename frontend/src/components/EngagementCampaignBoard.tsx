@@ -136,8 +136,8 @@ export default function EngagementCampaignBoard({ wallet }: { wallet?: string })
                         <div className="truncate text-xs font-semibold uppercase tracking-[0.16em] text-white/50">{campaign.code}</div>
                         <h3 className="mt-2 break-words text-xl font-black">{campaign.title}</h3>
                       </div>
-                      <span className={`shrink-0 rounded-full border px-3 py-1 text-xs font-bold ${campaign.claimStatus === "pending" ? "border-amber-300/30 bg-amber-400/15 text-amber-100" : "border-emerald-300/30 bg-emerald-400/15 text-emerald-100"}`}>
-                        {campaign.claimStatus === "pending" ? "Pending" : "Active"}
+                      <span className="shrink-0 rounded-full border border-emerald-300/30 bg-emerald-400/15 px-3 py-1 text-xs font-bold text-emerald-100">
+                        Active
                       </span>
                     </div>
 
