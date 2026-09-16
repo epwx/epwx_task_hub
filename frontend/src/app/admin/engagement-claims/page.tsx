@@ -136,7 +136,7 @@ export default function AdminEngagementClaimsPage() {
     totalPages: 1,
   });
   const [statusFilter, setStatusFilter] = useState("pending");
-  const [claimsTaskTypeFilter, setClaimsTaskTypeFilter] = useState<ClaimsTaskTypeFilter>("retweet");
+  const [claimsTaskTypeFilter, setClaimsTaskTypeFilter] = useState<ClaimsTaskTypeFilter>("all");
   const [campaignsTaskTypeFilter, setCampaignsTaskTypeFilter] = useState<CampaignTaskTypeFilter>("all");
   const [campaignsStatusFilter, setCampaignsStatusFilter] = useState<CampaignStatusFilter>("active");
   const [loading, setLoading] = useState(false);
