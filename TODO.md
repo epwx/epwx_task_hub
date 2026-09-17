@@ -16,12 +16,13 @@
   Implemented and production-tested:
   - [x] Wallet-signed email enrollment for existing wallet-only users.
   - [x] Verification email with expiring, hashed verification tokens.
-  - [x] SendGrid delivery through SMTP port 2525 with authenticated domain sending.
+  - [x] Amazon SES production delivery through SMTP port 2587 with authenticated domain sending.
   - [x] Successful paid-claim confirmation with EPWX earned and next claim time.
   - [x] Support confirmations for automatic payouts and claims marked paid by an administrator.
   - [x] Secure unsubscribe flow that disables reminder and success emails.
   - [x] Enrollment rate limiting and duplicate success-email protection.
   - [x] Wallet-authenticated masked email status, change-email flow, and reminder/confirmation controls.
+  - [x] Verified-email Daily Claim bonus with auditable Telegram and email reward breakdown.
   Implemented, awaiting production timing validation:
   - [ ] Daily claim-ready reminder after the 24-hour claim cooldown.
   - [ ] Confirm scheduler delivery occurs within the configured 15-minute interval after eligibility.

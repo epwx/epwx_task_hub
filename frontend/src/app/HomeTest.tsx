@@ -489,14 +489,18 @@ export default function HomeTest() {
       const data = await res.json();
       if (data.success) {
         const claimedAmount = Number(data.amount || DEFAULT_DAILY_REWARD).toLocaleString();
+        const emailBonusAmount = Number(data.rewardBreakdown?.emailBonusAmount || 0);
+        const emailBonusMessage = emailBonusAmount > 0
+          ? ` Includes a ${emailBonusAmount.toLocaleString()} EPWX verified-email bonus.`
+          : "";
         const referralMessage = formatReferralRewardMessage(data.referralReward);
         const partnerMessage = data.partnerReward?.partnerName
           ? ` Partner reward attributed to ${data.partnerReward.partnerName}.`
           : "";
         setClaimStatus(
           referralMessage
-            ? `Successfully claimed ${claimedAmount} EPWX! Your reward will be sent soon. ${referralMessage}${partnerMessage}`
-            : `Successfully claimed ${claimedAmount} EPWX! Your reward will be sent soon.${partnerMessage}`
+            ? `Successfully claimed ${claimedAmount} EPWX!${emailBonusMessage} Your reward will be sent soon. ${referralMessage}${partnerMessage}`
+            : `Successfully claimed ${claimedAmount} EPWX!${emailBonusMessage} Your reward will be sent soon.${partnerMessage}`
         );
         if (partnerReferralCode && typeof window !== "undefined") {
           localStorage.removeItem(PENDING_PARTNER_REFERRAL_CODE_STORAGE_KEY);

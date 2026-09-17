@@ -145,19 +145,20 @@ If you're using GitHub Actions for deployment:
 
 ---
 
-## Hostinger Daily Claim Email
+## Amazon SES Daily Claim Email
 
-Create a dedicated mailbox in Hostinger, then add the following values to the backend `.env` file. Use the exact SMTP hostname shown by Hostinger under **Connect Apps & Devices** if it differs from the default below.
+Create region-specific Amazon SES SMTP credentials, then add the following values to the backend `.env` file. The sender domain and MAIL FROM domain must be verified in the same SES region.
 
 ```env
-SMTP_HOST=smtp.hostinger.com
-SMTP_PORT=465
-SMTP_SECURE=true
-SMTP_USER=notifications@epowex.com
-SMTP_PASS=your_hostinger_mailbox_password
+SMTP_HOST=email-smtp.us-east-1.amazonaws.com
+SMTP_PORT=2587
+SMTP_SECURE=false
+SMTP_USER=your_ses_smtp_username
+SMTP_PASS=your_ses_smtp_password
 EMAIL_FROM_NAME=EPWX Daily Claims
 EMAIL_FROM_ADDRESS=notifications@epowex.com
 EMAIL_REPLY_TO=support@epowex.com
+DAILY_CLAIM_EMAIL_VERIFIED_BONUS_BPS=2500
 
 # Leave disabled until the migration and a verification email have been tested.
 DAILY_CLAIM_EMAIL_REMINDERS_ENABLED=false
@@ -167,11 +168,14 @@ DAILY_CLAIM_EMAIL_REMINDER_LOCK_KEY=90412023
 
 Before enabling reminders:
 
-1. Confirm SPF, DKIM, and DMARC for `epowex.com` in Hostinger.
+1. Confirm SES identity, DKIM, custom MAIL FROM, SPF, and DMARC for `epowex.com`.
 2. Run `npm run migrate` from the backend directory.
-3. Restart the backend with updated environment variables.
-4. Connect a wallet, enroll an email from the Daily Claim section, and verify the message arrives.
-5. Set `DAILY_CLAIM_EMAIL_REMINDERS_ENABLED=true` and restart the backend.
+3. Test SMTP authentication and send to the SES mailbox simulator.
+4. Restart the backend with updated environment variables.
+5. Connect a wallet, enroll an email from the Daily Claim section, and verify the message arrives.
+6. Set `DAILY_CLAIM_EMAIL_REMINDERS_ENABLED=true` and restart the backend.
+
+`DAILY_CLAIM_EMAIL_VERIFIED_BONUS_BPS=2500` adds 25% of the wallet's base tier for a verified email. Notification preferences do not affect bonus eligibility.
 
 Never commit `SMTP_PASS` to the repository.
 

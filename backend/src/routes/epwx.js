@@ -13,6 +13,7 @@ import { recordPartnerEarning } from '../services/partnerService.js';
 import { ethers } from 'ethers';
 import { epwxTokenContract, epwxTokenWithSigner } from '../services/blockchain.js';
 import dailyClaimSignatureUtils from '../utils/dailyClaimSignature.cjs';
+import dailyClaimRewardUtils from '../utils/dailyClaimReward.cjs';
 const router = express.Router();
 
 const REFERRAL_REWARD_AMOUNT = '1000000';
@@ -27,6 +28,7 @@ const DEFAULT_DAILY_DRAW_WINNER_COUNT = 5;
 const DEFAULT_DAILY_DRAW_PRIZE_AMOUNT = '100000';
 const EPWX_TOKEN_DECIMALS = 9;
 const EPWX_REWARD_TRANSFER_FEE_BPS = Number(process.env.EPWX_REWARD_TRANSFER_FEE_BPS || '600');
+const DAILY_CLAIM_EMAIL_VERIFIED_BONUS_BPS = process.env.DAILY_CLAIM_EMAIL_VERIFIED_BONUS_BPS || '2500';
 const DAILY_REWARD_TIERS = [
   {
     minimumBalance: MEGA_TIER_DAILY_REWARD_THRESHOLD,
@@ -67,6 +69,7 @@ const {
   buildEmailStatusMessages,
   buildEmailPreferenceMessages,
 } = dailyClaimSignatureUtils;
+const { calculateDailyClaimReward } = dailyClaimRewardUtils;
 
 function getAdminWallets() {
   return (process.env.ADMIN_WALLETS || '').split(',').map(w => w.trim().toLowerCase()).filter(Boolean);
@@ -561,19 +564,6 @@ function getDefaultDailyRewardDetails() {
     badgeLabel: null,
     badgeBenefit: null,
   };
-}
-
-function getTelegramAdjustedDailyRewardAmount(amount, isOfficialGroupMember) {
-  const normalizedAmount = String(amount || '0');
-  if (isOfficialGroupMember) {
-    return normalizedAmount;
-  }
-
-  try {
-    return (BigInt(normalizedAmount) / 2n).toString();
-  } catch {
-    return normalizedAmount;
-  }
 }
 
 async function getDailyRewardDetails(wallet) {
@@ -1630,14 +1620,32 @@ router.post('/daily-claim', async (req, res) => {
 
   // TODO: Send EPWX to wallet here (call contract or queue for admin)
   const rewardDetails = await getDailyRewardDetails(normalizedWallet);
-  const amount = getTelegramAdjustedDailyRewardAmount(rewardDetails.amount, officialGroupMembership.isMember);
+  const emailPreference = await DailyClaimEmailPreference.findOne({
+    where: { wallet: normalizedWallet },
+    attributes: ['emailVerifiedAt'],
+  });
+  const rewardBreakdown = calculateDailyClaimReward(
+    rewardDetails.amount,
+    officialGroupMembership.isMember,
+    Boolean(emailPreference?.emailVerifiedAt),
+    DAILY_CLAIM_EMAIL_VERIFIED_BONUS_BPS,
+  );
+  const amount = rewardBreakdown.amount;
   if (!officialGroupMembership.isMember) {
     console.log('[daily-claim] applying 50% reward for wallet without official Telegram group verification', {
       wallet: normalizedWallet,
       telegramUserId: user?.telegramUserId || null,
       reason: officialGroupMembership.reason,
       baseAmount: rewardDetails.amount,
-      adjustedAmount: amount,
+      adjustedAmount: rewardBreakdown.telegramAdjustedAmount,
+    });
+  }
+  if (rewardBreakdown.emailVerified) {
+    console.log('[daily-claim] applying verified email bonus', {
+      wallet: normalizedWallet,
+      baseAmount: rewardBreakdown.baseAmount,
+      emailBonusAmount: rewardBreakdown.emailBonusAmount,
+      emailBonusBps: rewardBreakdown.emailBonusBps,
     });
   }
   const claim = await DailyClaim.create({ 
@@ -1645,6 +1653,11 @@ router.post('/daily-claim', async (req, res) => {
     ip, 
     claimedAt: now, 
     amount,
+    baseAmount: rewardBreakdown.baseAmount,
+    telegramMember: rewardBreakdown.telegramMember,
+    emailVerified: rewardBreakdown.emailVerified,
+    emailBonusAmount: rewardBreakdown.emailBonusAmount,
+    emailBonusBps: rewardBreakdown.emailBonusBps,
     partnerReferralId: partnerReferral?.id || null,
     partnerId: partnerId || null
   });
@@ -1729,6 +1742,7 @@ router.post('/daily-claim', async (req, res) => {
     success: true,
     message: claim.status === 'paid' ? 'Daily claim successful and paid!' : 'Daily claim successful and queued for payout.',
     amount: claim.amount,
+    rewardBreakdown,
     status: claim.status,
     txHash: claim.txHash || null,
     referralReward,

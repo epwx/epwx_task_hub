@@ -24,6 +24,26 @@ const DailyClaim = sequelize.define('DailyClaim', {
     allowNull: false,
     defaultValue: '100000',
   },
+  baseAmount: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  telegramMember: {
+    type: DataTypes.BOOLEAN,
+    allowNull: true,
+  },
+  emailVerified: {
+    type: DataTypes.BOOLEAN,
+    allowNull: true,
+  },
+  emailBonusAmount: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  emailBonusBps: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
   txHash: {
     type: DataTypes.STRING,
     allowNull: true,
