@@ -11,6 +11,7 @@ import DailyDrawWinner from './DailyDrawWinner.js';
 import SpecialClaim from './SpecialClaim.js';
 import Merchant from './Merchant.js';
 import Claim from './Claim.js';
+import MerchantClaimCode from './MerchantClaimCode.js';
 import TwitterCampaign from './TwitterCampaign.js';
 import RewardDistributionLedgerDef from './RewardDistributionLedger.js';
 import WalletReferral from './WalletReferral.js';
@@ -58,4 +59,9 @@ TelegramGroupReward.belongsTo(TelegramGroupOwner, { foreignKey: 'groupOwnerId', 
 DailyClaim.hasOne(TelegramGroupReward, { foreignKey: 'dailyClaimId', as: 'telegramGroupReward' });
 TelegramGroupReward.belongsTo(DailyClaim, { foreignKey: 'dailyClaimId', as: 'dailyClaim' });
 
-export { User, Campaign, TaskSubmission, CashbackClaim, DailyClaim, DailyDraw, DailyDrawWinner, SpecialClaim, Merchant, Claim, TwitterCampaign, RewardDistributionLedger, WalletReferral, PlatformStats, Partner, PartnerReferral, PartnerEarning, TelegramGroupOwner, TelegramGroupReward, DailyClaimEmailPreference };
+Merchant.hasMany(MerchantClaimCode, { foreignKey: 'merchantId', as: 'claimCodes' });
+MerchantClaimCode.belongsTo(Merchant, { foreignKey: 'merchantId', as: 'merchant' });
+MerchantClaimCode.hasOne(Claim, { foreignKey: 'merchantClaimCodeId', as: 'claim' });
+Claim.belongsTo(MerchantClaimCode, { foreignKey: 'merchantClaimCodeId', as: 'merchantClaimCode' });
+
+export { User, Campaign, TaskSubmission, CashbackClaim, DailyClaim, DailyDraw, DailyDrawWinner, SpecialClaim, Merchant, Claim, MerchantClaimCode, TwitterCampaign, RewardDistributionLedger, WalletReferral, PlatformStats, Partner, PartnerReferral, PartnerEarning, TelegramGroupOwner, TelegramGroupReward, DailyClaimEmailPreference };

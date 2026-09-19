@@ -407,7 +407,7 @@ export default function MerchantAdminPage() {
                 <>
                   {paginatedMerchants.map((m) => {
                     // Construct the merchant claim URL for QR code
-                    const merchantUrl = `https://tasks.epowex.com/claim?merchant=${m.id}`;
+                    const merchantUrl = `https://tasks.epowex.com/claim?merchant=${m.id}&mode=code`;
                     return (
                       <div key={String(m.id)} className={`${pageShellClass} p-5 sm:p-6`}>
                         <div className="relative z-10 flex flex-col gap-5">
@@ -438,6 +438,9 @@ export default function MerchantAdminPage() {
                                 <div className="mt-2 font-semibold text-white">{m.address}</div>
                               </div>
                               <div className="flex flex-wrap gap-3 pt-1">
+                                <a href={`/merchant/claim-code?merchant=${m.id}`} className="rounded-full border border-amber-300/30 bg-amber-400/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-amber-100 transition-colors hover:bg-amber-400/20">
+                                  Open Code Generator
+                                </a>
                                 <button className="rounded-full border border-cyan-300/30 bg-cyan-400/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-cyan-100 transition-colors hover:bg-cyan-400/20" onClick={() => toggleClaims(m.id)}>
                                   {expanded[m.id] ? "Hide Claims" : "View Claims"}
                                 </button>

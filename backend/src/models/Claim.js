@@ -4,6 +4,7 @@ import sequelize from '../config/database.js';
 const Claim = sequelize.define('Claim', {
   id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
   merchantId: { type: DataTypes.INTEGER, allowNull: true },
+  merchantClaimCodeId: { type: DataTypes.INTEGER, allowNull: true, unique: true },
   customer: { type: DataTypes.STRING, allowNull: false },
   bill: { type: DataTypes.STRING },
   lat: { type: DataTypes.FLOAT, allowNull: true },

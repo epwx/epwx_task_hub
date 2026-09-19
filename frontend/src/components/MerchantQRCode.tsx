@@ -49,12 +49,12 @@ const MerchantQRCode: React.FC<MerchantQRCodeProps> = ({ url, merchantName, merc
     const howToClaim = [
       'How to Claim:',
       '1. Scan the QR code above using your phone camera or QR app.',
-      '2. Enable location access when prompted.',
+      '2. Get a single-use purchase code from the cashier.',
       '3. Connect your wallet (Metamask, TrustWallet, etc.).',
       '4. On the Connect Wallet screen, you can also choose',
       '   "Continue with Family" for supported wallets.',
       '5. Follow the link to the merchant’s claim page.',
-      '6. Submit your bill and details as required.',
+      '6. Enter the purchase code. No receipt upload is required.',
       '7. Wait for approval and receive your reward!',
       '',
       'For Merchants: Print and display this QR code at your shop counter for customers to claim rewards easily.'

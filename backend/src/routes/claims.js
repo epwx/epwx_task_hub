@@ -3,8 +3,10 @@ console.log('BACKEND ENV ADMIN_WALLETS:', process.env.ADMIN_WALLETS);
 
 
 import express from 'express';
-import { Claim, Merchant, TwitterCampaign } from '../models/index.js';
+import { Claim, Merchant, MerchantClaimCode, TwitterCampaign } from '../models/index.js';
 import { Op } from 'sequelize';
+import sequelize from '../config/database.js';
+import { hashMerchantClaimCode, normalizeMerchantClaimCode } from '../utils/merchantClaimCode.js';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -129,6 +131,63 @@ router.post('/add', upload.single('receiptImage'), async (req, res) => {
     res.json({ success: true, claim });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/claims/redeem-code - Redeem a fixed-reward merchant purchase code
+router.post('/redeem-code', async (req, res) => {
+  const { merchantId, customer } = req.body;
+  const code = normalizeMerchantClaimCode(req.body.code);
+  if (!merchantId || !customer || !code) {
+    return res.status(400).json({ error: 'Merchant, wallet, and claim code are required.' });
+  }
+
+  const customerLc = String(customer).trim().toLowerCase();
+  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.connection?.remoteAddress || req.socket?.remoteAddress || 'unknown';
+  const transaction = await sequelize.transaction();
+
+  try {
+    const claimCode = await MerchantClaimCode.findOne({
+      where: { merchantId, codeHash: hashMerchantClaimCode(code) },
+      transaction,
+      lock: transaction.LOCK.UPDATE,
+    });
+
+    if (!claimCode) {
+      await transaction.rollback();
+      return res.status(404).json({ error: 'Invalid claim code.' });
+    }
+    if (claimCode.status !== 'active') {
+      await transaction.rollback();
+      return res.status(409).json({ error: 'This claim code has already been used or cancelled.' });
+    }
+    if (new Date(claimCode.expiresAt).getTime() <= Date.now()) {
+      claimCode.status = 'expired';
+      await claimCode.save({ transaction });
+      await transaction.commit();
+      return res.status(410).json({ error: 'This claim code has expired. Ask the cashier for a new code.' });
+    }
+
+    const claim = await Claim.create({
+      merchantId: claimCode.merchantId,
+      merchantClaimCodeId: claimCode.id,
+      customer: customerLc,
+      bill: claimCode.rewardAmount,
+      claimType: 'merchant_code',
+      status: 'pending',
+      ip,
+    }, { transaction });
+
+    claimCode.status = 'redeemed';
+    claimCode.redeemedAt = new Date();
+    claimCode.redeemedBy = customerLc;
+    await claimCode.save({ transaction });
+    await transaction.commit();
+
+    return res.status(201).json({ success: true, claim, rewardAmount: claimCode.rewardAmount });
+  } catch (err) {
+    if (!transaction.finished) await transaction.rollback();
+    return res.status(500).json({ error: err.message });
   }
 });
 

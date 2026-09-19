@@ -4,6 +4,7 @@ import { useAccount } from "wagmi";
 import { ConnectKitButton } from "connectkit";
 import { useSearchParams } from "next/navigation";
 import ReceiptUploadClaim from "../../components/ReceiptUploadClaim";
+import MerchantCodeClaim from "../../components/MerchantCodeClaim";
 
 const GEOLOCATION_OPTIONS: PositionOptions = {
   enableHighAccuracy: true,
@@ -31,6 +32,8 @@ function ClaimPage() {
   const searchParams = useSearchParams();
   const partnerCode = searchParams.get("partner");
   const merchantId = searchParams.get("merchant") || searchParams.get("merchantId");
+  const isCodeClaim = searchParams.get("mode") === "code";
+  const initialCode = searchParams.get("code") || "";
   const [merchantLat, setMerchantLat] = useState<number | null>(null);
   const [merchantLng, setMerchantLng] = useState<number | null>(null);
   const [merchantInfo, setMerchantInfo] = useState<any | null>(null);
@@ -153,6 +156,27 @@ function ClaimPage() {
     return (
       <div className={`${statusViewportClass} bg-slate-950`}>
         <div className={`${statusCardClass} text-white/80`}>Redirecting to daily claim...</div>
+      </div>
+    );
+  }
+  if (isCodeClaim && merchantInfo && merchantId) {
+    return (
+      <div className="relative min-h-[calc(100vh-5rem)] bg-slate-950 px-4 py-10 text-white">
+        <div className="mx-auto max-w-2xl rounded-3xl border border-white/10 bg-slate-900/70 p-6 shadow-2xl sm:p-8">
+          <div className="mb-6 border-b border-white/10 pb-5 text-center sm:text-left">
+            <div className="text-xs font-black uppercase tracking-[0.24em] text-slate-400">Merchant Claim</div>
+            <h1 className="mt-2 text-3xl font-black">Claim EPWX Reward</h1>
+            <p className="mt-2 text-sm text-slate-300">Enter the single-use code provided after your purchase. No receipt or purchase amount is required.</p>
+          </div>
+          {!address ? (
+            <div className="flex flex-col items-center gap-4 text-center">
+              <div className="text-sm text-slate-300">Connect your wallet to claim.</div>
+              <ConnectKitButton />
+            </div>
+          ) : (
+            <MerchantCodeClaim merchantId={merchantId} merchantInfo={merchantInfo} wallet={address} initialCode={initialCode} />
+          )}
+        </div>
       </div>
     );
   }
