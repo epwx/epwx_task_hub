@@ -2,6 +2,15 @@ import Link from "next/link";
 
 const posts = [
   {
+    href: "/blog/merchant-claim-code-rewards",
+    tag: "New Merchant Flow",
+    tagClassName: "text-amber-200",
+    title: "Fixed EPWX Rewards with One Store QR and Single-Use Purchase Codes",
+    description:
+      "How merchants reward customers without receipt uploads or purchase-amount entry, with one-time codes and automatic email updates.",
+    borderClassName: "border-amber-300/20 hover:border-amber-300/50",
+  },
+  {
     href: "/blog/daily-claim-step-by-step",
     tag: "Guide",
     tagClassName: "text-cyan-200",
