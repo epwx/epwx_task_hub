@@ -21,10 +21,15 @@ const flow = [
     copy: "The cashier connects the authorized merchant wallet, selects Generate Claim Code, and signs the request. No blockchain transaction or gas payment is required.",
     owner: "Cashier",
     screenshotSrc: "/blog/merchant-code-flow-02-cashier.png",
-    screenshotAlt: "Connected EPWX Merchant Checkout page with the Generate Claim Code button",
-    screenshotWidth: 768,
-    screenshotHeight: 1152,
-    screenshotCaption: "After connecting the authorized wallet, the cashier selects Generate Claim Code.",
+    screenshotAlt: "EPWX Merchant Checkout page prompting the cashier to connect an authorized wallet",
+    screenshotWidth: 618,
+    screenshotHeight: 651,
+    screenshotCaption: "First, the cashier connects the authorized merchant wallet.",
+    secondaryScreenshotSrc: "/blog/merchant-code-flow-02-generate.png",
+    secondaryScreenshotAlt: "Connected EPWX Merchant Checkout page with the Generate Claim Code button",
+    secondaryScreenshotWidth: 768,
+    secondaryScreenshotHeight: 1152,
+    secondaryScreenshotCaption: "Then, the cashier selects Generate Claim Code for the completed purchase.",
   },
   {
     number: "03",
@@ -136,6 +141,20 @@ export default function MerchantClaimCodeRewardsArticlePage() {
                       />
                       <figcaption className="px-2 pb-1 pt-3 text-center text-xs leading-5 text-slate-400">
                         {step.screenshotCaption}
+                      </figcaption>
+                    </figure>
+                  ) : null}
+                  {step.secondaryScreenshotSrc ? (
+                    <figure className="mt-5 overflow-hidden rounded-lg border border-white/15 bg-slate-900 p-2">
+                      <Image
+                        src={step.secondaryScreenshotSrc}
+                        alt={step.secondaryScreenshotAlt}
+                        width={step.secondaryScreenshotWidth}
+                        height={step.secondaryScreenshotHeight}
+                        className="mx-auto h-auto max-h-[34rem] w-auto max-w-full rounded-md object-contain"
+                      />
+                      <figcaption className="px-2 pb-1 pt-3 text-center text-xs leading-5 text-slate-400">
+                        {step.secondaryScreenshotCaption}
                       </figcaption>
                     </figure>
                   ) : null}
