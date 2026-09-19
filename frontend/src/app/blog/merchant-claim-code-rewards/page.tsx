@@ -20,30 +20,55 @@ const flow = [
     title: "Cashier generates one code",
     copy: "The cashier connects the authorized merchant wallet, selects Generate Claim Code, and signs the request. No blockchain transaction or gas payment is required.",
     owner: "Cashier",
+    screenshotSrc: "/blog/merchant-code-flow-02-cashier.png",
+    screenshotAlt: "EPWX Merchant Checkout page prompting the cashier to connect an authorized wallet",
+    screenshotWidth: 618,
+    screenshotHeight: 651,
+    screenshotCaption: "The merchant checkout page keeps cashier actions focused on code generation.",
   },
   {
     number: "03",
     title: "Customer scans the store QR",
     copy: "One permanent QR can serve every customer. It opens the merchant-specific EPWX code claim page; only the purchase code changes for each sale.",
     owner: "Customer",
+    screenshotSrc: "/blog/merchant-flow-01-qr-scan.png",
+    screenshotAlt: "Customer scanning a reusable EPWX merchant QR at checkout",
+    screenshotWidth: 784,
+    screenshotHeight: 1168,
+    screenshotCaption: "The merchant displays one reusable QR for every customer.",
   },
   {
     number: "04",
     title: "Customer enters code and email",
     copy: "The customer connects a wallet, enters the single-use purchase code and email address, and consents to claim status notifications.",
     owner: "Customer",
+    screenshotSrc: "/blog/merchant-flow-04-wallet-chooser.jpg",
+    screenshotAlt: "EPWX wallet chooser shown before the customer submits a merchant claim",
+    screenshotWidth: 784,
+    screenshotHeight: 1168,
+    screenshotCaption: "The customer first chooses a wallet, then enters the purchase code and email.",
   },
   {
     number: "05",
     title: "EPWX validates the claim",
     copy: "EPWX checks the merchant, code status, 30-minute expiry, wallet, and reward configuration before creating a pending claim.",
     owner: "EPWX",
+    screenshotSrc: "/blog/merchant-flow-06-admin-approval.jpg",
+    screenshotAlt: "EPWX admin claim review showing pending claims and reward actions",
+    screenshotWidth: 784,
+    screenshotHeight: 1168,
+    screenshotCaption: "Validated submissions appear in the pending claim review queue.",
   },
   {
     number: "06",
     title: "Review, reward, and notify",
     copy: "Admin reviews the claim and distributes the fixed EPWX reward. The customer receives email updates when the claim is received, approved, rejected, or paid.",
     owner: "EPWX",
+    screenshotSrc: "/blog/merchant-flow-07-reward-sent.jpg",
+    screenshotAlt: "Wallet confirmation showing an EPWX reward transfer on Base",
+    screenshotWidth: 784,
+    screenshotHeight: 1168,
+    screenshotCaption: "Approved rewards are transferred to the customer wallet and tracked by transaction.",
   },
 ];
 
@@ -92,13 +117,29 @@ export default function MerchantClaimCodeRewardsArticlePage() {
           <h2 className="mt-2 text-2xl font-extrabold text-white">From checkout to wallet reward</h2>
           <div className="mt-6 divide-y divide-white/10 border-y border-white/10">
             {flow.map((step) => (
-              <div key={step.number} className="grid gap-3 py-5 sm:grid-cols-[56px_150px_minmax(0,1fr)] sm:items-start">
+              <div key={step.number} className="grid gap-3 py-6 sm:grid-cols-[56px_150px_minmax(0,1fr)] sm:items-start">
                 <div className="text-2xl font-black text-amber-300">{step.number}</div>
                 <div>
                   <span className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">{step.owner}</span>
                   <h3 className="mt-1 font-extrabold text-white">{step.title}</h3>
                 </div>
-                <p className="leading-7 text-slate-300">{step.copy}</p>
+                <div>
+                  <p className="leading-7 text-slate-300">{step.copy}</p>
+                  {step.screenshotSrc ? (
+                    <figure className="mt-5 overflow-hidden rounded-lg border border-white/15 bg-slate-900 p-2">
+                      <Image
+                        src={step.screenshotSrc}
+                        alt={step.screenshotAlt}
+                        width={step.screenshotWidth}
+                        height={step.screenshotHeight}
+                        className="mx-auto h-auto max-h-[34rem] w-auto max-w-full rounded-md object-contain"
+                      />
+                      <figcaption className="px-2 pb-1 pt-3 text-center text-xs leading-5 text-slate-400">
+                        {step.screenshotCaption}
+                      </figcaption>
+                    </figure>
+                  ) : null}
+                </div>
               </div>
             ))}
           </div>
