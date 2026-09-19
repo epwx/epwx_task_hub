@@ -8,7 +8,7 @@ import { Op } from 'sequelize';
 // import { ethers } from 'ethers'; // Removed duplicate import
 import { getEPWXPurchaseTransactions } from '../services/epwxCashback.js';
 import { notifyDailyClaimPaid } from '../services/telegramNotifications.js';
-import { notifyDailyClaimSuccess, sendDailyClaimVerificationEmail } from '../services/emailNotifications.js';
+import { notifyDailyClaimSuccess, notifyMerchantCodeClaimStatus, sendDailyClaimVerificationEmail } from '../services/emailNotifications.js';
 import { recordPartnerEarning } from '../services/partnerService.js';
 import { ethers } from 'ethers';
 import { epwxTokenContract, epwxTokenWithSigner } from '../services/blockchain.js';
@@ -796,6 +796,7 @@ router.post('/claims/mark-paid', async (req, res) => {
     }
     await claim.save();
     console.log('[mark-paid] Updated claim:', claim.id, 'status:', claim.status);
+    await notifyMerchantCodeClaimStatus(claim, 'paid');
 
     // Insert into RewardDistributionLedger with detailed logging
     try {

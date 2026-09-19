@@ -2,6 +2,7 @@ import nodemailer from 'nodemailer';
 import { createHash, randomBytes } from 'crypto';
 import DailyClaimEmailPreference from '../models/DailyClaimEmailPreference.js';
 import DailyClaim from '../models/DailyClaim.js';
+import Merchant from '../models/Merchant.js';
 
 let transporter;
 
@@ -184,4 +185,60 @@ export async function sendReadyDailyClaimReminders(now = new Date()) {
   }
 
   return { checked: preferences.length, sent, failed };
+}
+
+export async function notifyMerchantCodeClaimStatus(claim, requestedStatus = claim?.status) {
+  try {
+    const status = String(requestedStatus || '').toLowerCase();
+    if (claim?.claimType !== 'merchant_code' || !claim.customerEmail || !claim.emailNotificationConsent) {
+      return { sent: false, reason: 'email_not_enabled' };
+    }
+    if (!['pending', 'approved', 'rejected', 'paid'].includes(status)) {
+      return { sent: false, reason: 'unsupported_status' };
+    }
+    if (claim.lastEmailNotificationStatus === status) {
+      return { sent: false, reason: 'already_sent' };
+    }
+
+    const merchant = await Merchant.findByPk(claim.merchantId);
+    const merchantName = merchant?.name || 'the merchant';
+    const amount = formatAmount(claim.bill);
+    const statusContent = {
+      pending: {
+        subject: 'Your EPWX merchant claim was received',
+        heading: 'Claim received',
+        message: `Your claim at ${merchantName} for ${amount} EPWX is pending review.`,
+      },
+      approved: {
+        subject: 'Your EPWX merchant claim was approved',
+        heading: 'Claim approved',
+        message: `Your claim at ${merchantName} for ${amount} EPWX was approved and is awaiting payment.`,
+      },
+      rejected: {
+        subject: 'Update on your EPWX merchant claim',
+        heading: 'Claim not approved',
+        message: `Your claim at ${merchantName} was not approved.${claim.rejectionComment ? ` Reason: ${claim.rejectionComment}` : ''}`,
+      },
+      paid: {
+        subject: `Your ${amount} EPWX merchant reward was paid`,
+        heading: 'Reward paid',
+        message: `${amount} EPWX for your claim at ${merchantName} was sent to your wallet.`,
+      },
+    }[status];
+
+    const result = await sendEmail({
+      to: claim.customerEmail,
+      subject: statusContent.subject,
+      text: `${statusContent.heading}\n\n${statusContent.message}\n\nClaim ID: ${claim.id}`,
+      html: `<h1>${escapeHtml(statusContent.heading)}</h1><p>${escapeHtml(statusContent.message)}</p><p>Claim ID: ${escapeHtml(claim.id)}</p>`,
+    });
+    if (result.sent) {
+      claim.lastEmailNotificationStatus = status;
+      await claim.save();
+    }
+    return result;
+  } catch (error) {
+    console.error('[emailNotifications] Merchant claim notification failed:', error?.message || error);
+    return { sent: false, reason: 'email_notification_failed', error: error?.message || String(error) };
+  }
 }

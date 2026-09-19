@@ -7,6 +7,7 @@ import { Claim, Merchant, MerchantClaimCode, TwitterCampaign } from '../models/i
 import { Op } from 'sequelize';
 import sequelize from '../config/database.js';
 import { hashMerchantClaimCode, normalizeMerchantClaimCode } from '../utils/merchantClaimCode.js';
+import { notifyMerchantCodeClaimStatus } from '../services/emailNotifications.js';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -136,10 +137,17 @@ router.post('/add', upload.single('receiptImage'), async (req, res) => {
 
 // POST /api/claims/redeem-code - Redeem a fixed-reward merchant purchase code
 router.post('/redeem-code', async (req, res) => {
-  const { merchantId, customer } = req.body;
+  const { merchantId, customer, email, emailNotificationConsent } = req.body;
   const code = normalizeMerchantClaimCode(req.body.code);
-  if (!merchantId || !customer || !code) {
-    return res.status(400).json({ error: 'Merchant, wallet, and claim code are required.' });
+  const customerEmail = String(email || '').trim().toLowerCase();
+  if (!merchantId || !customer || !code || !customerEmail) {
+    return res.status(400).json({ error: 'Merchant, wallet, email, and claim code are required.' });
+  }
+  if (customerEmail.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) {
+    return res.status(400).json({ error: 'Enter a valid email address.' });
+  }
+  if (emailNotificationConsent !== true) {
+    return res.status(400).json({ error: 'Email notification consent is required.' });
   }
 
   const customerLc = String(customer).trim().toLowerCase();
@@ -172,6 +180,8 @@ router.post('/redeem-code', async (req, res) => {
       merchantId: claimCode.merchantId,
       merchantClaimCodeId: claimCode.id,
       customer: customerLc,
+      customerEmail,
+      emailNotificationConsent: true,
       bill: claimCode.rewardAmount,
       claimType: 'merchant_code',
       status: 'pending',
@@ -184,7 +194,12 @@ router.post('/redeem-code', async (req, res) => {
     await claimCode.save({ transaction });
     await transaction.commit();
 
-    return res.status(201).json({ success: true, claim, rewardAmount: claimCode.rewardAmount });
+    await notifyMerchantCodeClaimStatus(claim, 'pending');
+    return res.status(201).json({
+      success: true,
+      claim: { id: claim.id, merchantId: claim.merchantId, status: claim.status },
+      rewardAmount: claimCode.rewardAmount,
+    });
   } catch (err) {
     if (!transaction.finished) await transaction.rollback();
     return res.status(500).json({ error: err.message });
@@ -208,7 +223,11 @@ router.get('/', async (req, res) => {
     } else {
       return res.status(403).json({ error: 'Unauthorized' });
     }
-    const claims = await Claim.findAll({ where, order: [['createdAt', 'DESC']] });
+    const claims = await Claim.findAll({
+      where,
+      attributes: { exclude: ['customerEmail', 'emailNotificationConsent', 'lastEmailNotificationStatus'] },
+      order: [['createdAt', 'DESC']],
+    });
     res.json({ claims });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -308,6 +327,7 @@ router.post('/:id/mark-status', async (req, res) => {
       claim.rejectionComment = null;
     }
     await claim.save();
+    await notifyMerchantCodeClaimStatus(claim, status);
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
