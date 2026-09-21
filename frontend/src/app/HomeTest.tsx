@@ -884,7 +884,7 @@ export default function HomeTest() {
                       ) : null}
                     </div>
                   </div>
-                  <div className="mb-5 grid w-full grid-cols-2 gap-3">
+                  <div className="mb-5 grid w-full grid-cols-1 gap-3 sm:grid-cols-2">
                     <div className={`${glassPanelClass} p-4 text-center`}>
                       <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/65">Daily Claims Till Now</div>
                       <div className="mt-2 text-2xl font-black text-white sm:text-3xl">
@@ -1028,7 +1028,7 @@ export default function HomeTest() {
                 <div className="mt-2">
                   <ConnectKitButton />
                 </div>
-                <div className="mt-6 grid w-full grid-cols-2 gap-3">
+                <div className="mt-6 grid w-full grid-cols-1 gap-3 sm:grid-cols-2">
                   <div className={`${glassPanelClass} p-4 text-center`}>
                     <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/65">Daily Claims</div>
                     <div className="mt-2 text-2xl font-black text-white">
