@@ -12,7 +12,6 @@ import LastFivePaidDailyClaims from "@/components/LastFivePaidDailyClaims";
 import LatestDailyWinnersBoard from "@/components/LatestDailyWinnersBoard";
 import DailyClaimEmailSignup from "@/components/DailyClaimEmailSignup";
 import { BuyerBadgeChip, type BuyerBadge } from "@/components/BuyerBadge";
-import EngagementCampaignBoard from "@/components/EngagementCampaignBoard";
 import { formatEpwxBalance, formatDuration } from "@/utils/homeFormat";
 import {
   themedSectionClass,
@@ -43,6 +42,13 @@ interface DailyClaimsSummary {
   totalEpwxDistributedTillNow: number;
 }
 
+interface LatestDailyDraw {
+  drawDate: string;
+  winnerCount: number;
+  eligibleCount: number;
+  prizeAmount: string;
+}
+
 interface ReferralRewardStatus {
   status: string;
   rewardAmount?: string;
@@ -50,6 +56,8 @@ interface ReferralRewardStatus {
   referrerRewardStatus?: string;
   referredRewardStatus?: string;
 }
+
+const DAILY_CLAIM_TERMS_ACCEPTANCE_KEY_PREFIX = "epwx-daily-claim-terms-v1";
 
 function formatReferralRewardMessage(reward?: ReferralRewardStatus | null) {
   if (!reward) {
@@ -118,6 +126,7 @@ export default function HomeTest() {
   const [hasRecentQualifyingPurchase, setHasRecentQualifyingPurchase] = useState(false);
   const [dailyClaimsSummary, setDailyClaimsSummary] = useState<DailyClaimsSummary | null>(null);
   const [dailyClaimsSummaryLoading, setDailyClaimsSummaryLoading] = useState(true);
+  const [latestDailyDraw, setLatestDailyDraw] = useState<LatestDailyDraw | null>(null);
   const [isTelegramVerified, setIsTelegramVerified] = useState<boolean | null>(null);
   const [agreed, setAgreed] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
@@ -125,6 +134,11 @@ export default function HomeTest() {
   const [telegramVerificationLastCheckedAt, setTelegramVerificationLastCheckedAt] = useState<number | null>(null);
   const [telegramVerificationError, setTelegramVerificationError] = useState<string | null>(null);
   const [activeShortcutSection, setActiveShortcutSection] = useState<HomeShortcutSection>('daily-claim');
+
+  useEffect(() => {
+    const termsKey = `${DAILY_CLAIM_TERMS_ACCEPTANCE_KEY_PREFIX}:${address?.toLowerCase() || "disconnected"}`;
+    setAgreed(localStorage.getItem(termsKey) === "accepted");
+  }, [address]);
 
   useEffect(() => {
     const syncShortcutSectionFromHash = () => {
@@ -246,8 +260,19 @@ export default function HomeTest() {
     }
   };
 
+  const fetchLatestDailyDraw = async () => {
+    try {
+      const res = await fetch('/api/epwx/daily-draws/latest', { cache: 'no-store' });
+      const data = await res.json();
+      setLatestDailyDraw(res.ok && data.draw ? data.draw : null);
+    } catch {
+      setLatestDailyDraw(null);
+    }
+  };
+
   useEffect(() => {
     fetchDailyClaimsSummary();
+    fetchLatestDailyDraw();
   }, []);
 
   useEffect(() => {
@@ -778,32 +803,103 @@ export default function HomeTest() {
           </div>
         </section>
 
-        <EngagementCampaignBoard wallet={address} />
-
         {/* Daily Claim Section */}
         <section id="daily-claim" className="py-12 scroll-mt-36">
           <div className={`${themedSectionClass} w-full max-w-4xl mx-auto`}>
             <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
             <div className={themedInnerClass}>
             <h2 className="text-2xl font-black mb-4 text-white">Daily Claim</h2>
-            <div className="grid w-full grid-cols-1 gap-3 mb-6 sm:grid-cols-2">
-              <div className={`${glassPanelClass} p-4 text-center`}>
-                <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/65">Daily Claims Till Now</div>
-                <div className="mt-2 text-3xl font-black text-white">
-                  {dailyClaimsSummaryLoading ? '...' : (dailyClaimsSummary?.totalClaimsTillNow ?? 0).toLocaleString()}
-                </div>
-                <div className="mt-1 text-sm text-white/75">Total daily claims submitted</div>
-              </div>
-              <div className={`${glassPanelClass} p-4 text-center`}>
-                <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/65">EPWX Distributed Till Now</div>
-                <div className="mt-2 text-3xl font-black text-emerald-200">
-                  {dailyClaimsSummaryLoading ? '...' : (dailyClaimsSummary?.totalEpwxDistributedTillNow ?? 0).toLocaleString()}
-                </div>
-                <div className="mt-1 text-sm text-white/75">Total paid daily-claim rewards (EPWX)</div>
-              </div>
-            </div>
             {address ? (
               <>
+                  <div className="mb-5 overflow-hidden rounded-lg border border-emerald-300/30 bg-emerald-400/10">
+                    <div className="grid gap-px bg-white/10 sm:grid-cols-2">
+                      <div className="bg-slate-950/25 p-5 text-center sm:text-left">
+                        <div className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-100/70">
+                          {remainingClaimTime ? "Next reward" : "Available now"}
+                        </div>
+                        <div className="mt-2 text-3xl font-black text-white">
+                          {(isTelegramVerified === false ? Math.floor(currentDailyReward / 2) : currentDailyReward).toLocaleString()} EPWX
+                        </div>
+                        <div className="mt-1 text-sm text-white/70">Estimated payout before any verified-email bonus</div>
+                      </div>
+                      <div className="bg-slate-950/25 p-5 text-center sm:text-left">
+                        <div className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-100/70">Daily draw</div>
+                        {latestDailyDraw ? (
+                          <>
+                            <div className="mt-2 text-lg font-black text-amber-100">
+                              Latest: {latestDailyDraw.winnerCount} winners × {Number(latestDailyDraw.prizeAmount).toLocaleString()} EPWX
+                            </div>
+                            <div className="mt-1 text-sm text-white/70">
+                              Selected from {latestDailyDraw.eligibleCount} eligible daily claim wallets
+                            </div>
+                          </>
+                        ) : (
+                          <div className="mt-2 text-sm font-semibold text-white/75">Successful claims qualify for the daily draw.</div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="p-5">
+                      <div className="flex items-start gap-3">
+                        <input
+                          id="daily-terms-checkbox"
+                          type="checkbox"
+                          checked={agreed}
+                          onChange={(event) => {
+                            const accepted = event.target.checked;
+                            const termsKey = `${DAILY_CLAIM_TERMS_ACCEPTANCE_KEY_PREFIX}:${address.toLowerCase()}`;
+                            setAgreed(accepted);
+                            if (accepted) {
+                              localStorage.setItem(termsKey, "accepted");
+                            } else {
+                              localStorage.removeItem(termsKey);
+                            }
+                          }}
+                          className="mt-0.5 h-4 w-4 shrink-0 accent-emerald-400"
+                        />
+                        <label htmlFor="daily-terms-checkbox" className="text-sm text-white/85">
+                          I agree to the{' '}
+                          <button
+                            type="button"
+                            className="text-emerald-200 underline hover:text-white"
+                            onClick={() => setShowTerms(true)}
+                          >
+                            terms and conditions
+                          </button>
+                        </label>
+                      </div>
+                      <button
+                        onClick={handleDailyClaim}
+                        disabled={claiming || !agreed || !!remainingClaimTime}
+                        className={`mt-4 flex min-h-12 w-full items-center justify-center rounded-lg bg-emerald-500 px-6 py-3 text-base font-black text-slate-950 transition-colors hover:bg-emerald-400 ${claiming || !agreed || !!remainingClaimTime ? 'cursor-not-allowed opacity-50' : ''}`}
+                      >
+                        {claiming ? 'Claiming...' : remainingClaimTime ? `Next claim in ${remainingClaimTime}` : 'Claim Daily EPWX'}
+                      </button>
+                      {claimStatus && (
+                        <div className="mt-4 text-center text-base font-semibold text-white">{claimStatus}</div>
+                      )}
+                      {!isTelegramVerified ? (
+                        <div className="mt-4 rounded-lg border border-amber-300/25 bg-amber-500/10 p-4 text-sm text-amber-100">
+                          Telegram group verification doubles this wallet&apos;s current claim from the reduced 50% rate to the full tier reward.
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                  <div className="mb-5 grid w-full grid-cols-2 gap-3">
+                    <div className={`${glassPanelClass} p-4 text-center`}>
+                      <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/65">Daily Claims Till Now</div>
+                      <div className="mt-2 text-2xl font-black text-white sm:text-3xl">
+                        {dailyClaimsSummaryLoading ? '...' : (dailyClaimsSummary?.totalClaimsTillNow ?? 0).toLocaleString()}
+                      </div>
+                      <div className="mt-1 text-sm text-white/75">Total claims submitted</div>
+                    </div>
+                    <div className={`${glassPanelClass} p-4 text-center`}>
+                      <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/65">EPWX Distributed</div>
+                      <div className="mt-2 text-2xl font-black text-emerald-200 sm:text-3xl">
+                        {dailyClaimsSummaryLoading ? '...' : (dailyClaimsSummary?.totalEpwxDistributedTillNow ?? 0).toLocaleString()}
+                      </div>
+                      <div className="mt-1 text-sm text-white/75">Total paid rewards</div>
+                    </div>
+                  </div>
                   <div className={`${glassPanelClass} mb-5 w-full overflow-hidden text-sm text-white/90`}>
                     <div className="border-b border-white/15 bg-white/5 px-4 py-3 text-center sm:text-left">
                       <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Claim Rules</div>
@@ -880,61 +976,7 @@ export default function HomeTest() {
                       </div>
                     )}
                   </div>
-                  <div className="flex items-center mb-4">
-                    <input
-                      id="daily-terms-checkbox"
-                      type="checkbox"
-                      checked={agreed}
-                      onChange={e => setAgreed(e.target.checked)}
-                      className="mr-2"
-                    />
-                    <label htmlFor="daily-terms-checkbox" className="text-sm text-white/85">
-                      I agree to the{' '}
-                      <button
-                        type="button"
-                        className="text-emerald-200 underline hover:text-white"
-                        onClick={() => setShowTerms(true)}
-                      >
-                        terms and conditions
-                      </button>
-                    </label>
-                  </div>
-                  <div className="mb-4 text-center text-sm text-white/80">
-                    Track EPWX on the
-                    <a href="https://coinmarketcap.com/currencies/epowerx-on-base/" target="_blank" rel="noopener noreferrer" className="ml-1 text-emerald-200 underline hover:text-white">CoinMarketCap watchlist</a>
-                    if you want price and community updates.
-                  </div>
-                  <button
-                    onClick={handleDailyClaim}
-                    disabled={claiming || !agreed || !!remainingClaimTime}
-                    className={`block mx-auto px-6 py-3 rounded-lg font-bold text-white bg-green-600 hover:bg-green-700 transition-colors mb-4 ${claiming || !agreed || !!remainingClaimTime ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
-                    {claiming ? 'Claiming...' : 'Claim Daily Reward'}
-                  </button>
-                  {remainingClaimTime && (
-                    <div className="text-center text-sm font-semibold text-yellow-100 mb-4">
-                      Next daily claim available in {remainingClaimTime}
-                    </div>
-                  )}
-                  {!remainingClaimTime && hasDailyClaimHistory && (
-                    <div className="text-center text-sm font-semibold text-emerald-100 mb-4">
-                      Daily claim is available now.
-                    </div>
-                  )}
-                  {!remainingClaimTime && !hasDailyClaimHistory && (
-                    <div className="text-center text-sm font-semibold text-white/80 mb-4">
-                      No previous daily claim found. You can claim now.
-                    </div>
-                  )}
                   <TermsAndConditionsModal open={showTerms} onClose={() => setShowTerms(false)} />
-                  {claimStatus && (
-                    <div className="text-center text-lg font-semibold text-white mb-2">{claimStatus}</div>
-                  )}
-                  {!isTelegramVerified ? (
-                    <div className="mb-4 rounded-2xl border border-amber-300/25 bg-amber-500/10 p-4 text-sm text-amber-100">
-                      Telegram group is not verified for this wallet yet. Daily rewards are paid at 50% of the current tier until group verification is complete.
-                    </div>
-                  ) : null}
                   <div className="mb-4 rounded-2xl border border-white/15 bg-white/10 p-4 text-sm text-white/80">
                     Daily claims use a wallet signature to confirm that you control this address. Signing this message does not transfer funds and does not create a token approval.
                   </div>
@@ -985,6 +1027,20 @@ export default function HomeTest() {
                 <div className="text-center text-white/80 font-semibold mb-2">Connect your wallet to claim daily rewards.</div>
                 <div className="mt-2">
                   <ConnectKitButton />
+                </div>
+                <div className="mt-6 grid w-full grid-cols-2 gap-3">
+                  <div className={`${glassPanelClass} p-4 text-center`}>
+                    <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/65">Daily Claims</div>
+                    <div className="mt-2 text-2xl font-black text-white">
+                      {dailyClaimsSummaryLoading ? '...' : (dailyClaimsSummary?.totalClaimsTillNow ?? 0).toLocaleString()}
+                    </div>
+                  </div>
+                  <div className={`${glassPanelClass} p-4 text-center`}>
+                    <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/65">EPWX Distributed</div>
+                    <div className="mt-2 text-2xl font-black text-emerald-200">
+                      {dailyClaimsSummaryLoading ? '...' : (dailyClaimsSummary?.totalEpwxDistributedTillNow ?? 0).toLocaleString()}
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
