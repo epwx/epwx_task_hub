@@ -12,6 +12,7 @@ import LastFivePaidDailyClaims from "@/components/LastFivePaidDailyClaims";
 import LatestDailyWinnersBoard from "@/components/LatestDailyWinnersBoard";
 import DailyClaimEmailSignup from "@/components/DailyClaimEmailSignup";
 import { BuyerBadgeChip, type BuyerBadge } from "@/components/BuyerBadge";
+import EngagementCampaignBoard from "@/components/EngagementCampaignBoard";
 import { formatEpwxBalance, formatDuration } from "@/utils/homeFormat";
 import {
   themedSectionClass,
@@ -802,6 +803,8 @@ export default function HomeTest() {
             </div>
           </div>
         </section>
+
+        <EngagementCampaignBoard wallet={address} />
 
         {/* Daily Claim Section */}
         <section id="daily-claim" className="py-12 scroll-mt-36">
