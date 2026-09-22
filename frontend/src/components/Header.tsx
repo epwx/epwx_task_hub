@@ -29,6 +29,7 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [adminMenuOpen, setAdminMenuOpen] = useState(false);
   const [openNavGroup, setOpenNavGroup] = useState<string | null>(null);
+  const desktopNavRef = useRef<HTMLElement>(null);
   const adminMenuRef = useRef<HTMLDetailsElement>(null);
   const pathname = usePathname();
 
@@ -181,6 +182,26 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
     };
   }, [adminMenuOpen]);
 
+  useEffect(() => {
+    if (!openNavGroup) return;
+    const handlePointerDown = (event: MouseEvent | TouchEvent) => {
+      if (desktopNavRef.current && !desktopNavRef.current.contains(event.target as Node)) {
+        setOpenNavGroup(null);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpenNavGroup(null);
+    };
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('touchstart', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('touchstart', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [openNavGroup]);
+
   // Debug logs for troubleshooting
   useEffect(() => {
     if (address) {
@@ -208,7 +229,7 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex flex-1 items-center justify-end gap-3">
-            <nav className="flex items-center gap-1 rounded-full border border-slate-200 bg-white/70 p-1 shadow-sm dark:border-slate-800 dark:bg-slate-900/80">
+            <nav ref={desktopNavRef} className="flex items-center gap-1 rounded-full border border-slate-200 bg-white/70 p-1 shadow-sm dark:border-slate-800 dark:bg-slate-900/80">
               {primaryLinks.map((link) =>
                 link.external ? (
                   <a
