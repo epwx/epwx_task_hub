@@ -229,20 +229,24 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
   };
 
   return (
-    <div className={`relative overflow-hidden rounded-3xl border border-white/10 bg-slate-900/70 shadow-[0_24px_65px_rgba(2,6,23,0.5)] backdrop-blur-xl ${compact ? 'p-4 sm:p-5' : 'p-8'}`}>
+    <div className={`relative overflow-hidden rounded-2xl border border-white/10 bg-slate-900/70 shadow-[0_24px_65px_rgba(2,6,23,0.5)] backdrop-blur-xl ${compact ? 'p-4 sm:p-5' : 'p-5 sm:p-7'}`}>
       <div className={`absolute left-0 top-0 rounded-full bg-cyan-300/10 blur-3xl ${compact ? 'h-32 w-32' : 'h-48 w-48'}`} />
       <div className={`absolute bottom-0 right-0 rounded-full bg-emerald-300/10 blur-3xl ${compact ? 'h-40 w-40' : 'h-56 w-56'}`} />
 
       <div className="relative z-10">
         <div>
           <p className={`font-semibold uppercase text-white/70 ${compact ? 'text-xs tracking-[0.2em]' : 'text-sm tracking-[0.3em]'}`}>Base Swap</p>
-          <h2 className={`mt-2 font-black text-white ${compact ? 'text-2xl' : 'text-3xl'}`}>Swap ETH to EPWX</h2>
-          <p className={`mt-3 max-w-2xl text-white/80 ${compact ? 'text-xs leading-6' : 'text-sm leading-7'}`}>
-            Buying EPWX does more than add tokens to your wallet. It can upgrade your daily claim tier immediately and purchases above {CASHBACK_THRESHOLD.toLocaleString()} EPWX within 3 hours can unlock cashback.
+          {compact ? (
+            <h2 className="mt-2 text-2xl font-black text-white">Swap ETH to EPWX</h2>
+          ) : (
+            <h1 className="mt-2 text-3xl font-black text-white sm:text-4xl">Buy EPWX</h1>
+          )}
+          <p className={`mt-2 text-white/75 ${compact ? 'text-xs leading-6' : 'text-sm leading-6'}`}>
+            Swap ETH on Base and receive EPWX directly in your wallet.
           </p>
         </div>
 
-        <div className={`mt-5 grid gap-3 ${compact ? 'grid-cols-1' : 'lg:grid-cols-3'}`}>
+        {compact ? <div className="mt-5 grid grid-cols-1 gap-3">
           <div className="rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur-lg">
             <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Current daily tier</div>
             <div className="mt-2 text-2xl font-black text-white">{currentDailyReward.toLocaleString()} EPWX</div>
@@ -262,17 +266,9 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
               </>
             )}
           </div>
-          {!compact ? (
-            <div className="rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur-lg">
-              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Buyer cashback</div>
-              <div className="mt-2 text-2xl font-black text-white">100B+ EPWX buy</div>
-              <div className="mt-1 text-sm text-white/75">Qualifying purchases in the last 3 hours can be claimed in the cashback section.</div>
-              <Link href="/cashback" className="mt-3 inline-flex text-sm font-semibold text-emerald-100 underline underline-offset-4 hover:text-white">Open cashback rewards</Link>
-            </div>
-          ) : null}
-        </div>
+        </div> : null}
 
-        <div className={`mt-5 flex w-full flex-col gap-3 ${compact ? '' : 'sm:flex-row sm:items-center'}`}>
+        {compact ? <div className="mt-5 flex w-full flex-col gap-3">
           <div className="flex-1 rounded-2xl border border-white/20 bg-white/10 px-4 py-3 backdrop-blur-lg">
             <div className="text-xs font-semibold uppercase tracking-[0.25em] text-white/60">From</div>
             <div className="mt-1 text-xl font-black text-white">ETH</div>
@@ -286,9 +282,9 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
             <div className="mt-1 text-xl font-black text-white">EPWX</div>
             <div className="text-sm text-white/70">Received in wallet</div>
           </div>
-        </div>
+        </div> : null}
 
-        <div className="mt-6">
+        <div className="mt-5">
           <div className={`w-full rounded-2xl border border-white/20 bg-white/10 backdrop-blur-lg ${compact ? 'p-4' : 'p-6'}`}>
             <label className="block text-sm font-semibold text-white/80" htmlFor="home-epwx-swap-amount">
               ETH amount on Base
@@ -344,25 +340,8 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
 
             <div className="mt-5 rounded-2xl border border-white/10 bg-white/5 p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Estimated EPWX</p>
-              <p className="mt-2 break-all text-2xl font-black text-white">
+              <p className="mt-2 break-all text-lg font-black tabular-nums text-white sm:text-2xl">
                 {quoteLoading ? 'Loading...' : quoteOut ? Number(quoteOut).toLocaleString(undefined, { maximumFractionDigits: 4 }) : '--'}
-              </p>
-            </div>
-
-            <div className="mt-4 rounded-2xl border border-emerald-200/20 bg-emerald-400/10 p-4 text-sm text-emerald-50">
-              <p className="font-semibold">Price protection enabled</p>
-              <p className="mt-1 text-emerald-100/80">
-                If the rate moves too much before confirmation, the swap will not go through. Your protected minimum still includes a {EPWX_SWAP_SLIPPAGE_PERCENT}% price movement allowance.
-              </p>
-            </div>
-
-            <div className="mt-4 rounded-2xl border border-white/15 bg-white/10 p-4 text-sm text-white/80">
-              <p className="font-semibold text-white">What your wallet will ask you to do</p>
-              <p className="mt-2">
-                Connecting identifies the wallet that should receive EPWX. Confirming the swap is a separate on-chain transaction that spends the ETH amount shown plus normal Base gas fees.
-              </p>
-              <p className="mt-2 text-white/70">
-                This flow does not ask for an EPWX token approval because you are swapping from Base ETH.
               </p>
             </div>
 
@@ -384,9 +363,15 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
             <p className="mt-3 text-xs text-white/70">
               {address ? 'Your connected wallet will receive EPWX directly on Base after you approve the swap transaction.' : 'Connect your wallet first, then review and approve the swap transaction in your wallet.'}
             </p>
-            <p className="mt-2 text-xs text-emerald-100/80">
-              After your swap settles, return to the daily claim card to see your upgraded reward tier. If your purchase crosses 100,000,000,000 EPWX, check cashback right away.
-            </p>
+
+            <details className="mt-4 border-t border-white/10 pt-4 text-sm text-white/75">
+              <summary className="cursor-pointer font-semibold text-white">Transaction details</summary>
+              <div className="mt-3 space-y-2 leading-6">
+                <p>Price protection includes a {EPWX_SWAP_SLIPPAGE_PERCENT}% movement allowance. The swap will fail if the rate moves beyond it.</p>
+                <p>Your wallet will confirm one Base transaction for the ETH amount shown plus the network gas fee. No EPWX token approval is required.</p>
+                {minimumOut ? <p>Minimum received: {Number(minimumOut).toLocaleString(undefined, { maximumFractionDigits: 4 })} EPWX.</p> : null}
+              </div>
+            </details>
 
             {status && (
               <div className="mt-4 rounded-2xl border border-white/15 bg-slate-950/20 p-4 text-sm text-white/85 break-all">
@@ -395,6 +380,28 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
             )}
           </div>
         </div>
+
+        {!compact ? (
+          <section className="mt-5 border-t border-white/10 pt-5" aria-labelledby="swap-rewards-heading">
+            <div className="flex items-center justify-between gap-4">
+              <h2 id="swap-rewards-heading" className="text-sm font-bold text-white">Your EPWX rewards</h2>
+              <Link href="/cashback" className="text-xs font-semibold text-emerald-200 hover:text-white">Cashback details</Link>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <p className="text-white/55">Daily reward</p>
+                <p className="mt-1 font-bold text-white">{currentDailyReward.toLocaleString()} EPWX</p>
+              </div>
+              <div>
+                <p className="text-white/55">Next tier</p>
+                <p className="mt-1 font-bold text-white">{nextTierReward ? `${nextTierReward.toLocaleString()} EPWX` : 'Top tier active'}</p>
+              </div>
+            </div>
+            <p className="mt-3 text-xs leading-5 text-white/60">
+              {nextTierTarget ? `${formatEpwxBalance(tokensToNextTier)} more EPWX reaches the next tier.` : 'This wallet qualifies for the maximum daily reward.'} Purchases of {CASHBACK_THRESHOLD.toLocaleString()} EPWX or more may qualify for cashback.
+            </p>
+          </section>
+        ) : null}
       </div>
     </div>
   );
