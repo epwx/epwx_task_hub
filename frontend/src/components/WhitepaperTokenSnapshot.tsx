@@ -67,7 +67,7 @@ function formatSupply(value: string) {
   return numericValue.toLocaleString(undefined, { maximumFractionDigits: 0 });
 }
 
-const statCardClass = 'rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm dark:border-slate-800 dark:bg-slate-800/70';
+const statCardClass = 'border-t border-slate-200 py-5 dark:border-slate-800';
 
 export function WhitepaperTokenSnapshot() {
   const [state, setState] = useState<SnapshotState>({
@@ -161,34 +161,34 @@ export function WhitepaperTokenSnapshot() {
   }, [state.priceData, state.supplyData]);
 
   return (
-    <section className="mx-auto max-w-6xl px-4 pt-6 pb-10 md:px-6 md:pt-8 md:pb-14">
-      <div className="rounded-[2rem] border border-slate-200/80 bg-white/95 p-6 shadow-sm shadow-slate-200/50 dark:border-slate-800 dark:bg-slate-900/90 dark:shadow-none md:p-8">
+    <section id="token-snapshot" className="scroll-mt-24 py-10 md:py-14">
+      <div>
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <div className="text-sm font-bold uppercase tracking-[0.3em] text-sky-700 dark:text-sky-300">Live token snapshot</div>
-            <h2 className="mt-3 text-3xl font-black text-slate-950 dark:text-white">Real-time EPWX token data</h2>
-            <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600 dark:text-slate-300">
+            <div className="text-xs font-bold uppercase tracking-[0.18em] text-sky-700 dark:text-sky-300">Live token snapshot</div>
+            <h2 className="mt-3 text-3xl font-bold text-slate-950 dark:text-white">EPWX at a glance</h2>
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300">
               This section combines live market data with on-chain supply reporting so the public whitepaper page can act as a current reference for listings, partners, and community research.
             </p>
           </div>
-          <div className="rounded-2xl bg-slate-50 px-4 py-3 text-xs font-medium text-slate-600 dark:bg-slate-800/80 dark:text-slate-300">
+          <div className="shrink-0 border-l border-sky-500 pl-3 text-xs font-medium text-slate-500 dark:text-slate-400">
             {state.lastUpdated ? `Updated ${state.lastUpdated.toLocaleTimeString()}` : 'Updating live data'}
           </div>
         </div>
 
         {state.error ? (
-          <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
+          <div className="mt-6 border-l-2 border-amber-500 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:bg-amber-500/10 dark:text-amber-200">
             {state.error}
           </div>
         ) : null}
 
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-8 grid gap-x-8 sm:grid-cols-2 xl:grid-cols-3">
           {(state.loading ? new Array(6).fill(null) : stats).map((stat, index) => (
             <div key={stat ? stat.label : index} className={statCardClass}>
               {stat ? (
                 <>
-                  <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">{stat.label}</div>
-                  <div className="mt-3 text-2xl font-black text-slate-950 dark:text-white">{stat.value}</div>
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">{stat.label}</div>
+                  <div className="mt-3 break-words text-xl font-bold text-slate-950 dark:text-white md:text-2xl">{stat.value}</div>
                   <div className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">{stat.caption}</div>
                 </>
               ) : (
@@ -202,19 +202,19 @@ export function WhitepaperTokenSnapshot() {
           ))}
         </div>
 
-        <div className="mt-6 grid gap-4 lg:grid-cols-3">
+        <div className="mt-2 grid gap-x-8 lg:grid-cols-3">
           <div className={statCardClass}>
-            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Network</div>
-            <div className="mt-3 text-lg font-black text-slate-950 dark:text-white">Base</div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">Network</div>
+            <div className="mt-3 text-lg font-bold text-slate-950 dark:text-white">Base</div>
             <div className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">Utility, rewards, and market activity are tracked against the Base deployment.</div>
           </div>
           <div className={statCardClass}>
-            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Token Contract</div>
-            <div className="mt-3 break-all text-sm font-semibold text-slate-950 dark:text-white">{EPWX_TOKEN_ADDRESS}</div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">Token Contract</div>
+            <div className="mt-3 break-all font-mono text-xs leading-5 text-slate-950 dark:text-white">{EPWX_TOKEN_ADDRESS}</div>
           </div>
           <div className={statCardClass}>
-            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Trading Infrastructure</div>
-            <div className="mt-3 space-y-2 text-sm text-slate-600 dark:text-slate-300">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">Trading Infrastructure</div>
+            <div className="mt-3 space-y-2 font-mono text-xs leading-5 text-slate-600 dark:text-slate-300">
               <div>
                 <span className="font-semibold text-slate-950 dark:text-white">WETH:</span>{' '}
                 <span className="break-all">{WETH_TOKEN_ADDRESS}</span>

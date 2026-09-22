@@ -2,8 +2,18 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { WhitepaperTokenSnapshot } from "@/components/WhitepaperTokenSnapshot";
 
-const utilityPillClass = "rounded-full border border-sky-200/70 bg-sky-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-sky-700 dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-100";
-const sectionClass = "rounded-3xl border border-slate-200/80 bg-white/95 p-6 shadow-sm shadow-slate-200/50 dark:border-slate-800 dark:bg-slate-900/90 dark:shadow-none md:p-8";
+const utilityPillClass = "border-l border-sky-500 pl-3 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-600 dark:text-slate-300";
+const sectionClass = "scroll-mt-24 border-t border-slate-200 py-10 dark:border-slate-800 md:py-14";
+
+const tableOfContents = [
+  { label: "Token snapshot", href: "#token-snapshot" },
+  { label: "Abstract", href: "#abstract" },
+  { label: "Utility model", href: "#utility-model" },
+  { label: "Architecture", href: "#architecture" },
+  { label: "Security", href: "#security" },
+  { label: "Official links", href: "#official-links" },
+  { label: "Implementation", href: "#implementation" },
+];
 
 const tokenUtilities = [
   "Tiered daily claim rewards based on EPWX wallet balance",
@@ -116,51 +126,45 @@ export const metadata: Metadata = {
 export default function WhitepaperPage() {
   return (
     <>
-      <main className="bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.14),_transparent_36%),linear-gradient(180deg,_#f8fbff_0%,_#eef5ff_48%,_#f8fafc_100%)] text-slate-900 dark:bg-[radial-gradient(circle_at_top,_rgba(14,165,233,0.16),_transparent_30%),linear-gradient(180deg,_#020617_0%,_#0f172a_55%,_#020617_100%)] dark:text-slate-100">
-        <section className="border-b border-slate-200/70 bg-white/75 backdrop-blur dark:border-slate-800 dark:bg-slate-950/70">
-          <div className="mx-auto max-w-6xl px-4 pt-16 pb-8 md:px-6 md:pt-20 md:pb-10">
-            <div className="flex flex-wrap gap-3">
+      <main className="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+        <section className="relative overflow-hidden border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
+          <div className="absolute inset-y-0 right-0 hidden w-[38%] border-l border-slate-200 bg-[linear-gradient(135deg,transparent_0%,transparent_49%,rgba(14,165,233,0.08)_49%,rgba(14,165,233,0.08)_51%,transparent_51%,transparent_100%)] bg-[length:28px_28px] dark:border-slate-800 dark:bg-[linear-gradient(135deg,transparent_0%,transparent_49%,rgba(56,189,248,0.08)_49%,rgba(56,189,248,0.08)_51%,transparent_51%,transparent_100%)] lg:block" />
+          <div className="relative mx-auto max-w-7xl px-5 py-12 sm:px-8 md:py-16 lg:px-10 lg:py-20">
+            <div className="flex flex-wrap gap-x-7 gap-y-3">
               <span className={utilityPillClass}>Official Whitepaper</span>
               <span className={utilityPillClass}>Base Network</span>
               <span className={utilityPillClass}>Version 1.0</span>
             </div>
-            <div className="mt-6 grid gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
+            <div className="mt-10 grid gap-12 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-end lg:gap-20">
               <div>
-                <div className="mb-6 inline-flex rounded-3xl border border-slate-200/80 bg-white px-5 py-4 shadow-sm shadow-sky-100/70 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none">
+                <div className="mb-7 inline-flex border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-900">
                   <Image
                     src="/logo.webp"
                     alt="EPWX logo"
                     width={180}
                     height={48}
-                    className="h-12 w-auto"
+                    className="h-10 w-auto"
                     priority
                   />
                 </div>
-                <h1 className="max-w-4xl text-4xl font-black tracking-tight text-slate-950 dark:text-white md:text-6xl">
-                  EPWX Utility Whitepaper
+                <h1 className="max-w-3xl text-4xl font-bold leading-[1.05] text-slate-950 dark:text-white sm:text-5xl md:text-6xl">
+                  Utility infrastructure for verifiable rewards
                 </h1>
-                <p className="mt-6 max-w-3xl text-lg leading-8 text-slate-600 dark:text-slate-300">
+                <p className="mt-7 max-w-2xl border-l-2 border-sky-500 pl-5 text-lg leading-8 text-slate-600 dark:text-slate-300">
                   EPWX is a utility token powering daily rewards, community verification, social growth campaigns, merchant promotions,
                   cashback incentives, and escrow-capable task campaigns on Base.
                 </p>
-                <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-500 dark:text-slate-400">
-                  This page is the public web edition of the EPWX whitepaper and is intended for partners, exchanges, listing sites,
-                  and community members who need a stable reference URL.
-                </p>
               </div>
-              <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-lg shadow-sky-100/60 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none">
-                <div className="text-xs font-bold uppercase tracking-[0.3em] text-sky-700 dark:text-sky-300">Core contracts</div>
-                <div className="mt-4 space-y-4 text-sm text-slate-600 dark:text-slate-300">
+              <div className="border-t-2 border-slate-950 bg-white/90 pt-5 dark:border-white dark:bg-slate-950/90">
+                <div className="text-xs font-bold uppercase tracking-[0.18em] text-sky-700 dark:text-sky-300">Core contracts</div>
+                <div className="mt-5 space-y-5 text-xs text-slate-600 dark:text-slate-300">
                   <div>
                     <div className="font-semibold text-slate-900 dark:text-white">EPWX Token</div>
-                    <div className="mt-1 break-all">0xef5f5751cf3eca6cc3572768298b7783d33d60eb</div>
+                    <div className="mt-1 break-all font-mono leading-5">0xef5f5751cf3eca6cc3572768298b7783d33d60eb</div>
                   </div>
                   <div>
                     <div className="font-semibold text-slate-900 dark:text-white">TaskManager</div>
-                    <div className="mt-1 break-all">0x792896b951380eBC7E52f370Ec6208c5D260A210</div>
-                  </div>
-                  <div className="rounded-2xl bg-slate-50 p-4 text-slate-700 dark:bg-slate-800/80 dark:text-slate-300">
-                    Public whitepaper route: <span className="font-semibold">/whitepaper</span>
+                    <div className="mt-1 break-all font-mono leading-5">0x792896b951380eBC7E52f370Ec6208c5D260A210</div>
                   </div>
                 </div>
               </div>
@@ -168,21 +172,39 @@ export default function WhitepaperPage() {
           </div>
         </section>
 
-        <WhitepaperTokenSnapshot />
+        <div className="mx-auto grid max-w-7xl gap-10 px-5 sm:px-8 lg:grid-cols-[12rem_minmax(0,1fr)] lg:px-10">
+          <aside className="hidden lg:block">
+            <nav className="sticky top-24 py-14" aria-label="Whitepaper contents">
+              <div className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Contents</div>
+              <ol className="mt-5 space-y-3 border-l border-slate-200 pl-4 text-sm dark:border-slate-800">
+                {tableOfContents.map((item, index) => (
+                  <li key={item.href}>
+                    <a className="group flex gap-3 text-slate-500 transition-colors hover:text-sky-600 dark:text-slate-400 dark:hover:text-sky-300" href={item.href}>
+                      <span className="font-mono text-xs text-slate-400">{String(index + 1).padStart(2, "0")}</span>
+                      <span>{item.label}</span>
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </nav>
+          </aside>
+          <div className="min-w-0">
+            <WhitepaperTokenSnapshot />
 
-        <section className="mx-auto max-w-6xl px-4 py-10 md:px-6 md:py-14">
-          <div className="grid gap-6 lg:grid-cols-3">
+        <section className="border-t border-slate-200 py-8 dark:border-slate-800 md:py-10">
+          <div className="grid gap-x-8 gap-y-5 md:grid-cols-2">
             {tokenUtilities.map((utility) => (
-              <div key={utility} className="rounded-3xl border border-slate-200/80 bg-white/90 p-5 text-sm leading-7 text-slate-700 shadow-sm dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-300">
-                {utility}
+              <div key={utility} className="flex gap-4 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                <span className="mt-2 h-1.5 w-1.5 shrink-0 bg-sky-500" />
+                <span>{utility}</span>
               </div>
             ))}
           </div>
         </section>
 
-        <section className="mx-auto max-w-6xl space-y-8 px-4 pb-16 md:px-6 md:pb-20">
-          <div className={sectionClass}>
-            <div className="text-sm font-bold uppercase tracking-[0.3em] text-sky-700 dark:text-sky-300">Abstract</div>
+        <section className="pb-16 md:pb-20">
+          <div id="abstract" className={sectionClass}>
+            <div className="text-xs font-bold uppercase tracking-[0.18em] text-sky-700 dark:text-sky-300">01 / Abstract</div>
             <p className="mt-4 max-w-4xl text-base leading-8 text-slate-700 dark:text-slate-300">
               EPWX Task Hub combines social engagement campaigns, Telegram-gated community participation, merchant-linked rewards,
               qualifying cashback claims, and transparent distribution records into a single Base-based utility layer. The current
@@ -191,9 +213,9 @@ export default function WhitepaperPage() {
             </p>
           </div>
 
-          <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
-            <div className={sectionClass}>
-              <div className="text-sm font-bold uppercase tracking-[0.3em] text-sky-700 dark:text-sky-300">Utility model</div>
+          <div id="utility-model" className={`${sectionClass} grid gap-10 xl:grid-cols-[1fr_0.9fr]`}>
+            <div>
+              <div className="text-xs font-bold uppercase tracking-[0.18em] text-sky-700 dark:text-sky-300">02 / Utility model</div>
               <div className="mt-5 space-y-6 text-slate-700 dark:text-slate-300">
                 <div>
                   <h2 className="text-2xl font-black text-slate-950 dark:text-white">Why EPWX has recurring utility</h2>
@@ -216,12 +238,12 @@ export default function WhitepaperPage() {
               </div>
             </div>
 
-            <div className={sectionClass}>
-              <div className="text-sm font-bold uppercase tracking-[0.3em] text-sky-700 dark:text-sky-300">Current parameters</div>
+            <div>
+              <div className="text-xs font-bold uppercase tracking-[0.18em] text-sky-700 dark:text-sky-300">Current parameters</div>
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
                 {currentParameters.map((item) => (
-                  <div key={item.label} className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-800/70">
-                    <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">{item.label}</div>
+                  <div key={item.label} className="border-b border-slate-200 py-3 dark:border-slate-800">
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">{item.label}</div>
                     <div className="mt-2 text-base font-bold text-slate-900 dark:text-white">{item.value}</div>
                   </div>
                 ))}
@@ -229,8 +251,8 @@ export default function WhitepaperPage() {
             </div>
           </div>
 
-          <div className={sectionClass}>
-            <div className="text-sm font-bold uppercase tracking-[0.3em] text-sky-700 dark:text-sky-300">Architecture</div>
+          <div id="architecture" className={sectionClass}>
+            <div className="text-xs font-bold uppercase tracking-[0.18em] text-sky-700 dark:text-sky-300">03 / Architecture</div>
             <div className="mt-5 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
               <div className="rounded-2xl bg-slate-50 p-5 dark:bg-slate-800/70">
                 <h2 className="text-lg font-black text-slate-950 dark:text-white">Frontend</h2>
@@ -261,7 +283,7 @@ export default function WhitepaperPage() {
             </div>
           </div>
 
-          <div className="grid gap-8 lg:grid-cols-2">
+          <div id="security" className="scroll-mt-24 grid gap-8 lg:grid-cols-2">
             <div className={sectionClass}>
               <div className="text-sm font-bold uppercase tracking-[0.3em] text-sky-700 dark:text-sky-300">Security and anti-abuse</div>
               <ul className="mt-5 list-disc space-y-3 pl-6 text-sm leading-7 text-slate-700 dark:text-slate-300">
@@ -281,7 +303,7 @@ export default function WhitepaperPage() {
             </div>
           </div>
 
-          <div className={sectionClass}>
+          <div id="official-links" className={sectionClass}>
             <div className="text-sm font-bold uppercase tracking-[0.3em] text-sky-700 dark:text-sky-300">Official links</div>
             <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {officialLinks.map((link) => (
@@ -300,7 +322,7 @@ export default function WhitepaperPage() {
             </div>
           </div>
 
-          <div className={sectionClass}>
+          <div id="implementation" className={sectionClass}>
             <div className="text-sm font-bold uppercase tracking-[0.3em] text-sky-700 dark:text-sky-300">Implementation status</div>
             <div className="mt-5 grid gap-5 lg:grid-cols-3">
               {implementationRows.map((row) => (
@@ -326,6 +348,8 @@ export default function WhitepaperPage() {
             </p>
           </div>
         </section>
+          </div>
+        </div>
       </main>
     </>
   );
