@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 import { ConnectKitButton } from "connectkit";
 import { useSearchParams } from "next/navigation";
+import EngagementCampaignBoard from "@/components/EngagementCampaignBoard";
 import TwitterRetweetClaimForm from "@/components/TwitterRetweetClaimForm";
 
 type TwitterCampaign = {
@@ -83,6 +84,13 @@ function TwitterRetweetClaimPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!campaignIdParam) {
+      setCampaign(null);
+      setError(null);
+      setLoading(false);
+      return;
+    }
+
     const campaignId = Number(campaignIdParam);
 
     if (!Number.isInteger(campaignId) || campaignId <= 0) {
@@ -118,6 +126,14 @@ function TwitterRetweetClaimPage() {
         setLoading(false);
       });
   }, [address, campaignIdParam]);
+
+  if (!campaignIdParam) {
+    return (
+      <div className="min-h-[calc(100vh-5rem)] bg-slate-950 px-4 py-8 text-white sm:py-12">
+        <EngagementCampaignBoard wallet={address} />
+      </div>
+    );
+  }
 
   if (loading) {
     return (
