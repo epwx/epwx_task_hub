@@ -7,6 +7,7 @@ import { useAccount, useBalance } from 'wagmi';
 import { base } from 'wagmi/chains';
 
 import {
+  EPWX_DECIMALS,
   EPWX_SWAP_SLIPPAGE_PERCENT,
 } from '@/utils/epwxMarket';
 import { getEpwxSwapQuote, getEpwxToEthSwapQuote, swapEpwxToEth, swapEthToEpwx } from '@/utils/swapEthToEpwx';
@@ -15,6 +16,7 @@ const DEFAULT_SWAP_AMOUNT = '0.001';
 const DEFAULT_SELL_AMOUNT = '1000000000';
 const BASE_RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || 'https://mainnet.base.org';
 const MAX_GAS_BUFFER_ETH = 0.00005;
+const MAX_GAS_BUFFER_WEI = ethers.parseEther(String(MAX_GAS_BUFFER_ETH));
 const EPWX_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_EPWX_TOKEN as `0x${string}`) || '0xef5f5751cf3eca6cc3572768298b7783d33d60eb';
 const DEFAULT_DAILY_REWARD = 100_000;
 const MID_TIER_DAILY_REWARD = 2_000_000;
@@ -53,14 +55,6 @@ function formatEthBalance(balance?: string) {
   return numericBalance.toLocaleString(undefined, { maximumFractionDigits: 6 });
 }
 
-function formatAmountInput(value: number) {
-  if (!Number.isFinite(value) || value <= 0) {
-    return '0';
-  }
-
-  return value.toFixed(6).replace(/\.?0+$/, '');
-}
-
 function formatSwapOutput(value: string, symbol: 'ETH' | 'EPWX') {
   return Number(value).toLocaleString(undefined, {
     maximumFractionDigits: symbol === 'ETH' ? 8 : 4,
@@ -95,13 +89,22 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
 
   const availableBaseEth = Number(baseEthBalance?.formatted || 0);
-  const maxSwapEth = Math.max(0, availableBaseEth - MAX_GAS_BUFFER_ETH);
+  const availableBaseEthWei = baseEthBalance?.value || BigInt(0);
+  const maxSwapEthWei = availableBaseEthWei > MAX_GAS_BUFFER_WEI
+    ? availableBaseEthWei - MAX_GAS_BUFFER_WEI
+    : BigInt(0);
   const normalizedEpwxBalance = Number(epwxBalance?.formatted || 0);
-  const inputBalance = direction === 'buy' ? availableBaseEth : normalizedEpwxBalance;
-  const maxInputAmount = direction === 'buy' ? maxSwapEth : normalizedEpwxBalance;
-  const normalizedAmount = Number(amount.trim());
+  const inputBalanceWei = direction === 'buy' ? availableBaseEthWei : epwxBalance?.value || BigInt(0);
+  const maxInputAmountWei = direction === 'buy' ? maxSwapEthWei : inputBalanceWei;
+  const inputDecimals = direction === 'buy' ? 18 : EPWX_DECIMALS;
+  let amountInWei: bigint | null = null;
+  try {
+    amountInWei = ethers.parseUnits(amount.trim(), inputDecimals);
+  } catch {
+    amountInWei = null;
+  }
   const amountExceedsBalance = Boolean(direction === 'buy' ? baseEthBalance : epwxBalance) && (
-    !Number.isFinite(normalizedAmount) || normalizedAmount > maxInputAmount
+    amountInWei === null || amountInWei > maxInputAmountWei
   );
   const inputSymbol = direction === 'buy' ? 'ETH' : 'EPWX';
   const outputSymbol = direction === 'buy' ? 'EPWX' : 'ETH';
@@ -131,14 +134,16 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
     : Math.max(nextTierTarget - normalizedEpwxBalance, 0);
 
   const setPercentAmount = (percent: number) => {
-    if (!inputBalance || inputBalance <= 0) {
+    if (inputBalanceWei <= BigInt(0)) {
       setAmount('0');
       setSelectedPreset(null);
       return;
     }
 
-    const value = percent === 100 ? maxInputAmount : inputBalance * percent;
-    setAmount(formatAmountInput(value));
+    const valueWei = percent === 100
+      ? maxInputAmountWei
+      : (inputBalanceWei * BigInt(percent)) / BigInt(100);
+    setAmount(ethers.formatUnits(valueWei, inputDecimals));
     setSelectedPreset(percent === 100 ? 'max' : String(percent));
   };
 
@@ -164,7 +169,7 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
       if (amountExceedsBalance) {
         setQuoteOut('');
         setMinimumOut('');
-        setQuoteError(`Enter ${formatAmountInput(maxInputAmount)} ${inputSymbol} or less${direction === 'buy' ? ' to keep enough ETH for Base gas' : ''}.`);
+        setQuoteError(`Enter ${ethers.formatUnits(maxInputAmountWei, inputDecimals)} ${inputSymbol} or less${direction === 'buy' ? ' to keep enough ETH for Base gas' : ''}.`);
         return;
       }
 
@@ -199,13 +204,13 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
     return () => {
       cancelled = true;
     };
-  }, [amount, amountExceedsBalance, direction, inputSymbol, maxInputAmount, outputSymbol]);
+  }, [amount, amountExceedsBalance, direction, inputDecimals, inputSymbol, maxInputAmountWei, outputSymbol]);
 
   const handleSwap = async () => {
     setStatus(null);
 
     if (amountExceedsBalance) {
-      setStatus(`Enter ${formatAmountInput(maxInputAmount)} ${inputSymbol} or less${direction === 'buy' ? ' to keep enough ETH for Base gas' : ''}.`);
+      setStatus(`Enter ${ethers.formatUnits(maxInputAmountWei, inputDecimals)} ${inputSymbol} or less${direction === 'buy' ? ' to keep enough ETH for Base gas' : ''}.`);
       return;
     }
 
@@ -339,9 +344,9 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
                   <button
                     key={percent}
                     type="button"
-                    onClick={() => setPercentAmount(percent / 100)}
-                    disabled={!inputBalance}
-                    className={`rounded-full border px-3 py-1 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${selectedPreset === String(percent / 100)
+                    onClick={() => setPercentAmount(percent)}
+                    disabled={inputBalanceWei <= BigInt(0)}
+                    className={`rounded-full border px-3 py-1 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${selectedPreset === String(percent)
                       ? 'border-emerald-200 bg-emerald-400/20 text-white'
                       : 'border-white/20 bg-white/10 text-white hover:bg-white/20'}`}
                   >
@@ -351,7 +356,7 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
                 <button
                   type="button"
                   onClick={() => setPercentAmount(100)}
-                  disabled={!inputBalance}
+                  disabled={inputBalanceWei <= BigInt(0)}
                   className={`rounded-full border px-3 py-1 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${selectedPreset === 'max'
                     ? 'border-emerald-200 bg-emerald-400/20 text-white'
                     : 'border-white/20 bg-white/10 text-white hover:bg-white/20'}`}
@@ -365,7 +370,7 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
                 id="home-epwx-swap-amount"
                 type="number"
                 min="0"
-                max={maxInputAmount || undefined}
+                max={maxInputAmountWei > BigInt(0) ? ethers.formatUnits(maxInputAmountWei, inputDecimals) : undefined}
                 step={direction === 'buy' ? '0.0001' : '1'}
                 value={amount}
                 onChange={(event) => {
