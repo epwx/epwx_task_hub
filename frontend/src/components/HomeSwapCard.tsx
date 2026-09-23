@@ -15,6 +15,7 @@ import { getEpwxSwapQuote, getEpwxToEthSwapQuote, swapEpwxToEth, swapEthToEpwx }
 const DEFAULT_SWAP_AMOUNT = '0.001';
 const DEFAULT_SELL_AMOUNT = '1000000000';
 const BASE_RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || 'https://mainnet.base.org';
+const BASE_QUOTE_RPC_URLS = Array.from(new Set([BASE_RPC_URL, 'https://base-rpc.publicnode.com']));
 const MAX_GAS_BUFFER_ETH = 0.00005;
 const MAX_GAS_BUFFER_WEI = ethers.parseEther(String(MAX_GAS_BUFFER_ETH));
 const EPWX_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_EPWX_TOKEN as `0x${string}`) || '0xef5f5751cf3eca6cc3572768298b7783d33d60eb';
@@ -177,10 +178,23 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
       setQuoteError(null);
 
       try {
-        const provider = new ethers.JsonRpcProvider(BASE_RPC_URL);
-        const quote = direction === 'buy'
-          ? await getEpwxSwapQuote({ provider, amountEth: normalizedInput })
-          : await getEpwxToEthSwapQuote({ provider, amountEpwx: normalizedInput });
+        let quote: Awaited<ReturnType<typeof getEpwxSwapQuote>> | null = null;
+
+        for (const rpcUrl of BASE_QUOTE_RPC_URLS) {
+          try {
+            const provider = new ethers.JsonRpcProvider(rpcUrl);
+            quote = direction === 'buy'
+              ? await getEpwxSwapQuote({ provider, amountEth: normalizedInput })
+              : await getEpwxToEthSwapQuote({ provider, amountEpwx: normalizedInput });
+            break;
+          } catch {
+            // Try the next Base RPC endpoint.
+          }
+        }
+
+        if (!quote) {
+          throw new Error('Unable to load a swap quote right now. Please try again.');
+        }
 
         if (!cancelled) {
           setQuoteOut(quote.quotedOutFormatted);
