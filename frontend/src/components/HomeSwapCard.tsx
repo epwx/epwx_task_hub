@@ -9,9 +9,10 @@ import { base } from 'wagmi/chains';
 import {
   EPWX_SWAP_SLIPPAGE_PERCENT,
 } from '@/utils/epwxMarket';
-import { getEpwxSwapQuote, swapEthToEpwx } from '@/utils/swapEthToEpwx';
+import { getEpwxSwapQuote, getEpwxToEthSwapQuote, swapEpwxToEth, swapEthToEpwx } from '@/utils/swapEthToEpwx';
 
 const DEFAULT_SWAP_AMOUNT = '0.001';
+const DEFAULT_SELL_AMOUNT = '1000000000';
 const BASE_RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || 'https://mainnet.base.org';
 const MAX_GAS_BUFFER_ETH = 0.00005;
 const EPWX_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_EPWX_TOKEN as `0x${string}`) || '0xef5f5751cf3eca6cc3572768298b7783d33d60eb';
@@ -60,9 +61,17 @@ function formatAmountInput(value: number) {
   return value.toFixed(6).replace(/\.?0+$/, '');
 }
 
+function formatSwapOutput(value: string, symbol: 'ETH' | 'EPWX') {
+  return Number(value).toLocaleString(undefined, {
+    maximumFractionDigits: symbol === 'ETH' ? 8 : 4,
+  });
+}
+
 type HomeSwapCardProps = {
   compact?: boolean;
 };
+
+type SwapDirection = 'buy' | 'sell';
 
 export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
   const { address, connector } = useAccount();
@@ -75,7 +84,8 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
     token: EPWX_TOKEN_ADDRESS,
     chainId: base.id,
   });
-  const [amountEth, setAmountEth] = useState(DEFAULT_SWAP_AMOUNT);
+  const [direction, setDirection] = useState<SwapDirection>('buy');
+  const [amount, setAmount] = useState(DEFAULT_SWAP_AMOUNT);
   const [quoteOut, setQuoteOut] = useState<string>('');
   const [minimumOut, setMinimumOut] = useState<string>('');
   const [quoteLoading, setQuoteLoading] = useState(false);
@@ -86,11 +96,15 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
 
   const availableBaseEth = Number(baseEthBalance?.formatted || 0);
   const maxSwapEth = Math.max(0, availableBaseEth - MAX_GAS_BUFFER_ETH);
-  const normalizedAmountEth = Number(amountEth.trim());
-  const amountExceedsBalance = Boolean(baseEthBalance) && (
-    !Number.isFinite(normalizedAmountEth) || normalizedAmountEth > maxSwapEth
-  );
   const normalizedEpwxBalance = Number(epwxBalance?.formatted || 0);
+  const inputBalance = direction === 'buy' ? availableBaseEth : normalizedEpwxBalance;
+  const maxInputAmount = direction === 'buy' ? maxSwapEth : normalizedEpwxBalance;
+  const normalizedAmount = Number(amount.trim());
+  const amountExceedsBalance = Boolean(direction === 'buy' ? baseEthBalance : epwxBalance) && (
+    !Number.isFinite(normalizedAmount) || normalizedAmount > maxInputAmount
+  );
+  const inputSymbol = direction === 'buy' ? 'ETH' : 'EPWX';
+  const outputSymbol = direction === 'buy' ? 'EPWX' : 'ETH';
   const currentDailyReward = normalizedEpwxBalance >= MEGA_DAILY_REWARD_THRESHOLD
     ? MEGA_DAILY_REWARD
     : normalizedEpwxBalance >= BONUS_DAILY_REWARD_THRESHOLD
@@ -117,33 +131,40 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
     : Math.max(nextTierTarget - normalizedEpwxBalance, 0);
 
   const setPercentAmount = (percent: number) => {
-    if (!availableBaseEth || availableBaseEth <= 0) {
-      setAmountEth('0');
+    if (!inputBalance || inputBalance <= 0) {
+      setAmount('0');
       setSelectedPreset(null);
       return;
     }
 
-    const value = percent === 100 ? maxSwapEth : availableBaseEth * percent;
-    setAmountEth(formatAmountInput(value));
+    const value = percent === 100 ? maxInputAmount : inputBalance * percent;
+    setAmount(formatAmountInput(value));
     setSelectedPreset(percent === 100 ? 'max' : String(percent));
+  };
+
+  const selectDirection = (nextDirection: SwapDirection) => {
+    setDirection(nextDirection);
+    setAmount(nextDirection === 'buy' ? DEFAULT_SWAP_AMOUNT : DEFAULT_SELL_AMOUNT);
+    setSelectedPreset(null);
+    setStatus(null);
   };
 
   useEffect(() => {
     let cancelled = false;
-    const normalizedAmount = amountEth.trim();
+    const normalizedInput = amount.trim();
 
     const loadQuote = async () => {
-      if (!normalizedAmount || Number(normalizedAmount) <= 0) {
+      if (!normalizedInput || Number(normalizedInput) <= 0) {
         setQuoteOut('');
         setMinimumOut('');
-        setQuoteError('Enter an ETH amount greater than 0');
+        setQuoteError(`Enter an ${inputSymbol} amount greater than 0`);
         return;
       }
 
       if (amountExceedsBalance) {
         setQuoteOut('');
         setMinimumOut('');
-        setQuoteError(`Enter ${formatAmountInput(maxSwapEth)} ETH or less to keep enough ETH for Base gas.`);
+        setQuoteError(`Enter ${formatAmountInput(maxInputAmount)} ${inputSymbol} or less${direction === 'buy' ? ' to keep enough ETH for Base gas' : ''}.`);
         return;
       }
 
@@ -152,10 +173,9 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
 
       try {
         const provider = new ethers.JsonRpcProvider(BASE_RPC_URL);
-        const quote = await getEpwxSwapQuote({
-          provider,
-          amountEth: normalizedAmount,
-        });
+        const quote = direction === 'buy'
+          ? await getEpwxSwapQuote({ provider, amountEth: normalizedInput })
+          : await getEpwxToEthSwapQuote({ provider, amountEpwx: normalizedInput });
 
         if (!cancelled) {
           setQuoteOut(quote.quotedOutFormatted);
@@ -165,7 +185,7 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
         if (!cancelled) {
           setQuoteOut('');
           setMinimumOut('');
-          setQuoteError(error instanceof Error ? error.message : 'Unable to load EPWX quote');
+          setQuoteError(error instanceof Error ? error.message : `Unable to load ${outputSymbol} quote`);
         }
       } finally {
         if (!cancelled) {
@@ -179,13 +199,13 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
     return () => {
       cancelled = true;
     };
-  }, [amountEth, amountExceedsBalance, maxSwapEth]);
+  }, [amount, amountExceedsBalance, direction, inputSymbol, maxInputAmount, outputSymbol]);
 
   const handleSwap = async () => {
     setStatus(null);
 
     if (amountExceedsBalance) {
-      setStatus(`Enter ${formatAmountInput(maxSwapEth)} ETH or less to keep enough ETH for Base gas.`);
+      setStatus(`Enter ${formatAmountInput(maxInputAmount)} ${inputSymbol} or less${direction === 'buy' ? ' to keep enough ETH for Base gas' : ''}.`);
       return;
     }
 
@@ -214,11 +234,9 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
         throw new Error('Connect your wallet before swapping');
       }
 
-      const txHash = await swapEthToEpwx({
-        provider,
-        amountEth: amountEth.trim(),
-        userAddress,
-      });
+      const txHash = direction === 'buy'
+        ? await swapEthToEpwx({ provider, amountEth: amount.trim(), userAddress })
+        : await swapEpwxToEth({ provider, amountEpwx: amount.trim(), userAddress });
 
       setStatus(`Swap submitted successfully: ${txHash}`);
     } catch (error) {
@@ -239,12 +257,35 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
           {compact ? (
             <h2 className="mt-2 text-2xl font-black text-white">Swap ETH to EPWX</h2>
           ) : (
-            <h1 className="mt-2 text-3xl font-black text-white sm:text-4xl">Buy EPWX</h1>
+            <h1 className="mt-2 text-3xl font-black text-white sm:text-4xl">{direction === 'buy' ? 'Buy EPWX' : 'Sell EPWX'}</h1>
           )}
           <p className={`mt-2 text-white/75 ${compact ? 'text-xs leading-6' : 'text-sm leading-6'}`}>
-            Swap ETH on Base and receive EPWX directly in your wallet.
+            {direction === 'buy'
+              ? 'Swap ETH on Base and receive EPWX directly in your wallet.'
+              : 'Swap EPWX on Base and receive ETH directly in your wallet.'}
           </p>
         </div>
+
+        {!compact ? (
+          <div className="mt-5 grid grid-cols-2 rounded-xl border border-white/15 bg-slate-950/40 p-1" aria-label="Swap direction">
+            <button
+              type="button"
+              aria-pressed={direction === 'buy'}
+              onClick={() => selectDirection('buy')}
+              className={`rounded-lg px-4 py-2.5 text-sm font-bold transition ${direction === 'buy' ? 'bg-emerald-500 text-slate-950' : 'text-white/65 hover:text-white'}`}
+            >
+              Buy EPWX
+            </button>
+            <button
+              type="button"
+              aria-pressed={direction === 'sell'}
+              onClick={() => selectDirection('sell')}
+              className={`rounded-lg px-4 py-2.5 text-sm font-bold transition ${direction === 'sell' ? 'bg-cyan-400 text-slate-950' : 'text-white/65 hover:text-white'}`}
+            >
+              Sell EPWX
+            </button>
+          </div>
+        ) : null}
 
         {compact ? <div className="mt-5 grid grid-cols-1 gap-3">
           <div className="rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur-lg">
@@ -287,11 +328,11 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
         <div className="mt-5">
           <div className={`w-full rounded-2xl border border-white/20 bg-white/10 backdrop-blur-lg ${compact ? 'p-4' : 'p-6'}`}>
             <label className="block text-sm font-semibold text-white/80" htmlFor="home-epwx-swap-amount">
-              ETH amount on Base
+              {inputSymbol} amount on Base
             </label>
             <div className="mt-2 flex flex-col gap-2 text-sm text-white/75 sm:flex-row sm:items-center sm:justify-between">
               <span>
-                Available Base ETH: <span className="font-semibold text-white">{formatEthBalance(baseEthBalance?.formatted)}</span>
+                Available {inputSymbol}: <span className="font-semibold text-white">{direction === 'buy' ? formatEthBalance(baseEthBalance?.formatted) : formatEpwxBalance(normalizedEpwxBalance)}</span>
               </span>
               <div className="flex flex-wrap gap-2">
                 {[10, 25, 50, 75].map((percent) => (
@@ -299,7 +340,7 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
                     key={percent}
                     type="button"
                     onClick={() => setPercentAmount(percent / 100)}
-                    disabled={!availableBaseEth}
+                    disabled={!inputBalance}
                     className={`rounded-full border px-3 py-1 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${selectedPreset === String(percent / 100)
                       ? 'border-emerald-200 bg-emerald-400/20 text-white'
                       : 'border-white/20 bg-white/10 text-white hover:bg-white/20'}`}
@@ -310,7 +351,7 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
                 <button
                   type="button"
                   onClick={() => setPercentAmount(100)}
-                  disabled={!availableBaseEth}
+                  disabled={!inputBalance}
                   className={`rounded-full border px-3 py-1 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${selectedPreset === 'max'
                     ? 'border-emerald-200 bg-emerald-400/20 text-white'
                     : 'border-white/20 bg-white/10 text-white hover:bg-white/20'}`}
@@ -324,24 +365,26 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
                 id="home-epwx-swap-amount"
                 type="number"
                 min="0"
-                max={maxSwapEth || undefined}
-                step="0.0001"
-                value={amountEth}
+                max={maxInputAmount || undefined}
+                step={direction === 'buy' ? '0.0001' : '1'}
+                value={amount}
                 onChange={(event) => {
-                  setAmountEth(event.target.value);
+                  setAmount(event.target.value);
                   setSelectedPreset(null);
                 }}
                 className="w-full bg-transparent text-lg font-semibold text-white outline-none placeholder:text-white/35"
-                placeholder="0.001"
+                placeholder={direction === 'buy' ? DEFAULT_SWAP_AMOUNT : DEFAULT_SELL_AMOUNT}
               />
-              <span className="rounded-full bg-white/10 px-3 py-1 text-sm font-bold text-white">ETH</span>
+              <span className="rounded-full bg-white/10 px-3 py-1 text-sm font-bold text-white">{inputSymbol}</span>
             </div>
-            <p className="mt-2 text-xs text-white/65">Max keeps a small amount of ETH available for Base network gas.</p>
+            <p className="mt-2 text-xs text-white/65">
+              {direction === 'buy' ? 'Max keeps a small amount of ETH available for Base network gas.' : 'Keep a small amount of ETH in your wallet for Base network gas.'}
+            </p>
 
             <div className="mt-5 rounded-2xl border border-white/10 bg-white/5 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Estimated EPWX</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Estimated {outputSymbol}</p>
               <p className="mt-2 break-all text-lg font-black tabular-nums text-white sm:text-2xl">
-                {quoteLoading ? 'Loading...' : quoteOut ? Number(quoteOut).toLocaleString(undefined, { maximumFractionDigits: 4 }) : '--'}
+                {quoteLoading ? 'Loading...' : quoteOut ? formatSwapOutput(quoteOut, outputSymbol) : '--'}
               </p>
             </div>
 
@@ -354,22 +397,24 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
             <button
               type="button"
               onClick={handleSwap}
-              disabled={swapLoading || quoteLoading || !quoteOut || !!quoteError || !baseEthBalance || amountExceedsBalance}
-              className="mt-6 inline-flex w-full items-center justify-center rounded-2xl bg-green-600 px-5 py-3 text-base font-bold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={swapLoading || quoteLoading || !quoteOut || !!quoteError || !(direction === 'buy' ? baseEthBalance : epwxBalance) || amountExceedsBalance}
+              className={`mt-6 inline-flex w-full items-center justify-center rounded-2xl px-5 py-3 text-base font-bold text-slate-950 transition disabled:cursor-not-allowed disabled:opacity-50 ${direction === 'buy' ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-cyan-400 hover:bg-cyan-300'}`}
             >
-              {swapLoading ? 'Submitting swap...' : `Swap ${amountEth || '0'} ETH for EPWX`}
+              {swapLoading ? 'Submitting swap...' : `Swap ${inputSymbol} for ${outputSymbol}`}
             </button>
 
             <p className="mt-3 text-xs text-white/70">
-              {address ? 'Your connected wallet will receive EPWX directly on Base after you approve the swap transaction.' : 'Connect your wallet first, then review and approve the swap transaction in your wallet.'}
+              {address
+                ? `Your connected wallet will receive ${outputSymbol} directly on Base after you confirm the swap.`
+                : 'Connect your wallet first, then review and approve the swap transaction in your wallet.'}
             </p>
 
             <details className="mt-4 border-t border-white/10 pt-4 text-sm text-white/75">
               <summary className="cursor-pointer font-semibold text-white">Transaction details</summary>
               <div className="mt-3 space-y-2 leading-6">
                 <p>Price protection includes a {EPWX_SWAP_SLIPPAGE_PERCENT}% movement allowance. The swap will fail if the rate moves beyond it.</p>
-                <p>Your wallet will confirm one Base transaction for the ETH amount shown plus the network gas fee. No EPWX token approval is required.</p>
-                {minimumOut ? <p>Minimum received: {Number(minimumOut).toLocaleString(undefined, { maximumFractionDigits: 4 })} EPWX.</p> : null}
+                <p>{direction === 'buy' ? 'Your wallet will confirm one Base transaction for the ETH amount shown plus the network gas fee. No EPWX token approval is required.' : 'If needed, your wallet will first ask you to approve the exact EPWX amount, then confirm the swap. Both transactions require Base network gas.'}</p>
+                {minimumOut ? <p>Minimum received: {formatSwapOutput(minimumOut, outputSymbol)} {outputSymbol}.</p> : null}
               </div>
             </details>
 
@@ -399,6 +444,7 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
             </div>
             <p className="mt-3 text-xs leading-5 text-white/60">
               {nextTierTarget ? `${formatEpwxBalance(tokensToNextTier)} more EPWX reaches the next tier.` : 'This wallet qualifies for the maximum daily reward.'} Purchases of {CASHBACK_THRESHOLD.toLocaleString()} EPWX or more may qualify for cashback.
+              {direction === 'sell' ? ' Selling EPWX may lower your daily reward tier.' : ''}
             </p>
           </section>
         ) : null}

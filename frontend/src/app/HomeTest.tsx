@@ -559,19 +559,19 @@ export default function HomeTest() {
     { label: '90% Burnt', href: '/platform-stats#token-supply', eyebrow: 'Token' },
   ];
 
-  const mobileShortcutActionItems: Array<{ section?: HomeShortcutSection; label: string; href: string; icon: 'home' | 'claim' | 'trophy' | 'wallet' | 'chart' }> = [
+  const mobileShortcutActionItems: Array<{ section?: HomeShortcutSection; label: string; href: string; icon: 'home' | 'claim' | 'trophy' | 'wallet' | 'swap' }> = [
     { section: 'daily-claim', label: 'Claim', href: '#daily-claim', icon: 'claim' },
     { section: 'latest-winners', label: 'Winners', href: '#latest-winners', icon: 'trophy' },
     { label: 'Wallet', href: '#wallet-verification', icon: 'wallet' },
-    { label: 'Stats', href: '/platform-stats#token-supply', icon: 'chart' },
+    { label: 'Buy', href: '/buy-epwx', icon: 'swap' },
   ];
 
-  const mobileTabIconPaths: Record<'home' | 'claim' | 'trophy' | 'wallet' | 'chart', string> = {
+  const mobileTabIconPaths: Record<'home' | 'claim' | 'trophy' | 'wallet' | 'swap', string> = {
     home: 'M3 11.2 12 4l9 7.2M5.5 9.8V19a1 1 0 0 0 1 1H9.5v-5a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v5h3a1 1 0 0 0 1-1V9.8',
     claim: 'M12 3v10.5m0 0 3.5-3.5M12 13.5 8.5 10M5 15.5v3a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3',
     trophy: 'M7 4h10v3a5 5 0 0 1-5 5 5 5 0 0 1-5-5V4Zm0 0H4v1.5A3.5 3.5 0 0 0 7.5 9M17 4h3v1.5A3.5 3.5 0 0 1 16.5 9M10 12v3h4v-3M9 20h6M11 15h2v5h-2z',
     wallet: 'M4 7.5A2.5 2.5 0 0 1 6.5 5H18a1 1 0 0 1 1 1v1.2M4 7.5V17a2 2 0 0 0 2 2h13a1 1 0 0 0 1-1v-3M4 7.5 4 7.5M16.5 13.2h2.3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1h-2.3a2 2 0 0 0 0 4Z',
-    chart: 'M4 20V10m5 10V4m5 16v-7m5 7V8',
+    swap: 'M7 7h11m0 0-3-3m3 3-3 3M17 17H6m0 0 3 3m-3-3 3-3',
   };
 
   return (
