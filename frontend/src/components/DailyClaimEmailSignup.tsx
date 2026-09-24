@@ -88,7 +88,7 @@ export default function DailyClaimEmailSignup({ wallet }: { wallet: string }) {
         }),
       });
       const data = await response.json();
-      setStatus(data.message || data.error || "Unable to enable email notifications.");
+      setStatus(data.message || data.error || "Unable to start email verification.");
       if (response.ok) {
         setPreference({
           enrolled: true,
@@ -104,7 +104,7 @@ export default function DailyClaimEmailSignup({ wallet }: { wallet: string }) {
     } catch (error) {
       setStatus(error instanceof Error && /rejected|denied/i.test(error.message)
         ? "Wallet signature was cancelled."
-        : "Unable to enable email notifications.");
+        : "Unable to start email verification.");
     } finally {
       setSubmitting(false);
     }
@@ -189,7 +189,7 @@ export default function DailyClaimEmailSignup({ wallet }: { wallet: string }) {
               />
             </label>
           </div>
-          {!preference.verified ? <div className="mt-3 text-xs text-white/60">Verify the new email to activate the reward bonus and alerts.</div> : null}
+          {!preference.verified ? <div className="mt-3 text-xs text-white/60">Open the verification email and confirm the address before claiming.</div> : null}
         </div>
       ) : null}
 
@@ -213,7 +213,7 @@ export default function DailyClaimEmailSignup({ wallet }: { wallet: string }) {
               disabled={submitting || !email.trim()}
               className="rounded-lg bg-emerald-500 px-5 py-3 text-sm font-bold text-slate-950 transition-colors hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {submitting ? "Signing..." : preference?.enrolled ? "Verify new email" : "Enable alerts"}
+              {submitting ? "Signing..." : preference?.enrolled ? "Verify New Email" : "Verify Email to Claim"}
             </button>
           </div>
           {editingEmail ? (
