@@ -141,7 +141,7 @@ export default function DailyClaimEmailSignup({ wallet }: { wallet: string }) {
     <div className="border-t border-white/15 pt-4">
       <div className="text-sm font-bold text-white">Daily Claim email verification</div>
       <div className="mt-1 text-sm text-white/70">
-        A verified email linked to this wallet is required for Daily Claims. Email alerts are optional and can be turned off after verification without losing claim eligibility.
+        Verify an email for this wallet before claiming. Email alerts are optional.
       </div>
       {!preference ? (
         <button
@@ -150,7 +150,7 @@ export default function DailyClaimEmailSignup({ wallet }: { wallet: string }) {
           disabled={loadingStatus || submitting}
           className="mt-3 text-sm font-semibold text-emerald-200 underline hover:text-white disabled:opacity-50"
         >
-          {loadingStatus ? "Checking..." : "View linked email"}
+          {loadingStatus ? "Checking..." : "Check Email Status"}
         </button>
       ) : null}
 
