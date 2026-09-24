@@ -1556,6 +1556,17 @@ router.post('/daily-claim', async (req, res) => {
     return res.status(401).json({ error: 'Signature does not match wallet' });
   }
 
+  const emailPreference = await DailyClaimEmailPreference.findOne({
+    where: { wallet: normalizedWallet },
+    attributes: ['emailVerifiedAt'],
+  });
+  if (!emailPreference?.emailVerifiedAt) {
+    return res.status(403).json({
+      error: 'Verify an email address for this wallet before submitting a Daily Claim.',
+      code: 'EMAIL_VERIFICATION_REQUIRED',
+    });
+  }
+
   const user = await User.findOne({ where: { walletAddress: normalizedWallet } });
   if (user && !user.telegramVerified) {
     console.log('[daily-claim] allowing claim for wallet without telegram verification', {
@@ -1621,10 +1632,6 @@ router.post('/daily-claim', async (req, res) => {
 
   // TODO: Send EPWX to wallet here (call contract or queue for admin)
   const rewardDetails = await getDailyRewardDetails(normalizedWallet);
-  const emailPreference = await DailyClaimEmailPreference.findOne({
-    where: { wallet: normalizedWallet },
-    attributes: ['emailVerifiedAt'],
-  });
   const rewardBreakdown = calculateDailyClaimReward(
     rewardDetails.amount,
     officialGroupMembership.isMember,

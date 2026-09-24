@@ -1256,6 +1256,13 @@ export default function TelegramMiniAppPage() {
                 Next claim in {remaining}
               </div>
             ) : null}
+            <div className="rounded-xl border border-cyan-300/35 bg-cyan-500/10 px-3 py-2 text-center text-cyan-50">
+              A verified email linked to this wallet is required. Verify it in the{" "}
+              <a href="/#daily-claim" className="font-semibold underline hover:text-white">
+                Daily Claim email section
+              </a>
+              .
+            </div>
           </div>
 
           <div className="grid gap-3">

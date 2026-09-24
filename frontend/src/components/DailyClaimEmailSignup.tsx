@@ -141,7 +141,7 @@ export default function DailyClaimEmailSignup({ wallet }: { wallet: string }) {
     <div className="border-t border-white/15 pt-4">
       <div className="text-sm font-bold text-white">Daily Claim email alerts</div>
       <div className="mt-1 text-sm text-white/70">
-        Verify your email to receive an extra 25% of your Daily Claim tier reward. For example, a 100,000 EPWX tier earns an extra 25,000 EPWX. You can turn email alerts off without losing this bonus.
+        A verified email linked to this wallet is required for Daily Claims. Verification also adds 25% to your tier reward; you can turn alerts off after verification without losing eligibility or the bonus.
       </div>
       {!preference ? (
         <button

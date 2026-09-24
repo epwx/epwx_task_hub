@@ -842,6 +842,9 @@ export default function HomeTest() {
                       </div>
                     </div>
                     <div className="p-5">
+                      <div className="mb-5">
+                        <DailyClaimEmailSignup wallet={address} />
+                      </div>
                       <div className="flex items-start gap-3">
                         <input
                           id="daily-terms-checkbox"
@@ -982,9 +985,6 @@ export default function HomeTest() {
                   <TermsAndConditionsModal open={showTerms} onClose={() => setShowTerms(false)} />
                   <div className="mb-4 rounded-2xl border border-white/15 bg-white/10 p-4 text-sm text-white/80">
                     Daily claims use a wallet signature to confirm that you control this address. Signing this message does not transfer funds and does not create a token approval.
-                  </div>
-                  <div className={`${glassPanelClass} mb-4 p-4`}>
-                    <DailyClaimEmailSignup wallet={address} />
                   </div>
                   {showClaimUpgradePrompt && nextTierTarget && nextTierReward && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 px-4">
