@@ -140,12 +140,16 @@ export default function DailyClaimEmailSignup({ wallet }: { wallet: string }) {
   return (
     <div className="border-t border-white/15 pt-4">
       <div className="text-sm font-bold text-white">
-        {preference?.verified ? "Daily Claim email verified" : "Daily Claim email verification"}
+        {preference === null
+          ? "Daily Claim email status"
+          : preference.verified ? "Daily Claim email verified" : "Daily Claim email verification"}
       </div>
       <div className="mt-1 text-sm text-white/70">
-        {preference?.verified
-          ? "This wallet is eligible to claim. Email alerts are optional."
-          : "Verify an email for this wallet before claiming. Email alerts are optional."}
+        {preference === null
+          ? "Check this wallet's email status. Email alerts are optional."
+          : preference.verified
+            ? "This wallet is eligible to claim. Email alerts are optional."
+            : "Verify an email for this wallet before claiming. Email alerts are optional."}
       </div>
       {!preference ? (
         <button
