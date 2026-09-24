@@ -28,7 +28,6 @@ const DEFAULT_DAILY_DRAW_WINNER_COUNT = 5;
 const DEFAULT_DAILY_DRAW_PRIZE_AMOUNT = '100000';
 const EPWX_TOKEN_DECIMALS = 9;
 const EPWX_REWARD_TRANSFER_FEE_BPS = Number(process.env.EPWX_REWARD_TRANSFER_FEE_BPS || '600');
-const DAILY_CLAIM_EMAIL_VERIFIED_BONUS_BPS = process.env.DAILY_CLAIM_EMAIL_VERIFIED_BONUS_BPS || '2500';
 const DAILY_REWARD_TIERS = [
   {
     minimumBalance: MEGA_TIER_DAILY_REWARD_THRESHOLD,
@@ -1636,7 +1635,6 @@ router.post('/daily-claim', async (req, res) => {
     rewardDetails.amount,
     officialGroupMembership.isMember,
     Boolean(emailPreference?.emailVerifiedAt),
-    DAILY_CLAIM_EMAIL_VERIFIED_BONUS_BPS,
   );
   const amount = rewardBreakdown.amount;
   if (!officialGroupMembership.isMember) {
@@ -1646,14 +1644,6 @@ router.post('/daily-claim', async (req, res) => {
       reason: officialGroupMembership.reason,
       baseAmount: rewardDetails.amount,
       adjustedAmount: rewardBreakdown.telegramAdjustedAmount,
-    });
-  }
-  if (rewardBreakdown.emailVerified) {
-    console.log('[daily-claim] applying verified email bonus', {
-      wallet: normalizedWallet,
-      baseAmount: rewardBreakdown.baseAmount,
-      emailBonusAmount: rewardBreakdown.emailBonusAmount,
-      emailBonusBps: rewardBreakdown.emailBonusBps,
     });
   }
   const claim = await DailyClaim.create({ 

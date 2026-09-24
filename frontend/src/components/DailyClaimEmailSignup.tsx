@@ -139,9 +139,9 @@ export default function DailyClaimEmailSignup({ wallet }: { wallet: string }) {
 
   return (
     <div className="border-t border-white/15 pt-4">
-      <div className="text-sm font-bold text-white">Daily Claim email alerts</div>
+      <div className="text-sm font-bold text-white">Daily Claim email verification</div>
       <div className="mt-1 text-sm text-white/70">
-        A verified email linked to this wallet is required for Daily Claims. Verification also adds 25% to your tier reward; you can turn alerts off after verification without losing eligibility or the bonus.
+        A verified email linked to this wallet is required for Daily Claims. Email alerts are optional and can be turned off after verification without losing claim eligibility.
       </div>
       {!preference ? (
         <button
@@ -160,7 +160,7 @@ export default function DailyClaimEmailSignup({ wallet }: { wallet: string }) {
             <div>
               <div className="font-semibold text-white">{preference.emailMasked}</div>
               <div className={`mt-1 text-xs font-semibold ${preference.verified ? "text-emerald-200" : "text-amber-200"}`}>
-                {preference.verified ? "Verified - 25% reward bonus active" : "Verification pending"}
+                {preference.verified ? "Verified - eligible for Daily Claims" : "Verification pending"}
               </div>
             </div>
             <button type="button" onClick={() => setEditingEmail(true)} className="text-sm font-semibold text-emerald-200 underline hover:text-white">

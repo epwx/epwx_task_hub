@@ -515,18 +515,14 @@ export default function HomeTest() {
       const data = await res.json();
       if (data.success) {
         const claimedAmount = Number(data.amount || DEFAULT_DAILY_REWARD).toLocaleString();
-        const emailBonusAmount = Number(data.rewardBreakdown?.emailBonusAmount || 0);
-        const emailBonusMessage = emailBonusAmount > 0
-          ? ` Includes a ${emailBonusAmount.toLocaleString()} EPWX verified-email bonus.`
-          : "";
         const referralMessage = formatReferralRewardMessage(data.referralReward);
         const partnerMessage = data.partnerReward?.partnerName
           ? ` Partner reward attributed to ${data.partnerReward.partnerName}.`
           : "";
         setClaimStatus(
           referralMessage
-            ? `Successfully claimed ${claimedAmount} EPWX!${emailBonusMessage} Your reward will be sent soon. ${referralMessage}${partnerMessage}`
-            : `Successfully claimed ${claimedAmount} EPWX!${emailBonusMessage} Your reward will be sent soon.${partnerMessage}`
+            ? `Successfully claimed ${claimedAmount} EPWX! Your reward will be sent soon. ${referralMessage}${partnerMessage}`
+            : `Successfully claimed ${claimedAmount} EPWX! Your reward will be sent soon.${partnerMessage}`
         );
         if (partnerReferralCode && typeof window !== "undefined") {
           localStorage.removeItem(PENDING_PARTNER_REFERRAL_CODE_STORAGE_KEY);
@@ -823,7 +819,7 @@ export default function HomeTest() {
                         <div className="mt-2 text-3xl font-black text-white">
                           {(isTelegramVerified === false ? Math.floor(currentDailyReward / 2) : currentDailyReward).toLocaleString()} EPWX
                         </div>
-                        <div className="mt-1 text-sm text-white/70">Estimated payout before any verified-email bonus</div>
+                        <div className="mt-1 text-sm text-white/70">Estimated payout for this wallet</div>
                       </div>
                       <div className="bg-slate-950/25 p-5 text-center sm:text-left">
                         <div className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-100/70">Daily draw</div>

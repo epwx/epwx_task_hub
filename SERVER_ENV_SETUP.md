@@ -158,7 +158,6 @@ SMTP_PASS=your_ses_smtp_password
 EMAIL_FROM_NAME=EPWX Daily Claims
 EMAIL_FROM_ADDRESS=notifications@epowex.com
 EMAIL_REPLY_TO=support@epowex.com
-DAILY_CLAIM_EMAIL_VERIFIED_BONUS_BPS=2500
 
 # Leave disabled until the migration and a verification email have been tested.
 DAILY_CLAIM_EMAIL_REMINDERS_ENABLED=false
@@ -174,8 +173,6 @@ Before enabling reminders:
 4. Restart the backend with updated environment variables.
 5. Connect a wallet, enroll an email from the Daily Claim section, and verify the message arrives.
 6. Set `DAILY_CLAIM_EMAIL_REMINDERS_ENABLED=true` and restart the backend.
-
-`DAILY_CLAIM_EMAIL_VERIFIED_BONUS_BPS=2500` adds 25% of the wallet's base tier for a verified email. Notification preferences do not affect bonus eligibility.
 
 Never commit `SMTP_PASS` to the repository.
 
