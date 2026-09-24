@@ -135,7 +135,7 @@ export default function DailyClaimEmailSignup({ wallet }: { wallet: string }) {
     }
   };
 
-  const showEnrollmentForm = !preference?.enrolled || editingEmail;
+  const showEnrollmentForm = preference !== null && (!preference.enrolled || editingEmail);
 
   return (
     <div className="border-t border-white/15 pt-4">
