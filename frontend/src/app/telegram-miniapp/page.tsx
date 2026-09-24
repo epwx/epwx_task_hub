@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import Link from "next/link";
 import { ConnectKitButton } from "connectkit";
 import { useAccount, useBalance, useSignMessage } from "wagmi";
 import { base } from "wagmi/chains";
@@ -1258,9 +1259,9 @@ export default function TelegramMiniAppPage() {
             ) : null}
             <div className="rounded-xl border border-cyan-300/35 bg-cyan-500/10 px-3 py-2 text-center text-cyan-50">
               A verified email linked to this wallet is required. Verify it in the{" "}
-              <a href="/#daily-claim" className="font-semibold underline hover:text-white">
+              <Link href="/#daily-claim" className="font-semibold underline hover:text-white">
                 Daily Claim email section
-              </a>
+              </Link>
               .
             </div>
           </div>
