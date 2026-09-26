@@ -52,7 +52,9 @@ export default function TermsAndConditionsModal({ open, onClose }: TermsAndCondi
           <p className="mb-4">We respect your privacy. Please review our Privacy Policy to understand how we collect, use, and protect your information.</p>
           <h2 className="text-lg font-semibold mt-6 mb-2">9. Governing Law</h2>
           <p className="mb-4">These Terms are governed by the laws of the jurisdiction in which EPWX Task Hub operates.</p>
-          <h2 className="text-lg font-semibold mt-6 mb-2">10. Contact</h2>
+          <h2 className="text-lg font-semibold mt-6 mb-2">10. Free Daily Reward Draw</h2>
+          <p className="mb-4">No purchase, payment, EPWX holding, paid transaction, social promotion, or user-paid gas is required. One successful Daily Claim creates one entry per wallet for that UTC day. Participants must be at least 18 and legally eligible where they live. Bots, duplicate wallets, sanctioned wallets, and excluded jurisdictions are prohibited. Winners are selected using recorded Base block entropy and remain pending until a successful on-chain payout is verified. Token rewards may have tax consequences.</p>
+          <h2 className="text-lg font-semibold mt-6 mb-2">11. Contact</h2>
           <p>If you have questions about these Terms, please contact info@epowex.com.</p>
           <div className="mt-8 flex justify-end not-prose">
             <button

@@ -440,6 +440,7 @@ export default function TelegramMiniAppPage() {
   const [nextDrawCountdown, setNextDrawCountdown] = useState<string>("Calculating...");
   const [nextDrawAtUtc, setNextDrawAtUtc] = useState<string>("");
   const [showClaimUpgradePrompt, setShowClaimUpgradePrompt] = useState(false);
+  const [drawEligibilityConfirmed, setDrawEligibilityConfirmed] = useState(false);
 
   const toggleSection = (section: "walletBalance" | "swap" | "groupOwner" | "dailyClaim" | "dailyDraws") => {
     setOpenSections((current) => ({
@@ -485,7 +486,7 @@ export default function TelegramMiniAppPage() {
       normalizedConnectedWallet === normalizedLinkedWallet
   );
   const claimOnCooldown = Boolean(nextClaimAt && nextClaimAt > Date.now());
-  const claimDisabled = busy || !canClaim || claimOnCooldown;
+  const claimDisabled = busy || !canClaim || claimOnCooldown || !drawEligibilityConfirmed;
 
   const openUpgradeAction = (section: "swap" | "dailyDraws") => {
     setOpenSections((current) => ({
@@ -511,6 +512,8 @@ export default function TelegramMiniAppPage() {
     claimDisabledReason = "Link your wallet first.";
   } else if (normalizedConnectedWallet !== normalizedLinkedWallet) {
     claimDisabledReason = "Connected wallet must match linked wallet before claiming.";
+  } else if (!drawEligibilityConfirmed) {
+    claimDisabledReason = "Confirm the Daily Reward Draw eligibility terms before claiming.";
   }
 
   useEffect(() => {
@@ -601,7 +604,7 @@ export default function TelegramMiniAppPage() {
       try {
         const res = await fetchWithTimeout(`/api/epwx/daily-draws/latest?page=${drawPage}`, { cache: "no-store" });
         if (!res.ok) {
-          throw new Error(await readApiError(res, "Failed to load latest daily draws."));
+          throw new Error(await readApiError(res, "Failed to load latest Daily Reward Draws."));
         }
 
         const data = (await res.json()) as LatestDailyDrawResponse;
@@ -634,7 +637,7 @@ export default function TelegramMiniAppPage() {
           hasPrevPage: false,
           hasNextPage: false,
         });
-        setLatestDrawError(error instanceof Error ? error.message : "Failed to load latest daily draws.");
+        setLatestDrawError(error instanceof Error ? error.message : "Failed to load latest Daily Reward Draws.");
       } finally {
         if (isMounted && !silent) {
           setLatestDrawLoading(false);
@@ -943,7 +946,7 @@ export default function TelegramMiniAppPage() {
 
     try {
       const todayUtc = new Date().toISOString().slice(0, 10);
-      const message = `EPWX Daily Claim for ${normalizedConnectedWallet} on ${todayUtc}`;
+      const message = `EPWX Daily Claim for ${normalizedConnectedWallet} on ${todayUtc}\nEligibility policy: daily-reward-draw-eligibility-v1`;
       setAwaitingWalletSignature(true);
       setStatus("Waiting for wallet signature. Open MetaMask/Coinbase Wallet, approve the signature, then return here.");
       const signature = await signMessageForMiniApp(message);
@@ -955,6 +958,8 @@ export default function TelegramMiniAppPage() {
         body: JSON.stringify({
           wallet: normalizedConnectedWallet,
           signature,
+          ageConfirmed: drawEligibilityConfirmed,
+          jurisdictionConfirmed: drawEligibilityConfirmed,
           ...(groupContextToken ? { groupContextToken } : {}),
         }),
       });
@@ -1264,6 +1269,18 @@ export default function TelegramMiniAppPage() {
               </Link>
               .
             </div>
+            <label className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-slate-200">
+              <input
+                type="checkbox"
+                checked={drawEligibilityConfirmed}
+                onChange={(event) => setDrawEligibilityConfirmed(event.target.checked)}
+                className="mt-0.5 h-4 w-4 shrink-0 accent-cyan-400"
+              />
+              <span>
+                I am at least 18, participation is permitted where I live, and I accept the{" "}
+                <Link href="/terms" className="font-semibold underline hover:text-white">Daily Reward Draw rules</Link>.
+              </span>
+            </label>
           </div>
 
           <div className="grid gap-3">
@@ -1309,8 +1326,8 @@ export default function TelegramMiniAppPage() {
 
         <div ref={dailyDrawSectionRef} className="scroll-mt-28 sm:scroll-mt-24">
         <CollapsibleSection
-          title="Daily Draws & Winners"
-          description="Live draw details from the main dapp feed, including countdown and winner payouts."
+          title="Daily Reward Draws & Winners"
+          description="Live free reward draw details, including countdown and winner payouts."
           isOpen={openSections.dailyDraws}
           onToggle={() => toggleSection("dailyDraws")}
         >
@@ -1424,7 +1441,7 @@ export default function TelegramMiniAppPage() {
                   onClick={() => openUpgradeAction("dailyDraws")}
                   className="ui-btn-muted inline-flex items-center justify-center rounded-2xl px-4 py-3 text-sm"
                 >
-                  View Daily Draws
+                  View Daily Reward Draws
                 </button>
               </div>
             </div>

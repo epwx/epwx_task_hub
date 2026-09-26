@@ -1,7 +1,7 @@
 
 import express from 'express';
 import rateLimit from 'express-rate-limit';
-import { createHash, randomBytes, randomInt } from 'crypto';
+import { createHash, randomBytes } from 'crypto';
 import jwt from 'jsonwebtoken';
 import { User, DailyClaim, DailyDraw, DailyDrawWinner, CashbackClaim, SpecialClaim, Claim, RewardDistributionLedger, Merchant, WalletReferral, PlatformStats, PartnerReferral, Partner, PartnerEarning, TelegramGroupOwner, TelegramGroupReward, DailyClaimEmailPreference } from '../models/index.js';
 import { Op } from 'sequelize';
@@ -14,6 +14,8 @@ import { ethers } from 'ethers';
 import { epwxTokenContract, epwxTokenWithSigner } from '../services/blockchain.js';
 import dailyClaimSignatureUtils from '../utils/dailyClaimSignature.cjs';
 import dailyClaimRewardUtils from '../utils/dailyClaimReward.cjs';
+import dailyDrawSelectionUtils from '../utils/dailyDrawSelection.cjs';
+import dailyDrawEligibilityUtils from '../utils/dailyDrawEligibility.cjs';
 const router = express.Router();
 
 const REFERRAL_REWARD_AMOUNT = '1000000';
@@ -62,6 +64,7 @@ const dailyClaimEmailEnrollmentLimiter = rateLimit({
   message: { error: 'Too many verification emails requested. Please try again later.' },
 });
 const {
+  DAILY_DRAW_ELIGIBILITY_POLICY_VERSION,
   verifyWalletSignature,
   buildDailyClaimMessages,
   buildEmailEnrollmentMessages,
@@ -69,6 +72,17 @@ const {
   buildEmailPreferenceMessages,
 } = dailyClaimSignatureUtils;
 const { calculateDailyClaimReward } = dailyClaimRewardUtils;
+const { selectDailyDrawWinners } = dailyDrawSelectionUtils;
+const { getRequestCountryCode, parsePolicyList, validateDailyDrawEligibility } = dailyDrawEligibilityUtils;
+const DAILY_DRAW_BLOCKED_COUNTRY_CODES = parsePolicyList(process.env.DAILY_DRAW_BLOCKED_COUNTRY_CODES || 'CU,IR,KP,SY', (item) => item.toUpperCase());
+const DAILY_DRAW_BLOCKED_WALLETS = parsePolicyList(process.env.DAILY_DRAW_BLOCKED_WALLETS, (item) => item.toLowerCase());
+const dailyClaimSubmissionLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many Daily Claim attempts. Please try again later.', code: 'DAILY_CLAIM_RATE_LIMITED' },
+});
 
 function getAdminWallets() {
   return (process.env.ADMIN_WALLETS || '').split(',').map(w => w.trim().toLowerCase()).filter(Boolean);
@@ -234,15 +248,6 @@ function getUtcDateBounds(dateString) {
   const start = new Date(`${dateString}T00:00:00.000Z`);
   const end = new Date(`${dateString}T23:59:59.999Z`);
   return { start, end };
-}
-
-function pickRandomEntries(entries, count) {
-  const pool = [...entries];
-  for (let i = pool.length - 1; i > 0; i -= 1) {
-    const j = randomInt(i + 1);
-    [pool[i], pool[j]] = [pool[j], pool[i]];
-  }
-  return pool.slice(0, count);
 }
 
 function getRequestIp(req) {
@@ -473,7 +478,24 @@ export async function runDailyDraw({ drawDate, winnerCount, prizeAmount, runBy }
   }
 
   const selectedWinnerCount = Math.min(requestedWinnerCount, eligibleCount);
-  const pickedClaims = pickRandomEntries(eligibleClaims, selectedWinnerCount);
+  const provider = new ethers.JsonRpcProvider(process.env.BASE_RPC_URL || process.env.RPC_URL);
+  let entropyBlock;
+  try {
+    entropyBlock = await provider.getBlock('latest');
+  } catch (error) {
+    console.error('[daily-reward-draw] Unable to load entropy block:', error);
+  }
+  if (!entropyBlock?.hash || entropyBlock.number === undefined || entropyBlock.number === null) {
+    throw createDailyDrawError('Unable to obtain Base block entropy. The draw was not created and can be retried.', 503, 'DRAW_ENTROPY_UNAVAILABLE');
+  }
+
+  const selection = selectDailyDrawWinners({
+    claims: eligibleClaims,
+    count: selectedWinnerCount,
+    drawDate: resolvedDrawDate,
+    entropyBlockHash: entropyBlock.hash,
+  });
+  const pickedClaims = selection.winners;
 
   try {
     const result = await DailyDraw.sequelize.transaction(async (transaction) => {
@@ -485,6 +507,10 @@ export async function runDailyDraw({ drawDate, winnerCount, prizeAmount, runBy }
         status: 'completed',
         runBy: normalizeWallet(runBy || 'system:auto-draw'),
         runAt: new Date(),
+        selectionAlgorithm: selection.algorithm,
+        eligiblePoolHash: selection.eligiblePoolHash,
+        entropyBlockNumber: String(entropyBlock.number),
+        entropyBlockHash: entropyBlock.hash.toLowerCase(),
       }, { transaction });
 
       const winnerRows = pickedClaims.map((claim, index) => ({
@@ -1191,6 +1217,27 @@ router.get('/daily-draws', async (req, res) => {
   }
 });
 
+router.get('/daily-draws/rules', (req, res) => {
+  return res.json({
+    name: 'Free Daily Reward Draw',
+    minimumAge: 18,
+    scheduledTimeUtc: String(process.env.AUTO_DAILY_DRAW_TIME_UTC || '00:05'),
+    targetClaimDay: String(process.env.AUTO_DAILY_DRAW_TARGET || 'previous-day'),
+    defaultWinnerCount: Number.parseInt(process.env.AUTO_DAILY_DRAW_WINNER_COUNT || String(DEFAULT_DAILY_DRAW_WINNER_COUNT), 10),
+    defaultPrizeAmount: String(process.env.AUTO_DAILY_DRAW_PRIZE_AMOUNT || DEFAULT_DAILY_DRAW_PRIZE_AMOUNT),
+    blockedCountryCodes: Array.from(DAILY_DRAW_BLOCKED_COUNTRY_CODES).sort(),
+    walletExclusionScreeningEnabled: DAILY_DRAW_BLOCKED_WALLETS.size > 0,
+    selectionAlgorithm: 'base-block-hash-sha256-v1',
+    entryRequirements: {
+      purchaseRequired: false,
+      paymentRequired: false,
+      tokenHoldingRequired: false,
+      socialPromotionRequired: false,
+      userPaidGasRequired: false,
+    },
+  });
+});
+
 // GET /api/epwx/daily-draws/:drawId/winners
 router.get('/daily-draws/:drawId/winners', async (req, res) => {
   const drawId = Number.parseInt(String(req.params.drawId), 10);
@@ -1537,12 +1584,24 @@ router.post('/daily-claim/email/unsubscribe', async (req, res) => {
   }
 });
 
-router.post('/daily-claim', async (req, res) => {
-  const { wallet, signature, referralCode, groupContextToken } = req.body;
+router.post('/daily-claim', dailyClaimSubmissionLimiter, async (req, res) => {
+  const { wallet, signature, referralCode, groupContextToken, ageConfirmed, jurisdictionConfirmed } = req.body;
   const rawWallet = typeof wallet === 'string' ? wallet.trim() : '';
   const normalizedWallet = normalizeWallet(wallet);
   if (!normalizedWallet || !signature) return res.status(400).json({ error: 'wallet and signature are required' });
+  const policyResult = validateDailyDrawEligibility({
+    wallet: normalizedWallet,
+    ageConfirmed,
+    jurisdictionConfirmed,
+    countryCode: getRequestCountryCode(req.headers),
+    blockedCountryCodes: DAILY_DRAW_BLOCKED_COUNTRY_CODES,
+    blockedWallets: DAILY_DRAW_BLOCKED_WALLETS,
+  });
+  if (!policyResult.eligible) {
+    return res.status(policyResult.status).json({ error: policyResult.error, code: policyResult.code });
+  }
   const ip = getRequestIp(req);
+  const eligibilityCountryCode = getRequestCountryCode(req.headers) || null;
   const now = new Date();
   const utcDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
   const todayUtc = utcDate.toISOString().slice(0, 10);
@@ -1656,6 +1715,9 @@ router.post('/daily-claim', async (req, res) => {
     emailVerified: rewardBreakdown.emailVerified,
     emailBonusAmount: rewardBreakdown.emailBonusAmount,
     emailBonusBps: rewardBreakdown.emailBonusBps,
+    eligibilityPolicyVersion: DAILY_DRAW_ELIGIBILITY_POLICY_VERSION,
+    eligibilityConfirmedAt: now,
+    eligibilityCountryCode,
     partnerReferralId: partnerReferral?.id || null,
     partnerId: partnerId || null
   });

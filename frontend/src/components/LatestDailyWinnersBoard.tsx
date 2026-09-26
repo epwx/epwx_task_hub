@@ -18,6 +18,10 @@ interface LatestDailyDraw {
   winnerCount: number;
   eligibleCount: number;
   prizeAmount: string;
+  selectionAlgorithm?: string | null;
+  eligiblePoolHash?: string | null;
+  entropyBlockNumber?: string | null;
+  entropyBlockHash?: string | null;
 }
 
 interface LatestDailyDrawWinner {
@@ -34,6 +38,13 @@ interface LatestDailyDrawPagination {
   totalPages: number;
   hasPrevPage: boolean;
   hasNextPage: boolean;
+}
+
+interface DailyDrawRules {
+  minimumAge: number;
+  scheduledTimeUtc: string;
+  blockedCountryCodes: string[];
+  walletExclusionScreeningEnabled: boolean;
 }
 
 function parseUtcHourMinute(input: string) {
@@ -90,7 +101,7 @@ function buildDailyDrawShareText(params: {
 }) {
   const prizeAmount = Number(params.draw.prizeAmount || '0').toLocaleString();
   const lines = [
-    `EPWX Daily Draw ${params.draw.drawDate}`,
+    `EPWX Daily Reward Draw ${params.draw.drawDate}`,
     `Winners: ${params.draw.winnerCount}`,
     `Eligible wallets: ${params.draw.eligibleCount}`,
     `Prize per winner: ${prizeAmount} EPWX`,
@@ -152,7 +163,7 @@ function buildDailyDrawShareSvg(params: {
     <circle cx="130" cy="110" r="95" fill="rgba(255,255,255,0.10)"/>
     <circle cx="1080" cy="520" r="140" fill="rgba(255,255,255,0.08)"/>
     <rect x="90" y="80" width="1020" height="470" rx="40" fill="url(#card)" stroke="rgba(255,255,255,0.18)" filter="url(#shadow)"/>
-    <text x="600" y="142" fill="rgba(255,255,255,0.78)" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="700" letter-spacing="6" text-anchor="middle">EPWX DAILY DRAW</text>
+    <text x="600" y="142" fill="rgba(255,255,255,0.78)" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="700" letter-spacing="6" text-anchor="middle">EPWX DAILY REWARD DRAW</text>
     <text x="600" y="208" fill="#ffffff" font-family="Inter, Arial, sans-serif" font-size="54" font-weight="900" text-anchor="middle">${dateLabel}</text>
     <text x="600" y="262" fill="rgba(255,255,255,0.92)" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="500" text-anchor="middle">Winners selected from daily claim wallets</text>
 
@@ -233,6 +244,7 @@ export default function LatestDailyWinnersBoard({ referralLink }: { referralLink
   const [lastUpdatedAt, setLastUpdatedAt] = useState<string | null>(null);
   const [nextDrawCountdown, setNextDrawCountdown] = useState<string>("Calculating...");
   const [nextDrawAtUtc, setNextDrawAtUtc] = useState<string>("");
+  const [drawRules, setDrawRules] = useState<DailyDrawRules | null>(null);
 
   const handleShareDailyDraw = async () => {
     if (!draw || typeof window === "undefined") {
@@ -262,7 +274,7 @@ export default function LatestDailyWinnersBoard({ referralLink }: { referralLink
       pageUrl,
     });
     const shareData = {
-      title: "EPWX Daily Draw",
+      title: "EPWX Daily Reward Draw",
       text: shareMessage,
       url: pageUrl,
       files: [shareFile],
@@ -273,7 +285,7 @@ export default function LatestDailyWinnersBoard({ referralLink }: { referralLink
     if (typeof navigator.share !== "function" || !supportsFileShare) {
       try {
         await navigator.clipboard.writeText(copyMessage);
-        toast.success("Daily draw details copied. Paste them anywhere to share.");
+        toast.success("Daily Reward Draw details copied. Paste them anywhere to share.");
       } catch {
         const objectUrl = URL.createObjectURL(shareFile);
         const anchor = document.createElement('a');
@@ -292,9 +304,9 @@ export default function LatestDailyWinnersBoard({ referralLink }: { referralLink
       if (error?.name !== "AbortError") {
         try {
           await navigator.clipboard.writeText(copyMessage);
-          toast.success("Daily draw details copied. Paste them anywhere to share.");
+          toast.success("Daily Reward Draw details copied. Paste them anywhere to share.");
         } catch {
-          toast.error("Unable to share the daily draw right now.");
+          toast.error("Unable to share the Daily Reward Draw right now.");
         }
       }
     }
@@ -312,6 +324,21 @@ export default function LatestDailyWinnersBoard({ referralLink }: { referralLink
     updateCountdown();
     const timerId = window.setInterval(updateCountdown, NEXT_DRAW_COUNTDOWN_REFRESH_INTERVAL_MS);
     return () => window.clearInterval(timerId);
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetch('/api/epwx/daily-draws/rules', { cache: 'no-store' })
+      .then((response) => parseJsonResponse<DailyDrawRules>(response, 'Failed to load Daily Reward Draw rules.'))
+      .then((rules) => {
+        if (isMounted) setDrawRules(rules);
+      })
+      .catch(() => {
+        if (isMounted) setDrawRules(null);
+      });
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -383,15 +410,28 @@ export default function LatestDailyWinnersBoard({ referralLink }: { referralLink
   return (
     <section id="latest-winners" className="py-12 scroll-mt-36">
       <div className="flex flex-col items-center">
-        <h2 className="text-2xl font-black mb-4 text-slate-100 text-center">Latest Daily Winners</h2>
+        <h2 className="text-2xl font-black mb-4 text-slate-100 text-center">Latest Daily Reward Draw Winners</h2>
         <div className={`${themedSectionClass} w-full max-w-5xl`}>
           <div className="absolute top-0 left-0 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
           <div className="relative z-10 text-white">
             <div className="mb-6 text-center">
-              <p className="text-sm uppercase tracking-[0.3em] text-white/80">Daily Draw Results</p>
-              <h3 className="mt-2 text-2xl font-black sm:text-3xl">Transparent winners for each daily draw</h3>
-              <p className="mt-3 text-sm text-white/90">Winners are selected randomly from unique daily claim wallets and listed below with payout status.</p>
+              <p className="text-sm uppercase tracking-[0.3em] text-white/80">Free Daily Reward Draw Results</p>
+              <h3 className="mt-2 text-2xl font-black sm:text-3xl">Transparent winners for each reward draw</h3>
+              <p className="mt-3 text-sm text-white/90">Winners are ranked deterministically from unique eligible Daily Claim wallets using a recorded Base block hash.</p>
               {lastUpdatedAt ? <p className="mt-2 text-xs text-white/85">Auto-refreshes every minute. Last updated: {lastUpdatedAt}</p> : null}
+            </div>
+
+            <div className={`${glassPanelClass} mb-5 p-4 text-sm leading-6 text-white/90`}>
+              <div className="font-black text-white">Eligibility and payout rules</div>
+              <ul className="mt-2 list-disc space-y-1 pl-5">
+                <li>No purchase, payment, token holding, paid transaction, social promotion, or user-paid gas is required.</li>
+                <li>Submit one valid Daily Claim during the UTC draw date. One eligible entry is retained per wallet.</li>
+                <li>Participants must be at least {drawRules?.minimumAge || 18}, comply with local law, and not use bots, duplicate wallets, sanctioned wallets, or excluded jurisdictions.</li>
+                <li>Excluded country codes: {drawRules?.blockedCountryCodes?.join(', ') || 'CU, IR, KP, SY'}, plus any jurisdiction prohibited by applicable law.</li>
+                <li>The scheduled draw runs daily at {drawRules?.scheduledTimeUtc || NEXT_PUBLIC_AUTO_DAILY_DRAW_TIME_UTC} UTC for the previous UTC day. Prize amount and winner count appear in each result.</li>
+                <li>Prizes remain pending until a successful on-chain transfer is verified. Failed transfers or insufficient treasury balance delay payment for retry; they do not select a replacement winner.</li>
+                <li>Participants are responsible for determining and reporting any taxes that apply to token rewards.</li>
+              </ul>
             </div>
 
             <div className={`${glassPanelClass} mb-5 p-4`}>
@@ -427,6 +467,21 @@ export default function LatestDailyWinnersBoard({ referralLink }: { referralLink
                     <div>Eligible Wallets: <span className="font-bold text-white">{draw.eligibleCount}</span></div>
                     <div>Prize Per Winner: <span className="font-bold text-emerald-100">{Number(draw.prizeAmount || '0').toLocaleString()} EPWX</span></div>
                   </div>
+                  {draw.entropyBlockHash && draw.eligiblePoolHash ? (
+                    <div className="mt-3 rounded-xl border border-white/15 bg-white/5 p-3 text-xs text-white/80">
+                      <div className="font-bold text-white">Selection audit</div>
+                      <div className="mt-1 break-all">Algorithm: {draw.selectionAlgorithm || "base-block-hash-sha256-v1"}</div>
+                      <div className="mt-1 break-all">Eligible pool SHA-256: {draw.eligiblePoolHash}</div>
+                      <a
+                        href={`https://basescan.org/block/${draw.entropyBlockNumber}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-1 block break-all text-emerald-100 underline hover:text-white"
+                      >
+                        Entropy block {draw.entropyBlockNumber}: {draw.entropyBlockHash}
+                      </a>
+                    </div>
+                  ) : null}
                   <div className="mt-3 flex items-center justify-between rounded-xl border border-white/15 bg-white/5 px-3 py-2">
                     <button
                       type="button"

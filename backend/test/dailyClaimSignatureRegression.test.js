@@ -26,11 +26,11 @@ describe('Daily claim signature regression', () => {
     const normalizedWallet = checksumWallet.toLowerCase();
     const date = '2026-07-03';
 
-    const checksumMessage = `EPWX Daily Claim for ${checksumWallet} on ${date}`;
+    const checksumMessage = `EPWX Daily Claim for ${checksumWallet} on ${date}\nEligibility policy: daily-reward-draw-eligibility-v1`;
     const signature = await wallet.signMessage(checksumMessage);
 
     // This is the pre-fix behavior that caused false negatives.
-    const normalizedOnlyMessage = `EPWX Daily Claim for ${normalizedWallet} on ${date}`;
+    const normalizedOnlyMessage = `EPWX Daily Claim for ${normalizedWallet} on ${date}\nEligibility policy: daily-reward-draw-eligibility-v1`;
     const normalizedOnlyValid = await verifyWalletSignature(normalizedOnlyMessage, signature, normalizedWallet);
     expect(normalizedOnlyValid).toBe(false);
 
@@ -50,15 +50,28 @@ describe('Daily claim signature regression', () => {
     const date = '2026-07-03';
 
     // Mini-app signs with normalized wallet and sends normalized wallet in payload.
-    const normalizedMessage = `EPWX Daily Claim for ${normalizedWallet} on ${date}`;
+    const normalizedMessage = `EPWX Daily Claim for ${normalizedWallet} on ${date}\nEligibility policy: daily-reward-draw-eligibility-v1`;
     const signature = await wallet.signMessage(normalizedMessage);
 
     const messageVariants = buildDailyClaimMessages(normalizedWallet, normalizedWallet, date);
     expect(messageVariants).toContain(normalizedMessage);
-    expect(messageVariants).toContain(`EPWX Daily Claim for ${checksumWallet} on ${date}`);
+    expect(messageVariants).toContain(`EPWX Daily Claim for ${checksumWallet} on ${date}\nEligibility policy: daily-reward-draw-eligibility-v1`);
 
     const valid = await verifyWalletSignature(messageVariants, signature, normalizedWallet);
     expect(valid).toBe(true);
+  });
+
+  it('rejects legacy signatures that do not bind the eligibility policy', async () => {
+    const wallet = createWalletWithCaseDifference();
+    const normalizedWallet = wallet.address.toLowerCase();
+    const date = '2026-09-26';
+    const legacySignature = await wallet.signMessage(`EPWX Daily Claim for ${normalizedWallet} on ${date}`);
+
+    expect(await verifyWalletSignature(
+      buildDailyClaimMessages(normalizedWallet, normalizedWallet, date),
+      legacySignature,
+      normalizedWallet,
+    )).toBe(false);
   });
 
   it('binds an email enrollment signature to the wallet, email, and date', async () => {

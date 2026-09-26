@@ -167,7 +167,7 @@ export default function AdminDailyDrawsPage() {
       setLoading(true);
       setError(null);
       const response = await fetch(`/api/epwx/daily-draws?admin=${address}&limit=20`, { cache: "no-store" });
-      const data = await parseJsonResponse<{ draws?: DailyDraw[] }>(response, "Failed to fetch daily draws");
+      const data = await parseJsonResponse<{ draws?: DailyDraw[] }>(response, "Failed to fetch Daily Reward Draws");
       const nextDraws = data.draws || [];
       setDraws(nextDraws);
       setDrawsPage(1);
@@ -185,7 +185,7 @@ export default function AdminDailyDrawsPage() {
         await fetchWinners(drawToSelect.id);
       }
     } catch (fetchError: any) {
-      setError(fetchError?.message || "Failed to fetch daily draws");
+      setError(fetchError?.message || "Failed to fetch Daily Reward Draws");
     } finally {
       setLoading(false);
     }
@@ -237,14 +237,14 @@ export default function AdminDailyDrawsPage() {
         }),
       });
 
-      const data = await parseJsonResponse<{ draw: DailyDraw; winners: DailyDrawWinner[] }>(response, "Failed to run daily draw");
+      const data = await parseJsonResponse<{ draw: DailyDraw; winners: DailyDrawWinner[] }>(response, "Failed to run Daily Reward Draw");
       setSelectedDraw(data.draw);
       setWinners((data.winners || []).sort((a, b) => a.rank - b.rank));
       setWinnersPage(1);
-      setSuccess(`Daily draw completed for ${data.draw.drawDate}`);
+      setSuccess(`Daily Reward Draw completed for ${data.draw.drawDate}`);
       await fetchDraws();
     } catch (runError: any) {
-      setError(runError?.message || "Failed to run daily draw");
+      setError(runError?.message || "Failed to run Daily Reward Draw");
     } finally {
       setRunning(false);
     }
@@ -335,7 +335,7 @@ export default function AdminDailyDrawsPage() {
         <div className="absolute -left-16 bottom-0 h-52 w-52 rounded-full bg-emerald-400/10 blur-3xl" />
         <div className="relative z-10 flex min-w-0 flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div className="min-w-0">
-            <div className="text-xs font-black uppercase tracking-[0.24em] text-slate-400">Daily Draw Admin</div>
+            <div className="text-xs font-black uppercase tracking-[0.24em] text-slate-400">Daily Reward Draw Admin</div>
             <h1 className="mt-2 text-3xl font-black text-white">Run draws and pay winners</h1>
             <p className="mt-3 max-w-2xl text-sm text-slate-300">Select winners from verified daily claims, publish transparent draw history, and mark payouts with on-chain transaction hashes.</p>
           </div>

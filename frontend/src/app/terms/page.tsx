@@ -48,7 +48,18 @@ export default function TermsPage() {
           <li>We may reject, disqualify, or reverse submissions that appear fraudulent, automated, abusive, duplicated, inauthentic, or otherwise non-compliant.</li>
           <li>We may suspend campaign participation privileges for wallets that violate these Terms, campaign rules, or applicable laws.</li>
         </ul>
-        <h2 className="mt-8 mb-4 text-xl font-bold text-white">11. Contact</h2>
+        <h2 className="mt-8 mb-4 text-xl font-bold text-white">11. Free Daily Reward Draw</h2>
+        <ul className="list-disc pl-6 mb-4 space-y-2">
+          <li>No purchase, payment, EPWX holding, paid transaction, social promotion, or user-paid gas is required to enter or win.</li>
+          <li>A successful Daily Claim during a UTC calendar day creates one entry for that wallet. Duplicate claims or wallets do not create additional entries.</li>
+          <li>Participants must be at least 18 years old and legally permitted to participate where they live. Cuba (CU), Iran (IR), North Korea (KP), Syria (SY), any other jurisdiction prohibited by applicable law, sanctioned or blocked wallets, bots, scripts, and abusive or duplicate-wallet activity are not eligible.</li>
+          <li>The scheduled draw normally runs at 00:05 UTC for claims from the previous UTC day. The live interface publishes the configured time, eligible-wallet count, winner count, and prize per winner.</li>
+          <li>Winner ranking uses a recorded Base block hash and SHA-256. The algorithm version, eligible-pool hash, entropy block, winners, timestamps, and payout transaction hashes are retained for audit.</li>
+          <li>A duplicate draw is rejected. If scheduling or Base RPC access fails, no partial draw is created and the draw may be retried. Existing winners are not replaced because of payment delay.</li>
+          <li>Prizes remain pending until a successful on-chain transfer is verified. Failed transfers or insufficient treasury balance delay payment for retry and do not cancel the recorded result.</li>
+          <li>Token rewards may have tax consequences. Each participant is responsible for obtaining advice, retaining records, and reporting or paying taxes required in their jurisdiction.</li>
+        </ul>
+        <h2 className="mt-8 mb-4 text-xl font-bold text-white">12. Contact</h2>
         <p>If you have questions about these Terms, please contact info@epowex.com.</p>
           </div>
         </main>

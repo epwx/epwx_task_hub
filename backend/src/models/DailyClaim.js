@@ -44,6 +44,18 @@ const DailyClaim = sequelize.define('DailyClaim', {
     type: DataTypes.INTEGER,
     allowNull: true,
   },
+  eligibilityPolicyVersion: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  eligibilityConfirmedAt: {
+    type: DataTypes.DATE,
+    allowNull: true,
+  },
+  eligibilityCountryCode: {
+    type: DataTypes.STRING(2),
+    allowNull: true,
+  },
   txHash: {
     type: DataTypes.STRING,
     allowNull: true,

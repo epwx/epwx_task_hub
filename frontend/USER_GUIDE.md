@@ -23,6 +23,10 @@ Welcome to the EPWX Task Platform! This guide will help you understand the main 
 - Click **Claim Daily Reward** in the Daily Claim section.
 - You will receive a status message about your claim.
 - You can claim once per day. Wallets with at least 1,000,000,000,000 EPWX can claim 10,000,000 EPWX, wallets with at least 100,000,000,000 EPWX can claim 5,000,000 EPWX, wallets with at least 10,000,000,000 EPWX can claim 2,000,000 EPWX, and other wallets can claim 100,000 EPWX.
+- No purchase, payment, EPWX balance, paid transaction, social promotion, or user-paid gas is required.
+- A successful Daily Claim creates one free Daily Reward Draw entry for that wallet for the UTC day.
+- Participants must be at least 18 and legally eligible where they live. Bots, duplicate wallets, sanctioned wallets, and excluded jurisdictions are not eligible.
+- Draw time, winner count, prize amount, selection audit data, and payout status are published in the **Latest Daily Reward Draw Winners** section.
 
 ## 5. Referrals
 - Share your referral link from the homepage to invite new users.

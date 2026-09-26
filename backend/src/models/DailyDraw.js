@@ -40,6 +40,22 @@ const DailyDraw = sequelize.define('DailyDraw', {
     type: DataTypes.DATE,
     allowNull: false,
   },
+  selectionAlgorithm: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  eligiblePoolHash: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  entropyBlockNumber: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  entropyBlockHash: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
 }, {
   tableName: 'daily_draws',
   timestamps: true,

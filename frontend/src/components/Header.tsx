@@ -112,7 +112,7 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
   const dashboardLinks = isAdmin
     ? [
         { href: '/admin', label: 'Admin Dashboard', active: pathname === '/admin' },
-        { href: '/admin/daily-draws', label: 'Daily Draws', active: pathname === '/admin/daily-draws' },
+        { href: '/admin/daily-draws', label: 'Daily Reward Draws', active: pathname === '/admin/daily-draws' },
         { href: '/admin/engagement-claims', label: 'Social Engagement Claims', active: pathname === '/admin/engagement-claims' },
         { href: '/admin/merchants', label: 'Merchant Admin', active: pathname === '/admin/merchants' },
         { href: '/admin/partners', label: 'Partner Verification', active: pathname === '/admin/partners' },

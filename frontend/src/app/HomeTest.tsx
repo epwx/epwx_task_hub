@@ -58,7 +58,7 @@ interface ReferralRewardStatus {
   referredRewardStatus?: string;
 }
 
-const DAILY_CLAIM_TERMS_ACCEPTANCE_KEY_PREFIX = "epwx-daily-claim-terms-v1";
+const DAILY_CLAIM_TERMS_ACCEPTANCE_KEY_PREFIX = "epwx-daily-claim-terms-v2";
 
 function formatReferralRewardMessage(reward?: ReferralRewardStatus | null) {
   if (!reward) {
@@ -501,7 +501,7 @@ export default function HomeTest() {
         ? (localStorage.getItem(PENDING_PARTNER_REFERRAL_CODE_STORAGE_KEY) || incomingPartnerReferralCode)
         : incomingPartnerReferralCode;
       const todayUtc = new Date(Date.now()).toISOString().slice(0, 10);
-      const message = `EPWX Daily Claim for ${normalizedWallet} on ${todayUtc}`;
+      const message = `EPWX Daily Claim for ${normalizedWallet} on ${todayUtc}\nEligibility policy: daily-reward-draw-eligibility-v1`;
       const signature = await signMessageAsync({ message });
       const res = await fetch("/api/epwx/daily-claim", {
         method: "POST",
@@ -509,6 +509,8 @@ export default function HomeTest() {
         body: JSON.stringify({
           wallet: normalizedWallet,
           signature,
+          ageConfirmed: agreed,
+          jurisdictionConfirmed: agreed,
           ...(partnerReferralCode ? { referralCode: partnerReferralCode } : {}),
         }),
       });
@@ -822,7 +824,7 @@ export default function HomeTest() {
                         <div className="mt-1 text-sm text-white/70">Estimated payout for this wallet</div>
                       </div>
                       <div className="bg-slate-950/25 p-5 text-center sm:text-left">
-                        <div className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-100/70">Daily draw</div>
+                        <div className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-100/70">Daily Reward Draw</div>
                         {latestDailyDraw ? (
                           <>
                             <div className="mt-2 text-lg font-black text-amber-100">
@@ -833,7 +835,7 @@ export default function HomeTest() {
                             </div>
                           </>
                         ) : (
-                          <div className="mt-2 text-sm font-semibold text-white/75">Successful claims qualify for the daily draw.</div>
+                          <div className="mt-2 text-sm font-semibold text-white/75">Successful claims qualify for the free Daily Reward Draw.</div>
                         )}
                       </div>
                     </div>
@@ -859,7 +861,7 @@ export default function HomeTest() {
                           className="mt-0.5 h-4 w-4 shrink-0 accent-emerald-400"
                         />
                         <label htmlFor="daily-terms-checkbox" className="text-sm text-white/85">
-                          I agree to the{' '}
+                          I confirm that I am at least 18, participation is permitted where I live, and I agree to the{' '}
                           <button
                             type="button"
                             className="text-emerald-200 underline hover:text-white"

@@ -1,6 +1,7 @@
 const { ethers } = require('ethers');
 
 const ERC1271_MAGIC_VALUE = '0x1626ba7e';
+const DAILY_DRAW_ELIGIBILITY_POLICY_VERSION = 'daily-reward-draw-eligibility-v1';
 
 let baseRpcProvider = null;
 
@@ -83,7 +84,7 @@ function buildDailyClaimMessages(walletInput, normalizedWallet, dateString) {
   return buildWalletMessageVariants(
     walletInput,
     normalizedWallet,
-    (walletAddress) => `EPWX Daily Claim for ${walletAddress} on ${dateString}`,
+    (walletAddress) => `EPWX Daily Claim for ${walletAddress} on ${dateString}\nEligibility policy: ${DAILY_DRAW_ELIGIBILITY_POLICY_VERSION}`,
   );
 }
 
@@ -113,6 +114,7 @@ function buildEmailPreferenceMessages(walletInput, normalizedWallet, remindersEn
 }
 
 module.exports = {
+  DAILY_DRAW_ELIGIBILITY_POLICY_VERSION,
   verifyWalletSignature,
   buildDailyClaimMessages,
   buildEmailEnrollmentMessages,
