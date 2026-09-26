@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ConnectKitButton } from "connectkit";
 import { useAccount } from "wagmi";
@@ -316,11 +317,22 @@ export default function ReferralsPage() {
           <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/40 to-transparent" />
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl">
-              <p className="text-xs font-black uppercase tracking-[0.28em] text-cyan-300">Wallet Referrals</p>
-              <h1 className="mt-3 text-3xl font-black tracking-tight text-white sm:text-4xl">Referral Rewards</h1>
+              <p className="text-xs font-black uppercase tracking-[0.28em] text-cyan-300">Referral Programs</p>
+              <h1 className="mt-3 text-3xl font-black tracking-tight text-white sm:text-4xl">Wallet Referral Rewards</h1>
               <p className="mt-3 text-sm leading-7 text-slate-300 sm:text-base">
                 Share your referral link, track qualified wallets, and help both wallets qualify after the referred wallet completes a first daily claim.
               </p>
+              <div className="mt-5 flex flex-wrap gap-3">
+                <span className="rounded-lg bg-cyan-300 px-4 py-2 text-sm font-bold text-slate-950">
+                  Wallet referrals
+                </span>
+                <Link
+                  href="/partner"
+                  className="rounded-lg border border-white/15 bg-white/5 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-white/10"
+                >
+                  Partner referral portal
+                </Link>
+              </div>
             </div>
             <div className="ui-surface self-start px-4 py-3 text-sm text-slate-200">
               <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Reward amount</div>

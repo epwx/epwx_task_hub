@@ -74,7 +74,6 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
       label: 'Earn',
       items: [
         { href: '/#daily-claim', label: 'Daily Claim' },
-        { href: '/referrals', label: 'Referral Rewards' },
         { href: '/cashback', label: 'Cashback Rewards' },
         { href: '/tasks', label: 'Campaign Tasks' },
         { href: '/claim/engagement', label: 'Social Engagement Claim' },
@@ -90,8 +89,9 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
       ],
     },
     {
-      label: 'Partners',
+      label: 'Referrals',
       items: [
+        { href: '/referrals', label: 'Wallet Referral Rewards' },
         { href: '/partner', label: 'Partner Portal' },
         { href: '/advertise', label: 'Advertise' },
       ],

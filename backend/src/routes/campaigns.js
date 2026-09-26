@@ -1,7 +1,6 @@
 import express from 'express';
 import { Campaign, User } from '../models/index.js';
 import { authenticateToken } from './auth.js';
-import { createCampaignOnChain } from '../services/campaignOnChain.js';
 const router = express.Router();
 
 /**
