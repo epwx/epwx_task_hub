@@ -1295,6 +1295,15 @@ router.get('/daily-draws/:drawId/audit', async (req, res) => {
     const recordedWinnersVerified = recordedWinnerIds.length === computedWinnerIds.length
       && recordedWinnerIds.every((claimId, index) => claimId === computedWinnerIds[index]);
     const storedPoolHash = String(draw.eligiblePoolHash).toLowerCase();
+    const storedEntropyBlockHash = String(draw.entropyBlockHash).toLowerCase();
+    let canonicalEntropyBlockHash = null;
+    try {
+      const provider = new ethers.JsonRpcProvider(process.env.BASE_RPC_URL || process.env.RPC_URL);
+      const canonicalBlock = await provider.getBlock(Number(draw.entropyBlockNumber));
+      canonicalEntropyBlockHash = canonicalBlock?.hash ? canonicalBlock.hash.toLowerCase() : null;
+    } catch (error) {
+      console.error(`[daily-reward-draw] Unable to verify entropy block ${draw.entropyBlockNumber}:`, error);
+    }
 
     return res.json({
       auditVersion: 1,
@@ -1306,7 +1315,9 @@ router.get('/daily-draws/:drawId/audit', async (req, res) => {
         eligibleCount: draw.eligibleCount,
         selectionAlgorithm: algorithm,
         entropyBlockNumber: draw.entropyBlockNumber,
-        entropyBlockHash: String(draw.entropyBlockHash).toLowerCase(),
+        entropyBlockHash: storedEntropyBlockHash,
+        canonicalEntropyBlockHash,
+        entropyBlockHashVerified: canonicalEntropyBlockHash === null ? null : canonicalEntropyBlockHash === storedEntropyBlockHash,
         storedEligiblePoolHash: storedPoolHash,
         recomputedEligiblePoolHash: audit.eligiblePoolHash,
         poolHashVerified: storedPoolHash === audit.eligiblePoolHash,

@@ -47,6 +47,12 @@ interface DailyDrawRules {
   walletExclusionScreeningEnabled: boolean;
 }
 
+interface DailyDrawAuditVerification {
+  entropyBlockHashVerified: boolean | null;
+  poolHashVerified: boolean;
+  recordedWinnersVerified: boolean;
+}
+
 function parseUtcHourMinute(input: string) {
   const matched = String(input || "").match(/^(\d{2}):(\d{2})$/);
   if (!matched) {
@@ -247,6 +253,8 @@ export default function LatestDailyWinnersBoard({ referralLink }: { referralLink
   const [drawRules, setDrawRules] = useState<DailyDrawRules | null>(null);
   const [rulesModalOpen, setRulesModalOpen] = useState(false);
   const [auditDownloading, setAuditDownloading] = useState(false);
+  const [auditVerifying, setAuditVerifying] = useState(false);
+  const [auditVerification, setAuditVerification] = useState<DailyDrawAuditVerification | null>(null);
   const rulesButtonRef = useRef<HTMLButtonElement>(null);
 
   const closeRulesModal = () => {
@@ -327,10 +335,7 @@ export default function LatestDailyWinnersBoard({ referralLink }: { referralLink
     try {
       const response = await fetch(`/api/epwx/daily-draws/${draw.id}/audit`, { cache: 'no-store' });
       const audit = await parseJsonResponse<{
-        draw?: {
-          poolHashVerified?: boolean;
-          recordedWinnersVerified?: boolean;
-        };
+        draw?: Partial<DailyDrawAuditVerification>;
       }>(response, 'Failed to prepare Daily Reward Draw audit data.');
       const blob = new Blob([JSON.stringify(audit, null, 2)], { type: 'application/json' });
       const objectUrl = URL.createObjectURL(blob);
@@ -342,7 +347,7 @@ export default function LatestDailyWinnersBoard({ referralLink }: { referralLink
       anchor.remove();
       window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
 
-      if (audit.draw?.poolHashVerified && audit.draw?.recordedWinnersVerified) {
+      if (audit.draw?.entropyBlockHashVerified && audit.draw?.poolHashVerified && audit.draw?.recordedWinnersVerified) {
         toast.success('Verified draw audit data downloaded.');
       } else {
         toast.error('Audit data downloaded with verification warnings.');
@@ -351,6 +356,29 @@ export default function LatestDailyWinnersBoard({ referralLink }: { referralLink
       toast.error(downloadError?.message || 'Unable to download draw audit data.');
     } finally {
       setAuditDownloading(false);
+    }
+  };
+
+  const handleVerifyAudit = async () => {
+    if (!draw || auditVerifying) return;
+
+    setAuditVerifying(true);
+    try {
+      const response = await fetch(`/api/epwx/daily-draws/${draw.id}/audit`, { cache: 'no-store' });
+      const audit = await parseJsonResponse<{ draw?: Partial<DailyDrawAuditVerification> }>(
+        response,
+        'Failed to verify Daily Reward Draw audit data.',
+      );
+      setAuditVerification({
+        entropyBlockHashVerified: audit.draw?.entropyBlockHashVerified ?? null,
+        poolHashVerified: audit.draw?.poolHashVerified === true,
+        recordedWinnersVerified: audit.draw?.recordedWinnersVerified === true,
+      });
+    } catch (verificationError: any) {
+      setAuditVerification(null);
+      toast.error(verificationError?.message || 'Unable to verify draw audit data.');
+    } finally {
+      setAuditVerifying(false);
     }
   };
 
@@ -398,6 +426,10 @@ export default function LatestDailyWinnersBoard({ referralLink }: { referralLink
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [rulesModalOpen]);
+
+  useEffect(() => {
+    setAuditVerification(null);
+  }, [draw?.id]);
 
   useEffect(() => {
     let isMounted = true;
@@ -535,24 +567,51 @@ export default function LatestDailyWinnersBoard({ referralLink }: { referralLink
                     <div className="mt-3 rounded-xl border border-white/15 bg-white/5 p-3 text-xs text-white/80">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div className="font-bold text-white">Selection audit</div>
-                        <button
-                          type="button"
-                          onClick={handleDownloadAudit}
-                          disabled={auditDownloading}
-                          className="rounded-full border border-emerald-200/40 bg-emerald-300/10 px-3 py-1.5 text-xs font-black text-emerald-100 hover:bg-emerald-300/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200 disabled:cursor-wait disabled:opacity-60"
-                        >
-                          {auditDownloading ? 'Preparing audit...' : 'Download audit JSON'}
-                        </button>
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={handleVerifyAudit}
+                            disabled={auditVerifying}
+                            className="rounded-full bg-emerald-300 px-3 py-1.5 text-xs font-black text-slate-950 hover:bg-emerald-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-100 disabled:cursor-wait disabled:opacity-60"
+                          >
+                            {auditVerifying ? 'Verifying...' : 'Verify draw'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleDownloadAudit}
+                            disabled={auditDownloading}
+                            className="rounded-full border border-emerald-200/40 bg-emerald-300/10 px-3 py-1.5 text-xs font-black text-emerald-100 hover:bg-emerald-300/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200 disabled:cursor-wait disabled:opacity-60"
+                          >
+                            {auditDownloading ? 'Preparing...' : 'Download JSON'}
+                          </button>
+                        </div>
                       </div>
+                      {auditVerification ? (
+                        <div className="mt-3 grid gap-2 sm:grid-cols-3" role="status" aria-live="polite">
+                          {[
+                            { label: 'Base block hash', verified: auditVerification.entropyBlockHashVerified },
+                            { label: 'Eligible pool', verified: auditVerification.poolHashVerified },
+                            { label: 'Winner ranking', verified: auditVerification.recordedWinnersVerified },
+                          ].map((check) => (
+                            <div key={check.label} className={`rounded-lg border px-3 py-2 ${check.verified === true ? 'border-emerald-300/35 bg-emerald-300/10 text-emerald-100' : check.verified === false ? 'border-red-300/35 bg-red-300/10 text-red-100' : 'border-amber-300/35 bg-amber-300/10 text-amber-100'}`}>
+                              <div className="font-bold">{check.label}</div>
+                              <div className="mt-0.5">{check.verified === true ? 'Verified' : check.verified === false ? 'Mismatch' : 'RPC unavailable'}</div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="mt-2 text-white/70">Select Verify draw to check the blockchain source, eligible pool, and winner ranking.</div>
+                      )}
                       <div className="mt-1 break-all">Algorithm: {draw.selectionAlgorithm || "base-block-hash-weighted-sha256-v2"}</div>
                       <div className="mt-1 break-all">Eligible pool SHA-256: {draw.eligiblePoolHash}</div>
+                      <div className="mt-1 break-all">Recorded entropy hash: {draw.entropyBlockHash}</div>
                       <a
                         href={`https://basescan.org/block/${draw.entropyBlockNumber}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="mt-1 block break-all text-emerald-100 underline hover:text-white"
                       >
-                        Entropy block {draw.entropyBlockNumber}: {draw.entropyBlockHash}
+                        View Base block {draw.entropyBlockNumber} details
                       </a>
                     </div>
                   ) : null}
