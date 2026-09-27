@@ -1,9 +1,9 @@
 const { selectDailyDrawWinners } = require('../src/utils/dailyDrawSelection.cjs');
 
 const claims = [
-  { id: 3, wallet: '0x0000000000000000000000000000000000000003', claimedAt: '2026-09-25T03:00:00.000Z' },
-  { id: 1, wallet: '0x0000000000000000000000000000000000000001', claimedAt: '2026-09-25T01:00:00.000Z' },
-  { id: 2, wallet: '0x0000000000000000000000000000000000000002', claimedAt: '2026-09-25T02:00:00.000Z' },
+  { id: 3, wallet: '0x0000000000000000000000000000000000000003', claimedAt: '2026-09-25T03:00:00.000Z', drawEntries: 5 },
+  { id: 1, wallet: '0x0000000000000000000000000000000000000001', claimedAt: '2026-09-25T01:00:00.000Z', drawEntries: 1 },
+  { id: 2, wallet: '0x0000000000000000000000000000000000000002', claimedAt: '2026-09-25T02:00:00.000Z', drawEntries: 2 },
 ];
 
 describe('Daily Reward Draw selection', () => {
@@ -19,7 +19,7 @@ describe('Daily Reward Draw selection', () => {
     const second = selectDailyDrawWinners({ ...input, claims: [...claims].reverse() });
 
     expect(first).toEqual(second);
-    expect(first.algorithm).toBe('base-block-hash-sha256-v1');
+    expect(first.algorithm).toBe('base-block-hash-weighted-sha256-v2');
     expect(first.eligiblePoolHash).toMatch(/^[0-9a-f]{64}$/);
     expect(first.winners).toHaveLength(2);
   });
@@ -48,5 +48,37 @@ describe('Daily Reward Draw selection', () => {
       drawDate: '2026-09-25',
       entropyBlockHash: 'invalid',
     })).toThrow('A valid block hash is required for draw entropy.');
+  });
+
+  it('changes the auditable pool hash when a wallet receives more entries', () => {
+    const input = {
+      claims,
+      count: 1,
+      drawDate: '2026-09-25',
+      entropyBlockHash: `0x${'ab'.repeat(32)}`,
+    };
+    const standard = selectDailyDrawWinners(input);
+    const reweighted = selectDailyDrawWinners({
+      ...input,
+      claims: claims.map((claim) => claim.id === 1 ? { ...claim, drawEntries: 5 } : claim),
+    });
+
+    expect(standard.eligiblePoolHash).not.toBe(reweighted.eligiblePoolHash);
+  });
+
+  it('allows each wallet to win at most once even if duplicate claims are supplied', () => {
+    const duplicateWalletClaims = [
+      ...claims,
+      { id: 4, wallet: claims[0].wallet.toUpperCase(), claimedAt: '2026-09-25T04:00:00.000Z', drawEntries: 5 },
+    ];
+    const result = selectDailyDrawWinners({
+      claims: duplicateWalletClaims,
+      count: duplicateWalletClaims.length,
+      drawDate: '2026-09-25',
+      entropyBlockHash: `0x${'ef'.repeat(32)}`,
+    });
+
+    expect(result.winners).toHaveLength(3);
+    expect(new Set(result.winners.map((winner) => winner.wallet)).size).toBe(3);
   });
 });

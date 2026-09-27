@@ -44,6 +44,16 @@ const DailyClaim = sequelize.define('DailyClaim', {
     type: DataTypes.INTEGER,
     allowNull: true,
   },
+  streakDay: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 1,
+  },
+  drawEntries: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 1,
+  },
   eligibilityPolicyVersion: {
     type: DataTypes.STRING,
     allowNull: true,

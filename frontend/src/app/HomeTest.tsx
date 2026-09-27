@@ -50,6 +50,11 @@ interface LatestDailyDraw {
   prizeAmount: string;
 }
 
+interface DailyClaimStreak {
+  day: number;
+  drawEntries: number;
+}
+
 interface ReferralRewardStatus {
   status: string;
   rewardAmount?: string;
@@ -124,6 +129,7 @@ export default function HomeTest() {
   const [nextDailyClaimAt, setNextDailyClaimAt] = useState<number | null>(null);
   const [remainingClaimTime, setRemainingClaimTime] = useState<string | null>(null);
   const [hasDailyClaimHistory, setHasDailyClaimHistory] = useState(false);
+  const [dailyClaimStreak, setDailyClaimStreak] = useState<DailyClaimStreak | null>(null);
   const [hasRecentQualifyingPurchase, setHasRecentQualifyingPurchase] = useState(false);
   const [dailyClaimsSummary, setDailyClaimsSummary] = useState<DailyClaimsSummary | null>(null);
   const [dailyClaimsSummaryLoading, setDailyClaimsSummaryLoading] = useState(true);
@@ -437,6 +443,7 @@ export default function HomeTest() {
       if (!address) {
         setHasDailyClaimHistory(false);
         setNextDailyClaimAt(null);
+        setDailyClaimStreak(null);
         return;
       }
 
@@ -448,15 +455,23 @@ export default function HomeTest() {
         if (!latestClaim?.claimedAt) {
           setHasDailyClaimHistory(false);
           setNextDailyClaimAt(null);
+          setDailyClaimStreak(null);
           return;
         }
 
         setHasDailyClaimHistory(true);
-        const nextClaimTime = new Date(latestClaim.claimedAt).getTime() + 24 * 60 * 60 * 1000;
+        const latestClaimTime = new Date(latestClaim.claimedAt).getTime();
+        const nextClaimTime = latestClaimTime + 24 * 60 * 60 * 1000;
         setNextDailyClaimAt(nextClaimTime);
+        const streakDay = Number(latestClaim.streakDay || 1);
+        const drawEntries = Number(latestClaim.drawEntries || 1);
+        setDailyClaimStreak(Date.now() - latestClaimTime <= 48 * 60 * 60 * 1000
+          ? { day: streakDay, drawEntries }
+          : null);
       } catch {
         setHasDailyClaimHistory(false);
         setNextDailyClaimAt(null);
+        setDailyClaimStreak(null);
       }
     };
 
@@ -840,6 +855,34 @@ export default function HomeTest() {
                       </div>
                     </div>
                     <div className="p-5">
+                      <div className="mb-5 rounded-lg border border-white/15 bg-slate-950/25 p-4">
+                        <div className="flex flex-wrap items-end justify-between gap-2">
+                          <div>
+                            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">7-day streak</div>
+                            <div className="mt-1 text-base font-black text-white">
+                              {dailyClaimStreak ? `Day ${dailyClaimStreak.day} of 7` : 'Start your streak today'}
+                            </div>
+                          </div>
+                          <div className="text-sm font-bold text-amber-100">
+                            {dailyClaimStreak ? dailyClaimStreak.drawEntries : 1} draw {dailyClaimStreak?.drawEntries === 1 || !dailyClaimStreak ? 'entry' : 'entries'}
+                          </div>
+                        </div>
+                        <div className="mt-3 grid grid-cols-7 gap-1.5" aria-label={`${dailyClaimStreak?.day || 0} of 7 streak days completed`}>
+                          {Array.from({ length: 7 }, (_, index) => {
+                            const day = index + 1;
+                            const completed = day <= (dailyClaimStreak?.day || 0);
+                            return (
+                              <div
+                                key={day}
+                                className={`flex aspect-square items-center justify-center rounded text-xs font-black ${completed ? 'bg-amber-300 text-slate-950' : 'border border-white/15 bg-white/5 text-white/45'}`}
+                              >
+                                {day}
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <div className="mt-3 text-xs leading-5 text-white/60">Claim again within 48 hours to advance. Day 7 earns five entries, then a new cycle begins.</div>
+                      </div>
                       <div className="mb-5">
                         <DailyClaimEmailSignup wallet={address} />
                       </div>

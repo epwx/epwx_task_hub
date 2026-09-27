@@ -425,7 +425,8 @@ export default function LatestDailyWinnersBoard({ referralLink }: { referralLink
               <div className="font-black text-white">Eligibility and payout rules</div>
               <ul className="mt-2 list-disc space-y-1 pl-5">
                 <li>No purchase, payment, token holding, paid transaction, social promotion, or user-paid gas is required.</li>
-                <li>Submit one valid Daily Claim during the UTC draw date. One eligible entry is retained per wallet.</li>
+                <li>Submit one valid Daily Claim during the UTC draw date. A 7-day streak provides 1, 1, 2, 2, 3, 3, then 5 weighted entries.</li>
+                <li>Entry weight improves selection odds, but each wallet can win at most once in a draw.</li>
                 <li>Participants must be at least {drawRules?.minimumAge || 18}, comply with local law, and not use bots, duplicate wallets, sanctioned wallets, or excluded jurisdictions.</li>
                 <li>Excluded country codes: {drawRules?.blockedCountryCodes?.join(', ') || 'CU, IR, KP, SY'}, plus any jurisdiction prohibited by applicable law.</li>
                 <li>The scheduled draw runs daily at {drawRules?.scheduledTimeUtc || NEXT_PUBLIC_AUTO_DAILY_DRAW_TIME_UTC} UTC for the previous UTC day. Prize amount and winner count appear in each result.</li>
@@ -470,7 +471,7 @@ export default function LatestDailyWinnersBoard({ referralLink }: { referralLink
                   {draw.entropyBlockHash && draw.eligiblePoolHash ? (
                     <div className="mt-3 rounded-xl border border-white/15 bg-white/5 p-3 text-xs text-white/80">
                       <div className="font-bold text-white">Selection audit</div>
-                      <div className="mt-1 break-all">Algorithm: {draw.selectionAlgorithm || "base-block-hash-sha256-v1"}</div>
+                      <div className="mt-1 break-all">Algorithm: {draw.selectionAlgorithm || "base-block-hash-weighted-sha256-v2"}</div>
                       <div className="mt-1 break-all">Eligible pool SHA-256: {draw.eligiblePoolHash}</div>
                       <a
                         href={`https://basescan.org/block/${draw.entropyBlockNumber}`}

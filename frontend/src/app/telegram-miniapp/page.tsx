@@ -67,10 +67,14 @@ type DailyClaimResponse = {
   amount?: string;
   status?: string;
   txHash?: string | null;
+  streak?: {
+    day: number;
+    drawEntries: number;
+  };
 };
 
 type DailyClaimListResponse = {
-  claims?: Array<{ claimedAt: string }>;
+  claims?: Array<{ claimedAt: string; streakDay?: number; drawEntries?: number }>;
 };
 
 type LatestDailyDraw = {
@@ -407,6 +411,7 @@ export default function TelegramMiniAppPage() {
   const [awaitingWalletSignature, setAwaitingWalletSignature] = useState<boolean>(false);
   const [status, setStatus] = useState<string>("");
   const [nextClaimAt, setNextClaimAt] = useState<number | null>(null);
+  const [dailyClaimStreak, setDailyClaimStreak] = useState<{ day: number; drawEntries: number } | null>(null);
   const [remaining, setRemaining] = useState<string>("");
   const [groupContextToken, setGroupContextToken] = useState<string>("");
   const [registerGroupId, setRegisterGroupId] = useState<string>("");
@@ -744,6 +749,7 @@ export default function TelegramMiniAppPage() {
   useEffect(() => {
     if (!normalizedLinkedWallet) {
       setNextClaimAt(null);
+      setDailyClaimStreak(null);
       return;
     }
 
@@ -752,19 +758,27 @@ export default function TelegramMiniAppPage() {
         const res = await fetchWithTimeout(`/api/epwx/daily-claims?wallet=${normalizedLinkedWallet}&limit=1`, { cache: "no-store" });
         if (!res.ok) {
           setNextClaimAt(null);
+          setDailyClaimStreak(null);
           return;
         }
         const data = (await res.json()) as DailyClaimListResponse;
-        const latestClaimedAt = data.claims?.[0]?.claimedAt;
+        const latestClaim = data.claims?.[0];
+        const latestClaimedAt = latestClaim?.claimedAt;
         if (!latestClaimedAt) {
           setNextClaimAt(null);
+          setDailyClaimStreak(null);
           return;
         }
 
-        const next = new Date(latestClaimedAt).getTime() + 24 * 60 * 60 * 1000;
+        const latestClaimTime = new Date(latestClaimedAt).getTime();
+        const next = latestClaimTime + 24 * 60 * 60 * 1000;
         setNextClaimAt(next > Date.now() ? next : null);
+        setDailyClaimStreak(Date.now() - latestClaimTime <= 48 * 60 * 60 * 1000
+          ? { day: Number(latestClaim.streakDay || 1), drawEntries: Number(latestClaim.drawEntries || 1) }
+          : null);
       } catch {
         setNextClaimAt(null);
+        setDailyClaimStreak(null);
       }
     };
 
@@ -974,6 +988,7 @@ export default function TelegramMiniAppPage() {
       const amount = Number(data.amount || BASE_DAILY_REWARD).toLocaleString();
       setStatus(`Claim submitted: ${amount} EPWX. ${data.message || ""}`.trim());
       setNextClaimAt(Date.now() + 24 * 60 * 60 * 1000);
+      if (data.streak) setDailyClaimStreak(data.streak);
       if (nextTierTarget && nextTierReward) {
         setShowClaimUpgradePrompt(true);
       }
@@ -1262,6 +1277,24 @@ export default function TelegramMiniAppPage() {
                 Next claim in {remaining}
               </div>
             ) : null}
+            <div className="rounded-xl border border-amber-300/35 bg-amber-500/10 px-3 py-3 text-amber-50">
+              <div className="flex items-center justify-between gap-3">
+                <span className="font-semibold">7-day streak</span>
+                <span className="font-black">
+                  {dailyClaimStreak ? `Day ${dailyClaimStreak.day} · ${dailyClaimStreak.drawEntries} ${dailyClaimStreak.drawEntries === 1 ? 'entry' : 'entries'}` : 'Ready to start · 1 entry'}
+                </span>
+              </div>
+              <div className="mt-2 grid grid-cols-7 gap-1" aria-label={`${dailyClaimStreak?.day || 0} of 7 streak days completed`}>
+                {Array.from({ length: 7 }, (_, index) => (
+                  <div
+                    key={index + 1}
+                    className={`flex aspect-square items-center justify-center rounded text-[10px] font-black ${index < (dailyClaimStreak?.day || 0) ? 'bg-amber-300 text-slate-950' : 'border border-white/15 bg-white/5 text-white/45'}`}
+                  >
+                    {index + 1}
+                  </div>
+                ))}
+              </div>
+            </div>
             <div className="rounded-xl border border-cyan-300/35 bg-cyan-500/10 px-3 py-2 text-center text-cyan-50">
               A verified email linked to this wallet is required. Verify it in the{" "}
               <Link href="/#daily-claim" className="font-semibold underline hover:text-white">

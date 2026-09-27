@@ -14,6 +14,7 @@ import { ethers } from 'ethers';
 import { epwxTokenContract, epwxTokenWithSigner } from '../services/blockchain.js';
 import dailyClaimSignatureUtils from '../utils/dailyClaimSignature.cjs';
 import dailyClaimRewardUtils from '../utils/dailyClaimReward.cjs';
+import dailyClaimStreakUtils from '../utils/dailyClaimStreak.cjs';
 import dailyDrawSelectionUtils from '../utils/dailyDrawSelection.cjs';
 import dailyDrawEligibilityUtils from '../utils/dailyDrawEligibility.cjs';
 const router = express.Router();
@@ -72,6 +73,7 @@ const {
   buildEmailPreferenceMessages,
 } = dailyClaimSignatureUtils;
 const { calculateDailyClaimReward } = dailyClaimRewardUtils;
+const { calculateDailyClaimStreak } = dailyClaimStreakUtils;
 const { selectDailyDrawWinners } = dailyDrawSelectionUtils;
 const { getRequestCountryCode, parsePolicyList, validateDailyDrawEligibility } = dailyDrawEligibilityUtils;
 const DAILY_DRAW_BLOCKED_COUNTRY_CODES = parsePolicyList(process.env.DAILY_DRAW_BLOCKED_COUNTRY_CODES || 'CU,IR,KP,SY', (item) => item.toUpperCase());
@@ -458,7 +460,7 @@ export async function runDailyDraw({ drawDate, winnerCount, prizeAmount, runBy }
     where: {
       claimedAt: { [Op.gte]: start, [Op.lte]: end },
     },
-    attributes: ['id', 'wallet', 'claimedAt'],
+    attributes: ['id', 'wallet', 'claimedAt', 'drawEntries'],
     order: [['claimedAt', 'ASC']],
   });
 
@@ -1227,7 +1229,13 @@ router.get('/daily-draws/rules', (req, res) => {
     defaultPrizeAmount: String(process.env.AUTO_DAILY_DRAW_PRIZE_AMOUNT || DEFAULT_DAILY_DRAW_PRIZE_AMOUNT),
     blockedCountryCodes: Array.from(DAILY_DRAW_BLOCKED_COUNTRY_CODES).sort(),
     walletExclusionScreeningEnabled: DAILY_DRAW_BLOCKED_WALLETS.size > 0,
-    selectionAlgorithm: 'base-block-hash-sha256-v1',
+    selectionAlgorithm: 'base-block-hash-weighted-sha256-v2',
+    streakPolicy: {
+      cycleDays: 7,
+      graceHours: 48,
+      drawEntrySchedule: [1, 1, 2, 2, 3, 3, 5],
+      maximumWinsPerWalletPerDraw: 1,
+    },
     entryRequirements: {
       purchaseRequired: false,
       paymentRequired: false,
@@ -1654,6 +1662,12 @@ router.post('/daily-claim', dailyClaimSubmissionLimiter, async (req, res) => {
     order: [['claimedAt', 'ASC']],
   });
 
+  const previousClaim = await DailyClaim.findOne({
+    where: { wallet: normalizedWallet },
+    order: [['claimedAt', 'DESC']],
+    attributes: ['claimedAt', 'streakDay'],
+  });
+
   // Check if wallet claimed in last 24h
   const walletClaim = await DailyClaim.findOne({
     where: {
@@ -1695,6 +1709,7 @@ router.post('/daily-claim', dailyClaimSubmissionLimiter, async (req, res) => {
     officialGroupMembership.isMember,
     Boolean(emailPreference?.emailVerifiedAt),
   );
+  const streak = calculateDailyClaimStreak(previousClaim, now);
   const amount = rewardBreakdown.amount;
   if (!officialGroupMembership.isMember) {
     console.log('[daily-claim] applying 50% reward for wallet without official Telegram group verification', {
@@ -1715,6 +1730,8 @@ router.post('/daily-claim', dailyClaimSubmissionLimiter, async (req, res) => {
     emailVerified: rewardBreakdown.emailVerified,
     emailBonusAmount: rewardBreakdown.emailBonusAmount,
     emailBonusBps: rewardBreakdown.emailBonusBps,
+    streakDay: streak.streakDay,
+    drawEntries: streak.drawEntries,
     eligibilityPolicyVersion: DAILY_DRAW_ELIGIBILITY_POLICY_VERSION,
     eligibilityConfirmedAt: now,
     eligibilityCountryCode,
@@ -1803,6 +1820,11 @@ router.post('/daily-claim', dailyClaimSubmissionLimiter, async (req, res) => {
     message: claim.status === 'paid' ? 'Daily claim successful and paid!' : 'Daily claim successful and queued for payout.',
     amount: claim.amount,
     rewardBreakdown,
+    streak: {
+      day: claim.streakDay,
+      drawEntries: claim.drawEntries,
+      continued: streak.streakContinued,
+    },
     status: claim.status,
     txHash: claim.txHash || null,
     referralReward,

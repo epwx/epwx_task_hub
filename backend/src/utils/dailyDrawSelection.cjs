@@ -1,19 +1,34 @@
 const { createHash } = require('crypto');
 
-const DAILY_DRAW_SELECTION_ALGORITHM = 'base-block-hash-sha256-v1';
+const DAILY_DRAW_SELECTION_ALGORITHM = 'base-block-hash-weighted-sha256-v2';
 
 function hash(value) {
   return createHash('sha256').update(value).digest('hex');
 }
 
 function canonicalizeEligibleClaims(claims) {
-  return claims
+  const canonicalClaims = claims
     .map((claim) => ({
       id: Number(claim.id),
       wallet: String(claim.wallet || '').trim().toLowerCase(),
       claimedAt: new Date(claim.claimedAt).toISOString(),
+      drawEntries: Math.max(1, Math.min(5, Number.parseInt(String(claim.drawEntries || '1'), 10) || 1)),
     }))
     .sort((left, right) => left.id - right.id || left.wallet.localeCompare(right.wallet));
+
+  const uniqueByWallet = new Map();
+  for (const claim of canonicalClaims) {
+    if (claim.wallet && !uniqueByWallet.has(claim.wallet)) {
+      uniqueByWallet.set(claim.wallet, claim);
+    }
+  }
+  return Array.from(uniqueByWallet.values());
+}
+
+function getWeightedScore(seedHash, weight) {
+  const numerator = Number.parseInt(seedHash.slice(0, 13), 16) + 1;
+  const uniformValue = numerator / (0x10000000000000 + 1);
+  return -Math.log(uniformValue) / weight;
 }
 
 function selectDailyDrawWinners({ claims, count, drawDate, entropyBlockHash }) {
@@ -30,11 +45,15 @@ function selectDailyDrawWinners({ claims, count, drawDate, entropyBlockHash }) {
   const canonicalClaims = canonicalizeEligibleClaims(claims);
   const eligiblePoolHash = hash(JSON.stringify(canonicalClaims));
   const rankedClaims = canonicalClaims
-    .map((claim) => ({
-      claim,
-      score: hash(`${DAILY_DRAW_SELECTION_ALGORITHM}:${entropyBlockHash.toLowerCase()}:${drawDate}:${claim.id}:${claim.wallet}`),
-    }))
-    .sort((left, right) => left.score.localeCompare(right.score) || left.claim.id - right.claim.id);
+    .map((claim) => {
+      const seedHash = hash(`${DAILY_DRAW_SELECTION_ALGORITHM}:${entropyBlockHash.toLowerCase()}:${drawDate}:${claim.id}:${claim.wallet}`);
+      return {
+        claim,
+        seedHash,
+        score: getWeightedScore(seedHash, claim.drawEntries),
+      };
+    })
+    .sort((left, right) => left.score - right.score || left.seedHash.localeCompare(right.seedHash) || left.claim.id - right.claim.id);
 
   return {
     algorithm: DAILY_DRAW_SELECTION_ALGORITHM,
@@ -46,5 +65,6 @@ function selectDailyDrawWinners({ claims, count, drawDate, entropyBlockHash }) {
 module.exports = {
   DAILY_DRAW_SELECTION_ALGORITHM,
   canonicalizeEligibleClaims,
+  getWeightedScore,
   selectDailyDrawWinners,
 };
