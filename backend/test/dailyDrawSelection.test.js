@@ -1,4 +1,7 @@
-const { selectDailyDrawWinners } = require('../src/utils/dailyDrawSelection.cjs');
+const {
+  buildDailyDrawAudit,
+  selectDailyDrawWinners,
+} = require('../src/utils/dailyDrawSelection.cjs');
 
 const claims = [
   { id: 3, wallet: '0x0000000000000000000000000000000000000003', claimedAt: '2026-09-25T03:00:00.000Z', drawEntries: 5 },
@@ -80,5 +83,47 @@ describe('Daily Reward Draw selection', () => {
 
     expect(result.winners).toHaveLength(3);
     expect(new Set(result.winners.map((winner) => winner.wallet)).size).toBe(3);
+  });
+
+  it('builds a v2 audit with the same pool hash and ranking as winner selection', () => {
+    const input = {
+      claims,
+      count: claims.length,
+      drawDate: '2026-09-25',
+      entropyBlockHash: `0x${'ab'.repeat(32)}`,
+    };
+    const selection = selectDailyDrawWinners(input);
+    const audit = buildDailyDrawAudit(input);
+
+    expect(audit.eligiblePoolHash).toBe(selection.eligiblePoolHash);
+    expect(audit.ranking.map((entry) => entry.claim.id)).toEqual(selection.winners.map((winner) => winner.id));
+    expect(audit.ranking.every((entry) => Number.isFinite(entry.score))).toBe(true);
+  });
+
+  it('reproduces legacy v1 draws without including streak weights', () => {
+    const input = {
+      claims,
+      drawDate: '2026-09-25',
+      entropyBlockHash: `0x${'ab'.repeat(32)}`,
+      algorithm: 'base-block-hash-sha256-v1',
+    };
+    const first = buildDailyDrawAudit(input);
+    const reweighted = buildDailyDrawAudit({
+      ...input,
+      claims: claims.map((claim) => ({ ...claim, drawEntries: claim.drawEntries === 5 ? 1 : 5 })),
+    });
+
+    expect(first.eligiblePoolHash).toBe(reweighted.eligiblePoolHash);
+    expect(first.ranking.map((entry) => entry.claim.id)).toEqual(reweighted.ranking.map((entry) => entry.claim.id));
+    expect(first.canonicalClaims[0]).not.toHaveProperty('drawEntries');
+  });
+
+  it('rejects unsupported historical algorithms', () => {
+    expect(() => buildDailyDrawAudit({
+      claims,
+      drawDate: '2026-09-25',
+      entropyBlockHash: `0x${'ab'.repeat(32)}`,
+      algorithm: 'unknown-v3',
+    })).toThrow('Unsupported selection algorithm');
   });
 });

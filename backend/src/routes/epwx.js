@@ -74,7 +74,11 @@ const {
 } = dailyClaimSignatureUtils;
 const { calculateDailyClaimReward } = dailyClaimRewardUtils;
 const { calculateDailyClaimStreak } = dailyClaimStreakUtils;
-const { selectDailyDrawWinners } = dailyDrawSelectionUtils;
+const {
+  LEGACY_DAILY_DRAW_SELECTION_ALGORITHM,
+  buildDailyDrawAudit,
+  selectDailyDrawWinners,
+} = dailyDrawSelectionUtils;
 const { getRequestCountryCode, parsePolicyList, validateDailyDrawEligibility } = dailyDrawEligibilityUtils;
 const DAILY_DRAW_BLOCKED_COUNTRY_CODES = parsePolicyList(process.env.DAILY_DRAW_BLOCKED_COUNTRY_CODES || 'CU,IR,KP,SY', (item) => item.toUpperCase());
 const DAILY_DRAW_BLOCKED_WALLETS = parsePolicyList(process.env.DAILY_DRAW_BLOCKED_WALLETS, (item) => item.toLowerCase());
@@ -1244,6 +1248,92 @@ router.get('/daily-draws/rules', (req, res) => {
       userPaidGasRequired: false,
     },
   });
+});
+
+// GET /api/epwx/daily-draws/:drawId/audit
+router.get('/daily-draws/:drawId/audit', async (req, res) => {
+  const drawId = Number.parseInt(String(req.params.drawId), 10);
+  if (!Number.isInteger(drawId) || drawId <= 0) {
+    return res.status(400).json({ error: 'Invalid draw id.' });
+  }
+
+  try {
+    const draw = await DailyDraw.findByPk(drawId);
+    if (!draw) {
+      return res.status(404).json({ error: 'Draw not found.' });
+    }
+    if (!draw.entropyBlockHash || !draw.eligiblePoolHash) {
+      return res.status(409).json({ error: 'This draw does not contain enough audit data for independent verification.' });
+    }
+
+    const { start, end } = getUtcDateBounds(draw.drawDate);
+    const claims = await DailyClaim.findAll({
+      where: { claimedAt: { [Op.gte]: start, [Op.lte]: end } },
+      attributes: ['id', 'wallet', 'claimedAt', 'drawEntries'],
+      order: [['claimedAt', 'ASC']],
+    });
+    const uniqueByWallet = new Map();
+    for (const claim of claims) {
+      const wallet = normalizeWallet(claim.wallet);
+      if (wallet && !uniqueByWallet.has(wallet)) uniqueByWallet.set(wallet, claim);
+    }
+
+    const algorithm = draw.selectionAlgorithm || LEGACY_DAILY_DRAW_SELECTION_ALGORITHM;
+    const audit = buildDailyDrawAudit({
+      claims: Array.from(uniqueByWallet.values()),
+      drawDate: draw.drawDate,
+      entropyBlockHash: draw.entropyBlockHash,
+      algorithm,
+    });
+    const winners = await DailyDrawWinner.findAll({
+      where: { drawId },
+      order: [['rank', 'ASC']],
+    });
+    const recordedWinnerRanks = new Map(winners.map((winner) => [Number(winner.dailyClaimId), Number(winner.rank)]));
+    const recordedWinnerIds = winners.map((winner) => Number(winner.dailyClaimId));
+    const computedWinnerIds = audit.ranking.slice(0, recordedWinnerIds.length).map((entry) => entry.claim.id);
+    const recordedWinnersVerified = recordedWinnerIds.length === computedWinnerIds.length
+      && recordedWinnerIds.every((claimId, index) => claimId === computedWinnerIds[index]);
+    const storedPoolHash = String(draw.eligiblePoolHash).toLowerCase();
+
+    return res.json({
+      auditVersion: 1,
+      generatedAt: new Date().toISOString(),
+      draw: {
+        id: draw.id,
+        drawDate: draw.drawDate,
+        winnerCount: draw.winnerCount,
+        eligibleCount: draw.eligibleCount,
+        selectionAlgorithm: algorithm,
+        entropyBlockNumber: draw.entropyBlockNumber,
+        entropyBlockHash: String(draw.entropyBlockHash).toLowerCase(),
+        storedEligiblePoolHash: storedPoolHash,
+        recomputedEligiblePoolHash: audit.eligiblePoolHash,
+        poolHashVerified: storedPoolHash === audit.eligiblePoolHash,
+        recordedWinnersVerified,
+      },
+      canonicalization: algorithm === LEGACY_DAILY_DRAW_SELECTION_ALGORITHM
+        ? 'Sort unique claims by numeric claim id, then lowercase wallet; hash the JSON fields id, wallet, and claimedAt with SHA-256.'
+        : 'Sort unique claims by numeric claim id, then lowercase wallet; hash the JSON fields id, wallet, claimedAt, and drawEntries with SHA-256.',
+      rankingRule: algorithm === LEGACY_DAILY_DRAW_SELECTION_ALGORITHM
+        ? 'Sort ascending by SHA-256 seed hash.'
+        : 'Compute -ln(U) / drawEntries from each SHA-256 seed and sort ascending.',
+      entrants: audit.ranking.map((entry, index) => ({
+        rank: index + 1,
+        claimId: entry.claim.id,
+        wallet: entry.claim.wallet,
+        claimedAt: entry.claim.claimedAt,
+        drawEntries: entry.claim.drawEntries || 1,
+        seedInput: entry.seedInput,
+        seedHash: entry.seedHash,
+        score: entry.score,
+        selectedByAlgorithm: index < Number(draw.winnerCount),
+        recordedWinnerRank: recordedWinnerRanks.get(entry.claim.id) || null,
+      })),
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
 });
 
 // GET /api/epwx/daily-draws/:drawId/winners

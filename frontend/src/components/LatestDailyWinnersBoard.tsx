@@ -246,6 +246,7 @@ export default function LatestDailyWinnersBoard({ referralLink }: { referralLink
   const [nextDrawAtUtc, setNextDrawAtUtc] = useState<string>("");
   const [drawRules, setDrawRules] = useState<DailyDrawRules | null>(null);
   const [rulesModalOpen, setRulesModalOpen] = useState(false);
+  const [auditDownloading, setAuditDownloading] = useState(false);
   const rulesButtonRef = useRef<HTMLButtonElement>(null);
 
   const closeRulesModal = () => {
@@ -316,6 +317,40 @@ export default function LatestDailyWinnersBoard({ referralLink }: { referralLink
           toast.error("Unable to share the Daily Reward Draw right now.");
         }
       }
+    }
+  };
+
+  const handleDownloadAudit = async () => {
+    if (!draw || auditDownloading) return;
+
+    setAuditDownloading(true);
+    try {
+      const response = await fetch(`/api/epwx/daily-draws/${draw.id}/audit`, { cache: 'no-store' });
+      const audit = await parseJsonResponse<{
+        draw?: {
+          poolHashVerified?: boolean;
+          recordedWinnersVerified?: boolean;
+        };
+      }>(response, 'Failed to prepare Daily Reward Draw audit data.');
+      const blob = new Blob([JSON.stringify(audit, null, 2)], { type: 'application/json' });
+      const objectUrl = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = objectUrl;
+      anchor.download = `epwx-daily-draw-${draw.drawDate}-audit.json`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+
+      if (audit.draw?.poolHashVerified && audit.draw?.recordedWinnersVerified) {
+        toast.success('Verified draw audit data downloaded.');
+      } else {
+        toast.error('Audit data downloaded with verification warnings.');
+      }
+    } catch (downloadError: any) {
+      toast.error(downloadError?.message || 'Unable to download draw audit data.');
+    } finally {
+      setAuditDownloading(false);
     }
   };
 
@@ -498,7 +533,17 @@ export default function LatestDailyWinnersBoard({ referralLink }: { referralLink
                   </div>
                   {draw.entropyBlockHash && draw.eligiblePoolHash ? (
                     <div className="mt-3 rounded-xl border border-white/15 bg-white/5 p-3 text-xs text-white/80">
-                      <div className="font-bold text-white">Selection audit</div>
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="font-bold text-white">Selection audit</div>
+                        <button
+                          type="button"
+                          onClick={handleDownloadAudit}
+                          disabled={auditDownloading}
+                          className="rounded-full border border-emerald-200/40 bg-emerald-300/10 px-3 py-1.5 text-xs font-black text-emerald-100 hover:bg-emerald-300/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200 disabled:cursor-wait disabled:opacity-60"
+                        >
+                          {auditDownloading ? 'Preparing audit...' : 'Download audit JSON'}
+                        </button>
+                      </div>
                       <div className="mt-1 break-all">Algorithm: {draw.selectionAlgorithm || "base-block-hash-weighted-sha256-v2"}</div>
                       <div className="mt-1 break-all">Eligible pool SHA-256: {draw.eligiblePoolHash}</div>
                       <a
