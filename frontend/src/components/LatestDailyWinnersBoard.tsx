@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import toast from "react-hot-toast";
 import { parseJsonResponse } from "@/utils/apiErrors";
 import { formatDuration, formatWalletAddress } from "@/utils/homeFormat";
@@ -245,6 +245,13 @@ export default function LatestDailyWinnersBoard({ referralLink }: { referralLink
   const [nextDrawCountdown, setNextDrawCountdown] = useState<string>("Calculating...");
   const [nextDrawAtUtc, setNextDrawAtUtc] = useState<string>("");
   const [drawRules, setDrawRules] = useState<DailyDrawRules | null>(null);
+  const [rulesModalOpen, setRulesModalOpen] = useState(false);
+  const rulesButtonRef = useRef<HTMLButtonElement>(null);
+
+  const closeRulesModal = () => {
+    setRulesModalOpen(false);
+    window.setTimeout(() => rulesButtonRef.current?.focus(), 0);
+  };
 
   const handleShareDailyDraw = async () => {
     if (!draw || typeof window === "undefined") {
@@ -342,6 +349,22 @@ export default function LatestDailyWinnersBoard({ referralLink }: { referralLink
   }, []);
 
   useEffect(() => {
+    if (!rulesModalOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') closeRulesModal();
+    };
+
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [rulesModalOpen]);
+
+  useEffect(() => {
     let isMounted = true;
 
     const fetchLatestWinners = async (silent = false) => {
@@ -421,18 +444,23 @@ export default function LatestDailyWinnersBoard({ referralLink }: { referralLink
               {lastUpdatedAt ? <p className="mt-2 text-xs text-white/85">Auto-refreshes every minute. Last updated: {lastUpdatedAt}</p> : null}
             </div>
 
-            <div className={`${glassPanelClass} mb-5 p-4 text-sm leading-6 text-white/90`}>
-              <div className="font-black text-white">Eligibility and payout rules</div>
-              <ul className="mt-2 list-disc space-y-1 pl-5">
-                <li>No purchase, payment, token holding, paid transaction, social promotion, or user-paid gas is required.</li>
-                <li>Submit one valid Daily Claim during the UTC draw date. A 7-day streak provides 1, 1, 2, 2, 3, 3, then 5 weighted entries.</li>
-                <li>Entry weight improves selection odds, but each wallet can win at most once in a draw.</li>
-                <li>Participants must be at least {drawRules?.minimumAge || 18}, comply with local law, and not use bots, duplicate wallets, sanctioned wallets, or excluded jurisdictions.</li>
-                <li>Excluded country codes: {drawRules?.blockedCountryCodes?.join(', ') || 'CU, IR, KP, SY'}, plus any jurisdiction prohibited by applicable law.</li>
-                <li>The scheduled draw runs daily at {drawRules?.scheduledTimeUtc || NEXT_PUBLIC_AUTO_DAILY_DRAW_TIME_UTC} UTC for the previous UTC day. Prize amount and winner count appear in each result.</li>
-                <li>Prizes remain pending until a successful on-chain transfer is verified. Failed transfers or insufficient treasury balance delay payment for retry; they do not select a replacement winner.</li>
-                <li>Participants are responsible for determining and reporting any taxes that apply to token rewards.</li>
-              </ul>
+            <div className={`${glassPanelClass} mb-5 flex items-center justify-between gap-4 p-4`}>
+              <div>
+                <div className="font-black text-white">Eligibility and payout rules</div>
+                <div className="mt-1 text-sm text-white/80">Review entry requirements, exclusions, draw timing, and payout terms.</div>
+              </div>
+              <button
+                ref={rulesButtonRef}
+                type="button"
+                onClick={() => setRulesModalOpen(true)}
+                aria-label="View eligibility and payout rules"
+                aria-haspopup="dialog"
+                aria-expanded={rulesModalOpen}
+                title="View eligibility and payout rules"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/30 bg-white/10 text-base font-black text-white hover:border-emerald-200 hover:bg-white/15 hover:text-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200"
+              >
+                ?
+              </button>
             </div>
 
             <div className={`${glassPanelClass} mb-5 p-4`}>
@@ -540,6 +568,52 @@ export default function LatestDailyWinnersBoard({ referralLink }: { referralLink
           </div>
         </div>
       </div>
+
+      {rulesModalOpen ? (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) closeRulesModal();
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="daily-draw-rules-title"
+            className="relative max-h-[85vh] w-full max-w-3xl overflow-y-auto rounded-lg border border-white/20 bg-slate-900 p-5 text-slate-100 shadow-2xl sm:p-7"
+          >
+            <button
+              type="button"
+              onClick={closeRulesModal}
+              aria-label="Close eligibility and payout rules"
+              autoFocus
+              className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-white/5 text-2xl leading-none text-white/75 hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200"
+            >
+              &times;
+            </button>
+            <h3 id="daily-draw-rules-title" className="pr-12 text-xl font-black text-white sm:text-2xl">Eligibility and payout rules</h3>
+            <ul className="mt-5 list-disc space-y-3 pl-5 text-sm leading-6 text-slate-200 sm:text-base">
+              <li>No purchase, payment, token holding, paid transaction, social promotion, or user-paid gas is required.</li>
+              <li>Submit one valid Daily Claim during the UTC draw date. A 7-day streak provides 1, 1, 2, 2, 3, 3, then 5 weighted entries.</li>
+              <li>Entry weight improves selection odds, but each wallet can win at most once in a draw.</li>
+              <li>Participants must be at least {drawRules?.minimumAge || 18}, comply with local law, and not use bots, duplicate wallets, sanctioned wallets, or excluded jurisdictions.</li>
+              <li>Excluded country codes: {drawRules?.blockedCountryCodes?.join(', ') || 'CU, IR, KP, SY'}, plus any jurisdiction prohibited by applicable law.</li>
+              <li>The scheduled draw runs daily at {drawRules?.scheduledTimeUtc || NEXT_PUBLIC_AUTO_DAILY_DRAW_TIME_UTC} UTC for the previous UTC day. Prize amount and winner count appear in each result.</li>
+              <li>Prizes remain pending until a successful on-chain transfer is verified. Failed transfers or insufficient treasury balance delay payment for retry; they do not select a replacement winner.</li>
+              <li>Participants are responsible for determining and reporting any taxes that apply to token rewards.</li>
+            </ul>
+            <div className="mt-6 flex justify-end">
+              <button
+                type="button"
+                onClick={closeRulesModal}
+                className="rounded-full bg-emerald-300 px-5 py-2.5 text-sm font-black text-slate-950 hover:bg-emerald-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-100 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }
