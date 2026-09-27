@@ -858,7 +858,17 @@ export default function HomeTest() {
                       <div className="mb-5 rounded-lg border border-white/15 bg-slate-950/25 p-4">
                         <div className="flex flex-wrap items-end justify-between gap-2">
                           <div>
-                            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">7-day streak</div>
+                            <div className="flex items-center gap-1.5">
+                              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">7-day streak</div>
+                              <Link
+                                href="/blog/daily-claim-step-by-step"
+                                aria-label="Learn about the 7-day streak"
+                                title="Learn about the 7-day streak"
+                                className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-white/25 text-[11px] font-black text-white/70 hover:border-amber-200 hover:text-amber-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200"
+                              >
+                                ?
+                              </Link>
+                            </div>
                             <div className="mt-1 text-base font-black text-white">
                               {dailyClaimStreak ? `Day ${dailyClaimStreak.day} of 7` : 'Start your streak today'}
                             </div>

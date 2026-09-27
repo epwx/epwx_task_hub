@@ -1279,7 +1279,17 @@ export default function TelegramMiniAppPage() {
             ) : null}
             <div className="rounded-xl border border-amber-300/35 bg-amber-500/10 px-3 py-3 text-amber-50">
               <div className="flex items-center justify-between gap-3">
-                <span className="font-semibold">7-day streak</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-semibold">7-day streak</span>
+                  <Link
+                    href="/blog/daily-claim-step-by-step"
+                    aria-label="Learn about the 7-day streak"
+                    title="Learn about the 7-day streak"
+                    className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-amber-100/40 text-[11px] font-black text-amber-50/80 hover:border-white hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                  >
+                    ?
+                  </Link>
+                </div>
                 <span className="font-black">
                   {dailyClaimStreak ? `Day ${dailyClaimStreak.day} · ${dailyClaimStreak.drawEntries} ${dailyClaimStreak.drawEntries === 1 ? 'entry' : 'entries'}` : 'Ready to start · 1 entry'}
                 </span>
