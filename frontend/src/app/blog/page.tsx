@@ -12,11 +12,11 @@ const posts = [
   },
   {
     href: "/blog/daily-claim-step-by-step",
-    tag: "Guide",
+    tag: "Updated Guide",
     tagClassName: "text-cyan-200",
-    title: "Claim EPWX Daily: Step-by-Step Guide for Long-Term Rewards",
+    title: "Claim EPWX Daily: Seven-Day Streak and Step-by-Step Guide",
     description:
-      "How to connect your wallet, verify through Telegram, complete eligibility checks, and claim your daily EPWX reward.",
+      "How to claim daily, maintain a seven-day streak, and earn up to five weighted Daily Reward Draw entries.",
     borderClassName: "border-cyan-300/20 hover:border-cyan-300/50",
   },
   {

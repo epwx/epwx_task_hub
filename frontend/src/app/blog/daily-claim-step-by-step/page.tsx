@@ -42,7 +42,7 @@ const steps = [
   {
     title: "5. Claim your daily EPWX reward",
     copy:
-      "Once connected, verified, and eligible, submit your daily claim. Make daily claiming part of your routine: connect, verify, claim, and repeat.",
+      "Once connected, verified, and eligible, submit your daily claim. Each successful claim also enters the free Daily Reward Draw and can advance your seven-day streak.",
     screenshotSrc: "/blog/daily-claim-step-05-claim-reward.jpg",
     screenshotAlt: "Daily claim screen showing Claim Daily Reward button and terms agreement checkbox",
     screenshotWidth: 1152,
@@ -57,11 +57,11 @@ export default function DailyClaimStepByStepArticlePage() {
       <section className="mx-auto max-w-4xl rounded-3xl border border-cyan-300/20 bg-gradient-to-br from-cyan-900/45 via-slate-900 to-emerald-950 p-6 shadow-2xl md:p-10">
         <p className="text-xs font-bold uppercase tracking-[0.22em] text-cyan-300">EPWX Blog</p>
         <h1 className="mt-3 text-3xl font-black leading-tight md:text-5xl">
-          Claim EPWX Daily: Step-by-Step Guide for Long-Term Rewards
+          Claim EPWX Daily: Seven-Day Streak and Step-by-Step Guide
         </h1>
         <p className="mt-4 text-sm leading-7 text-slate-300 md:text-base">
           EPWX Daily Claim is designed for consistent community participation, with wallet identity, Telegram
-          verification, and eligibility checks keeping rewards transparent and fair for real members.
+          verification, eligibility checks, and a seven-day draw streak keeping rewards transparent and fair for real members.
         </p>
 
         <div className="mt-5 rounded-2xl border border-emerald-300/35 bg-emerald-300/10 p-4 text-sm text-emerald-100">
@@ -122,6 +122,48 @@ export default function DailyClaimStepByStepArticlePage() {
                 </div>
               ))}
             </div>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-extrabold text-white">Build a seven-day draw streak</h2>
+            <p className="mt-3 text-slate-300">
+              Claim again within 48 hours of your previous successful claim to advance your streak. Your streak day
+              determines how many weighted entries that claim receives in the Daily Reward Draw.
+            </p>
+            <div className="mt-4 overflow-x-auto rounded-xl border border-amber-300/25">
+              <table className="w-full min-w-[34rem] text-left text-sm">
+                <thead className="bg-amber-300/10 text-amber-100">
+                  <tr>
+                    <th className="px-4 py-3 font-bold">Streak day</th>
+                    <th className="px-4 py-3 font-bold">1</th>
+                    <th className="px-4 py-3 font-bold">2</th>
+                    <th className="px-4 py-3 font-bold">3</th>
+                    <th className="px-4 py-3 font-bold">4</th>
+                    <th className="px-4 py-3 font-bold">5</th>
+                    <th className="px-4 py-3 font-bold">6</th>
+                    <th className="px-4 py-3 font-bold">7</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-black/20 text-slate-200">
+                  <tr className="border-t border-amber-300/15">
+                    <th className="px-4 py-3 font-bold text-white">Draw entries</th>
+                    <td className="px-4 py-3">1</td>
+                    <td className="px-4 py-3">1</td>
+                    <td className="px-4 py-3">2</td>
+                    <td className="px-4 py-3">2</td>
+                    <td className="px-4 py-3">3</td>
+                    <td className="px-4 py-3">3</td>
+                    <td className="px-4 py-3 font-black text-amber-200">5</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <ul className="mt-4 list-disc space-y-2 pl-5 text-slate-300">
+              <li>Waiting more than 48 hours resets the next successful claim to day 1.</li>
+              <li>After day 7, your next successful claim begins a new cycle at day 1.</li>
+              <li>Weighted entries improve your chance in the deterministic draw but do not guarantee a win.</li>
+              <li>Each wallet can win no more than once in the same draw.</li>
+            </ul>
           </section>
 
           <section>
