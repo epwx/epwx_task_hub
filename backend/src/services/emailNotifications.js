@@ -3,6 +3,9 @@ import { createHash, randomBytes } from 'crypto';
 import DailyClaimEmailPreference from '../models/DailyClaimEmailPreference.js';
 import DailyClaim from '../models/DailyClaim.js';
 import Merchant from '../models/Merchant.js';
+import dailyClaimEmailUtils from '../utils/dailyClaimEmail.cjs';
+
+const { isReadyReminderEligible, isSuccessRetryEligible } = dailyClaimEmailUtils;
 
 let transporter;
 
@@ -16,6 +19,7 @@ function getEmailConfig() {
     fromName: String(process.env.EMAIL_FROM_NAME || 'EPWX Daily Claims').trim(),
     fromAddress: String(process.env.EMAIL_FROM_ADDRESS || process.env.SMTP_USER || '').trim(),
     frontendUrl: String(process.env.FRONTEND_URL || 'https://tasks.epowex.com').replace(/\/$/, ''),
+    publicApiUrl: String(process.env.PUBLIC_API_URL || 'https://api.epowex.com/api').replace(/\/$/, ''),
   };
 }
 
@@ -51,7 +55,7 @@ function formatAmount(amount) {
   }
 }
 
-async function sendEmail({ to, subject, text, html }) {
+async function sendEmail({ to, subject, text, html, headers }) {
   const config = getEmailConfig();
   if (!config.host || !config.user || !config.pass || !config.fromAddress) {
     return { sent: false, reason: 'smtp_not_configured' };
@@ -65,6 +69,7 @@ async function sendEmail({ to, subject, text, html }) {
       subject,
       text,
       html,
+      headers,
     });
     return { sent: true, reason: 'sent' };
   } catch (error) {
@@ -89,13 +94,35 @@ export async function sendDailyClaimSuccessEmail({ preference, claim, unsubscrib
   const nextClaimAt = new Date(new Date(claim.claimedAt).getTime() + 24 * 60 * 60 * 1000);
   const claimUrl = `${config.frontendUrl}/#daily-claim`;
   const unsubscribeUrl = `${config.frontendUrl}/email/unsubscribe?token=${encodeURIComponent(unsubscribeToken)}`;
+  const oneClickUnsubscribeUrl = `${config.publicApiUrl}/epwx/daily-claim/email/unsubscribe?token=${encodeURIComponent(unsubscribeToken)}`;
   const amount = formatAmount(claim.amount);
   return sendEmail({
     to: preference.email,
     subject: `Your ${amount} EPWX Daily Claim was successful`,
     text: `Your Daily Claim of ${amount} EPWX was successful. Your next claim is available after ${nextClaimAt.toISOString()}.\n\nClaim: ${claimUrl}\nUnsubscribe: ${unsubscribeUrl}`,
     html: `<h1>Daily Claim successful</h1><p><strong>${escapeHtml(amount)} EPWX</strong> was sent to your wallet.</p><p>Your next claim is available after ${escapeHtml(nextClaimAt.toUTCString())}.</p><p><a href="${escapeHtml(claimUrl)}">View Daily Claim</a></p><p><a href="${escapeHtml(unsubscribeUrl)}">Unsubscribe from Daily Claim emails</a></p>`,
+    headers: {
+      'List-Unsubscribe': `<${oneClickUnsubscribeUrl}>`,
+      'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+    },
   });
+}
+
+async function deliverDailyClaimSuccessEmail(preference, claim, { markPending = false } = {}) {
+  const unsubscribeToken = randomBytes(32).toString('hex');
+  preference.unsubscribeTokenHash = createHash('sha256').update(unsubscribeToken).digest('hex');
+  if (markPending) {
+    preference.pendingSuccessClaimId = claim.id;
+  }
+  await preference.save();
+
+  const result = await sendDailyClaimSuccessEmail({ preference, claim, unsubscribeToken });
+  if (result.sent) {
+    preference.lastSuccessClaimId = claim.id;
+    preference.pendingSuccessClaimId = null;
+    await preference.save();
+  }
+  return result;
 }
 
 export async function notifyDailyClaimSuccess(claim) {
@@ -115,31 +142,58 @@ export async function notifyDailyClaimSuccess(claim) {
       return { sent: false, reason: 'already_sent' };
     }
 
-    const unsubscribeToken = randomBytes(32).toString('hex');
-    preference.unsubscribeTokenHash = createHash('sha256').update(unsubscribeToken).digest('hex');
-    await preference.save();
-
-    const result = await sendDailyClaimSuccessEmail({ preference, claim, unsubscribeToken });
-    if (result.sent) {
-      preference.lastSuccessClaimId = claim.id;
-      await preference.save();
-    }
-    return result;
+    return deliverDailyClaimSuccessEmail(preference, claim, { markPending: true });
   } catch (error) {
     console.error('[emailNotifications] Daily Claim success notification failed:', error?.message || error);
     return { sent: false, reason: 'email_notification_failed', error: error?.message || String(error) };
   }
 }
 
+export async function sendPendingDailyClaimSuccessEmails() {
+  const preferences = await DailyClaimEmailPreference.findAll({
+    where: {
+      successEmailsEnabled: true,
+      unsubscribedAt: null,
+    },
+  });
+  let sent = 0;
+  let failed = 0;
+
+  for (const preference of preferences) {
+    try {
+      if (!preference.pendingSuccessClaimId) continue;
+      const pendingClaim = await DailyClaim.findByPk(preference.pendingSuccessClaimId);
+      if (!isSuccessRetryEligible(preference, pendingClaim)) continue;
+
+      const result = await deliverDailyClaimSuccessEmail(preference, pendingClaim);
+      if (result.sent) {
+        sent += 1;
+      } else {
+        failed += 1;
+      }
+    } catch (error) {
+      failed += 1;
+      console.error(`[emailNotifications] Success email retry failed for wallet ${preference.wallet}:`, error?.message || error);
+    }
+  }
+
+  return { checked: preferences.length, sent, failed };
+}
+
 async function sendDailyClaimReadyEmail({ preference, unsubscribeToken }) {
   const config = getEmailConfig();
   const claimUrl = `${config.frontendUrl}/#daily-claim`;
   const unsubscribeUrl = `${config.frontendUrl}/email/unsubscribe?token=${encodeURIComponent(unsubscribeToken)}`;
+  const oneClickUnsubscribeUrl = `${config.publicApiUrl}/epwx/daily-claim/email/unsubscribe?token=${encodeURIComponent(unsubscribeToken)}`;
   return sendEmail({
     to: preference.email,
     subject: 'Your EPWX Daily Claim is ready',
     text: `Your next EPWX Daily Claim is ready. Claim now: ${claimUrl}\n\nUnsubscribe: ${unsubscribeUrl}`,
     html: `<h1>Your Daily Claim is ready</h1><p>Your next EPWX reward is available now.</p><p><a href="${escapeHtml(claimUrl)}">Claim Daily EPWX</a></p><p><a href="${escapeHtml(unsubscribeUrl)}">Unsubscribe from Daily Claim emails</a></p>`,
+    headers: {
+      'List-Unsubscribe': `<${oneClickUnsubscribeUrl}>`,
+      'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+    },
   });
 }
 
@@ -161,10 +215,7 @@ export async function sendReadyDailyClaimReminders(now = new Date()) {
         where: { wallet: preference.wallet },
         order: [['claimedAt', 'DESC']],
       });
-      if (!latestClaim || preference.lastReminderClaimId === latestClaim.id) continue;
-
-      const readyAt = new Date(latestClaim.claimedAt).getTime() + 24 * 60 * 60 * 1000;
-      if (readyAt > now.getTime()) continue;
+      if (!isReadyReminderEligible(preference, latestClaim, now)) continue;
 
       const unsubscribeToken = randomBytes(32).toString('hex');
       preference.unsubscribeTokenHash = createHash('sha256').update(unsubscribeToken).digest('hex');

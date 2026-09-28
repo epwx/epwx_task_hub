@@ -88,7 +88,7 @@ import { runDailyDraw } from './routes/epwx.js';
 import { DailyDraw } from './models/index.js';
 import { getPendingEarningsForSettlement, updatePartnerEarningStatus } from './services/partnerService.js';
 import { epwxTokenWithSigner } from './services/blockchain.js';
-import { sendReadyDailyClaimReminders } from './services/emailNotifications.js';
+import { sendPendingDailyClaimSuccessEmails, sendReadyDailyClaimReminders } from './services/emailNotifications.js';
 
 const AUTO_DAILY_DRAW_ENABLED = ['1', 'true', 'yes', 'on'].includes(String(process.env.AUTO_DAILY_DRAW_ENABLED || 'false').toLowerCase());
 const AUTO_DAILY_DRAW_TIME_UTC = String(process.env.AUTO_DAILY_DRAW_TIME_UTC || '00:05').trim();
@@ -373,12 +373,22 @@ async function executeDailyClaimEmailReminders() {
   if (!acquired) return;
 
   try {
-    const result = await sendReadyDailyClaimReminders();
-    if (result.sent || result.failed) {
-      console.log(`[daily-claim-email] Reminder run complete. checked=${result.checked}, sent=${result.sent}, failed=${result.failed}`);
+    const [reminders, successRetries] = await Promise.allSettled([
+      sendReadyDailyClaimReminders(),
+      sendPendingDailyClaimSuccessEmails(),
+    ]);
+    if (reminders.status === 'rejected') {
+      console.error('[daily-claim-email] Reminder run failed:', reminders.reason);
+    } else if (reminders.value.sent || reminders.value.failed) {
+      console.log(`[daily-claim-email] Reminder run complete. checked=${reminders.value.checked}, sent=${reminders.value.sent}, failed=${reminders.value.failed}`);
+    }
+    if (successRetries.status === 'rejected') {
+      console.error('[daily-claim-email] Success retry run failed:', successRetries.reason);
+    } else if (successRetries.value.sent || successRetries.value.failed) {
+      console.log(`[daily-claim-email] Success retry run complete. checked=${successRetries.value.checked}, sent=${successRetries.value.sent}, failed=${successRetries.value.failed}`);
     }
   } catch (error) {
-    console.error('[daily-claim-email] Reminder run failed:', error);
+    console.error('[daily-claim-email] Scheduled email run failed:', error);
   } finally {
     try {
       await DailyDraw.sequelize.query(

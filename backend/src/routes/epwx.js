@@ -1673,7 +1673,9 @@ router.get('/daily-claim/email/verify', async (req, res) => {
 });
 
 router.post('/daily-claim/email/unsubscribe', async (req, res) => {
-  const token = typeof req.body?.token === 'string' ? req.body.token : '';
+  const token = typeof req.body?.token === 'string'
+    ? req.body.token
+    : (typeof req.query?.token === 'string' ? req.query.token : '');
   if (!token) return res.status(400).json({ error: 'Unsubscribe token is required' });
 
   try {

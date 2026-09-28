@@ -45,6 +45,7 @@ const DailyClaimEmailPreference = sequelize.define('DailyClaimEmailPreference', 
   },
   unsubscribedAt: DataTypes.DATE,
   lastSuccessClaimId: DataTypes.INTEGER,
+  pendingSuccessClaimId: DataTypes.INTEGER,
   lastReminderClaimId: DataTypes.INTEGER,
 }, {
   tableName: 'daily_claim_email_preferences',
