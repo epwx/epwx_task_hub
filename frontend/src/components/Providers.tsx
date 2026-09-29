@@ -17,6 +17,7 @@ const config = createConfig(
     syncConnectedChain: false,
     // Use a placeholder WalletConnect project ID if not set
     walletConnectProjectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'a01e2f3b4c5d6e7f8g9h0i1j2k3l4m5n',
+    coinbaseWalletPreference: 'eoaOnly',
     appName: 'EPWX Task Platform',
     appDescription: 'Earn EPWX by completing campaigns and claiming rewards',
     appUrl: process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.NEXT_PUBLIC_PORT || 3000}`,
