@@ -10,7 +10,7 @@ import TermsAndConditionsModal from "@/components/TermsAndConditionsModal";
 import UserDailyClaims from "@/components/UserDailyClaims";
 import LastFivePaidDailyClaims from "@/components/LastFivePaidDailyClaims";
 import LatestDailyWinnersBoard from "@/components/LatestDailyWinnersBoard";
-import DailyClaimEmailSignup from "@/components/DailyClaimEmailSignup";
+import DailyClaimEmailSignup, { type EmailEligibilityStatus } from "@/components/DailyClaimEmailSignup";
 import { BuyerBadgeChip, type BuyerBadge } from "@/components/BuyerBadge";
 import EngagementCampaignBoard from "@/components/EngagementCampaignBoard";
 import { formatEpwxBalance, formatDuration } from "@/utils/homeFormat";
@@ -125,6 +125,7 @@ export default function HomeTest() {
   const { signMessageAsync } = useSignMessage();
   const [claiming, setClaiming] = useState(false);
   const [claimStatus, setClaimStatus] = useState<string | null>(null);
+  const [emailEligibility, setEmailEligibility] = useState<EmailEligibilityStatus>("unknown");
   const [showClaimUpgradePrompt, setShowClaimUpgradePrompt] = useState(false);
   const [nextDailyClaimAt, setNextDailyClaimAt] = useState<number | null>(null);
   const [remainingClaimTime, setRemainingClaimTime] = useState<string | null>(null);
@@ -504,6 +505,10 @@ export default function HomeTest() {
   const handleDailyClaim = async () => {
     if (!address) {
       setClaimStatus("Connect your wallet first.");
+      return;
+    }
+    if (emailEligibility !== "verified") {
+      setClaimStatus("Check and verify this wallet's email before claiming.");
       return;
     }
 
@@ -894,7 +899,7 @@ export default function HomeTest() {
                         <div className="mt-3 text-xs leading-5 text-white/60">Claim again within 48 hours to advance. Day 7 earns five entries, then a new cycle begins.</div>
                       </div>
                       <div className="mb-5">
-                        <DailyClaimEmailSignup wallet={address} />
+                        <DailyClaimEmailSignup wallet={address} onEligibilityChange={setEmailEligibility} />
                       </div>
                       <div className="flex items-start gap-3">
                         <input
@@ -926,10 +931,18 @@ export default function HomeTest() {
                       </div>
                       <button
                         onClick={handleDailyClaim}
-                        disabled={claiming || !agreed || !!remainingClaimTime}
-                        className={`mt-4 flex min-h-12 w-full items-center justify-center rounded-lg bg-emerald-500 px-6 py-3 text-base font-black text-slate-950 transition-colors hover:bg-emerald-400 ${claiming || !agreed || !!remainingClaimTime ? 'cursor-not-allowed opacity-50' : ''}`}
+                        disabled={claiming || !agreed || !!remainingClaimTime || emailEligibility !== "verified"}
+                        className={`mt-4 flex min-h-12 w-full items-center justify-center rounded-lg bg-emerald-500 px-6 py-3 text-base font-black text-slate-950 transition-colors hover:bg-emerald-400 ${claiming || !agreed || !!remainingClaimTime || emailEligibility !== "verified" ? 'cursor-not-allowed opacity-50' : ''}`}
                       >
-                        {claiming ? 'Claiming...' : remainingClaimTime ? `Next claim in ${remainingClaimTime}` : 'Claim Daily EPWX'}
+                        {claiming
+                          ? 'Claiming...'
+                          : remainingClaimTime
+                            ? `Next claim in ${remainingClaimTime}`
+                            : emailEligibility === "verified"
+                              ? 'Claim Daily EPWX'
+                              : emailEligibility === "unknown"
+                                ? 'Check Email Status to Claim'
+                                : 'Verify Email to Claim'}
                       </button>
                       {claimStatus && (
                         <div className="mt-4 text-center text-base font-semibold text-white">{claimStatus}</div>

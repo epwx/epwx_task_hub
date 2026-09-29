@@ -12,6 +12,13 @@ interface EmailPreference {
   unsubscribed?: boolean;
 }
 
+export type EmailEligibilityStatus = "unknown" | "unverified" | "verified";
+
+interface DailyClaimEmailSignupProps {
+  wallet: string;
+  onEligibilityChange?: (status: EmailEligibilityStatus) => void;
+}
+
 function maskEmail(email: string) {
   const [localPart, domain] = email.split("@");
   if (!localPart || !domain) return "";
@@ -19,7 +26,7 @@ function maskEmail(email: string) {
   return `${localPart.slice(0, 2)}${"*".repeat(Math.min(Math.max(localPart.length - 3, 3), 10))}${localPart.slice(-1)}@${domain}`;
 }
 
-export default function DailyClaimEmailSignup({ wallet }: { wallet: string }) {
+export default function DailyClaimEmailSignup({ wallet, onEligibilityChange }: DailyClaimEmailSignupProps) {
   const { signMessageAsync } = useSignMessage();
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -33,7 +40,8 @@ export default function DailyClaimEmailSignup({ wallet }: { wallet: string }) {
     setEditingEmail(false);
     setStatus(null);
     setPreference(null);
-  }, [wallet]);
+    onEligibilityChange?.("unknown");
+  }, [wallet, onEligibilityChange]);
 
   const getTodayUtc = () => new Date().toISOString().slice(0, 10);
 
@@ -52,6 +60,7 @@ export default function DailyClaimEmailSignup({ wallet }: { wallet: string }) {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Unable to load email preferences.");
       setPreference(data);
+      onEligibilityChange?.(data.verified ? "verified" : "unverified");
       setEditingEmail(false);
       if (!data.enrolled) setStatus("No email is linked to this wallet yet.");
     } catch (error) {
@@ -99,6 +108,7 @@ export default function DailyClaimEmailSignup({ wallet }: { wallet: string }) {
           unsubscribed: false,
         });
         setEditingEmail(false);
+        onEligibilityChange?.("unverified");
         if (data.emailSent) setEmail("");
       }
     } catch (error) {
@@ -146,10 +156,10 @@ export default function DailyClaimEmailSignup({ wallet }: { wallet: string }) {
       </div>
       <div className="mt-1 text-sm text-white/70">
         {preference === null
-          ? "Check this wallet's email status. Email alerts are optional."
+          ? "Check this wallet's verified email before claiming."
           : preference.verified
-            ? "This wallet is eligible to claim. Email alerts are optional."
-            : "Verify an email for this wallet before claiming. Email alerts are optional."}
+            ? "This wallet meets the email requirement for Daily Claims."
+            : "Verify an email for this wallet before claiming."}
       </div>
       {!preference ? (
         <button
@@ -198,6 +208,16 @@ export default function DailyClaimEmailSignup({ wallet }: { wallet: string }) {
             </label>
           </div>
           {!preference.verified ? <div className="mt-3 text-xs text-white/60">Open the verification email and confirm the address before claiming.</div> : null}
+          {!preference.verified ? (
+            <button
+              type="button"
+              onClick={loadStatus}
+              disabled={loadingStatus || submitting}
+              className="mt-3 text-sm font-semibold text-emerald-200 underline hover:text-white disabled:opacity-50"
+            >
+              {loadingStatus ? "Checking..." : "I verified my email - refresh status"}
+            </button>
+          ) : null}
         </div>
       ) : null}
 
