@@ -10,6 +10,7 @@ interface EmailPreference {
   remindersEnabled?: boolean;
   successEmailsEnabled?: boolean;
   unsubscribed?: boolean;
+  canManage?: boolean;
 }
 
 export type EmailEligibilityStatus = "unknown" | "unverified" | "verified";
@@ -50,6 +51,27 @@ export default function DailyClaimEmailSignup({ wallet, onEligibilityChange }: D
     setLoadingStatus(true);
     setStatus(null);
     try {
+      const response = await fetch(`/api/epwx/daily-claim/email/eligibility?wallet=${encodeURIComponent(normalizedWallet)}`);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Unable to load email preferences.");
+      setPreference({ ...data, canManage: false });
+      onEligibilityChange?.(data.verified ? "verified" : "unverified");
+      setEditingEmail(false);
+      if (!data.enrolled) setStatus("No email is linked to this wallet yet.");
+    } catch (error) {
+      setStatus(error instanceof Error && /rejected|denied/i.test(error.message)
+        ? "Wallet signature was cancelled."
+        : error instanceof Error ? error.message : "Unable to load email preferences.");
+    } finally {
+      setLoadingStatus(false);
+    }
+  };
+
+  const loadPreferenceDetails = async () => {
+    const normalizedWallet = wallet.toLowerCase();
+    setLoadingStatus(true);
+    setStatus(null);
+    try {
       const message = `EPWX Daily Claim Email Status\nWallet: ${normalizedWallet}\nDate: ${getTodayUtc()}`;
       const signature = await signMessageAsync({ message });
       const response = await fetch("/api/epwx/daily-claim/email/status", {
@@ -59,10 +81,8 @@ export default function DailyClaimEmailSignup({ wallet, onEligibilityChange }: D
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Unable to load email preferences.");
-      setPreference(data);
+      setPreference({ ...data, canManage: true });
       onEligibilityChange?.(data.verified ? "verified" : "unverified");
-      setEditingEmail(false);
-      if (!data.enrolled) setStatus("No email is linked to this wallet yet.");
     } catch (error) {
       setStatus(error instanceof Error && /rejected|denied/i.test(error.message)
         ? "Wallet signature was cancelled."
@@ -106,6 +126,7 @@ export default function DailyClaimEmailSignup({ wallet, onEligibilityChange }: D
           remindersEnabled: true,
           successEmailsEnabled: true,
           unsubscribed: false,
+          canManage: true,
         });
         setEditingEmail(false);
         onEligibilityChange?.("unverified");
@@ -176,7 +197,7 @@ export default function DailyClaimEmailSignup({ wallet, onEligibilityChange }: D
         <div className="mt-4 rounded-lg border border-white/15 bg-slate-950/30 p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <div className="font-semibold text-white">{preference.emailMasked}</div>
+              <div className="font-semibold text-white">{preference.emailMasked || "Email linked to this wallet"}</div>
               <div className={`mt-1 text-xs font-semibold ${preference.verified ? "text-emerald-200" : "text-amber-200"}`}>
                 {preference.verified ? "Verified - eligible for Daily Claims" : "Verification pending"}
               </div>
@@ -185,7 +206,7 @@ export default function DailyClaimEmailSignup({ wallet, onEligibilityChange }: D
               Change email
             </button>
           </div>
-          <div className="mt-4 grid gap-3">
+          {preference.canManage ? <div className="mt-4 grid gap-3">
             <label className="flex items-center justify-between gap-4 text-sm text-white/85">
               <span>Claim-ready reminders</span>
               <input
@@ -206,7 +227,17 @@ export default function DailyClaimEmailSignup({ wallet, onEligibilityChange }: D
                 className="h-4 w-4 accent-emerald-400"
               />
             </label>
-          </div>
+          </div> : null}
+          {preference.verified && !preference.canManage ? (
+            <button
+              type="button"
+              onClick={loadPreferenceDetails}
+              disabled={loadingStatus || submitting}
+              className="mt-3 text-sm font-semibold text-emerald-200 underline hover:text-white disabled:opacity-50"
+            >
+              {loadingStatus ? "Loading..." : "Manage email settings"}
+            </button>
+          ) : null}
           {!preference.verified ? <div className="mt-3 text-xs text-white/60">Open the verification email and confirm the address before claiming.</div> : null}
           {!preference.verified ? (
             <button

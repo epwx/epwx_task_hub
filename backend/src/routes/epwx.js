@@ -1605,6 +1605,27 @@ router.post('/daily-claim/email/status', async (req, res) => {
   }
 });
 
+router.get('/daily-claim/email/eligibility', async (req, res) => {
+  const normalizedWallet = normalizeWallet(req.query.wallet);
+  if (!normalizedWallet || !ethers.isAddress(normalizedWallet)) {
+    return res.status(400).json({ error: 'A valid wallet is required' });
+  }
+
+  try {
+    const preference = await DailyClaimEmailPreference.findOne({
+      where: { wallet: normalizedWallet },
+      attributes: ['emailVerifiedAt'],
+    });
+    return res.json({
+      enrolled: Boolean(preference),
+      verified: Boolean(preference?.emailVerifiedAt),
+    });
+  } catch (error) {
+    console.error('[daily-claim/email] Eligibility lookup failed:', error);
+    return res.status(500).json({ error: 'Unable to check email eligibility' });
+  }
+});
+
 router.put('/daily-claim/email/preferences', async (req, res) => {
   const { wallet, signature, remindersEnabled, successEmailsEnabled } = req.body;
   const rawWallet = typeof wallet === 'string' ? wallet.trim() : '';
