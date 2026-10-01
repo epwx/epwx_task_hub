@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useSignMessage } from "wagmi";
 
 interface EmailPreference {
@@ -36,17 +36,9 @@ export default function DailyClaimEmailSignup({ wallet, onEligibilityChange }: D
   const [status, setStatus] = useState<string | null>(null);
   const [preference, setPreference] = useState<EmailPreference | null>(null);
 
-  useEffect(() => {
-    setEmail("");
-    setEditingEmail(false);
-    setStatus(null);
-    setPreference(null);
-    onEligibilityChange?.("unknown");
-  }, [wallet, onEligibilityChange]);
-
   const getTodayUtc = () => new Date().toISOString().slice(0, 10);
 
-  const loadStatus = async () => {
+  const loadStatus = useCallback(async () => {
     const normalizedWallet = wallet.toLowerCase();
     setLoadingStatus(true);
     setStatus(null);
@@ -65,7 +57,16 @@ export default function DailyClaimEmailSignup({ wallet, onEligibilityChange }: D
     } finally {
       setLoadingStatus(false);
     }
-  };
+  }, [onEligibilityChange, wallet]);
+
+  useEffect(() => {
+    setEmail("");
+    setEditingEmail(false);
+    setStatus(null);
+    setPreference(null);
+    onEligibilityChange?.("unknown");
+    void loadStatus();
+  }, [loadStatus, onEligibilityChange]);
 
   const loadPreferenceDetails = async () => {
     const normalizedWallet = wallet.toLowerCase();
