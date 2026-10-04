@@ -860,44 +860,41 @@ export default function HomeTest() {
                       </div>
                     </div>
                     <div className="p-5">
-                      <div className="mb-5 rounded-lg border border-white/15 bg-slate-950/25 p-4">
-                        <div className="flex flex-wrap items-end justify-between gap-2">
-                          <div>
-                            <div className="flex items-center gap-1.5">
-                              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">7-day streak</div>
-                              <Link
-                                href="/blog/daily-claim-step-by-step"
-                                aria-label="Learn about the 7-day streak"
-                                title="Learn about the 7-day streak"
-                                className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-white/25 text-[11px] font-black text-white/70 hover:border-amber-200 hover:text-amber-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200"
-                              >
-                                ?
-                              </Link>
-                            </div>
-                            <div className="mt-1 text-base font-black text-white">
-                              {dailyClaimStreak ? `Day ${dailyClaimStreak.day} of 7` : 'Start your streak today'}
+                      <details className="group mb-5 rounded-lg border border-white/15 bg-slate-950/25">
+                        <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 marker:content-none">
+                          <div className="min-w-0">
+                            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">7-day streak</div>
+                            <div className="mt-0.5 truncate text-sm font-black text-white">
+                              {dailyClaimStreak
+                                ? `Day ${dailyClaimStreak.day} of 7 · ${dailyClaimStreak.drawEntries} draw ${dailyClaimStreak.drawEntries === 1 ? 'entry' : 'entries'}`
+                                : 'Start today · Day 7 earns 5 draw entries'}
                             </div>
                           </div>
-                          <div className="text-sm font-bold text-amber-100">
-                            {dailyClaimStreak ? dailyClaimStreak.drawEntries : 1} draw {dailyClaimStreak?.drawEntries === 1 || !dailyClaimStreak ? 'entry' : 'entries'}
+                          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded border border-white/15 text-lg text-white/70 transition-transform group-open:rotate-180" aria-hidden="true">⌄</span>
+                        </summary>
+                        <div className="border-t border-white/10 px-4 pb-4 pt-3">
+                          <div className="grid grid-cols-7 gap-1.5" aria-label={`${dailyClaimStreak?.day || 0} of 7 streak days completed`}>
+                            {Array.from({ length: 7 }, (_, index) => {
+                              const day = index + 1;
+                              const completed = day <= (dailyClaimStreak?.day || 0);
+                              return (
+                                <div
+                                  key={day}
+                                  className={`flex aspect-square items-center justify-center rounded text-xs font-black ${completed ? 'bg-amber-300 text-slate-950' : 'border border-white/15 bg-white/5 text-white/45'}`}
+                                >
+                                  {day}
+                                </div>
+                              );
+                            })}
+                          </div>
+                          <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs leading-5 text-white/60">
+                            <span>Claim again within 48 hours to advance. A new cycle begins after day 7.</span>
+                            <Link className="font-semibold text-amber-100 underline hover:text-white" href="/blog/daily-claim-step-by-step">
+                              View streak rules
+                            </Link>
                           </div>
                         </div>
-                        <div className="mt-3 grid grid-cols-7 gap-1.5" aria-label={`${dailyClaimStreak?.day || 0} of 7 streak days completed`}>
-                          {Array.from({ length: 7 }, (_, index) => {
-                            const day = index + 1;
-                            const completed = day <= (dailyClaimStreak?.day || 0);
-                            return (
-                              <div
-                                key={day}
-                                className={`flex aspect-square items-center justify-center rounded text-xs font-black ${completed ? 'bg-amber-300 text-slate-950' : 'border border-white/15 bg-white/5 text-white/45'}`}
-                              >
-                                {day}
-                              </div>
-                            );
-                          })}
-                        </div>
-                        <div className="mt-3 text-xs leading-5 text-white/60">Claim again within 48 hours to advance. Day 7 earns five entries, then a new cycle begins.</div>
-                      </div>
+                      </details>
                       <div className="mb-5">
                         <DailyClaimEmailSignup wallet={address} onEligibilityChange={setEmailEligibility} />
                       </div>
