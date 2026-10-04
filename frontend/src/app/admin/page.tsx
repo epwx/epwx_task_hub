@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import DailyClaimsTable from "@/components/DailyClaimsTable";
 import { useAccount, usePublicClient, useWriteContract } from "wagmi";
@@ -286,6 +287,11 @@ export default function AdminPage() {
               <div className="text-xs font-black uppercase tracking-[0.24em] text-slate-400">Admin Dashboard</div>
               <h1 className="mt-2 text-3xl font-black text-white">Claims and reward operations</h1>
               <p className="mt-3 max-w-2xl text-sm text-slate-300">Manage special claims, cashback distributions, and daily claim payouts from one operator panel.</p>
+              {!notAdmin ? (
+                <Link href="/admin/retention" className="mt-4 inline-flex rounded-lg border border-emerald-300/30 bg-emerald-300/10 px-4 py-2 text-sm font-bold text-emerald-100 hover:bg-emerald-300/15">
+                  View retention analytics
+                </Link>
+              ) : null}
             </div>
             <div className="grid min-w-0 gap-3 sm:grid-cols-3 lg:min-w-[360px]">
               <div className={`${glassPanelClass} min-w-0 px-4 py-3`}>

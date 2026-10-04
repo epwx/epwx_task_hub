@@ -15,6 +15,7 @@ import { epwxTokenContract, epwxTokenWithSigner } from '../services/blockchain.j
 import dailyClaimSignatureUtils from '../utils/dailyClaimSignature.cjs';
 import dailyClaimRewardUtils from '../utils/dailyClaimReward.cjs';
 import dailyClaimStreakUtils from '../utils/dailyClaimStreak.cjs';
+import dailyClaimAnalyticsUtils from '../utils/dailyClaimAnalytics.cjs';
 import dailyDrawSelectionUtils from '../utils/dailyDrawSelection.cjs';
 import dailyDrawEligibilityUtils from '../utils/dailyDrawEligibility.cjs';
 const router = express.Router();
@@ -71,9 +72,11 @@ const {
   buildEmailEnrollmentMessages,
   buildEmailStatusMessages,
   buildEmailPreferenceMessages,
+  buildAdminAnalyticsMessages,
 } = dailyClaimSignatureUtils;
 const { calculateDailyClaimReward } = dailyClaimRewardUtils;
 const { calculateDailyClaimStreak } = dailyClaimStreakUtils;
+const { calculateRetentionAnalytics } = dailyClaimAnalyticsUtils;
 const {
   LEGACY_DAILY_DRAW_SELECTION_ALGORITHM,
   buildDailyDrawAudit,
@@ -1114,6 +1117,52 @@ router.get('/daily-claims', async (req, res) => {
     }
   }
   return res.status(400).json({ error: 'Missing admin, wallet, or required parameters' });
+});
+
+// POST /api/epwx/daily-claims/analytics
+router.post('/daily-claims/analytics', async (req, res) => {
+  const rawWallet = typeof req.body.wallet === 'string' ? req.body.wallet.trim() : '';
+  const normalizedWallet = normalizeWallet(rawWallet);
+  const signature = req.body.signature;
+  if (!normalizedWallet || !signature || !isAdminWallet(normalizedWallet)) {
+    return res.status(403).json({ error: 'Unauthorized' });
+  }
+
+  try {
+    const now = new Date();
+    const todayUtc = now.toISOString().slice(0, 10);
+    const signatureValid = await verifyWalletSignature(
+      buildAdminAnalyticsMessages(rawWallet, normalizedWallet, todayUtc),
+      signature,
+      normalizedWallet,
+    );
+    if (!signatureValid) {
+      return res.status(401).json({ error: 'Admin wallet signature is invalid' });
+    }
+
+    const analyticsStart = new Date(now.getTime() - (60 * 24 * 60 * 60 * 1000));
+    const [recentClaims, firstClaimByWallet] = await Promise.all([
+      DailyClaim.findAll({
+        where: { claimedAt: { [Op.gte]: analyticsStart } },
+        attributes: ['wallet', 'claimedAt', 'streakDay', 'amount', 'status'],
+        order: [['claimedAt', 'ASC']],
+        raw: true,
+      }),
+      DailyClaim.findAll({
+        attributes: [
+          'wallet',
+          [DailyClaim.sequelize.fn('MIN', DailyClaim.sequelize.col('claimedAt')), 'firstClaimAt'],
+        ],
+        group: ['wallet'],
+        raw: true,
+      }),
+    ]);
+
+    return res.json(calculateRetentionAnalytics({ claims: recentClaims, firstClaimByWallet, now }));
+  } catch (err) {
+    console.error('[daily-claims/analytics] Failed to calculate retention analytics:', err);
+    return res.status(500).json({ error: 'Unable to calculate Daily Claim analytics' });
+  }
 });
 
 // GET /api/epwx/daily-claims/summary

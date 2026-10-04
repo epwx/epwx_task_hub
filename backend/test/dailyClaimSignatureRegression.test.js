@@ -5,6 +5,7 @@ const {
   buildEmailEnrollmentMessages,
   buildEmailStatusMessages,
   buildEmailPreferenceMessages,
+  buildAdminAnalyticsMessages,
 } = require('../src/utils/dailyClaimSignature.cjs');
 
 function createWalletWithCaseDifference() {
@@ -124,6 +125,25 @@ describe('Daily claim signature regression', () => {
     )).toBe(true);
     expect(await verifyWalletSignature(
       buildEmailPreferenceMessages(normalizedWallet, normalizedWallet, false, false, date),
+      signature,
+      normalizedWallet,
+    )).toBe(false);
+  });
+
+  it('binds retention analytics access to the admin wallet and date', async () => {
+    const wallet = createWalletWithCaseDifference();
+    const normalizedWallet = wallet.address.toLowerCase();
+    const date = '2026-10-04';
+    const message = `EPWX Admin Retention Analytics\nWallet: ${normalizedWallet}\nDate: ${date}`;
+    const signature = await wallet.signMessage(message);
+
+    expect(await verifyWalletSignature(
+      buildAdminAnalyticsMessages(normalizedWallet, normalizedWallet, date),
+      signature,
+      normalizedWallet,
+    )).toBe(true);
+    expect(await verifyWalletSignature(
+      buildAdminAnalyticsMessages(normalizedWallet, normalizedWallet, '2026-10-05'),
       signature,
       normalizedWallet,
     )).toBe(false);

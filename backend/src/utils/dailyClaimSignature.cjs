@@ -105,6 +105,14 @@ function buildEmailStatusMessages(walletInput, normalizedWallet, dateString) {
   );
 }
 
+function buildAdminAnalyticsMessages(walletInput, normalizedWallet, dateString) {
+  return buildWalletMessageVariants(
+    walletInput,
+    normalizedWallet,
+    (walletAddress) => `EPWX Admin Retention Analytics\nWallet: ${walletAddress}\nDate: ${dateString}`,
+  );
+}
+
 function buildEmailPreferenceMessages(walletInput, normalizedWallet, remindersEnabled, successEmailsEnabled, dateString) {
   return buildWalletMessageVariants(
     walletInput,
@@ -120,4 +128,5 @@ module.exports = {
   buildEmailEnrollmentMessages,
   buildEmailStatusMessages,
   buildEmailPreferenceMessages,
+  buildAdminAnalyticsMessages,
 };
