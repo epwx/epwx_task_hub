@@ -13,16 +13,16 @@ const steps = [
     screenshotClassName: "mx-auto h-auto w-full max-w-2xl rounded-lg",
   },
   {
-    title: "2. Join the EPWX Telegram group",
+    title: "2. Verify your email",
     copy:
-      "Join the official EPWX Telegram community before claiming. The daily claim flow is built for active community members, so Telegram membership is part of the reward verification model.",
-    linkHref: "https://t.me/ePowerX_On_Base",
-    linkText: "Join our group: https://t.me/ePowerX_On_Base",
+      "Link and verify an email address for the connected wallet. A verified email is required before the Daily Claim button becomes available and can be used for claim-ready and payment notifications.",
   },
   {
-    title: "3. Verify via Telegram",
+    title: "3. Join and verify the EPWX Telegram group",
     copy:
-      "Complete Telegram verification so EPWX can connect your wallet activity with your community account. This helps confirm that claims come from real members, not anonymous repeat attempts.",
+      "Telegram membership is not required to submit a Daily Claim, but it determines the payout rate. A wallet verified as a member of the official EPWX group receives 100% of its wallet-tier reward; a wallet without verified membership receives 50%.",
+    linkHref: "https://t.me/ePowerX_On_Base",
+    linkText: "Join our group: https://t.me/ePowerX_On_Base",
     screenshotSrc: "/blog/daily-claim-step-03-verify-telegram-part1.jpg",
     screenshotAlt: "Wallet connected panel showing Telegram status as not verified and button to verify membership",
     screenshotWidth: 1152,
@@ -61,7 +61,7 @@ export default function DailyClaimStepByStepArticlePage() {
         </h1>
         <p className="mt-4 text-sm leading-7 text-slate-300 md:text-base">
           EPWX Daily Claim is designed for consistent community participation, with wallet identity, Telegram
-          verification, eligibility checks, and a seven-day draw streak keeping rewards transparent and fair for real members.
+          membership, verified email, eligibility checks, and a seven-day draw streak keeping rewards transparent and fair for real members.
         </p>
 
         <div className="mt-5 rounded-2xl border border-emerald-300/35 bg-emerald-300/10 p-4 text-sm text-emerald-100">
@@ -127,9 +127,18 @@ export default function DailyClaimStepByStepArticlePage() {
           <section>
             <h2 className="text-2xl font-extrabold text-white">Build a seven-day draw streak</h2>
             <p className="mt-3 text-slate-300">
-              Claim again within 48 hours of your previous successful claim to advance your streak. Your streak day
-              determines how many weighted entries that claim receives in the Daily Reward Draw.
+              A successful claim starts or advances a seven-day cycle. The daily payout still follows your wallet tier
+              and Telegram membership; the streak changes only the number of weighted entries that claim receives in
+              the Daily Reward Draw.
             </p>
+            <div className="mt-4 border-l-4 border-cyan-300 bg-cyan-300/10 px-4 py-3 text-cyan-50">
+              <p className="font-bold">Your timing window</p>
+              <p className="mt-1 text-sm leading-6 text-cyan-100/90">
+                You can claim again after the 24-hour cooldown. To keep the streak, complete the next successful claim
+                no later than 48 hours after the previous one. In practice, that gives you about 24 hours after the
+                claim becomes available to continue the streak.
+              </p>
+            </div>
             <div className="mt-4 overflow-x-auto rounded-xl border border-amber-300/25">
               <table className="w-full min-w-[34rem] text-left text-sm">
                 <thead className="bg-amber-300/10 text-amber-100">
@@ -159,23 +168,29 @@ export default function DailyClaimStepByStepArticlePage() {
               </table>
             </div>
             <ul className="mt-4 list-disc space-y-2 pl-5 text-slate-300">
-              <li>Waiting more than 48 hours resets the next successful claim to day 1.</li>
+              <li>Only a successful Daily Claim advances the streak; special, merchant, cashback, and referral rewards do not count.</li>
+              <li>Claiming more than 48 hours after the previous successful claim resets the cycle to day 1.</li>
               <li>After day 7, your next successful claim begins a new cycle at day 1.</li>
-              <li>Weighted entries improve your chance in the deterministic draw but do not guarantee a win.</li>
+              <li>The entry weight shown for a streak day applies to that claim in its eligible UTC Daily Reward Draw.</li>
+              <li>Weighted entries improve selection odds in the deterministic draw but do not guarantee a win.</li>
               <li>Each wallet can win no more than once in the same draw.</li>
             </ul>
           </section>
 
           <section>
             <h2 className="text-2xl font-extrabold text-white">Built for real members</h2>
-            <div className="mt-3 grid gap-3 md:grid-cols-3">
+            <div className="mt-3 grid gap-3 md:grid-cols-2">
               <div className="rounded-xl border border-cyan-300/30 bg-cyan-300/10 p-4">
                 <p className="font-bold text-cyan-200">Wallet identity</p>
                 <p className="mt-1 text-sm text-cyan-100/90">Claims are connected to wallet-based identity for traceability.</p>
               </div>
+              <div className="rounded-xl border border-sky-300/30 bg-sky-300/10 p-4">
+                <p className="font-bold text-sky-200">Verified email</p>
+                <p className="mt-1 text-sm text-sky-100/90">Each claiming wallet must have a verified email before submitting.</p>
+              </div>
               <div className="rounded-xl border border-emerald-300/30 bg-emerald-300/10 p-4">
                 <p className="font-bold text-emerald-200">Telegram verification</p>
-                <p className="mt-1 text-sm text-emerald-100/90">Community membership is verified before daily rewards are enabled.</p>
+                <p className="mt-1 text-sm text-emerald-100/90">Verified official-group membership unlocks the full wallet-tier payout.</p>
               </div>
               <div className="rounded-xl border border-amber-300/30 bg-amber-300/10 p-4">
                 <p className="font-bold text-amber-200">Eligibility checks</p>
