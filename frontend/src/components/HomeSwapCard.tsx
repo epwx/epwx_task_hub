@@ -411,7 +411,12 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
             </p>
 
             <div className="mt-5 rounded-2xl border border-white/10 bg-white/5 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Estimated {outputSymbol}</p>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Estimated {outputSymbol}</p>
+                <p className="text-xs font-semibold text-emerald-200">
+                  {quoteLoading ? 'Comparing routes...' : selectedQuote ? `Via ${selectedQuote.dexName}` : 'Route unavailable'}
+                </p>
+              </div>
               <p className="mt-2 break-all text-lg font-black tabular-nums text-white sm:text-2xl">
                 {quoteLoading ? 'Loading...' : quoteOut ? formatSwapOutput(quoteOut, outputSymbol) : '--'}
               </p>
