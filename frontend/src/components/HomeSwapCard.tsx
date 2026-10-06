@@ -10,7 +10,7 @@ import {
   EPWX_DECIMALS,
   EPWX_SWAP_SLIPPAGE_PERCENT,
 } from '@/utils/epwxMarket';
-import { getEpwxSwapQuote, getEpwxToEthSwapQuote, swapEpwxToEth, swapEthToEpwx, type EpwxSwapQuote } from '@/utils/swapEthToEpwx';
+import { getEpwxSwapQuotes, getEpwxToEthSwapQuotes, swapEpwxToEth, swapEthToEpwx, type EpwxSwapQuote } from '@/utils/swapEthToEpwx';
 
 const DEFAULT_SWAP_AMOUNT = '0.001';
 const DEFAULT_SELL_AMOUNT = '1000000000';
@@ -83,6 +83,7 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
   const [amount, setAmount] = useState(DEFAULT_SWAP_AMOUNT);
   const [quoteOut, setQuoteOut] = useState<string>('');
   const [minimumOut, setMinimumOut] = useState<string>('');
+  const [routeQuotes, setRouteQuotes] = useState<EpwxSwapQuote[]>([]);
   const [selectedQuote, setSelectedQuote] = useState<EpwxSwapQuote | null>(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [swapLoading, setSwapLoading] = useState(false);
@@ -156,6 +157,13 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
     setStatus(null);
   };
 
+  const selectQuote = (quote: EpwxSwapQuote) => {
+    setSelectedQuote(quote);
+    setQuoteOut(quote.quotedOutFormatted);
+    setMinimumOut(quote.minOutFormatted);
+    setStatus(null);
+  };
+
   useEffect(() => {
     let cancelled = false;
     const normalizedInput = amount.trim();
@@ -164,6 +172,7 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
       if (!normalizedInput || Number(normalizedInput) <= 0) {
         setQuoteOut('');
         setMinimumOut('');
+        setRouteQuotes([]);
         setSelectedQuote(null);
         setQuoteError(`Enter an ${inputSymbol} amount greater than 0`);
         return;
@@ -172,6 +181,7 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
       if (amountExceedsBalance) {
         setQuoteOut('');
         setMinimumOut('');
+        setRouteQuotes([]);
         setSelectedQuote(null);
         setQuoteError(`Enter ${ethers.formatUnits(maxInputAmountWei, inputDecimals)} ${inputSymbol} or less${direction === 'buy' ? ' to keep enough ETH for Base gas' : ''}.`);
         return;
@@ -179,36 +189,40 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
 
       setQuoteLoading(true);
       setQuoteError(null);
+      setRouteQuotes([]);
       setSelectedQuote(null);
 
       try {
-        let quote: Awaited<ReturnType<typeof getEpwxSwapQuote>> | null = null;
+        let quotes: EpwxSwapQuote[] = [];
 
         for (const rpcUrl of BASE_QUOTE_RPC_URLS) {
           try {
             const provider = new ethers.JsonRpcProvider(rpcUrl);
-            quote = direction === 'buy'
-              ? await getEpwxSwapQuote({ provider, amountEth: normalizedInput })
-              : await getEpwxToEthSwapQuote({ provider, amountEpwx: normalizedInput });
+            quotes = direction === 'buy'
+              ? await getEpwxSwapQuotes({ provider, amountEth: normalizedInput })
+              : await getEpwxToEthSwapQuotes({ provider, amountEpwx: normalizedInput });
             break;
           } catch {
             // Try the next Base RPC endpoint.
           }
         }
 
-        if (!quote) {
+        if (quotes.length === 0) {
           throw new Error('Unable to load a swap quote right now. Please try again.');
         }
 
         if (!cancelled) {
-          setQuoteOut(quote.quotedOutFormatted);
-          setMinimumOut(quote.minOutFormatted);
-          setSelectedQuote(quote);
+          const recommendedQuote = quotes[0];
+          setRouteQuotes(quotes);
+          setQuoteOut(recommendedQuote.quotedOutFormatted);
+          setMinimumOut(recommendedQuote.minOutFormatted);
+          setSelectedQuote(recommendedQuote);
         }
       } catch (error) {
         if (!cancelled) {
           setQuoteOut('');
           setMinimumOut('');
+          setRouteQuotes([]);
           setSelectedQuote(null);
           setQuoteError(error instanceof Error ? error.message : `Unable to load ${outputSymbol} quote`);
         }
@@ -410,6 +424,38 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
               {direction === 'buy' ? 'Max keeps a small amount of ETH available for Base network gas.' : 'Keep a small amount of ETH in your wallet for Base network gas.'}
             </p>
 
+            <div className="mt-5" aria-label="Exchange route">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Choose exchange</p>
+                <p className="text-xs text-white/55">Highest output recommended</p>
+              </div>
+              <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {routeQuotes.map((quote, index) => {
+                  const isSelected = selectedQuote?.routerAddress === quote.routerAddress;
+                  return (
+                    <button
+                      key={quote.routerAddress}
+                      type="button"
+                      aria-pressed={isSelected}
+                      onClick={() => selectQuote(quote)}
+                      className={`min-w-0 rounded-xl border px-3 py-3 text-left transition ${isSelected
+                        ? 'border-emerald-300 bg-emerald-400/15 text-white'
+                        : 'border-white/15 bg-white/5 text-white/75 hover:border-white/30 hover:bg-white/10'}`}
+                    >
+                      <span className="flex items-center justify-between gap-2 text-sm font-bold">
+                        <span>{quote.dexName}</span>
+                        {index === 0 ? <span className="text-xs text-emerald-200">Recommended</span> : null}
+                      </span>
+                      <span className="mt-1 block truncate text-xs tabular-nums text-white/65">
+                        {formatSwapOutput(quote.quotedOutFormatted, outputSymbol)} {outputSymbol}
+                      </span>
+                    </button>
+                  );
+                })}
+                {quoteLoading ? <p className="col-span-full py-3 text-sm text-white/60">Comparing PancakeSwap and Uniswap V2...</p> : null}
+              </div>
+            </div>
+
             <div className="mt-5 rounded-2xl border border-white/10 bg-white/5 p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Estimated {outputSymbol}</p>
@@ -447,7 +493,7 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
               <summary className="cursor-pointer font-semibold text-white">Transaction details</summary>
               <div className="mt-3 space-y-2 leading-6">
                 <p>Price protection includes a {EPWX_SWAP_SLIPPAGE_PERCENT}% movement allowance. The swap will fail if the rate moves beyond it.</p>
-                {selectedQuote ? <p>Best route: {selectedQuote.dexName}.</p> : null}
+                {selectedQuote ? <p>Selected exchange: {selectedQuote.dexName}.</p> : null}
                 <p>{direction === 'buy' ? 'Your wallet will confirm one Base transaction for the ETH amount shown plus the network gas fee. No EPWX token approval is required.' : 'If needed, your wallet will first ask you to approve the exact EPWX amount, then confirm the swap. Both transactions require Base network gas.'}</p>
                 {minimumOut ? <p>Minimum received: {formatSwapOutput(minimumOut, outputSymbol)} {outputSymbol}.</p> : null}
               </div>

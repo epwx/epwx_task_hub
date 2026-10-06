@@ -77,7 +77,7 @@ async function getSwapQuote({
   };
 }
 
-async function getBestSwapQuote({
+async function getSwapQuotes({
   provider,
   amountInWei,
   path,
@@ -91,7 +91,7 @@ async function getBestSwapQuote({
   outputDecimals: number;
   outputLabel: string;
   slippageBps: number;
-}): Promise<EpwxSwapQuote> {
+}): Promise<EpwxSwapQuote[]> {
   const results = await Promise.allSettled(EPWX_SWAP_ROUTERS.map((dex) => getSwapQuote({
     provider,
     amountInWei,
@@ -110,12 +110,12 @@ async function getBestSwapQuote({
     throw new Error(`No ${outputLabel} quote available from supported exchanges`);
   }
 
-  return quotes.reduce((bestQuote, quote) => (
-    quote.quotedOutWei > bestQuote.quotedOutWei ? quote : bestQuote
+  return quotes.sort((firstQuote, secondQuote) => (
+    firstQuote.quotedOutWei > secondQuote.quotedOutWei ? -1 : firstQuote.quotedOutWei < secondQuote.quotedOutWei ? 1 : 0
   ));
 }
 
-export async function getEpwxSwapQuote({
+export async function getEpwxSwapQuotes({
   provider,
   amountEth,
   slippageBps = EPWX_SWAP_SLIPPAGE_BPS,
@@ -123,9 +123,9 @@ export async function getEpwxSwapQuote({
   provider: ethers.Provider;
   amountEth: string;
   slippageBps?: number;
-}): Promise<EpwxSwapQuote> {
+}): Promise<EpwxSwapQuote[]> {
   const amountInWei = ethers.parseEther(amountEth);
-  return getBestSwapQuote({
+  return getSwapQuotes({
     provider,
     amountInWei,
     path: getEpwxSwapPath(),
@@ -135,7 +135,12 @@ export async function getEpwxSwapQuote({
   });
 }
 
-export async function getEpwxToEthSwapQuote({
+export async function getEpwxSwapQuote(options: Parameters<typeof getEpwxSwapQuotes>[0]): Promise<EpwxSwapQuote> {
+  const quotes = await getEpwxSwapQuotes(options);
+  return quotes[0];
+}
+
+export async function getEpwxToEthSwapQuotes({
   provider,
   amountEpwx,
   slippageBps = EPWX_SWAP_SLIPPAGE_BPS,
@@ -143,9 +148,9 @@ export async function getEpwxToEthSwapQuote({
   provider: ethers.Provider;
   amountEpwx: string;
   slippageBps?: number;
-}): Promise<EpwxSwapQuote> {
+}): Promise<EpwxSwapQuote[]> {
   const amountInWei = ethers.parseUnits(amountEpwx, EPWX_DECIMALS);
-  return getBestSwapQuote({
+  return getSwapQuotes({
     provider,
     amountInWei,
     path: getEthSwapPath(),
@@ -153,6 +158,11 @@ export async function getEpwxToEthSwapQuote({
     outputLabel: "ETH",
     slippageBps,
   });
+}
+
+export async function getEpwxToEthSwapQuote(options: Parameters<typeof getEpwxToEthSwapQuotes>[0]): Promise<EpwxSwapQuote> {
+  const quotes = await getEpwxToEthSwapQuotes(options);
+  return quotes[0];
 }
 
 export async function swapEthToEpwx({ provider, amountEth, userAddress, quote: providedQuote }: { provider: ethers.BrowserProvider, amountEth: string, userAddress: string, quote?: EpwxSwapQuote }) {
