@@ -32,8 +32,8 @@ export const UNISWAP_V2_ROUTER_ADDRESS =
   "0x4752ba5dbc23f44d87826276bf6fd6b1c372ad24";
 
 export const EPWX_SWAP_ROUTERS = [
-  { name: "PancakeSwap", address: PANCAKESWAP_ROUTER_ADDRESS },
-  { name: "Uniswap V2", address: UNISWAP_V2_ROUTER_ADDRESS },
+  { name: "PancakeSwap", address: PANCAKESWAP_ROUTER_ADDRESS, logo: "/dex/pancakeswap.svg" },
+  { name: "Uniswap V2", address: UNISWAP_V2_ROUTER_ADDRESS, logo: "/dex/uniswap.svg" },
 ] as const;
 
 export const BASE_WETH_ADDRESS =

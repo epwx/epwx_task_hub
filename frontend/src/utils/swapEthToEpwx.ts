@@ -26,6 +26,7 @@ export interface EpwxSwapQuote {
   quotedOutFormatted: string;
   minOutFormatted: string;
   dexName: string;
+  dexLogo: string;
   routerAddress: `0x${string}`;
 }
 
@@ -45,6 +46,7 @@ async function getSwapQuote({
   outputLabel,
   slippageBps,
   dexName,
+  dexLogo,
   routerAddress,
 }: {
   provider: ethers.Provider;
@@ -54,6 +56,7 @@ async function getSwapQuote({
   outputLabel: string;
   slippageBps: number;
   dexName: string;
+  dexLogo: string;
   routerAddress: `0x${string}`;
 }): Promise<EpwxSwapQuote> {
   const router = new ethers.Contract(routerAddress, V2_ROUTER_ABI, provider);
@@ -73,6 +76,7 @@ async function getSwapQuote({
     quotedOutFormatted: ethers.formatUnits(quotedOutWei, outputDecimals),
     minOutFormatted: ethers.formatUnits(minOutWei, outputDecimals),
     dexName,
+    dexLogo,
     routerAddress,
   };
 }
@@ -100,6 +104,7 @@ async function getSwapQuotes({
     outputLabel,
     slippageBps,
     dexName: dex.name,
+    dexLogo: dex.logo,
     routerAddress: dex.address,
   })));
   const quotes = results

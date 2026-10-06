@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { ethers } from 'ethers';
 import { useAccount, useBalance } from 'wagmi';
@@ -443,7 +444,12 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
                         : 'border-white/15 bg-white/5 text-white/75 hover:border-white/30 hover:bg-white/10'}`}
                     >
                       <span className="flex items-center justify-between gap-2 text-sm font-bold">
-                        <span>{quote.dexName}</span>
+                        <span className="flex min-w-0 items-center gap-2">
+                          <span className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white">
+                            <Image src={quote.dexLogo} alt="" width={24} height={24} className="h-6 w-6 object-contain" />
+                          </span>
+                          <span className="truncate">{quote.dexName}</span>
+                        </span>
                         {index === 0 ? <span className="text-xs text-emerald-200">Recommended</span> : null}
                       </span>
                       <span className="mt-1 block truncate text-xs tabular-nums text-white/65">
