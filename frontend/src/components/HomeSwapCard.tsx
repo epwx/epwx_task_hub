@@ -10,7 +10,7 @@ import {
   EPWX_DECIMALS,
   EPWX_SWAP_SLIPPAGE_PERCENT,
 } from '@/utils/epwxMarket';
-import { getEpwxSwapQuote, getEpwxToEthSwapQuote, swapEpwxToEth, swapEthToEpwx } from '@/utils/swapEthToEpwx';
+import { getEpwxSwapQuote, getEpwxToEthSwapQuote, swapEpwxToEth, swapEthToEpwx, type EpwxSwapQuote } from '@/utils/swapEthToEpwx';
 
 const DEFAULT_SWAP_AMOUNT = '0.001';
 const DEFAULT_SELL_AMOUNT = '1000000000';
@@ -83,6 +83,7 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
   const [amount, setAmount] = useState(DEFAULT_SWAP_AMOUNT);
   const [quoteOut, setQuoteOut] = useState<string>('');
   const [minimumOut, setMinimumOut] = useState<string>('');
+  const [selectedQuote, setSelectedQuote] = useState<EpwxSwapQuote | null>(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [swapLoading, setSwapLoading] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
@@ -163,6 +164,7 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
       if (!normalizedInput || Number(normalizedInput) <= 0) {
         setQuoteOut('');
         setMinimumOut('');
+        setSelectedQuote(null);
         setQuoteError(`Enter an ${inputSymbol} amount greater than 0`);
         return;
       }
@@ -170,12 +172,14 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
       if (amountExceedsBalance) {
         setQuoteOut('');
         setMinimumOut('');
+        setSelectedQuote(null);
         setQuoteError(`Enter ${ethers.formatUnits(maxInputAmountWei, inputDecimals)} ${inputSymbol} or less${direction === 'buy' ? ' to keep enough ETH for Base gas' : ''}.`);
         return;
       }
 
       setQuoteLoading(true);
       setQuoteError(null);
+      setSelectedQuote(null);
 
       try {
         let quote: Awaited<ReturnType<typeof getEpwxSwapQuote>> | null = null;
@@ -199,11 +203,13 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
         if (!cancelled) {
           setQuoteOut(quote.quotedOutFormatted);
           setMinimumOut(quote.minOutFormatted);
+          setSelectedQuote(quote);
         }
       } catch (error) {
         if (!cancelled) {
           setQuoteOut('');
           setMinimumOut('');
+          setSelectedQuote(null);
           setQuoteError(error instanceof Error ? error.message : `Unable to load ${outputSymbol} quote`);
         }
       } finally {
@@ -253,9 +259,13 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
         throw new Error('Connect your wallet before swapping');
       }
 
+      if (!selectedQuote) {
+        throw new Error('Load a current swap quote before continuing');
+      }
+
       const txHash = direction === 'buy'
-        ? await swapEthToEpwx({ provider, amountEth: amount.trim(), userAddress })
-        : await swapEpwxToEth({ provider, amountEpwx: amount.trim(), userAddress });
+        ? await swapEthToEpwx({ provider, amountEth: amount.trim(), userAddress, quote: selectedQuote })
+        : await swapEpwxToEth({ provider, amountEpwx: amount.trim(), userAddress, quote: selectedQuote });
 
       setStatus(`Swap submitted successfully: ${txHash}`);
     } catch (error) {
@@ -416,7 +426,7 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
             <button
               type="button"
               onClick={handleSwap}
-              disabled={swapLoading || quoteLoading || !quoteOut || !!quoteError || !(direction === 'buy' ? baseEthBalance : epwxBalance) || amountExceedsBalance}
+              disabled={swapLoading || quoteLoading || !selectedQuote || !!quoteError || !(direction === 'buy' ? baseEthBalance : epwxBalance) || amountExceedsBalance}
               className={`mt-6 inline-flex w-full items-center justify-center rounded-2xl px-5 py-3 text-base font-bold text-slate-950 transition disabled:cursor-not-allowed disabled:opacity-50 ${direction === 'buy' ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-cyan-400 hover:bg-cyan-300'}`}
             >
               {swapLoading ? 'Submitting swap...' : `Swap ${inputSymbol} for ${outputSymbol}`}
@@ -432,6 +442,7 @@ export function HomeSwapCard({ compact = false }: HomeSwapCardProps) {
               <summary className="cursor-pointer font-semibold text-white">Transaction details</summary>
               <div className="mt-3 space-y-2 leading-6">
                 <p>Price protection includes a {EPWX_SWAP_SLIPPAGE_PERCENT}% movement allowance. The swap will fail if the rate moves beyond it.</p>
+                {selectedQuote ? <p>Best route: {selectedQuote.dexName}.</p> : null}
                 <p>{direction === 'buy' ? 'Your wallet will confirm one Base transaction for the ETH amount shown plus the network gas fee. No EPWX token approval is required.' : 'If needed, your wallet will first ask you to approve the exact EPWX amount, then confirm the swap. Both transactions require Base network gas.'}</p>
                 {minimumOut ? <p>Minimum received: {formatSwapOutput(minimumOut, outputSymbol)} {outputSymbol}.</p> : null}
               </div>

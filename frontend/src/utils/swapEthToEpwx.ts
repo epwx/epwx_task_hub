@@ -3,13 +3,12 @@ import { ethers } from "ethers";
 import {
   BASE_WETH_ADDRESS,
   EPWX_DECIMALS,
+  EPWX_SWAP_ROUTERS,
   EPWX_SWAP_SLIPPAGE_BPS,
   EPWX_TOKEN_ADDRESS,
-  PANCAKESWAP_ROUTER_ADDRESS,
 } from "@/utils/epwxMarket";
 
-// Minimal ABI for swapExactETHForTokens
-const PANCAKESWAP_ROUTER_ABI = [
+const V2_ROUTER_ABI = [
   "function getAmountsOut(uint amountIn, address[] calldata path) view returns (uint[] memory amounts)",
   "function swapExactETHForTokensSupportingFeeOnTransferTokens(uint amountOutMin, address[] calldata path, address to, uint deadline) payable",
   "function swapExactTokensForETHSupportingFeeOnTransferTokens(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline)",
@@ -26,6 +25,8 @@ export interface EpwxSwapQuote {
   minOutWei: bigint;
   quotedOutFormatted: string;
   minOutFormatted: string;
+  dexName: string;
+  routerAddress: `0x${string}`;
 }
 
 function getEpwxSwapPath() {
@@ -43,6 +44,8 @@ async function getSwapQuote({
   outputDecimals,
   outputLabel,
   slippageBps,
+  dexName,
+  routerAddress,
 }: {
   provider: ethers.Provider;
   amountInWei: bigint;
@@ -50,8 +53,10 @@ async function getSwapQuote({
   outputDecimals: number;
   outputLabel: string;
   slippageBps: number;
+  dexName: string;
+  routerAddress: `0x${string}`;
 }): Promise<EpwxSwapQuote> {
-  const router = new ethers.Contract(PANCAKESWAP_ROUTER_ADDRESS, PANCAKESWAP_ROUTER_ABI, provider);
+  const router = new ethers.Contract(routerAddress, V2_ROUTER_ABI, provider);
   const amountsOut = await router.getAmountsOut(amountInWei, path);
   const quotedOutWei = BigInt(amountsOut[amountsOut.length - 1].toString());
 
@@ -67,7 +72,47 @@ async function getSwapQuote({
     minOutWei,
     quotedOutFormatted: ethers.formatUnits(quotedOutWei, outputDecimals),
     minOutFormatted: ethers.formatUnits(minOutWei, outputDecimals),
+    dexName,
+    routerAddress,
   };
+}
+
+async function getBestSwapQuote({
+  provider,
+  amountInWei,
+  path,
+  outputDecimals,
+  outputLabel,
+  slippageBps,
+}: {
+  provider: ethers.Provider;
+  amountInWei: bigint;
+  path: string[];
+  outputDecimals: number;
+  outputLabel: string;
+  slippageBps: number;
+}): Promise<EpwxSwapQuote> {
+  const results = await Promise.allSettled(EPWX_SWAP_ROUTERS.map((dex) => getSwapQuote({
+    provider,
+    amountInWei,
+    path,
+    outputDecimals,
+    outputLabel,
+    slippageBps,
+    dexName: dex.name,
+    routerAddress: dex.address,
+  })));
+  const quotes = results
+    .filter((result): result is PromiseFulfilledResult<EpwxSwapQuote> => result.status === "fulfilled")
+    .map((result) => result.value);
+
+  if (quotes.length === 0) {
+    throw new Error(`No ${outputLabel} quote available from supported exchanges`);
+  }
+
+  return quotes.reduce((bestQuote, quote) => (
+    quote.quotedOutWei > bestQuote.quotedOutWei ? quote : bestQuote
+  ));
 }
 
 export async function getEpwxSwapQuote({
@@ -80,7 +125,7 @@ export async function getEpwxSwapQuote({
   slippageBps?: number;
 }): Promise<EpwxSwapQuote> {
   const amountInWei = ethers.parseEther(amountEth);
-  return getSwapQuote({
+  return getBestSwapQuote({
     provider,
     amountInWei,
     path: getEpwxSwapPath(),
@@ -100,7 +145,7 @@ export async function getEpwxToEthSwapQuote({
   slippageBps?: number;
 }): Promise<EpwxSwapQuote> {
   const amountInWei = ethers.parseUnits(amountEpwx, EPWX_DECIMALS);
-  return getSwapQuote({
+  return getBestSwapQuote({
     provider,
     amountInWei,
     path: getEthSwapPath(),
@@ -110,12 +155,15 @@ export async function getEpwxToEthSwapQuote({
   });
 }
 
-export async function swapEthToEpwx({ provider, amountEth, userAddress }: { provider: ethers.BrowserProvider, amountEth: string, userAddress: string }) {
+export async function swapEthToEpwx({ provider, amountEth, userAddress, quote: providedQuote }: { provider: ethers.BrowserProvider, amountEth: string, userAddress: string, quote?: EpwxSwapQuote }) {
   if (!provider || !userAddress) throw new Error("Wallet not connected");
   const signer = await provider.getSigner();
-  const router = new ethers.Contract(PANCAKESWAP_ROUTER_ADDRESS, PANCAKESWAP_ROUTER_ABI, signer);
   const path = getEpwxSwapPath();
-  const quote = await getEpwxSwapQuote({ provider, amountEth });
+  const quote = providedQuote || await getEpwxSwapQuote({ provider, amountEth });
+  if (quote.amountInWei !== ethers.parseEther(amountEth)) {
+    throw new Error("Swap amount changed. Wait for an updated quote and try again.");
+  }
+  const router = new ethers.Contract(quote.routerAddress, V2_ROUTER_ABI, signer);
   const deadline = Math.floor(Date.now() / 1000) + 60 * 10; // 10 minutes from now
 
   const tx = await router.swapExactETHForTokensSupportingFeeOnTransferTokens(
@@ -129,16 +177,19 @@ export async function swapEthToEpwx({ provider, amountEth, userAddress }: { prov
   return tx.hash;
 }
 
-export async function swapEpwxToEth({ provider, amountEpwx, userAddress }: { provider: ethers.BrowserProvider, amountEpwx: string, userAddress: string }) {
+export async function swapEpwxToEth({ provider, amountEpwx, userAddress, quote: providedQuote }: { provider: ethers.BrowserProvider, amountEpwx: string, userAddress: string, quote?: EpwxSwapQuote }) {
   if (!provider || !userAddress) throw new Error("Wallet not connected");
   const signer = await provider.getSigner();
-  const router = new ethers.Contract(PANCAKESWAP_ROUTER_ADDRESS, PANCAKESWAP_ROUTER_ABI, signer);
   const epwxToken = new ethers.Contract(EPWX_TOKEN_ADDRESS, ERC20_ABI, signer);
-  const quote = await getEpwxToEthSwapQuote({ provider, amountEpwx });
-  const currentAllowance = await epwxToken.allowance(userAddress, PANCAKESWAP_ROUTER_ADDRESS);
+  const quote = providedQuote || await getEpwxToEthSwapQuote({ provider, amountEpwx });
+  if (quote.amountInWei !== ethers.parseUnits(amountEpwx, EPWX_DECIMALS)) {
+    throw new Error("Swap amount changed. Wait for an updated quote and try again.");
+  }
+  const router = new ethers.Contract(quote.routerAddress, V2_ROUTER_ABI, signer);
+  const currentAllowance = await epwxToken.allowance(userAddress, quote.routerAddress);
 
   if (BigInt(currentAllowance.toString()) < quote.amountInWei) {
-    const approvalTx = await epwxToken.approve(PANCAKESWAP_ROUTER_ADDRESS, quote.amountInWei);
+    const approvalTx = await epwxToken.approve(quote.routerAddress, quote.amountInWei);
     await approvalTx.wait();
   }
 

@@ -27,6 +27,15 @@ export const PANCAKESWAP_ROUTER_ADDRESS =
   (process.env.NEXT_PUBLIC_PANCAKESWAP_ROUTER as `0x${string}`) ||
   "0x8cFe327CEc66d1C090Dd72bd0FF11d690C33a2Eb";
 
+export const UNISWAP_V2_ROUTER_ADDRESS =
+  (process.env.NEXT_PUBLIC_UNISWAP_V2_ROUTER as `0x${string}`) ||
+  "0x4752ba5dbc23f44d87826276bf6fd6b1c372ad24";
+
+export const EPWX_SWAP_ROUTERS = [
+  { name: "PancakeSwap", address: PANCAKESWAP_ROUTER_ADDRESS },
+  { name: "Uniswap V2", address: UNISWAP_V2_ROUTER_ADDRESS },
+] as const;
+
 export const BASE_WETH_ADDRESS =
   WETH_TOKEN_ADDRESS;
 
