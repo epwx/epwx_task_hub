@@ -84,13 +84,16 @@ import twitterCampaignsRouter from './routes/twitterCampaigns.js';
 import rewardLedgerRouter from './routes/rewardLedger.js';
 import partnersRouter from './routes/partners.js';
 import telegramMiniAppRouter from './routes/telegramMiniApp.js';
-import { runDailyDraw } from './routes/epwx.js';
+import { runDailyDraw, settleDailyDrawWinners } from './routes/epwx.js';
 import { DailyDraw } from './models/index.js';
 import { getPendingEarningsForSettlement, updatePartnerEarningStatus } from './services/partnerService.js';
 import { epwxTokenWithSigner } from './services/blockchain.js';
 import { sendPendingDailyClaimSuccessEmails, sendReadyDailyClaimReminders } from './services/emailNotifications.js';
+import dailyDrawPayoutUtils from './utils/dailyDrawPayout.cjs';
 
 const AUTO_DAILY_DRAW_ENABLED = ['1', 'true', 'yes', 'on'].includes(String(process.env.AUTO_DAILY_DRAW_ENABLED || 'false').toLowerCase());
+const { getSettlementDrawId, isAutomaticDrawPayoutEnabled } = dailyDrawPayoutUtils;
+const AUTO_DAILY_DRAW_PAYOUT_ENABLED = isAutomaticDrawPayoutEnabled(process.env.AUTO_DAILY_DRAW_PAYOUT_ENABLED);
 const AUTO_DAILY_DRAW_TIME_UTC = String(process.env.AUTO_DAILY_DRAW_TIME_UTC || '00:05').trim();
 const AUTO_DAILY_DRAW_TARGET = String(process.env.AUTO_DAILY_DRAW_TARGET || 'previous-day').trim().toLowerCase();
 const AUTO_DAILY_DRAW_RUN_BY = String(process.env.AUTO_DAILY_DRAW_RUN_BY || 'system:auto-draw').trim();
@@ -205,9 +208,19 @@ async function executeAutoDailyDraw() {
     console.log(
       `[auto-draw] Daily draw completed for ${drawDate}. drawId=${result.draw.id}, winners=${result.winners.length}, eligible=${result.draw.eligibleCount}`
     );
+    if (AUTO_DAILY_DRAW_PAYOUT_ENABLED) {
+      const drawId = getSettlementDrawId({ result });
+      const payoutSummary = await settleDailyDrawWinners(drawId);
+      console.log(`[auto-draw] Winner payouts processed for drawId=${drawId}. paid=${payoutSummary.paid}, failed=${payoutSummary.failed}.`);
+    }
   } catch (error) {
     if (error?.code === 'DRAW_ALREADY_EXISTS') {
       console.log('[auto-draw] Draw already exists for scheduled date. No action needed.');
+      const drawId = getSettlementDrawId({ error });
+      if (AUTO_DAILY_DRAW_PAYOUT_ENABLED && drawId) {
+        const payoutSummary = await settleDailyDrawWinners(drawId);
+        console.log(`[auto-draw] Existing draw payouts retried for drawId=${drawId}. paid=${payoutSummary.paid}, failed=${payoutSummary.failed}.`);
+      }
       return;
     }
 

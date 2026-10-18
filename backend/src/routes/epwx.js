@@ -18,6 +18,7 @@ import dailyClaimStreakUtils from '../utils/dailyClaimStreak.cjs';
 import dailyClaimAnalyticsUtils from '../utils/dailyClaimAnalytics.cjs';
 import dailyDrawSelectionUtils from '../utils/dailyDrawSelection.cjs';
 import dailyDrawEligibilityUtils from '../utils/dailyDrawEligibility.cjs';
+import dailyDrawPayoutUtils from '../utils/dailyDrawPayout.cjs';
 const router = express.Router();
 
 const REFERRAL_REWARD_AMOUNT = '1000000';
@@ -83,6 +84,7 @@ const {
   selectDailyDrawWinners,
 } = dailyDrawSelectionUtils;
 const { getRequestCountryCode, parsePolicyList, validateDailyDrawEligibility } = dailyDrawEligibilityUtils;
+const { settlePendingDrawWinners } = dailyDrawPayoutUtils;
 const DAILY_DRAW_BLOCKED_COUNTRY_CODES = parsePolicyList(process.env.DAILY_DRAW_BLOCKED_COUNTRY_CODES || 'CU,IR,KP,SY', (item) => item.toUpperCase());
 const DAILY_DRAW_BLOCKED_WALLETS = parsePolicyList(process.env.DAILY_DRAW_BLOCKED_WALLETS, (item) => item.toLowerCase());
 const dailyClaimSubmissionLimiter = rateLimit({
@@ -580,6 +582,30 @@ async function distributeEpwxReward(wallet, amount) {
     paid: receipt?.status === 1,
     txHash: tx.hash,
   };
+}
+
+export async function settleDailyDrawWinners(drawId) {
+  const winners = await DailyDrawWinner.findAll({
+    where: { drawId, status: 'pending' },
+    order: [['rank', 'ASC']],
+  });
+
+  return settlePendingDrawWinners({
+    winners,
+    payWinner: (winner) => distributeEpwxReward(winner.wallet, winner.prizeAmount),
+    markPaid: async (winner, payout) => {
+      winner.status = 'paid';
+      winner.txHash = payout.txHash;
+      winner.paidAt = new Date();
+      await winner.save();
+    },
+    onFailure: async (winner, error) => {
+      console.error(
+        `[daily-reward-draw] Automatic payout failed for draw=${drawId}, winner=${winner.id}, wallet=${winner.wallet}:`,
+        error?.message || error
+      );
+    },
+  });
 }
 
 async function distributeReferralReward(wallet) {
