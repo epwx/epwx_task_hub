@@ -2,8 +2,20 @@ import axios from 'axios';
 import { Op } from 'sequelize';
 import { DailyDraw, DailyDrawWinner, DailyDrawAnnouncement } from '../models/index.js';
 import dailyDrawX from '../utils/dailyDrawX.cjs';
+import winnerImage from '../utils/dailyDrawWinnerImage.cjs';
 
-const { POST_URL, MAX_ATTEMPTS, readConfig, authorizationHeader, createDispatcher } = dailyDrawX;
+const { POST_URL, MEDIA_URL, MAX_ATTEMPTS, readConfig, authorizationHeader, createDispatcher } = dailyDrawX;
+
+function requestOptions(credentials, url) {
+  return {
+    headers: {
+      Authorization: authorizationHeader(credentials, undefined, undefined, url),
+      'Content-Type': 'application/json',
+    },
+    timeout: 15_000,
+    maxRedirects: 0,
+  };
+}
 
 export const announcementRepository = {
   async loadDraw(drawId) {
@@ -57,14 +69,22 @@ export async function announceDailyDraw(drawId) {
   const dispatch = createDispatcher({
     repository: announcementRepository,
     config,
-    post: (text, credentials) => axios.post(POST_URL, { text }, {
-      headers: {
-        Authorization: authorizationHeader(credentials),
-        'Content-Type': 'application/json',
-      },
-      timeout: 15_000,
-      maxRedirects: 0,
-    }),
+    renderImage: winnerImage.renderWinnerImage,
+    upload: async (image, credentials) => {
+      const response = await axios.post(MEDIA_URL, {
+        media: image.toString('base64'),
+        media_category: 'tweet_image',
+      }, requestOptions(credentials, MEDIA_URL));
+      const data = response.data?.data;
+      if (response.data?.errors?.length ||
+          (data?.processing_info && data.processing_info.state !== 'succeeded')) {
+        throw new Error('X_MEDIA_NOT_READY');
+      }
+      return data?.id;
+    },
+    post: (text, credentials, mediaId) => axios.post(POST_URL, {
+      text, media: { media_ids: [mediaId] },
+    }, requestOptions(credentials, POST_URL)),
   });
   return dispatch(drawId);
 }

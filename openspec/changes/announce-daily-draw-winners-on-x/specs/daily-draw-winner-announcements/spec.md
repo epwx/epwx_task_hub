@@ -32,7 +32,7 @@ The system SHALL dispatch announcements only when `DAILY_DRAW_X_ENABLED` is expl
 - **THEN** the system makes no announcement-related X API requests, including retries, and preserves existing draw and payout behavior
 
 ### Requirement: Post contains bounded and privacy-aware results
-The system SHALL include the draw date and each winner's prize amount in EPWX in detailed announcements. It SHALL default to shortened wallet identifiers and SHALL NOT include a full wallet address. It SHALL NOT use a linked X username as an automated mention without recorded explicit participant consent for automated winner mentions; account linking or policy acceptance alone SHALL NOT qualify as that consent. Until a consent mechanism exists, all announcements SHALL use shortened wallets.
+The system SHALL publish a celebratory caption with draw date, winner count, claim/results link, and hashtags within X's 280-character weighted limit. Winner prizes SHALL appear in the attached image. It SHALL use shortened wallets and SHALL NOT publish full wallets or automated mentions until explicit mention consent is supported; linking an account or accepting a privacy policy SHALL NOT imply that consent.
 
 #### Scenario: No explicit mention-consent mechanism exists
 - **WHEN** a selected winner has a linked X username but the system has no recorded mention-consent mechanism
@@ -42,13 +42,44 @@ The system SHALL include the draw date and each winner's prize amount in EPWX in
 - **WHEN** a selected winner has no linked X username or no recorded explicit consent for automated winner mentions
 - **THEN** the announcement identifies that winner using a shortened wallet address
 
-#### Scenario: Results do not fit in one post
-- **WHEN** all winner details exceed the X post length limit
-- **THEN** the system uses a bounded summary with winner count, exact total EPWX prizes, and a link to the public results board where visitors can browse by draw date
+#### Scenario: Celebratory caption exceeds the post limit
+- **WHEN** prize amounts or other caption details would exceed the X weighted post limit
+- **THEN** the system uses a shorter caption retaining draw date, winner count, payment caveat, hashtags, and the public results link, with detailed prizes shown in the image or full results board
 
-#### Scenario: Oversized results have no valid public results link
-- **WHEN** the details exceed the post limit and no valid results link is configured through `FRONTEND_URL`
+#### Scenario: No valid public results link
+- **WHEN** no valid results link is configured through `FRONTEND_URL`
 - **THEN** the system records and reports a terminal content failure without posting or silently dropping winners
+
+### Requirement: Announcement includes a winner-card image
+The system SHALL generate and attach a navy-and-green PNG displaying the recorded draw date, ranked winners, shortened wallets, EPWX prize amounts, and payment-status badges. The PNG SHALL be no larger than 5 MiB, and image rendering or upload failure SHALL NOT result in text-only publication.
+
+#### Scenario: Five selected winners have pending payouts
+- **WHEN** a completed draw has five winners without confirmed stored payment evidence
+- **THEN** the image displays all five ranked cards with PENDING badges and makes no claim that payments are complete
+
+#### Scenario: Stored winner payout is confirmed
+- **WHEN** a winner has paid status, a valid stored transaction hash, and valid payment time
+- **THEN** that winner's card displays PAID, while other winners without those fields remain PENDING
+
+#### Scenario: All payouts have stored confirmation
+- **WHEN** every winner has stored paid status, transaction hash, and valid payment time at publication
+- **THEN** the caption and image may state that all payouts are confirmed
+
+#### Scenario: More than ten winners
+- **WHEN** the draw contains more than ten selected winners
+- **THEN** the image displays the first ten by rank, explicitly labels the subset, and directs readers to complete results by draw date on the public board
+
+#### Scenario: PNG is uploaded successfully
+- **WHEN** the official-account media upload returns a valid ready media ID
+- **THEN** the create-post request attaches that media ID to the celebratory caption
+
+#### Scenario: Media upload fails transiently before posting
+- **WHEN** an image upload fails or its outcome is unknown before any create-post request
+- **THEN** the system records a retryable media failure within the three-attempt budget without posting text alone
+
+#### Scenario: Format is updated after a draw was announced
+- **WHEN** a draw already has a successful stored announcement
+- **THEN** the system does not edit or repost it in the new image format
 
 ### Requirement: Publication is tracked once per draw
 The system SHALL durably associate publication status and the confirmed X post ID with the draw, and SHALL NOT create another post for a draw already marked published.

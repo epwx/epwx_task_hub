@@ -13,6 +13,8 @@ EPWX Task Hub selects winners for a daily reward draw but does not announce the 
 - Configure official-account posting credentials on the backend; do not use a winner's or other user's connected account.
 - Use dedicated `DAILY_DRAW_X_*` settings and keep publishing disabled by default, without changing existing `TWITTER_*` integrations.
 - Describe selected winners without implying that pending prizes have been paid.
+- Match the existing celebratory announcement style with a short caption, claim/results link, hashtags, and a generated navy-and-green winner-card PNG.
+- Upload the image using the official account before creating the post; preserve duplicate prevention and do not repost already-published draws.
 
 ## Capabilities
 
@@ -30,4 +32,5 @@ None.
 - X API client configuration and backend environment example.
 - Durable announcement state associated with each draw.
 - Focused tests for rendering, publication, retry, and duplicate prevention.
+- Backend `sharp` PNG rendering and `twitter-text` weighted-length validation dependencies; no frontend rebuild or new database migration for the image format.
 - No change to winner selection, eligibility, or reward payout behavior.

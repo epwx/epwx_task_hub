@@ -8,6 +8,9 @@ const Op = { lt: Symbol('lt'), lte: Symbol('lte'), or: Symbol('or'), in: Symbol(
 const draw = { id: 10, drawDate: '2026-10-19', status: 'completed' };
 const winners = [{ wallet: `0x${'a'.repeat(40)}`, rank: 1, prizeAmount: '100000', status: 'pending' }];
 let httpResponse = { data: { data: { id: '1234' } } };
+let mediaResponse;
+const postCalls = () => calls.filter(([url]) => url.endsWith('/2/tweets'));
+const mediaCalls = () => calls.filter(([url]) => url.endsWith('/2/media/upload'));
 let winnerQuery;
 let staleCount = 0;
 const announcementModel = {
@@ -37,8 +40,9 @@ mock.module('axios', {
   defaultExport: {
     async post(...args) {
       calls.push(args);
-      if (httpResponse instanceof Error) throw httpResponse;
-      return httpResponse;
+      const response = args[0].endsWith('/2/media/upload') ? mediaResponse : httpResponse;
+      if (response instanceof Error) throw response;
+      return response;
     },
   },
 });
@@ -68,6 +72,7 @@ function reset() {
     FRONTEND_URL: 'https://example.com',
   });
   httpResponse = { data: { data: { id: '1234' } } };
+  mediaResponse = { data: { data: { id: '5678' } } };
 }
 
 test('real service signs the X request, uses a timeout, and stores a confirmed post without changing winners', async () => {
@@ -77,22 +82,30 @@ test('real service signs the X request, uses a timeout, and stores a confirmed p
   assert.equal(record.status, 'published');
   assert.equal(record.postId, '1234');
   assert.equal(record.attempts, 1);
-  const [url, body, options] = calls[0];
+  const [mediaUrl, mediaBody, mediaOptions] = mediaCalls()[0];
+  assert.equal(mediaUrl, 'https://api.x.com/2/media/upload');
+  assert.equal(mediaBody.media_category, 'tweet_image');
+  assert.equal(Buffer.from(mediaBody.media, 'base64').subarray(1, 4).toString(), 'PNG');
+  assert.ok(mediaOptions.headers.Authorization.startsWith('OAuth '));
+  const [url, body, options] = postCalls()[0];
   assert.equal(url, 'https://api.x.com/2/tweets');
-  assert.ok(body.text.includes('Selected winners:'));
+  assert.ok(body.text.includes('Congratulations'));
+  assert.deepEqual(body.media, { media_ids: ['5678'] });
   assert.ok(options.headers.Authorization.startsWith('OAuth '));
   assert.equal(options.timeout, 15000);
   assert.equal(options.maxRedirects, 0);
   assert.deepEqual(winnerQuery, { where: { drawId: 10 }, order: [['rank', 'ASC']] });
   assert.equal(JSON.stringify(winners), before);
   await announceDailyDraw(10);
-  assert.equal(calls.length, 1);
+  assert.equal(postCalls().length, 1);
+  assert.equal(mediaCalls().length, 1);
 });
 
 test('real storage adapter compare-and-set prevents competing dispatchers', async () => {
   reset();
   await Promise.all([announceDailyDraw(10), announceDailyDraw(10)]);
-  assert.equal(calls.length, 1);
+  assert.equal(postCalls().length, 1);
+  assert.equal(mediaCalls().length, 1);
   assert.equal(record.status, 'published');
   await assert.rejects(announcementRepository.finish(record.id, { status: 'failed' }));
 });
@@ -121,7 +134,7 @@ test('retry sweep processes stored failed draws from earlier dates, independent 
   await retryDailyDrawAnnouncements();
   assert.equal(record.status, 'published');
   assert.equal(record.attempts, 2);
-  assert.equal(calls.length, 1);
+  assert.equal(postCalls().length, 1);
   assert.equal(lastQuery.limit, 20);
   assert.equal(lastQuery.where.attempts[Op.lt], 3);
 });
@@ -134,6 +147,43 @@ test('interrupted sends become uncertain without a duplicate X request', async (
   assert.equal(record.status, 'uncertain');
   assert.equal(record.errorCode, 'X_INTERRUPTED_DISPATCH');
   assert.equal(calls.length, 0);
+});
+
+test('media access failures stop before posting and retain a terminal error', async () => {
+  reset();
+  mediaResponse = Object.assign(new Error('do not print credential-bearing Axios error'), {
+    response: { status: 403 },
+  });
+  assert.equal((await announceDailyDraw(10)).status, 'failed');
+  assert.equal(record.status, 'failed');
+  assert.equal(record.nextAttemptAt, null);
+  assert.equal(mediaCalls().length, 1);
+  assert.equal(postCalls().length, 0);
+});
+
+test('asynchronous or malformed media responses never publish a broken attachment', async () => {
+  for (const data of [
+    { id: '5678', processing_info: { state: 'pending' } },
+    { id: '5678', processing_info: { state: 'failed' } },
+    {},
+  ]) {
+    reset();
+    mediaResponse = { data: { data } };
+    assert.equal((await announceDailyDraw(10)).status, 'failed');
+    assert.equal(record.status, 'failed');
+    assert.ok(record.nextAttemptAt);
+    assert.equal(postCalls().length, 0);
+  }
+});
+
+test('uncertain final post outcomes remain uncertain after successful media upload', async () => {
+  reset();
+  httpResponse = new Error('post timeout');
+  assert.equal((await announceDailyDraw(10)).status, 'uncertain');
+  assert.equal(record.status, 'uncertain');
+  await announceDailyDraw(10);
+  assert.equal(mediaCalls().length, 1);
+  assert.equal(postCalls().length, 1);
 });
 
 test('database failure is reported without invalidating completed winners or leaking errors', async () => {

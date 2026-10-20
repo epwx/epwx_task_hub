@@ -46,7 +46,17 @@ The announcement is about selected winners, so it will be attempted once the dra
 
 ### Render concise, privacy-aware results
 
-Include the draw date and each winner's prize amount in EPWX. Default to a shortened wallet address. Use a linked X username as an automated mention only when explicit participant consent for that use is recorded; account linking or acceptance of a privacy policy alone is not consent. No recorded consent mechanism exists, so this implementation uses shortened wallets for all winners rather than introducing a new consent UI. Do not publish full wallet addresses or other user profile data. Keep the composed post within the X post length limit. If the list cannot fit, use a summary with the winner count, exact total prizes, and a link to the existing `/#latest-winners` board based on `FRONTEND_URL`; visitors can browse by draw date. If a valid link is unavailable or even the summary exceeds the limit, record a terminal content failure instead of silently omitting results.
+Use a celebratory caption with the recorded draw date, congratulations, winner count, prize amount, claim/results link, and hashtags. Include the configured next-draw UTC time only when automatic draws are enabled. Validate the caption with `twitter-text` against X's 280-character weighted limit, including emoji and t.co URL weighting; if needed, shorten the caption without dropping the date, winner count, payment caveat, or results link. Every post links to the existing `/#latest-winners` board based on `FRONTEND_URL`, where visitors can browse by draw date. A missing valid link is a terminal content failure.
+
+Default to shortened wallet addresses in the image. No recorded mention-consent mechanism exists, so never use linked usernames or add a consent UI as part of this change. Never publish full wallets or other profile data.
+
+### Attach a generated winner-card image
+
+Render an original navy-and-green SVG layout to PNG on the backend using `sharp`. Show the draw date, Base Network, ranked winners, shortened wallets, exact formatted EPWX prizes, and payment badges. Use a shared presentation model for caption and image to prevent conflicting payment claims. A winner is shown as PAID only with stored paid status, a valid transaction hash, and valid payment time; otherwise PENDING. Only say all payouts are confirmed when every winner meets that condition. Status reflects the stored records at publication and is not updated after the post is sent.
+
+Use a 1000-pixel-wide image with height determined by the winner rows, capped at ten rows and 5 MiB. For larger draws, explicitly label the visible subset and link to the full results board. Refuse unreadable or clipped amounts rather than silently truncating them. Generation or upload failure must not fall back to a text-only post.
+
+Upload PNG content as base64 JSON to `POST https://api.x.com/2/media/upload` with `media_category=tweet_image`, signed with OAuth 1.0a for that exact endpoint. Require a valid returned media ID and attach it through `media.media_ids` in `POST /2/tweets`. Each endpoint has its own timeout and sanitized failure boundary. Upload-only failures cannot publish a post, so transient or unknown upload failures can safely retry within the three-attempt budget; permanent media-access errors require operator recovery. Final post timeouts remain uncertain and must never automatically repost.
 
 ### Persist per-draw publication state
 
@@ -63,6 +73,8 @@ Integrate dispatch in `runDailyDraw()` after commit so both manual and scheduled
 - **X API credentials or access change** -> Leave the draw intact, record the posting failure, and alert through backend logs; recover the announcement after configuration is fixed.
 - **X accepts a post but the response is lost** -> Prevent automatic duplicate creation and require reconciliation of the uncertain result.
 - **Long winner list exceeds post limit** -> Use a concise summary and public results link rather than truncating or omitting winners silently.
+- **Media access or PNG rendering fails** -> Record the stage-specific failure and do not publish a text-only substitute; image upload may require separate API access/credits.
+- **Payments complete after publication** -> Preserve the original status snapshot and do not edit or repost the announcement automatically.
 - **Official-account credentials are compromised** -> Keep them server-side, restrict access, and rotate them through deployment configuration.
 
 ## Migration Plan
@@ -71,3 +83,5 @@ Integrate dispatch in `runDailyDraw()` after commit so both manual and scheduled
 2. Deploy the schema and backend changes; verify formatting and failure behavior with mocked X responses before any live test. Check current API access, billing, public draw rules, and applicable promotion requirements before enabling publication. A live test on the official account is public even if the console environment is labeled Development.
 3. Monitor publication status and X API failures.
 4. Set `DAILY_DRAW_X_ENABLED=false` and reload backend configuration to roll back publishing without affecting draw selection or payouts; retain recorded post IDs and statuses.
+
+For the card format update, install the updated backend dependencies before restarting the API. No new configuration or migration is required, and existing published announcement records remain untouched.

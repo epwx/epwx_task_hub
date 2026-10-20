@@ -1,6 +1,7 @@
 const crypto = require('crypto');
+const { parseTweet } = require('twitter-text');
 const {
-  POST_URL, readConfig, authorizationHeader, renderAnnouncement, classifyFailure, createDispatcher,
+  POST_URL, MEDIA_URL, readConfig, authorizationHeader, renderAnnouncement, announcementDetails, classifyFailure, createDispatcher,
 } = require('../src/utils/dailyDrawX.cjs');
 
 const date = new Date('2026-10-20T00:05:00.000Z');
@@ -37,12 +38,14 @@ function fixture(options = {}) {
       Object.assign(state, values);
     }),
   };
+  const renderImage = jest.fn(async () => Buffer.from('test-png'));
+  const upload = jest.fn(async () => '55555');
   const post = jest.fn(async () => ({ data: { data: { id: '123456789' } } }));
   const logger = { error: jest.fn(), log: jest.fn() };
   const dispatch = createDispatcher({
-    repository, post, logger, now: () => date, config: options.config || config,
+    repository, renderImage, upload, post, logger, now: () => date, config: options.config || config,
   });
-  return { dispatch, state, repository, post, logger };
+  return { dispatch, state, repository, renderImage, upload, post, logger };
 }
 
 describe('daily draw X configuration and signing', () => {
@@ -76,36 +79,85 @@ describe('daily draw X configuration and signing', () => {
     expect(header).toContain('oauth_consumer_key="a%21%27%28%29%2A"');
     expect(header).toContain('oauth_token="a%20b%2Bc"');
   });
+
+  test('signs media upload against its own URL rather than the create-post endpoint', () => {
+    const post = authorizationHeader(credentials, 'fixednonce', 123);
+    const media = authorizationHeader(credentials, 'fixednonce', 123, MEDIA_URL);
+    expect(media).not.toBe(post);
+    const params = [
+      'oauth_consumer_key=test-consumer', 'oauth_nonce=fixednonce',
+      'oauth_signature_method=HMAC-SHA1', 'oauth_timestamp=123',
+      'oauth_token=test-user', 'oauth_version=1.0',
+    ].join('&');
+    const base = ['POST', MEDIA_URL, params].map(encodeURIComponent).join('&');
+    const signature = crypto.createHmac('sha1', 'test-consumer-secret&test-user-secret').update(base).digest('base64');
+    expect(media).toContain(`oauth_signature="${encodeURIComponent(signature)}"`);
+  });
+
+  test('only advertises the configured draw time when automatic draws are enabled', () => {
+    expect(readConfig({}).nextDrawTime).toBeNull();
+    expect(readConfig({ AUTO_DAILY_DRAW_ENABLED: 'true' }).nextDrawTime).toBe('00:05');
+    expect(readConfig({ AUTO_DAILY_DRAW_ENABLED: 'true', AUTO_DAILY_DRAW_TIME_UTC: '14:30' }).nextDrawTime).toBe('14:30');
+    expect(readConfig({ AUTO_DAILY_DRAW_ENABLED: 'true', AUTO_DAILY_DRAW_TIME_UTC: '25:70' }).nextDrawTime).toBeNull();
+  });
 });
 
 describe('daily draw X announcement content', () => {
-  test('renders five winners within 280 characters without usernames, full wallets, or payment claims', () => {
+  test('renders celebratory text, claim link, hashtags, and truthful pending status within X weighted length', () => {
     const winners = Array.from({ length: 5 }, (_, index) => makeWinner(index + 1));
     const text = renderAnnouncement(draw, winners, config.frontendUrl);
-    expect(text.length).toBeLessThanOrEqual(280);
+    expect(parseTweet(text).valid).toBe(true);
+    expect(parseTweet(text).weightedLength).toBeLessThanOrEqual(280);
     expect(text).toContain('2026-10-19');
-    expect(text).toContain('0x0000...0001: 100,000 EPWX');
-    expect(text).not.toMatch(/@|shouldNeverBeMentioned|paid|sent|transferred/i);
+    expect(text).toContain('Congratulations to our 5 winners');
+    expect(text).toContain('100,000 EPWX each');
+    expect(text).toContain('payouts pending');
+    expect(text).toContain('https://tasks.example.com/#latest-winners');
+    expect(text).toContain('#EPWX #Base #DailyDraw');
+    expect(text).not.toMatch(/@|shouldNeverBeMentioned|all payouts confirmed|auto-eligible|\*\*/i);
     for (const winner of winners) expect(text).not.toContain(winner.wallet);
-    const paidText = renderAnnouncement(draw, winners.map((winner) => ({ ...winner, status: 'paid' })), config.frontendUrl);
-    expect(paidText).toBe(text);
   });
 
   test('orders winners by rank without mutating input and preserves integer precision', () => {
     const winners = [makeWinner(2, '999999999999999999999'), makeWinner(1)];
-    const text = renderAnnouncement(draw, winners, config.frontendUrl);
-    expect(text.indexOf('...0001')).toBeLessThan(text.indexOf('...0002'));
-    expect(text).toContain('999,999,999,999,999,999,999');
+    const details = announcementDetails(draw, winners, config.frontendUrl);
+    expect(details.rows.map((row) => row.rank)).toEqual([1, 2]);
+    expect(details.rows[1].prize).toBe('999,999,999,999,999,999,999');
+    expect(details.total).toBe('1,000,000,000,000,000,099,999');
     expect(winners[0].rank).toBe(2);
   });
 
-  test('oversized draws use a bounded summary, exact total, and results board link', () => {
+  test('large draws use a bounded caption with exact totals and a results board link', () => {
     const winners = Array.from({ length: 50 }, (_, index) => makeWinner(index + 1));
     const text = renderAnnouncement(draw, winners, 'https://tasks.example.com/somewhere?x=1');
-    expect(text).toContain('50 winners selected.');
-    expect(text).toContain('5,000,000 EPWX');
+    expect(text).toContain('50 winners');
+    expect(text).toContain('100,000 EPWX each');
     expect(text).toContain('https://tasks.example.com/#latest-winners');
-    expect(text.replace(/https?:\/\/\S+/g, 'x'.repeat(23)).length).toBeLessThanOrEqual(280);
+    expect(parseTweet(text).valid).toBe(true);
+    expect(announcementDetails(draw, winners, config.frontendUrl).total).toBe('5,000,000');
+  });
+
+  test('paid labels require stored paid status, transaction hash, and payment timestamp', () => {
+    const paid = {
+      ...makeWinner(), status: 'paid', txHash: `0x${'1'.repeat(64)}`, paidAt: date,
+    };
+    expect(renderAnnouncement(draw, [paid], config.frontendUrl)).toContain('All payouts confirmed!');
+    for (const missing of [{ txHash: null }, { paidAt: null }, { paidAt: 'invalid' }, { status: 'pending' }]) {
+      expect(renderAnnouncement(draw, [{ ...paid, ...missing }], config.frontendUrl)).toContain('payouts pending');
+    }
+    const mixed = renderAnnouncement(draw, [paid, makeWinner(2)], config.frontendUrl);
+    expect(mixed).toContain('1/2 payouts confirmed; others pending.');
+    expect(mixed).not.toContain('All payouts confirmed');
+  });
+
+  test('caption remains within weighted length for long amounts, mixed payouts, emojis, and long URLs', () => {
+    const text = renderAnnouncement(draw, [
+      makeWinner(1, '9'.repeat(90)), makeWinner(2, '8'.repeat(90)),
+    ], `https://tasks.example.com/${'path'.repeat(100)}`, '00:05');
+    expect(parseTweet(text).valid).toBe(true);
+    expect(text).toContain('Claim & full results');
+    expect(text).not.toContain('9'.repeat(90));
+    expect(renderAnnouncement(draw, [makeWinner()], config.frontendUrl, '14:30')).toContain('Next draw: 14:30 UTC');
   });
 
   test('never silently truncates invalid content or oversized results without a link', () => {
@@ -129,16 +181,20 @@ describe('daily draw X durable dispatch', () => {
   test('publishes pending winners, persists confirmation, and skips a second dispatch', async () => {
     const f = fixture();
     expect(await f.dispatch(10)).toEqual({ status: 'published', postId: '123456789' });
-    expect(f.post).toHaveBeenCalledWith(expect.stringContaining('Selected winners:'), credentials);
+    expect(f.post).toHaveBeenCalledWith(expect.stringContaining('Congratulations'), credentials, '55555');
+    expect(f.renderImage).toHaveBeenCalledTimes(1);
+    expect(f.upload).toHaveBeenCalledWith(Buffer.from('test-png'), credentials);
     expect(f.state).toMatchObject({ status: 'published', attempts: 1, postId: '123456789', publishedAt: date });
     await f.dispatch(10);
     expect(f.post).toHaveBeenCalledTimes(1);
+    expect(f.upload).toHaveBeenCalledTimes(1);
   });
 
   test('concurrent dispatchers claim only one post', async () => {
     const f = fixture();
     await Promise.all([f.dispatch(10), f.dispatch(10), f.dispatch(10)]);
     expect(f.post).toHaveBeenCalledTimes(1);
+    expect(f.upload).toHaveBeenCalledTimes(1);
     expect(f.state.status).toBe('published');
   });
 
@@ -227,6 +283,60 @@ describe('daily draw X durable dispatch', () => {
     });
     await f.dispatch(10);
     expect(JSON.stringify(f.logger.error.mock.calls)).not.toContain('SECRET');
+  });
+
+  test('image-render failure is terminal, explicit, and does not fall back to text-only publication', async () => {
+    const f = fixture();
+    f.renderImage.mockRejectedValue(new Error('renderer unavailable'));
+    await f.dispatch(10);
+    expect(f.state).toMatchObject({ status: 'failed', errorCode: 'X_IMAGE_RENDER_FAILED', nextAttemptAt: null });
+    expect(f.upload).not.toHaveBeenCalled();
+    expect(f.post).not.toHaveBeenCalled();
+  });
+
+  test('ambiguous upload failures are retryable because no post was submitted', async () => {
+    const f = fixture();
+    f.upload.mockRejectedValue(new Error('upload timeout SECRET'));
+    await f.dispatch(10);
+    expect(f.state.status).toBe('failed');
+    expect(f.state.nextAttemptAt).toEqual(new Date(date.getTime() + 60_000));
+    expect(f.post).not.toHaveBeenCalled();
+    expect(JSON.stringify(f.logger.error.mock.calls)).not.toContain('SECRET');
+    f.state.nextAttemptAt = date;
+    f.upload.mockResolvedValue('77777');
+    await f.dispatch(10);
+    expect(f.state.status).toBe('published');
+    expect(f.post).toHaveBeenCalledTimes(1);
+    expect(f.post).toHaveBeenCalledWith(expect.any(String), credentials, '77777');
+  });
+
+  test('media access rejection is terminal and never submits a text-only post', async () => {
+    const f = fixture();
+    f.upload.mockRejectedValue({ response: { status: 403 } });
+    await f.dispatch(10);
+    expect(f.state).toMatchObject({ status: 'failed', errorCode: 'X_MEDIA_HTTP_403', nextAttemptAt: null });
+    expect(f.post).not.toHaveBeenCalled();
+  });
+
+  test('invalid media IDs cannot reach the create-post endpoint', async () => {
+    const f = fixture();
+    f.upload.mockResolvedValue(undefined);
+    await f.dispatch(10);
+    expect(f.state.status).toBe('failed');
+    expect(f.state.nextAttemptAt).not.toBeNull();
+    expect(f.post).not.toHaveBeenCalled();
+  });
+
+  test('upload rate limits honor Retry-After and share the three-attempt publication budget', async () => {
+    const f = fixture({ record: { attempts: 1 } });
+    f.upload.mockRejectedValue({ response: { status: 429, headers: { 'retry-after': '300' } } });
+    await f.dispatch(10);
+    expect(f.state).toMatchObject({ status: 'failed', errorCode: 'X_MEDIA_HTTP_429', attempts: 2 });
+    expect(f.state.nextAttemptAt).toEqual(new Date(date.getTime() + 300_000));
+    f.state.nextAttemptAt = date;
+    await f.dispatch(10);
+    expect(f.state).toMatchObject({ attempts: 3, nextAttemptAt: null });
+    expect(f.post).not.toHaveBeenCalled();
   });
 });
 

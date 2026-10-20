@@ -1,6 +1,8 @@
 const crypto = require('crypto');
+const { parseTweet } = require('twitter-text');
 
 const POST_URL = 'https://api.x.com/2/tweets';
+const MEDIA_URL = 'https://api.x.com/2/media/upload';
 const MAX_ATTEMPTS = 3;
 
 function readConfig(env = process.env) {
@@ -14,7 +16,11 @@ function readConfig(env = process.env) {
   if (enabled && Object.values(credentials).some((value) => !value || !value.trim())) {
     throw new Error('DAILY_DRAW_X_CREDENTIALS_MISSING');
   }
-  return { enabled, credentials, frontendUrl: env.FRONTEND_URL };
+  const scheduledTime = env.AUTO_DAILY_DRAW_TIME_UTC || '00:05';
+  const schedulerEnabled = ['1', 'true', 'yes', 'on'].includes(String(env.AUTO_DAILY_DRAW_ENABLED).toLowerCase());
+  const nextDrawTime = schedulerEnabled && /^([01]\d|2[0-3]):[0-5]\d$/.test(scheduledTime)
+    ? scheduledTime : null;
+  return { enabled, credentials, frontendUrl: env.FRONTEND_URL, nextDrawTime };
 }
 
 function encode(value) {
@@ -22,7 +28,7 @@ function encode(value) {
     `%${character.charCodeAt(0).toString(16).toUpperCase()}`);
 }
 
-function authorizationHeader(credentials, nonce = crypto.randomBytes(16).toString('hex'), timestamp = Math.floor(Date.now() / 1000)) {
+function authorizationHeader(credentials, nonce = crypto.randomBytes(16).toString('hex'), timestamp = Math.floor(Date.now() / 1000), url = POST_URL) {
   const parameters = {
     oauth_consumer_key: credentials.apiKey,
     oauth_nonce: nonce,
@@ -33,7 +39,7 @@ function authorizationHeader(credentials, nonce = crypto.randomBytes(16).toStrin
   };
   const normalized = Object.keys(parameters).sort()
     .map((key) => `${encode(key)}=${encode(parameters[key])}`).join('&');
-  const base = `POST&${encode(POST_URL)}&${encode(normalized)}`;
+  const base = `POST&${encode(url)}&${encode(normalized)}`;
   const key = `${encode(credentials.apiSecret)}&${encode(credentials.accessTokenSecret)}`;
   parameters.oauth_signature = crypto.createHmac('sha1', key).update(base).digest('base64');
   return `OAuth ${Object.keys(parameters).sort()
@@ -48,22 +54,24 @@ function formatAmount(value) {
   return BigInt(amount).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
-function renderAnnouncement(draw, winners, frontendUrl) {
+function announcementDetails(draw, winners, frontendUrl) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(draw.drawDate) || winners.length === 0) {
     throw new Error('DAILY_DRAW_X_INVALID_DRAW');
   }
-  const header = `EPWX Daily Draw | ${draw.drawDate}\nSelected winners:`;
   const ordered = [...winners].sort((a, b) => a.rank - b.rank);
-  const lines = ordered.map((winner) => {
-    if (!/^0x[a-fA-F0-9]{40}$/.test(winner.wallet)) {
+  const rows = ordered.map((winner) => {
+    if (!/^0x[a-fA-F0-9]{40}$/.test(winner.wallet) || !Number.isSafeInteger(winner.rank) || winner.rank <= 0) {
       throw new Error('DAILY_DRAW_X_INVALID_WALLET');
     }
     // No recorded mention-consent mechanism exists, so never use linked usernames.
-    return `${winner.wallet.slice(0, 6)}...${winner.wallet.slice(-4)}: ${formatAmount(winner.prizeAmount)} EPWX`;
+    return {
+      rank: winner.rank,
+      wallet: `${winner.wallet.slice(0, 8)}...${winner.wallet.slice(-6)}`,
+      prize: formatAmount(winner.prizeAmount),
+      paid: winner.status === 'paid' && /^0x[a-fA-F0-9]{64}$/.test(winner.txHash || '') &&
+        Boolean(winner.paidAt) && Number.isFinite(new Date(winner.paidAt).getTime()),
+    };
   });
-  const detailed = [header, ...lines].join('\n');
-  if (detailed.length <= 280) return detailed;
-
   if (!frontendUrl) throw new Error('DAILY_DRAW_X_RESULTS_URL_REQUIRED');
   const url = new URL(frontendUrl);
   if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password) {
@@ -73,10 +81,39 @@ function renderAnnouncement(draw, winners, frontendUrl) {
   url.search = '';
   url.hash = 'latest-winners';
   const total = ordered.reduce((sum, winner) => sum + BigInt(winner.prizeAmount), 0n);
-  const summary = `EPWX Daily Draw | ${draw.drawDate}\n${winners.length} winners selected.\nTotal prizes: ${formatAmount(total)} EPWX\nFull results (browse by draw date):\n`;
-  // X shortens HTTPS/HTTP URLs to 23 weighted characters. All other output is ASCII.
-  if (summary.length + 23 > 280) throw new Error('DAILY_DRAW_X_CONTENT_TOO_LONG');
-  return summary + url.href;
+  return {
+    date: draw.drawDate, rows, total: formatAmount(total), resultsUrl: url.href,
+    paidCount: rows.filter((row) => row.paid).length,
+    equalPrizes: rows.every((row) => row.prize === rows[0].prize),
+  };
+}
+
+function renderAnnouncement(draw, winners, frontendUrl, nextDrawTime) {
+  const details = announcementDetails(draw, winners, frontendUrl);
+  const { rows, paidCount, resultsUrl } = details;
+  const prize = details.equalPrizes ? `${rows[0].prize} EPWX each` : `${details.total} EPWX in prizes`;
+  const payment = paidCount === rows.length ? 'All payouts confirmed!'
+    : paidCount ? `${paidCount}/${rows.length} payouts confirmed; others pending.` : 'Selected; payouts pending.';
+  const lines = [
+    `\u{1F389} EPWX Daily Draw | ${details.date} \u{1F3C6}`,
+    `Congratulations to our ${rows.length} winners on Base!`,
+    `${prize}. ${payment}`,
+    ...(nextDrawTime ? [`Next draw: ${nextDrawTime} UTC`] : []),
+    `\u{1F449} Claim daily & results (eligibility rules apply): ${resultsUrl}`,
+    '#EPWX #Base #DailyDraw #CryptoRewards #Winners',
+  ];
+  let text = lines.join('\n');
+  if (!parseTweet(text).valid) {
+    text = [
+      `\u{1F389} EPWX Daily Draw | ${details.date} \u{1F3C6}`,
+      `Congratulations to our ${rows.length} winners!`,
+      payment,
+      `Claim & full results (eligibility rules apply): ${resultsUrl}`,
+      '#EPWX #Base #DailyDraw #Winners',
+    ].join('\n');
+  }
+  if (!parseTweet(text).valid) throw new Error('DAILY_DRAW_X_CONTENT_TOO_LONG');
+  return text;
 }
 
 function classifyFailure(error, now) {
@@ -101,7 +138,7 @@ function classifyFailure(error, now) {
   return { status: 'uncertain', errorCode: 'X_OUTCOME_UNCERTAIN', retryable: false };
 }
 
-function createDispatcher({ repository, post, config, logger = console, now = () => new Date() }) {
+function createDispatcher({ repository, renderImage, upload, post, config, logger = console, now = () => new Date() }) {
   return async function dispatch(drawId) {
     if (!config.enabled) return { status: 'disabled' };
     try {
@@ -118,7 +155,7 @@ function createDispatcher({ repository, post, config, logger = console, now = ()
       }
       let text;
       try {
-        text = renderAnnouncement(data.draw, data.winners, config.frontendUrl);
+        text = renderAnnouncement(data.draw, data.winners, config.frontendUrl, config.nextDrawTime);
       } catch {
         await repository.reject(record, 'X_CONTENT_INVALID');
         logger.error(`[daily-draw-x] draw=${drawId} X_CONTENT_INVALID; fix content/configuration before recovery`);
@@ -127,9 +164,41 @@ function createDispatcher({ repository, post, config, logger = console, now = ()
       const claimed = await repository.claim(record);
       if (!claimed) return { status: 'busy' };
 
+      let image;
+      try {
+        image = await renderImage(data.draw, data.winners, config);
+      } catch {
+        await repository.finish(record.id, {
+          status: 'failed', errorCode: 'X_IMAGE_RENDER_FAILED', nextAttemptAt: null,
+        });
+        logger.error(`[daily-draw-x] draw=${drawId} X_IMAGE_RENDER_FAILED; no post sent`);
+        return { status: 'failed' };
+      }
+
+      let mediaId;
+      try {
+        mediaId = await upload(image, config.credentials);
+        if (typeof mediaId !== 'string' || !/^\d+$/.test(mediaId)) {
+          throw new Error('X_MEDIA_INVALID_RESPONSE');
+        }
+      } catch (error) {
+        const failure = classifyFailure(error, now());
+        // An upload cannot publish a post, so ambiguous upload outcomes are safe to retry.
+        const retryable = failure.retryable || failure.status === 'uncertain';
+        const attempts = record.attempts + 1;
+        const nextAttemptAt = retryable && attempts < MAX_ATTEMPTS
+          ? new Date(now().getTime() + Math.max(failure.delay || 0, 60_000 * (2 ** (attempts - 1))))
+          : null;
+        const errorCode = ['X_MEDIA_INVALID_RESPONSE', 'X_MEDIA_NOT_READY'].includes(error.message)
+          ? error.message : failure.errorCode.replace(/^X_/, 'X_MEDIA_');
+        await repository.finish(record.id, { status: 'failed', errorCode, nextAttemptAt });
+        logger.error(`[daily-draw-x] draw=${drawId} ${errorCode}; no post sent`);
+        return { status: 'failed' };
+      }
+
       let response;
       try {
-        response = await post(text, config.credentials);
+        response = await post(text, config.credentials, mediaId);
       } catch (error) {
         const failure = classifyFailure(error, now());
         const attempts = record.attempts + 1;
@@ -165,6 +234,6 @@ function createDispatcher({ repository, post, config, logger = console, now = ()
 }
 
 module.exports = {
-  POST_URL, MAX_ATTEMPTS, readConfig, authorizationHeader, renderAnnouncement,
+  POST_URL, MEDIA_URL, MAX_ATTEMPTS, readConfig, authorizationHeader, renderAnnouncement, announcementDetails,
   classifyFailure, createDispatcher,
 };

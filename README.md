@@ -58,36 +58,61 @@ values in backend deployment secrets, not Git or frontend variables. Leave exist
 
 Deployment:
 
-1. Keep `DAILY_DRAW_X_ENABLED=false` and run `npm run migrate` from the backend
-   directory before enabling. This creates `daily_draw_announcements`.
+1. Keep `DAILY_DRAW_X_ENABLED=false`, install backend dependencies with `npm ci`,
+   and run `npm run migrate` from the backend directory before enabling. This
+   creates `daily_draw_announcements`. The card renderer uses `sharp` (Node
+   18.17+ or 20.3+); the production Node 20 runtime is supported.
 2. Set `FRONTEND_URL` to the public frontend origin, such as
-   `https://tasks.epowex.com`. Oversized draws link to its `/#latest-winners` board,
+   `https://tasks.epowex.com`. Every announcement links to its `/#latest-winners` board,
    where visitors can browse results by date.
-3. Run the mocked tests below and verify X API access/billing, draw rules, and
+3. Run the mocked tests below and verify X API access/billing for both
+   `POST /2/media/upload` and `POST /2/tweets`, draw rules, and
    eligibility restrictions. No test below contacts X or a database.
 4. Set `DAILY_DRAW_X_ENABLED=true` and restart/reload the backend when ready for
    public announcements. A test post from the official account is public, even
    under an X console Development environment.
 
 New manual and scheduled draws are announced after winner records commit and before
-automatic payouts. Posts describe **selected winners**, not confirmed payments.
+automatic payouts. A short celebratory caption includes the recorded draw date,
+winner count, prize amount, a claim/results link, and hashtags. The configured
+`AUTO_DAILY_DRAW_TIME_UTC` is advertised only when automatic draws are enabled.
+Captions are validated against X's 280-character weighted limit using `twitter-text`;
+a shorter caption directs readers to the image and results board when needed.
 All identifiers use shortened wallets: no explicit automated-mention consent is
-currently recorded, so linked usernames are never used. If detailed results exceed
-280 characters, the post includes a winner count, total EPWX prizes, and the public
-results link instead. Invalid content or a missing required fallback link is reported,
-not silently truncated.
+currently recorded, so linked usernames are never used.
+
+Each post attaches a generated navy-and-green PNG with winner ranks, shortened
+wallets, EPWX prize amounts, and payment badges. The image uses `PAID` only when
+the stored winner status is paid with a transaction hash and valid payment time;
+otherwise it uses `PENDING`. "All payouts confirmed" appears only when every
+winner meets those checks. Payment status is a snapshot at publication, not a live
+image updated after subsequent payments. No existing published announcements are
+edited or reposted by a format change.
+
+Images show up to ten winners to keep text readable. Larger draws explicitly say
+"Showing 10 of N" and direct readers to the full results board. Images are capped
+at 5 MiB. Invalid content, an unreadable prize amount, or a missing required public
+URL is reported instead of silently clipping results. Rendering/upload failure
+does not fall back to a text-only post.
 
 A unique record per draw and an atomic `sending` transition prevent competing backend
 instances from posting the same draw. A minute-long retry sweep processes only
 stored pending/due announcements, including earlier draw dates. HTTP 429 rejections
 retry at most three total attempts, respecting rate-limit headers and exponential
 backoff. Other definitive 4xx failures require operator recovery. Timeouts, 408s,
-server errors, malformed success responses, and interrupted sends are uncertain:
+server errors, and malformed success responses from the final create-post request
+are uncertain, as are interrupted sends:
 they are **not automatically reposted**. Sending records older than five minutes
 are marked uncertain by the retry sweep. Disabling the flag stops both initial
 dispatch and retries; reload every backend instance for the change to take effect.
 There is no bulk historical backfill, although the existing-draw scheduler path
 can announce its current target draw if it has no announcement yet.
+Media is uploaded before the create-post request, signed separately using the same
+official-account credentials. Transient upload failures can safely retry within
+the same three-attempt limit because uploading an image alone does not publish a
+post. Failed attempts can leave unused media uploads, but cannot create text-only
+announcements. No new environment variables or migration are needed for the card
+format update; install the updated backend dependencies before restarting the API.
 
 Inspect and recover announcements from the backend directory:
 
@@ -116,7 +141,7 @@ records. Re-enable/reload dispatch to send the reset announcement.
 Mocked validation (from the backend directory):
 
 ```powershell
-node .\node_modules\jest\bin\jest.js --runInBand --runTestsByPath .\test\dailyDrawX.test.js .\test\dailyDrawPayout.test.js .\test\dailyDrawSelection.test.js .\test\dailyDrawEligibility.test.js
+node .\node_modules\jest\bin\jest.js --runInBand --runTestsByPath .\test\dailyDrawX.test.js .\test\dailyDrawWinnerImage.test.js .\test\dailyDrawPayout.test.js .\test\dailyDrawSelection.test.js .\test\dailyDrawEligibility.test.js
 # Integration tests use Node 22.3+ module mocking; validated on Node 22.23.
 node --experimental-test-module-mocks --test .\test\dailyDrawAnnouncements.integration.mjs
 ```
