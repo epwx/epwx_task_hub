@@ -51,7 +51,11 @@ The system SHALL publish a celebratory caption with draw date, winner count, cla
 - **THEN** the system records and reports a terminal content failure without posting or silently dropping winners
 
 ### Requirement: Announcement includes a winner-card image
-The system SHALL generate and attach a navy-and-green PNG displaying the recorded draw date, ranked winners, shortened wallets, EPWX prize amounts, and payment-status badges. The PNG SHALL be no larger than 5 MiB, and image rendering or upload failure SHALL NOT result in text-only publication.
+The system SHALL generate and attach a navy-and-green PNG displaying the EPWX site logo, recorded draw date, ranked winners, shortened wallets, EPWX prize amounts, and payment-status badges. The PNG SHALL be no larger than 5 MiB, and image rendering or upload failure SHALL NOT result in text-only publication.
+
+#### Scenario: Branded image is rendered
+- **WHEN** the system generates an announcement image
+- **THEN** it embeds the existing EPWX site logo in the header without covering the title or winner cards
 
 #### Scenario: Five selected winners have pending payouts
 - **WHEN** a completed draw has five winners without confirmed stored payment evidence

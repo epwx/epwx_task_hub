@@ -1,4 +1,5 @@
 const sharp = require('sharp');
+const path = require('path');
 const { MAX_IMAGE_WINNERS, MAX_PNG_BYTES, buildWinnerImageSvg, renderWinnerImage } =
   require('../src/utils/dailyDrawWinnerImage.cjs');
 
@@ -54,6 +55,23 @@ test('renders a real PNG at expected dimensions and under the media upload limit
   const metadata = await sharp(png).metadata();
   expect(metadata).toMatchObject({ format: 'png', width: 1000, height: 1130 });
   expect(png.length).toBeLessThan(MAX_PNG_BYTES);
+});
+
+test('composites the actual site logo into the header independently of the working directory', async () => {
+  const logoPath = path.resolve(__dirname, '../../frontend/public/logo.webp');
+  const expectedLogo = await sharp(logoPath).resize(110, 110, { fit: 'contain' })
+    .ensureAlpha().raw().toBuffer();
+  const png = await renderWinnerImage(draw, winners, config);
+  const header = await sharp(png).extract({ left: 48, top: 32, width: 110, height: 110 })
+    .ensureAlpha().raw().toBuffer();
+  let opaquePixels = 0;
+  for (let offset = 0; offset < expectedLogo.length; offset += 4) {
+    if (expectedLogo[offset + 3] === 255) {
+      expect(header.subarray(offset, offset + 3)).toEqual(expectedLogo.subarray(offset, offset + 3));
+      opaquePixels += 1;
+    }
+  }
+  expect(opaquePixels).toBeGreaterThan(1000);
 });
 
 test('escapes dynamic XML and refuses to clip exceptionally long prize values', () => {

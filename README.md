@@ -88,6 +88,10 @@ otherwise it uses `PENDING`. "All payouts confirmed" appears only when every
 winner meets those checks. Payment status is a snapshot at publication, not a live
 image updated after subsequent payments. No existing published announcements are
 edited or reposted by a format change.
+The header embeds the existing EPWX site logo from `frontend/public/logo.webp`,
+resolved relative to the renderer rather than the process working directory.
+Keep that asset available in backend deployments; a missing logo fails rendering
+explicitly rather than publishing an unbranded substitute.
 
 Images show up to ten winners to keep text readable. Larger draws explicitly say
 "Showing 10 of N" and direct readers to the full results board. Images are capped

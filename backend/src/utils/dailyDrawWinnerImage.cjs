@@ -1,9 +1,11 @@
 const sharp = require('sharp');
+const path = require('path');
 const { announcementDetails } = require('./dailyDrawX.cjs');
 
 const MAX_IMAGE_WINNERS = 10;
 const WIDTH = 1000;
 const MAX_PNG_BYTES = 5 * 1024 * 1024;
+const LOGO_PATH = path.resolve(__dirname, '../../../frontend/public/logo.webp');
 
 function escapeXml(value) {
   return String(value).replace(/[&<>"']/g, (character) => ({
@@ -68,7 +70,10 @@ function buildWinnerImageSvg(draw, winners, config) {
 
 async function renderWinnerImage(draw, winners, config) {
   const svg = buildWinnerImageSvg(draw, winners, config);
-  const png = await sharp(Buffer.from(svg)).png().toBuffer();
+  const logo = await sharp(LOGO_PATH).resize(110, 110, { fit: 'contain' }).png().toBuffer();
+  const png = await sharp(Buffer.from(svg))
+    .composite([{ input: logo, left: 48, top: 32 }])
+    .png().toBuffer();
   if (png.length > MAX_PNG_BYTES) throw new Error('DAILY_DRAW_X_IMAGE_TOO_LARGE');
   return png;
 }
