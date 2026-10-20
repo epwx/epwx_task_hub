@@ -90,6 +90,7 @@ import { getPendingEarningsForSettlement, updatePartnerEarningStatus } from './s
 import { epwxTokenWithSigner } from './services/blockchain.js';
 import { sendPendingDailyClaimSuccessEmails, sendReadyDailyClaimReminders } from './services/emailNotifications.js';
 import dailyDrawPayoutUtils from './utils/dailyDrawPayout.cjs';
+import { announceDailyDraw, startDailyDrawAnnouncementRetries } from './services/dailyDrawAnnouncements.js';
 
 const AUTO_DAILY_DRAW_ENABLED = ['1', 'true', 'yes', 'on'].includes(String(process.env.AUTO_DAILY_DRAW_ENABLED || 'false').toLowerCase());
 const { getSettlementDrawId, isAutomaticDrawPayoutEnabled } = dailyDrawPayoutUtils;
@@ -215,8 +216,9 @@ async function executeAutoDailyDraw() {
     }
   } catch (error) {
     if (error?.code === 'DRAW_ALREADY_EXISTS') {
-      console.log('[auto-draw] Draw already exists for scheduled date. No action needed.');
+      console.log('[auto-draw] Draw already exists for scheduled date. Reusing stored winners.');
       const drawId = getSettlementDrawId({ error });
+      if (drawId) await announceDailyDraw(drawId);
       if (AUTO_DAILY_DRAW_PAYOUT_ENABLED && drawId) {
         const payoutSummary = await settleDailyDrawWinners(drawId);
         console.log(`[auto-draw] Existing draw payouts retried for drawId=${drawId}. paid=${payoutSummary.paid}, failed=${payoutSummary.failed}.`);
@@ -471,6 +473,7 @@ app.listen(PORT, () => {
   console.log(`🚀 EPWX Task Platform API running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV}`);
   startAutoDailyDrawScheduler();
+  startDailyDrawAnnouncementRetries();
   startAutoPartnerSettlementScheduler();
   startDailyClaimEmailReminderScheduler();
 });

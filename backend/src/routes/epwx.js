@@ -19,6 +19,7 @@ import dailyClaimAnalyticsUtils from '../utils/dailyClaimAnalytics.cjs';
 import dailyDrawSelectionUtils from '../utils/dailyDrawSelection.cjs';
 import dailyDrawEligibilityUtils from '../utils/dailyDrawEligibility.cjs';
 import dailyDrawPayoutUtils from '../utils/dailyDrawPayout.cjs';
+import { announceDailyDraw } from '../services/dailyDrawAnnouncements.js';
 const router = express.Router();
 
 const REFERRAL_REWARD_AMOUNT = '1000000';
@@ -543,6 +544,7 @@ export async function runDailyDraw({ drawDate, winnerCount, prizeAmount, runBy }
       return { draw, winners };
     });
 
+    await announceDailyDraw(result.draw.id);
     return result;
   } catch (error) {
     if (error?.name === 'SequelizeUniqueConstraintError') {
