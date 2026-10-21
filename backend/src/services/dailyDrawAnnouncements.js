@@ -3,13 +3,38 @@ import { Op } from 'sequelize';
 import { DailyDraw, DailyDrawWinner, DailyDrawAnnouncement } from '../models/index.js';
 import dailyDrawX from '../utils/dailyDrawX.cjs';
 import winnerImage from '../utils/dailyDrawWinnerImage.cjs';
+import cleanup from '../utils/dailyDrawXCleanup.cjs';
 
 const { POST_URL, MEDIA_URL, MAX_ATTEMPTS, readConfig, authorizationHeader, createDispatcher } = dailyDrawX;
+const { deleteUrl, createCleanup } = cleanup;
 
-function requestOptions(credentials, url) {
+const cleanupRepository = {
+  async listPublished() {
+    const rows = await DailyDrawAnnouncement.findAll({
+      where: { status: 'published' },
+      include: [{ model: DailyDraw, as: 'draw', attributes: ['drawDate'] }],
+      order: [['drawId', 'DESC']],
+      limit: 50,
+    });
+    return rows.map((row) => row.get({ plain: true }));
+  },
+  async claimDelete(record) {
+    const [count] = await DailyDrawAnnouncement.update({
+      deleteStatus: 'deleting', deleteAttempts: (record.deleteAttempts || 0) + 1, deleteNextAttemptAt: null, deleteErrorCode: null,
+    }, {
+      where: { id: record.id, deleteStatus: record.deleteStatus ?? null, deleteAttempts: record.deleteAttempts || 0 },
+    });
+    return count === 1;
+  },
+  async finishDelete(id, values) {
+    await DailyDrawAnnouncement.update(values, { where: { id, deleteStatus: 'deleting' } });
+  },
+};
+
+function requestOptions(credentials, url, method = 'POST') {
   return {
     headers: {
-      Authorization: authorizationHeader(credentials, undefined, undefined, url),
+      Authorization: authorizationHeader(credentials, undefined, undefined, url, method),
       'Content-Type': 'application/json',
     },
     timeout: 15_000,
@@ -86,7 +111,32 @@ export async function announceDailyDraw(drawId) {
       text, media: { media_ids: [mediaId] },
     }, requestOptions(credentials, POST_URL)),
   });
-  return dispatch(drawId);
+  const result = await dispatch(drawId);
+  if (result?.status === 'published') await cleanupSupersededAnnouncements();
+  return result;
+}
+
+export async function cleanupSupersededAnnouncements() {
+  try {
+    const config = readConfig();
+    if (!config.deletePrevious) return { status: 'disabled', deleted: 0 };
+    await DailyDrawAnnouncement.update({
+      deleteStatus: 'failed', deleteErrorCode: 'X_DELETE_INTERRUPTED', deleteNextAttemptAt: new Date(),
+    }, {
+      where: { deleteStatus: 'deleting', updatedAt: { [Op.lt]: new Date(Date.now() - 5 * 60_000) } },
+    });
+    return await createCleanup({
+      repository: cleanupRepository,
+      config,
+      remove: (postId, credentials) => {
+        const url = deleteUrl(postId);
+        return axios.delete(url, requestOptions(credentials, url, 'DELETE'));
+      },
+    })();
+  } catch {
+    console.error('[daily-draw-x] Cleanup failed; check configuration and announcement storage. No credentials logged.');
+    return { status: 'error', deleted: 0 };
+  }
 }
 
 export async function retryDailyDrawAnnouncements() {
@@ -110,6 +160,7 @@ export async function retryDailyDrawAnnouncements() {
       limit: 20,
     });
     for (const record of records) await announceDailyDraw(record.drawId);
+    await cleanupSupersededAnnouncements();
   } catch {
     console.error('[daily-draw-x] Retry sweep failed; check configuration and announcement storage. No credentials logged.');
   }

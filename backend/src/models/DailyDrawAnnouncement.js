@@ -17,6 +17,11 @@ const DailyDrawAnnouncement = sequelize.define('DailyDrawAnnouncement', {
   publishedAt: { type: DataTypes.DATE, allowNull: true },
   nextAttemptAt: { type: DataTypes.DATE, allowNull: true },
   errorCode: { type: DataTypes.STRING, allowNull: true },
+  deleteStatus: { type: DataTypes.STRING, allowNull: true },
+  deleteAttempts: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+  deletedAt: { type: DataTypes.DATE, allowNull: true },
+  deleteNextAttemptAt: { type: DataTypes.DATE, allowNull: true },
+  deleteErrorCode: { type: DataTypes.STRING, allowNull: true },
 }, {
   tableName: 'daily_draw_announcements',
   timestamps: true,

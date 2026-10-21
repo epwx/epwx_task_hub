@@ -49,7 +49,15 @@ DAILY_DRAW_X_API_KEY=your_official_app_consumer_key
 DAILY_DRAW_X_API_SECRET=your_official_app_consumer_secret
 DAILY_DRAW_X_ACCESS_TOKEN=your_official_account_access_token
 DAILY_DRAW_X_ACCESS_TOKEN_SECRET=your_official_account_access_token_secret
+# Optional: delete older tracked announcements once a newer one is published
+DAILY_DRAW_X_DELETE_PREVIOUS=false
 ```
+
+With `DAILY_DRAW_X_DELETE_PREVIOUS=true`, after a newer announcement is published the
+service permanently deletes older announcements it tracked (`DELETE /2/tweets/:id`).
+Already-missing posts count as deleted, transient failures retry up to 3 times, and
+manually posted tweets are never touched. Run `npm run migrate` first to add the
+delete-tracking columns.
 
 Use OAuth 1.0a credentials generated with **Read and Write** permission. Do not use
 OAuth 2.0 Client ID/Secret or an app-only Bearer Token for this feature. Store actual

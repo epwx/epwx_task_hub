@@ -20,7 +20,10 @@ function readConfig(env = process.env) {
   const schedulerEnabled = ['1', 'true', 'yes', 'on'].includes(String(env.AUTO_DAILY_DRAW_ENABLED).toLowerCase());
   const nextDrawTime = schedulerEnabled && /^([01]\d|2[0-3]):[0-5]\d$/.test(scheduledTime)
     ? scheduledTime : null;
-  return { enabled, credentials, frontendUrl: env.FRONTEND_URL, nextDrawTime };
+  return {
+    enabled, credentials, frontendUrl: env.FRONTEND_URL, nextDrawTime,
+    deletePrevious: enabled && env.DAILY_DRAW_X_DELETE_PREVIOUS === 'true',
+  };
 }
 
 function encode(value) {
@@ -28,7 +31,7 @@ function encode(value) {
     `%${character.charCodeAt(0).toString(16).toUpperCase()}`);
 }
 
-function authorizationHeader(credentials, nonce = crypto.randomBytes(16).toString('hex'), timestamp = Math.floor(Date.now() / 1000), url = POST_URL) {
+function authorizationHeader(credentials, nonce = crypto.randomBytes(16).toString('hex'), timestamp = Math.floor(Date.now() / 1000), url = POST_URL, method = 'POST') {
   const parameters = {
     oauth_consumer_key: credentials.apiKey,
     oauth_nonce: nonce,
@@ -39,7 +42,7 @@ function authorizationHeader(credentials, nonce = crypto.randomBytes(16).toStrin
   };
   const normalized = Object.keys(parameters).sort()
     .map((key) => `${encode(key)}=${encode(parameters[key])}`).join('&');
-  const base = `POST&${encode(url)}&${encode(normalized)}`;
+  const base = `${method}&${encode(url)}&${encode(normalized)}`;
   const key = `${encode(credentials.apiSecret)}&${encode(credentials.accessTokenSecret)}`;
   parameters.oauth_signature = crypto.createHmac('sha1', key).update(base).digest('base64');
   return `OAuth ${Object.keys(parameters).sort()
