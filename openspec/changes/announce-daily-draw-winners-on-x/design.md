@@ -85,3 +85,7 @@ Integrate dispatch in `runDailyDraw()` after commit so both manual and scheduled
 4. Set `DAILY_DRAW_X_ENABLED=false` and reload backend configuration to roll back publishing without affecting draw selection or payouts; retain recorded post IDs and statuses.
 
 For the card format update, install the updated backend dependencies before restarting the API. No new configuration or migration is required, and existing published announcement records remain untouched.
+
+### Delete superseded announcements
+
+Opt-in via DAILY_DRAW_X_DELETE_PREVIOUS. After a newer announcement is published, older tracked posts are removed with an OAuth 1.0a signed DELETE /2/tweets/:id. Delete state lives in separate columns so the publication status stays published. 404 counts as deleted, 401/403 are terminal, and 429/5xx/network errors retry up to three times. Manual untracked posts are never touched.

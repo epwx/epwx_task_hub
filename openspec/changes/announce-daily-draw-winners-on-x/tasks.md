@@ -50,3 +50,9 @@
 - Authorize publish-capable credentials for the official EPWX X account before enabling announcement dispatch.
 - Keep `DAILY_DRAW_X_ENABLED=false` until deployment and mocked tests pass; verify current API access, costs, and public draw rules before any controlled public test or live dispatch.
 - Monitor failed and uncertain announcement states and reconcile uncertain requests before retrying.
+
+## Superseded Post Cleanup
+
+- [x] 6.1 Add opt-in flag, DELETE signing, delete-tracking migration and model fields.
+- [x] 6.2 Implement cleanup selection and retry flow, hooked after publish and the retry sweep.
+- [x] 6.3 Add mocked tests and README docs; deployed and verified live (draw 126 post deleted).

@@ -129,3 +129,18 @@ The system SHALL use OAuth 1.0a credentials with Read and Write permission for t
 #### Scenario: Posting credentials are unavailable
 - **WHEN** dispatch is enabled and required official-account credentials are missing or invalid
 - **THEN** the system records and reports the publication failure without affecting draw completion or payouts
+
+### Requirement: Superseded announcements can be deleted automatically
+When `DAILY_DRAW_X_DELETE_PREVIOUS=true`, the system SHALL delete older tracked announcement posts after a newer announcement is published, and SHALL NOT delete posts it did not publish.
+
+#### Scenario: Newer announcement is published
+- **WHEN** a newer draw announcement is published and an older tracked announcement is still live
+- **THEN** the older post is deleted from X and marked deleted, while its announcement record stays published so it is never reposted
+
+#### Scenario: Deletion fails
+- **WHEN** deletion fails with a transient error
+- **THEN** it is retried with backoff up to three attempts, and an already-missing post counts as deleted
+
+#### Scenario: Feature disabled
+- **WHEN** the flag is not `true`
+- **THEN** no posts are deleted
