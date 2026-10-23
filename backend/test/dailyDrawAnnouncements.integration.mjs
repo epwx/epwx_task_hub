@@ -105,11 +105,16 @@ test('confirmed X publication shares its link to the daily-claim Telegram group 
   assert.equal(record.telegramStatus, 'sent');
   assert.ok(record.telegramNotifiedAt instanceof Date);
   const [url, body, options] = telegramCalls()[0];
-  assert.equal(url, 'https://api.telegram.org/bottest-bot-token/sendMessage');
-  assert.equal(body.chat_id, '-100123456');
-  assert.equal(body.parse_mode, 'HTML');
-  assert.ok(body.text.includes('2026-10-19'));
-  assert.ok(body.text.includes('https://x.com/i/status/1234'));
+  assert.equal(url, 'https://api.telegram.org/bottest-bot-token/sendPhoto');
+  assert.equal(body.get('chat_id'), '-100123456');
+  assert.equal(body.get('parse_mode'), 'HTML');
+  assert.ok(body.get('caption').includes('2026-10-19'));
+  assert.ok(body.get('caption').includes('https://x.com/i/status/1234'));
+  const photo = body.get('photo');
+  assert.equal(photo.type, 'image/png');
+  assert.equal(photo.name, 'daily-draw-winners.png');
+  assert.deepEqual(Buffer.from(await photo.arrayBuffer()), Buffer.from(mediaCalls()[0][1].media, 'base64'));
+  assert.deepEqual(record.winnerImage, Buffer.from(mediaCalls()[0][1].media, 'base64'));
   assert.equal(options.timeout, 10000);
   assert.ok(calls.indexOf(telegramCalls()[0]) > calls.indexOf(postCalls()[0]));
   await announceDailyDraw(10);
@@ -123,7 +128,7 @@ test('competing Telegram relays claim one delivery and recover unsent published 
   enableTelegram();
   record = {
     id: 1, drawId: 10, status: 'published', postId: '9876', attempts: 1,
-    telegramStatus: null, deleteStatus: null, draw,
+    telegramStatus: null, deleteStatus: null, draw, winnerImage: Buffer.from('original-image'),
   };
   await Promise.all([relayDailyDrawToTelegram(10), relayDailyDrawToTelegram(10)]);
   assert.equal(telegramCalls().length, 1);
@@ -190,6 +195,45 @@ test('unconfirmed Telegram response is not recorded as delivered', async () => {
   await announceDailyDraw(10);
   assert.equal(record.telegramStatus, 'failed');
   assert.equal(record.telegramErrorCode, 'telegram_send_unconfirmed');
+});
+
+test('missing original image fails explicitly rather than rerendering or sending text only', async () => {
+  reset();
+  enableTelegram();
+  record = {
+    id: 1, drawId: 10, status: 'published', postId: '9876',
+    telegramStatus: null, deleteStatus: null, draw,
+  };
+  await relayDailyDrawToTelegram(10);
+  assert.equal(record.telegramStatus, 'failed');
+  assert.equal(record.telegramErrorCode, 'TELEGRAM_WINNER_IMAGE_MISSING');
+  assert.equal(calls.length, 0);
+});
+
+test('image persistence failure prevents X upload and Telegram publication', async () => {
+  reset();
+  enableTelegram();
+  const update = announcementModel.update;
+  announcementModel.update = async (values, options) => {
+    if (values.winnerImage) throw new Error('storage unavailable');
+    return update(values, options);
+  };
+  try {
+    assert.equal((await announceDailyDraw(10)).status, 'failed');
+    assert.equal(calls.length, 0);
+  } finally {
+    announcementModel.update = update;
+  }
+});
+
+test('Telegram photo helper rejects invalid images without an HTTP request', async () => {
+  reset();
+  enableTelegram();
+  const { sendTelegramGroupPhoto } = await import('../src/services/telegramNotifications.js');
+  for (const image of [null, Buffer.alloc(0), Buffer.alloc(5 * 1024 * 1024 + 1)]) {
+    assert.equal((await sendTelegramGroupPhoto('caption', image)).reason, 'telegram_image_invalid');
+  }
+  assert.equal(calls.length, 0);
 });
 
 test('interrupted Telegram sends become uncertain rather than sending twice', async () => {
@@ -452,4 +496,25 @@ test('Telegram migration tracks delivery separately and skips pre-existing publi
   assert.deepEqual(skipped, { values: { telegramStatus: 'skipped' }, where: { status: 'published' } });
   await migration.down(queryInterface);
   assert.deepEqual(removed, [...added].reverse());
+});
+
+test('winner image migration stores binary snapshots without modifying historical posts', async () => {
+  const { default: migration } = await import('../migrations/20261023010000-add-daily-draw-winner-image.js');
+  const events = [];
+  const queryInterface = {
+    async addColumn(table, column, definition) {
+      assert.equal(table, 'daily_draw_announcements');
+      assert.equal(column, 'winnerImage');
+      assert.deepEqual(definition, { type: 'BLOB', allowNull: true });
+      events.push('add');
+    },
+    async removeColumn(table, column) {
+      assert.equal(table, 'daily_draw_announcements');
+      assert.equal(column, 'winnerImage');
+      events.push('remove');
+    },
+  };
+  await migration.up(queryInterface, { BLOB: 'BLOB' });
+  await migration.down(queryInterface);
+  assert.deepEqual(events, ['add', 'remove']);
 });

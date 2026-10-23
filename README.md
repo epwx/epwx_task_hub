@@ -89,9 +89,16 @@ a shorter caption directs readers to the image and results board when needed.
 All identifiers use shortened wallets: no explicit automated-mention consent is
 currently recorded, so linked usernames are never used.
 
-After confirmed X publication, the backend shares the draw date and
-`https://x.com/i/status/<postId>` link in the same Telegram group used for daily-claim
+After confirmed X publication, the backend sends the same winner-card PNG with the
+draw date and `https://x.com/i/status/<postId>` link as its caption in the same Telegram group used for daily-claim
 notifications, using the existing `TELEGRAM_BOT_TOKEN` and `TELEGRAM_GROUP_ID`.
+The original PNG is saved in `daily_draw_announcements.winnerImage` before upload
+to X, then uploaded to Telegram using `sendPhoto`. It is never regenerated using
+later payout data. Run the winner-image migration before restarting the API.
+Existing posts have no saved image and are not resent; a missing image is reported
+as `TELEGRAM_WINNER_IMAGE_MISSING`, without a text-only fallback.
+Snapshots are retained in the database (up to 5 MiB per announcement); include
+their storage in database capacity and backup planning.
 No new environment settings are needed. Run `npm run migrate` before restarting
 the backend to add the Telegram delivery columns. The migration marks already
 published announcements as skipped, so deployment does not flood the group with

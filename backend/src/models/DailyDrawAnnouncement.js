@@ -25,6 +25,7 @@ const DailyDrawAnnouncement = sequelize.define('DailyDrawAnnouncement', {
   telegramStatus: { type: DataTypes.STRING, allowNull: true },
   telegramNotifiedAt: { type: DataTypes.DATE, allowNull: true },
   telegramErrorCode: { type: DataTypes.STRING, allowNull: true },
+  winnerImage: { type: DataTypes.BLOB, allowNull: true },
 }, {
   tableName: 'daily_draw_announcements',
   timestamps: true,

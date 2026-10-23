@@ -63,4 +63,21 @@
 - [x] 7.2 Add separate durable delivery state and atomic claims; skip already published announcements during migration.
 - [x] 7.3 Recover unclaimed deliveries in the sweep and record failed/interrupted sends without reposting X or duplicating Telegram messages.
 - [x] 7.4 Cover delivery ordering, concurrent claims, missing configuration, failures, migration, and daily-claim compatibility with mocked integration tests.
-- [ ] 7.5 Deploy the migration and backend, then verify a new announcement is shared to the configured group.
+- [x] 7.5 Deploy the migration and backend; verify Telegram delivery using an explicitly authorized existing announcement.
+- [ ] 7.6 Confirm the next automatically published X announcement is relayed without operator intervention.
+
+### Telegram Deployment Verification
+
+- Release `fcd7b80` was pushed and deployed; the Telegram delivery migration applied successfully, `epwx-api` restarted, and the daily-draw endpoint returned HTTP 200.
+- All 22 mocked integration tests passed locally; all 48 focused Jest tests passed locally and on production.
+- On 2026-10-23 at 03:23 UTC, the user-authorized one-time share sent draw 129 (draw date 2026-10-22), linking to https://x.com/i/status/2113421394931261948.
+- Only draw 129's skipped delivery was reset. Telegram confirmed delivery and storage recorded `telegramStatus=sent`, `telegramNotifiedAt=2026-10-23T03:23:00.024Z`, and no error code. No new X post was created.
+- This verifies live Telegram delivery, not yet the next scheduled draw's automatic end-to-end relay.
+
+## Telegram Winner-Card Attachment
+
+- [x] 8.1 Persist the exact rendered X PNG before upload using an additive binary-image migration.
+- [x] 8.2 Send the stored PNG via Telegram sendPhoto with draw date and X link as caption; preserve text-only daily-claim notifications.
+- [x] 8.3 Fail explicitly for missing snapshots without rerendering or falling back to text.
+- [x] 8.4 Validate byte-for-byte X/Telegram image equality, persistence failures, multipart fields, migration, and existing notification regressions (26 integration tests and 48 focused Jest tests passed; strict OpenSpec validation passed).
+- [ ] 8.5 Deploy the image migration and backend and verify a new winner-card photo notification.

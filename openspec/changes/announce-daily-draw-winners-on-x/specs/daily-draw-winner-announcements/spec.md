@@ -147,18 +147,31 @@ When `DAILY_DRAW_X_DELETE_PREVIOUS=true`, the system SHALL delete older tracked 
 
 ### Requirement: Share confirmed X announcement links in Telegram
 After a new draw announcement is confirmed published on X, the system SHALL share
-its draw date and X post link in the existing daily-claim notification group using
+the identical winner-card image uploaded to X, with its draw date and X post link
+as the photo caption, in the existing daily-claim notification group using
 the existing Telegram bot credentials. Telegram delivery SHALL be tracked separately
 and SHALL NOT alter X publication, winner selection, or payout state.
 
 #### Scenario: X publication succeeds
 - **WHEN** X returns a valid post ID and publication is persisted
-- **THEN** the bot sends the draw date and a link to that exact post to `TELEGRAM_GROUP_ID`
+- **THEN** the bot uploads the original winner-card PNG via Telegram `sendPhoto` with the draw date and a link to that exact post in its caption to `TELEGRAM_GROUP_ID`
 - **AND** concurrent workers cannot claim the same Telegram delivery twice
 
 #### Scenario: X publication fails or is uncertain
 - **WHEN** an announcement has not been confirmed published
 - **THEN** no Telegram link is sent
+
+#### Scenario: Delivery occurs after payout data changes
+- **WHEN** Telegram delivery happens after winner payment details have changed
+- **THEN** the photo uses the persisted original PNG bytes uploaded to X rather than a newly rendered image
+
+#### Scenario: Original winner image is unavailable
+- **WHEN** a published announcement has no saved original PNG
+- **THEN** the Telegram delivery is marked failed with `TELEGRAM_WINNER_IMAGE_MISSING` and logged without sending a text-only message or regenerating the image
+
+#### Scenario: Image persistence fails
+- **WHEN** the rendered image cannot be persisted before X upload
+- **THEN** no X upload, X publication, or Telegram notification is attempted during that dispatch
 
 #### Scenario: Telegram is not configured or delivery was not started before restart
 - **WHEN** a live published announcement has no claimed Telegram delivery
@@ -172,6 +185,12 @@ and SHALL NOT alter X publication, winner selection, or payout state.
 #### Scenario: Feature is deployed with existing announcements
 - **WHEN** the Telegram delivery migration runs
 - **THEN** already published announcements are marked skipped rather than shared retroactively
+
+#### Scenario: Operator explicitly shares a skipped announcement
+- **WHEN** an operator is authorized to share a specific live, published announcement whose Telegram delivery is marked skipped
+- **THEN** the operator can atomically reset only that announcement's skipped delivery to unclaimed and invoke the existing Telegram relay
+- **AND** the relay shares the stored X post link without publishing another X post or changing other announcements
+- **AND** an already sent delivery is not sent again
 
 #### Scenario: An older X announcement is deleted
 - **WHEN** automatic X cleanup deletes an older post

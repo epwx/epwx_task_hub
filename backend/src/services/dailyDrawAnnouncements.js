@@ -4,7 +4,7 @@ import { DailyDraw, DailyDrawWinner, DailyDrawAnnouncement } from '../models/ind
 import dailyDrawX from '../utils/dailyDrawX.cjs';
 import winnerImage from '../utils/dailyDrawWinnerImage.cjs';
 import cleanup from '../utils/dailyDrawXCleanup.cjs';
-import { buildDailyDrawPublishedMessage, sendTelegramGroupMessage } from './telegramNotifications.js';
+import { buildDailyDrawPublishedMessage, sendTelegramGroupPhoto } from './telegramNotifications.js';
 
 const { POST_URL, MEDIA_URL, MAX_ATTEMPTS, readConfig, authorizationHeader, createDispatcher } = dailyDrawX;
 const { deleteUrl, createCleanup } = cleanup;
@@ -12,6 +12,7 @@ const { deleteUrl, createCleanup } = cleanup;
 const cleanupRepository = {
   async listPublished() {
     const rows = await DailyDrawAnnouncement.findAll({
+      attributes: { exclude: ['winnerImage'] },
       where: { status: 'published' },
       include: [{ model: DailyDraw, as: 'draw', attributes: ['drawDate'] }],
       order: [['drawId', 'DESC']],
@@ -97,6 +98,10 @@ export async function announceDailyDraw(drawId) {
     config,
     renderImage: winnerImage.renderWinnerImage,
     upload: async (image, credentials) => {
+      const [saved] = await DailyDrawAnnouncement.update({ winnerImage: image }, {
+        where: { drawId, status: 'sending' },
+      });
+      if (saved !== 1) throw new Error('Winner image could not be stored before X upload');
       const response = await axios.post(MEDIA_URL, {
         media: image.toString('base64'),
         media_category: 'tweet_image',
@@ -132,11 +137,18 @@ export async function relayDailyDrawToTelegram(drawId) {
       return;
     }
     const message = buildDailyDrawPublishedMessage({ drawDate: record.draw?.drawDate, postId: record.postId });
+    if (!Buffer.isBuffer(record.winnerImage) || !record.winnerImage.length) {
+      await DailyDrawAnnouncement.update({
+        telegramStatus: 'failed', telegramErrorCode: 'TELEGRAM_WINNER_IMAGE_MISSING',
+      }, { where: { id: record.id, telegramStatus: null } });
+      console.error(`[daily-draw-x] draw=${drawId} TELEGRAM_WINNER_IMAGE_MISSING; original X image unavailable`);
+      return;
+    }
     const [claimed] = await DailyDrawAnnouncement.update({
       telegramStatus: 'sending', telegramErrorCode: null,
     }, { where: { id: record.id, status: 'published', telegramStatus: null, deleteStatus: null } });
     if (claimed !== 1) return;
-    const result = await sendTelegramGroupMessage(message);
+    const result = await sendTelegramGroupPhoto(message, record.winnerImage);
     const [saved] = await DailyDrawAnnouncement.update({
       telegramStatus: result.sent ? 'sent' : 'failed',
       telegramNotifiedAt: result.sent ? new Date() : null,
@@ -158,6 +170,7 @@ async function sweepTelegramAnnouncements() {
   });
   if (staleCount) console.error(`[daily-draw-x] ${staleCount} interrupted Telegram sends require reconciliation`);
   const records = await DailyDrawAnnouncement.findAll({
+    attributes: ['drawId'],
     where: { status: 'published', telegramStatus: null, deleteStatus: null },
     order: [['id', 'DESC']],
     limit: 20,
@@ -198,6 +211,7 @@ export async function retryDailyDrawAnnouncements() {
     });
     if (staleCount) console.error(`[daily-draw-x] ${staleCount} interrupted dispatches require reconciliation`);
     const records = await DailyDrawAnnouncement.findAll({
+      attributes: ['drawId'],
       where: {
         attempts: { [Op.lt]: MAX_ATTEMPTS },
         [Op.or]: [

@@ -207,6 +207,36 @@ export async function notifyDailyClaimPaid(claim) {
   return sendTelegramGroupMessage(message);
 }
 
+export async function sendTelegramGroupPhoto(caption, image) {
+  if (!hasTelegramConfig()) {
+    return { sent: false, reason: 'telegram_not_configured' };
+  }
+  if (!Buffer.isBuffer(image) || !image.length || image.length > 5 * 1024 * 1024) {
+    console.error('[telegramNotifications] Invalid winner image; photo not sent');
+    return { sent: false, reason: 'telegram_image_invalid' };
+  }
+  const form = new FormData();
+  form.set('chat_id', process.env.TELEGRAM_GROUP_ID);
+  form.set('caption', caption);
+  form.set('parse_mode', 'HTML');
+  form.set('photo', new Blob([image], { type: 'image/png' }), 'daily-draw-winners.png');
+  try {
+    const response = await axios.post(
+      `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendPhoto`,
+      form,
+      { timeout: 10_000, maxRedirects: 0 },
+    );
+    if (response.data?.ok !== true) {
+      console.error('[telegramNotifications] Telegram did not confirm photo delivery');
+      return { sent: false, reason: 'telegram_send_unconfirmed' };
+    }
+    return { sent: true, reason: 'sent' };
+  } catch (error) {
+    console.error('[telegramNotifications] Failed to send Telegram photo; HTTP status:', error?.response?.status || 'unknown');
+    return { sent: false, reason: 'telegram_send_failed' };
+  }
+}
+
 export function buildDailyDrawPublishedMessage({ drawDate, postId }) {
   if (!/^\d+$/.test(String(postId || '')) || !/^\d{4}-\d{2}-\d{2}$/.test(drawDate || '')) {
     throw new Error('Invalid daily draw announcement link or date');

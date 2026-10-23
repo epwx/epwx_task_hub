@@ -111,3 +111,30 @@ The migration marks existing published announcements `skipped` to avoid historic
 spam; pause dispatch during migration. Telegram failures are isolated from draw
 completion, X publication, X cleanup, and payouts. X cleanup does not remove
 Telegram messages, so historical links may stop resolving.
+
+For an explicitly authorized one-time share of a skipped announcement, use a
+compare-and-set update scoped to its ID, `status=published`, `deleteStatus=null`,
+and `telegramStatus=skipped`, resetting only its Telegram status to null and
+clearing its Telegram error code. Invoke `relayDailyDrawToTelegram(drawId)` and
+verify the stored delivery is `sent`. Do not reset sent, failed, sending, or
+uncertain deliveries through this procedure. This is an operator procedure, not
+a new public endpoint or recovery CLI command, and does not create a new X post.
+
+### Attach the original X image to Telegram
+
+Persist the rendered PNG in the nullable `winnerImage` BLOB column before uploading
+it to X. PostgreSQL stores this as binary data; retaining the exact bytes avoids
+rerendering a card with changed payout statuses during delayed delivery. Failure
+to save the snapshot stops that dispatch before any X request.
+
+The relay uses `sendTelegramGroupPhoto`, uploading the saved bytes as a PNG via
+multipart `sendPhoto` and using the existing HTML draw-date/X-link message as its
+caption. Native Node FormData and Blob are available in the supported Node 20
+runtime. The request has the same timeout, confirmation check, and no-automatic-
+resend policy as text delivery. Daily-claim messages continue using `sendMessage`.
+
+Missing snapshots fail explicitly with `TELEGRAM_WINNER_IMAGE_MISSING`; do not
+regenerate older cards or silently fall back to text. The additive migration
+does not change existing delivery statuses or resend old notifications. Retain
+snapshots (at most 5 MiB each) in database backups; list/sweep queries exclude the
+binary column to avoid loading images unnecessarily.
