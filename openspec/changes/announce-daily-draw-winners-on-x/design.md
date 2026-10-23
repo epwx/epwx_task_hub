@@ -89,3 +89,25 @@ For the card format update, install the updated backend dependencies before rest
 ### Delete superseded announcements
 
 Opt-in via DAILY_DRAW_X_DELETE_PREVIOUS. After a newer announcement is published, older tracked posts are removed with an OAuth 1.0a signed DELETE /2/tweets/:id. Delete state lives in separate columns so the publication status stays published. 404 counts as deleted, 401/403 are terminal, and 429/5xx/network errors retry up to three times. Manual untracked posts are never touched.
+
+### Relay published links to the daily-claim Telegram group
+
+Reuse `sendTelegramGroupMessage` with `TELEGRAM_BOT_TOKEN` and `TELEGRAM_GROUP_ID`.
+Only after persisting confirmed X publication, build a short HTML message containing
+the draw date and `https://x.com/i/status/<postId>`. Validate the post ID and escape
+the date. The existing Telegram sender now uses a ten-second timeout, disallows
+redirects, and requires Telegram's `ok: true` response.
+
+An atomic transition from null to `sending` in `telegramStatus` prevents concurrent
+delivery. Save `sent` with `telegramNotifiedAt`, or `failed` with a safe reason code
+in `telegramErrorCode`. A five-minute stale-send check marks interrupted sends
+`uncertain`; neither failed nor uncertain deliveries are automatically resent.
+Telegram has no send-message idempotency key, so delivery is best effort rather
+than exactly once. Operators must inspect the group before recovery.
+
+The existing sweep picks up published, undeleted records with unclaimed delivery.
+Missing Telegram configuration leaves them pending with an explicit log.
+The migration marks existing published announcements `skipped` to avoid historical
+spam; pause dispatch during migration. Telegram failures are isolated from draw
+completion, X publication, X cleanup, and payouts. X cleanup does not remove
+Telegram messages, so historical links may stop resolving.

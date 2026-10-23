@@ -89,6 +89,24 @@ a shorter caption directs readers to the image and results board when needed.
 All identifiers use shortened wallets: no explicit automated-mention consent is
 currently recorded, so linked usernames are never used.
 
+After confirmed X publication, the backend shares the draw date and
+`https://x.com/i/status/<postId>` link in the same Telegram group used for daily-claim
+notifications, using the existing `TELEGRAM_BOT_TOKEN` and `TELEGRAM_GROUP_ID`.
+No new environment settings are needed. Run `npm run migrate` before restarting
+the backend to add the Telegram delivery columns. The migration marks already
+published announcements as skipped, so deployment does not flood the group with
+historical links.
+
+Telegram delivery is tracked separately (`telegramStatus`, `telegramNotifiedAt`,
+`telegramErrorCode`). An atomic claim prevents concurrent duplicate messages.
+The minute-long sweep picks up published, not-deleted announcements not yet claimed,
+including when Telegram configuration becomes available later. Telegram requests
+time out after ten seconds. Failed or interrupted sends are logged and are not
+automatically retried because Telegram may have accepted the message; inspect the
+group and stored delivery state before operator recovery. Telegram failures never
+change the published X record, draw results, or payout state. Telegram messages are
+not deleted when an older X post is removed; their links can subsequently expire.
+
 Each post attaches a generated navy-and-green PNG with winner ranks, shortened
 wallets, EPWX prize amounts, and payment badges. The image uses `PAID` only when
 the stored winner status is paid with a transaction hash and valid payment time;

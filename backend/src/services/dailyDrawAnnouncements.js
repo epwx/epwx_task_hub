@@ -4,6 +4,7 @@ import { DailyDraw, DailyDrawWinner, DailyDrawAnnouncement } from '../models/ind
 import dailyDrawX from '../utils/dailyDrawX.cjs';
 import winnerImage from '../utils/dailyDrawWinnerImage.cjs';
 import cleanup from '../utils/dailyDrawXCleanup.cjs';
+import { buildDailyDrawPublishedMessage, sendTelegramGroupMessage } from './telegramNotifications.js';
 
 const { POST_URL, MEDIA_URL, MAX_ATTEMPTS, readConfig, authorizationHeader, createDispatcher } = dailyDrawX;
 const { deleteUrl, createCleanup } = cleanup;
@@ -112,8 +113,56 @@ export async function announceDailyDraw(drawId) {
     }, requestOptions(credentials, POST_URL)),
   });
   const result = await dispatch(drawId);
-  if (result?.status === 'published') await cleanupSupersededAnnouncements();
+  if (result?.status === 'published') {
+    await relayDailyDrawToTelegram(drawId);
+    await cleanupSupersededAnnouncements();
+  }
   return result;
+}
+
+export async function relayDailyDrawToTelegram(drawId) {
+  try {
+    const record = await DailyDrawAnnouncement.findOne({
+      where: { drawId, status: 'published', telegramStatus: null, deleteStatus: null },
+      include: [{ model: DailyDraw, as: 'draw', attributes: ['drawDate'] }],
+    });
+    if (!record) return;
+    if (!process.env.TELEGRAM_BOT_TOKEN || !process.env.TELEGRAM_GROUP_ID) {
+      console.error(`[daily-draw-x] draw=${drawId} telegram_not_configured; link not shared`);
+      return;
+    }
+    const message = buildDailyDrawPublishedMessage({ drawDate: record.draw?.drawDate, postId: record.postId });
+    const [claimed] = await DailyDrawAnnouncement.update({
+      telegramStatus: 'sending', telegramErrorCode: null,
+    }, { where: { id: record.id, status: 'published', telegramStatus: null, deleteStatus: null } });
+    if (claimed !== 1) return;
+    const result = await sendTelegramGroupMessage(message);
+    const [saved] = await DailyDrawAnnouncement.update({
+      telegramStatus: result.sent ? 'sent' : 'failed',
+      telegramNotifiedAt: result.sent ? new Date() : null,
+      telegramErrorCode: result.sent ? null : result.reason,
+    }, { where: { id: record.id, telegramStatus: 'sending' } });
+    if (saved !== 1) throw new Error('Telegram notification state changed during delivery');
+    if (result.sent) console.log(`[daily-draw-x] draw=${drawId} X link shared to Telegram`);
+    else console.error(`[daily-draw-x] draw=${drawId} ${result.reason}; inspect Telegram before retrying`);
+  } catch {
+    console.error(`[daily-draw-x] draw=${drawId} Telegram relay failed; inspect notification state before recovery`);
+  }
+}
+
+async function sweepTelegramAnnouncements() {
+  const [staleCount] = await DailyDrawAnnouncement.update({
+    telegramStatus: 'uncertain', telegramErrorCode: 'TELEGRAM_INTERRUPTED_SEND',
+  }, {
+    where: { telegramStatus: 'sending', updatedAt: { [Op.lt]: new Date(Date.now() - 5 * 60_000) } },
+  });
+  if (staleCount) console.error(`[daily-draw-x] ${staleCount} interrupted Telegram sends require reconciliation`);
+  const records = await DailyDrawAnnouncement.findAll({
+    where: { status: 'published', telegramStatus: null, deleteStatus: null },
+    order: [['id', 'DESC']],
+    limit: 20,
+  });
+  for (const record of records) await relayDailyDrawToTelegram(record.drawId);
 }
 
 export async function cleanupSupersededAnnouncements() {
@@ -161,6 +210,7 @@ export async function retryDailyDrawAnnouncements() {
     });
     for (const record of records) await announceDailyDraw(record.drawId);
     await cleanupSupersededAnnouncements();
+    await sweepTelegramAnnouncements();
   } catch {
     console.error('[daily-draw-x] Retry sweep failed; check configuration and announcement storage. No credentials logged.');
   }

@@ -56,3 +56,11 @@
 - [x] 6.1 Add opt-in flag, DELETE signing, delete-tracking migration and model fields.
 - [x] 6.2 Implement cleanup selection and retry flow, hooked after publish and the retry sweep.
 - [x] 6.3 Add mocked tests and README docs; deployed and verified live (draw 126 post deleted).
+
+## Telegram X-Link Notifications
+
+- [x] 7.1 Reuse the daily-claim Telegram bot and group to share confirmed X links with draw dates.
+- [x] 7.2 Add separate durable delivery state and atomic claims; skip already published announcements during migration.
+- [x] 7.3 Recover unclaimed deliveries in the sweep and record failed/interrupted sends without reposting X or duplicating Telegram messages.
+- [x] 7.4 Cover delivery ordering, concurrent claims, missing configuration, failures, migration, and daily-claim compatibility with mocked integration tests.
+- [ ] 7.5 Deploy the migration and backend, then verify a new announcement is shared to the configured group.

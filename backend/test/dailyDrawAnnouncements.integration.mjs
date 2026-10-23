@@ -9,6 +9,8 @@ const draw = { id: 10, drawDate: '2026-10-19', status: 'completed' };
 const winners = [{ wallet: `0x${'a'.repeat(40)}`, rank: 1, prizeAmount: '100000', status: 'pending' }];
 let httpResponse = { data: { data: { id: '1234' } } };
 let mediaResponse;
+let telegramResponse;
+const telegramCalls = () => calls.filter(([url]) => url.includes('api.telegram.org/'));
 const postCalls = () => calls.filter(([url]) => url.endsWith('/2/tweets'));
 const mediaCalls = () => calls.filter(([url]) => url.endsWith('/2/media/upload'));
 let winnerQuery;
@@ -16,11 +18,22 @@ let staleCount = 0;
 const announcementModel = {
   sequelize: { close: async () => {} },
   async findOrCreate() {
-    record ||= { id: 1, drawId: 10, status: 'pending', attempts: 0, nextAttemptAt: null };
+    record ||= {
+      id: 1, drawId: 10, status: 'pending', attempts: 0, nextAttemptAt: null,
+      telegramStatus: null, deleteStatus: null, draw,
+    };
     return [{ get: () => ({ ...record }) }];
+  },
+  async findOne({ where }) {
+    return record && Object.entries(where).every(([key, value]) => record[key] === value) ? record : null;
   },
   async update(values, { where }) {
     if (where.updatedAt) {
+      if (where.telegramStatus) {
+        if (!record || record.telegramStatus !== 'sending' || !staleCount) return [0];
+        Object.assign(record, values);
+        return [staleCount];
+      }
       if (!record || record.status !== 'sending' || !staleCount) return [0];
       Object.assign(record, values);
       return [staleCount];
@@ -31,7 +44,7 @@ const announcementModel = {
     return [1];
   },
   async findAll(query) {
-    lastQuery = query;
+    if (!Object.hasOwn(query.where, 'telegramStatus')) lastQuery = query;
     return record ? [record] : [];
   },
 };
@@ -40,7 +53,8 @@ mock.module('axios', {
   defaultExport: {
     async post(...args) {
       calls.push(args);
-      const response = args[0].endsWith('/2/media/upload') ? mediaResponse : httpResponse;
+      const response = args[0].includes('api.telegram.org/') ? telegramResponse
+        : args[0].endsWith('/2/media/upload') ? mediaResponse : httpResponse;
       if (response instanceof Error) throw response;
       return response;
     },
@@ -56,13 +70,16 @@ mock.module('../src/models/index.js', {
   },
 });
 
-const { announceDailyDraw, retryDailyDrawAnnouncements, announcementRepository } =
+const { announceDailyDraw, retryDailyDrawAnnouncements, announcementRepository, relayDailyDrawToTelegram } =
   await import('../src/services/dailyDrawAnnouncements.js');
 
 function reset() {
   calls.length = 0;
   record = null;
   staleCount = 0;
+  delete process.env.TELEGRAM_BOT_TOKEN;
+  delete process.env.TELEGRAM_GROUP_ID;
+  process.env.DAILY_DRAW_X_DELETE_PREVIOUS = 'false';
   Object.assign(process.env, {
     DAILY_DRAW_X_ENABLED: 'true',
     DAILY_DRAW_X_API_KEY: 'dummy-key',
@@ -73,7 +90,140 @@ function reset() {
   });
   httpResponse = { data: { data: { id: '1234' } } };
   mediaResponse = { data: { data: { id: '5678' } } };
+  telegramResponse = { data: { ok: true, result: { message_id: 42 } } };
 }
+
+function enableTelegram() {
+  process.env.TELEGRAM_BOT_TOKEN = 'test-bot-token';
+  process.env.TELEGRAM_GROUP_ID = '-100123456';
+}
+
+test('confirmed X publication shares its link to the daily-claim Telegram group once', async () => {
+  reset();
+  enableTelegram();
+  assert.equal((await announceDailyDraw(10)).status, 'published');
+  assert.equal(record.telegramStatus, 'sent');
+  assert.ok(record.telegramNotifiedAt instanceof Date);
+  const [url, body, options] = telegramCalls()[0];
+  assert.equal(url, 'https://api.telegram.org/bottest-bot-token/sendMessage');
+  assert.equal(body.chat_id, '-100123456');
+  assert.equal(body.parse_mode, 'HTML');
+  assert.ok(body.text.includes('2026-10-19'));
+  assert.ok(body.text.includes('https://x.com/i/status/1234'));
+  assert.equal(options.timeout, 10000);
+  assert.ok(calls.indexOf(telegramCalls()[0]) > calls.indexOf(postCalls()[0]));
+  await announceDailyDraw(10);
+  await Promise.all([relayDailyDrawToTelegram(10), relayDailyDrawToTelegram(10)]);
+  assert.equal(telegramCalls().length, 1);
+  assert.equal(postCalls().length, 1);
+});
+
+test('competing Telegram relays claim one delivery and recover unsent published links after restart', async () => {
+  reset();
+  enableTelegram();
+  record = {
+    id: 1, drawId: 10, status: 'published', postId: '9876', attempts: 1,
+    telegramStatus: null, deleteStatus: null, draw,
+  };
+  await Promise.all([relayDailyDrawToTelegram(10), relayDailyDrawToTelegram(10)]);
+  assert.equal(telegramCalls().length, 1);
+  assert.equal(postCalls().length, 0);
+  assert.equal(record.telegramStatus, 'sent');
+});
+
+test('Telegram failure cannot change published X state, leak a bot token, or trigger duplicate sends', async () => {
+  reset();
+  enableTelegram();
+  telegramResponse = new Error('https://api.telegram.org/botSECRET/sendMessage timed out');
+  const logs = [];
+  const original = console.error;
+  console.error = (...args) => logs.push(args.join(' '));
+  try {
+    assert.equal((await announceDailyDraw(10)).status, 'published');
+    assert.equal(record.status, 'published');
+    assert.equal(record.telegramStatus, 'failed');
+    assert.equal(record.telegramErrorCode, 'telegram_send_failed');
+    await retryDailyDrawAnnouncements();
+    assert.equal(telegramCalls().length, 1);
+    assert.equal(postCalls().length, 1);
+    assert.ok(logs.length);
+    assert.ok(!logs.join('\n').includes('SECRET'));
+  } finally {
+    console.error = original;
+  }
+});
+
+test('Telegram missing configuration leaves the link pending; sweep sends it when configured', async () => {
+  reset();
+  await announceDailyDraw(10);
+  assert.equal(telegramCalls().length, 0);
+  assert.equal(record.telegramStatus, null);
+  enableTelegram();
+  await retryDailyDrawAnnouncements();
+  assert.equal(telegramCalls().length, 1);
+  assert.equal(record.telegramStatus, 'sent');
+});
+
+test('uncertain X outcomes and historical, deleted or already claimed links never send to Telegram', async () => {
+  reset();
+  enableTelegram();
+  httpResponse = new Error('timeout');
+  await announceDailyDraw(10);
+  assert.equal(telegramCalls().length, 0);
+  for (const state of ['skipped', 'sending', 'uncertain', 'failed', 'sent']) {
+    record = {
+      id: 1, drawId: 10, status: 'published', postId: '1234',
+      telegramStatus: state, deleteStatus: null, draw,
+    };
+    await relayDailyDrawToTelegram(10);
+  }
+  record.telegramStatus = null;
+  record.deleteStatus = 'deleted';
+  await relayDailyDrawToTelegram(10);
+  assert.equal(telegramCalls().length, 0);
+});
+
+test('unconfirmed Telegram response is not recorded as delivered', async () => {
+  reset();
+  enableTelegram();
+  telegramResponse = { data: { ok: false } };
+  await announceDailyDraw(10);
+  assert.equal(record.telegramStatus, 'failed');
+  assert.equal(record.telegramErrorCode, 'telegram_send_unconfirmed');
+});
+
+test('interrupted Telegram sends become uncertain rather than sending twice', async () => {
+  reset();
+  enableTelegram();
+  record = {
+    id: 1, drawId: 10, status: 'published', postId: '1234',
+    telegramStatus: 'sending', deleteStatus: null, draw,
+  };
+  staleCount = 1;
+  await retryDailyDrawAnnouncements();
+  assert.equal(record.telegramStatus, 'uncertain');
+  assert.equal(record.telegramErrorCode, 'TELEGRAM_INTERRUPTED_SEND');
+  assert.equal(telegramCalls().length, 0);
+});
+
+test('daily-claim notifications still use the same group and HTML formatting', async () => {
+  reset();
+  enableTelegram();
+  const { notifyDailyClaimPaid, buildDailyDrawPublishedMessage } =
+    await import('../src/services/telegramNotifications.js');
+  assert.throws(() => buildDailyDrawPublishedMessage({ drawDate: '2026-10-19', postId: '123"><script>' }));
+  const result = await notifyDailyClaimPaid({
+    wallet: `0x${'a'.repeat(40)}`, amount: '1000', claimedAt: '2026-10-19T12:00:00Z',
+    badgeLabel: '<Buyer>',
+  });
+  assert.equal(result.sent, true);
+  const [, body] = telegramCalls()[0];
+  assert.equal(body.chat_id, '-100123456');
+  assert.ok(body.text.includes('EPWX Daily Reward Sent'));
+  assert.ok(body.text.includes('1,000 EPWX'));
+  assert.ok(body.text.includes('&lt;Buyer&gt;'));
+  assert.ok(body.text.includes('Claim Daily Free EPWX'));
+});
 
 test('real service signs the X request, uses a timeout, and stores a confirmed post without changing winners', async () => {
   reset();
@@ -270,4 +420,36 @@ test('migration creates a transactional table with unique per-draw publication s
   assert.equal(schema.attempts.defaultValue, 0);
   await migration.down(queryInterface);
   assert.equal(events.at(-1), 'drop');
+});
+
+test('Telegram migration tracks delivery separately and skips pre-existing published announcements', async () => {
+  const { default: migration } = await import('../migrations/20261023000000-add-daily-draw-telegram-notification.js');
+  const transaction = {};
+  const added = [];
+  const removed = [];
+  let skipped;
+  const queryInterface = {
+    sequelize: { transaction: async (callback) => callback(transaction) },
+    async addColumn(table, column, options, context) {
+      assert.equal(table, 'daily_draw_announcements');
+      assert.equal(context.transaction, transaction);
+      assert.equal(options.allowNull, true);
+      added.push(column);
+    },
+    async bulkUpdate(table, values, where, options) {
+      assert.equal(table, 'daily_draw_announcements');
+      assert.equal(options.transaction, transaction);
+      skipped = { values, where };
+    },
+    async removeColumn(table, column, options) {
+      assert.equal(table, 'daily_draw_announcements');
+      assert.equal(options.transaction, transaction);
+      removed.push(column);
+    },
+  };
+  await migration.up(queryInterface, { STRING: 'STRING', DATE: 'DATE' });
+  assert.deepEqual(added, ['telegramStatus', 'telegramNotifiedAt', 'telegramErrorCode']);
+  assert.deepEqual(skipped, { values: { telegramStatus: 'skipped' }, where: { status: 'published' } });
+  await migration.down(queryInterface);
+  assert.deepEqual(removed, [...added].reverse());
 });

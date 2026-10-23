@@ -183,17 +183,21 @@ export async function sendTelegramGroupMessage(text) {
   }
 
   try {
-    await axios.post(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+    const response = await axios.post(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
       chat_id: process.env.TELEGRAM_GROUP_ID,
       text,
       parse_mode: 'HTML',
       disable_web_page_preview: true,
-    });
+    }, { timeout: 10_000, maxRedirects: 0 });
+    if (response.data?.ok !== true) {
+      console.error('[telegramNotifications] Telegram did not confirm message delivery');
+      return { sent: false, reason: 'telegram_send_unconfirmed' };
+    }
 
     return { sent: true, reason: 'sent' };
   } catch (error) {
     const telegramError = error?.response?.data?.description || error?.message || 'Unknown Telegram error';
-    console.error('[telegramNotifications] Failed to send Telegram message:', error?.response?.data || error.message);
+    console.error('[telegramNotifications] Failed to send Telegram message; HTTP status:', error?.response?.status || 'unknown');
     return { sent: false, reason: 'telegram_send_failed', error: telegramError };
   }
 }
@@ -201,4 +205,17 @@ export async function sendTelegramGroupMessage(text) {
 export async function notifyDailyClaimPaid(claim) {
   const message = buildDailyClaimPaidMessage(claim);
   return sendTelegramGroupMessage(message);
+}
+
+export function buildDailyDrawPublishedMessage({ drawDate, postId }) {
+  if (!/^\d+$/.test(String(postId || '')) || !/^\d{4}-\d{2}-\d{2}$/.test(drawDate || '')) {
+    throw new Error('Invalid daily draw announcement link or date');
+  }
+  return [
+    '<b>EPWX Daily Draw Winners</b>',
+    `<b>Draw date</b>: ${escapeHtml(drawDate)}`,
+    '',
+    'The winners announcement is now live on X!',
+    `<a href="https://x.com/i/status/${postId}">View the winners on X</a>`,
+  ].join('\n');
 }

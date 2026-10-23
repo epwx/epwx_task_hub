@@ -144,3 +144,35 @@ When `DAILY_DRAW_X_DELETE_PREVIOUS=true`, the system SHALL delete older tracked 
 #### Scenario: Feature disabled
 - **WHEN** the flag is not `true`
 - **THEN** no posts are deleted
+
+### Requirement: Share confirmed X announcement links in Telegram
+After a new draw announcement is confirmed published on X, the system SHALL share
+its draw date and X post link in the existing daily-claim notification group using
+the existing Telegram bot credentials. Telegram delivery SHALL be tracked separately
+and SHALL NOT alter X publication, winner selection, or payout state.
+
+#### Scenario: X publication succeeds
+- **WHEN** X returns a valid post ID and publication is persisted
+- **THEN** the bot sends the draw date and a link to that exact post to `TELEGRAM_GROUP_ID`
+- **AND** concurrent workers cannot claim the same Telegram delivery twice
+
+#### Scenario: X publication fails or is uncertain
+- **WHEN** an announcement has not been confirmed published
+- **THEN** no Telegram link is sent
+
+#### Scenario: Telegram is not configured or delivery was not started before restart
+- **WHEN** a live published announcement has no claimed Telegram delivery
+- **THEN** the existing minute-long sweep attempts delivery once configuration is available
+
+#### Scenario: Telegram delivery fails or is interrupted
+- **WHEN** sending fails, cannot be confirmed, or the sending process is interrupted
+- **THEN** the failure is logged and stored without changing X publication or payouts
+- **AND** the send is not automatically repeated, to avoid duplicate messages
+
+#### Scenario: Feature is deployed with existing announcements
+- **WHEN** the Telegram delivery migration runs
+- **THEN** already published announcements are marked skipped rather than shared retroactively
+
+#### Scenario: An older X announcement is deleted
+- **WHEN** automatic X cleanup deletes an older post
+- **THEN** the existing Telegram message is retained, although its X link may no longer resolve
