@@ -80,4 +80,11 @@
 - [x] 8.2 Send the stored PNG via Telegram sendPhoto with draw date and X link as caption; preserve text-only daily-claim notifications.
 - [x] 8.3 Fail explicitly for missing snapshots without rerendering or falling back to text.
 - [x] 8.4 Validate byte-for-byte X/Telegram image equality, persistence failures, multipart fields, migration, and existing notification regressions (26 integration tests and 48 focused Jest tests passed; strict OpenSpec validation passed).
-- [ ] 8.5 Deploy the image migration and backend and verify a new winner-card photo notification.
+- [x] 8.5 Deploy the image migration and backend and verify an explicitly authorized winner-card photo notification.
+
+### Telegram Photo Deployment Verification
+
+- Release `b99effb` was pushed and deployed; the winner-image migration applied, `epwx-api` restarted online, and the daily-draw endpoint returned HTTP 200. All 48 focused Jest tests passed on production.
+- At the user's request, draw 129's existing X photo was retrieved through the authenticated X API, stored, and sent as a Telegram photo with its X link. The retrieved image was 1000 by 1130 pixels (540,736 PNG bytes).
+- Telegram confirmed delivery at `2026-10-23T04:05:17.243Z`; the announcement records `telegramStatus=sent` with no error. This was an authorized photo follow-up to the earlier text notification, not a new X post.
+- The next automatically published draw's end-to-end photo relay remains pending verification under task 7.6.
