@@ -64,7 +64,7 @@
 - [x] 7.3 Recover unclaimed deliveries in the sweep and record failed/interrupted sends without reposting X or duplicating Telegram messages.
 - [x] 7.4 Cover delivery ordering, concurrent claims, missing configuration, failures, migration, and daily-claim compatibility with mocked integration tests.
 - [x] 7.5 Deploy the migration and backend; verify Telegram delivery using an explicitly authorized existing announcement.
-- [ ] 7.6 Confirm the next automatically published X announcement is relayed without operator intervention.
+- [x] 7.6 Confirm the next automatically published X announcement is relayed without operator intervention.
 
 ### Telegram Deployment Verification
 
@@ -87,4 +87,4 @@
 - Release `b99effb` was pushed and deployed; the winner-image migration applied, `epwx-api` restarted online, and the daily-draw endpoint returned HTTP 200. All 48 focused Jest tests passed on production.
 - At the user's request, draw 129's existing X photo was retrieved through the authenticated X API, stored, and sent as a Telegram photo with its X link. The retrieved image was 1000 by 1130 pixels (540,736 PNG bytes).
 - Telegram confirmed delivery at `2026-10-23T04:05:17.243Z`; the announcement records `telegramStatus=sent` with no error. This was an authorized photo follow-up to the earlier text notification, not a new X post.
-- The next automatically published draw's end-to-end photo relay remains pending verification under task 7.6.
+- Automatic end-to-end delivery verified from production storage: draw 130 (draw date 2026-10-23) published X post `2113783782960410706` at `2026-10-24T00:05:00.980Z`; Telegram delivery recorded `sent` at `2026-10-24T00:05:02.402Z` with no error.
