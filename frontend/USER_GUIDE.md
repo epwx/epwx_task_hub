@@ -24,7 +24,12 @@ Welcome to the EPWX Task Platform! This guide will help you understand the main 
 - You will receive a status message about your claim.
 - You can claim once per day. Wallets with at least 1,000,000,000,000 EPWX can claim 10,000,000 EPWX, wallets with at least 100,000,000,000 EPWX can claim 5,000,000 EPWX, wallets with at least 10,000,000,000 EPWX can claim 2,000,000 EPWX, and other wallets can claim 100,000 EPWX.
 - No purchase, payment, EPWX balance, paid transaction, social promotion, or user-paid gas is required.
-- A successful Daily Claim creates one free Daily Reward Draw entry for that wallet for the UTC day.
+- A successful Daily Claim creates free Daily Reward Draw entries for that wallet for the UTC day. The seven-day streak schedule is **1, 1, 2, 2, 3, 3, 5 entries**; entries do not guarantee a win or increase the token reward tier.
+- The Daily Claim card always shows your seven-day progress and the next successful claim's day and entries. Completed days are marked in gold and the next day is highlighted in green.
+- During the 24-hour cooldown, the card shows a live countdown and the return time in your local timezone. After the cooldown, your claim window is open, subject to the usual email verification and eligibility requirements.
+- Complete the next successful claim no later than 48 hours after your previous claim to continue the streak. The card shows the remaining continuation window and automatically resets its preview to day one after expiry. After day seven, the next claim starts a new seven-day cycle.
+- Use **Manage claim-ready email reminders** to reach the existing email settings. Following this link does not enable notifications or change your preferences.
+- If history cannot be checked, use **Retry claim history**. Claim submission stays disabled until history is available, rather than showing an unverified claim-ready state.
 - Participants must be at least 18 and legally eligible where they live. Bots, duplicate wallets, sanctioned wallets, and excluded jurisdictions are not eligible.
 - Draw time, winner count, prize amount, selection audit data, and payout status are published in the **Latest Daily Reward Draw Winners** section.
 

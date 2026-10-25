@@ -15,6 +15,12 @@ import { BuyerBadgeChip, type BuyerBadge } from "@/components/BuyerBadge";
 import EngagementCampaignBoard from "@/components/EngagementCampaignBoard";
 import { formatEpwxBalance, formatDuration } from "@/utils/homeFormat";
 import {
+  DAILY_CLAIM_ENTRY_SCHEDULE,
+  getDailyClaimProgress,
+  parseLatestDailyClaim,
+  type DailyClaimHistory,
+} from "@/utils/dailyClaimProgress";
+import {
   themedSectionClass,
   themedInnerClass,
   glassPanelClass,
@@ -48,11 +54,6 @@ interface LatestDailyDraw {
   winnerCount: number;
   eligibleCount: number;
   prizeAmount: string;
-}
-
-interface DailyClaimStreak {
-  day: number;
-  drawEntries: number;
 }
 
 interface ReferralRewardStatus {
@@ -127,10 +128,26 @@ export default function HomeTest() {
   const [claimStatus, setClaimStatus] = useState<string | null>(null);
   const [emailEligibility, setEmailEligibility] = useState<EmailEligibilityStatus>("unknown");
   const [showClaimUpgradePrompt, setShowClaimUpgradePrompt] = useState(false);
-  const [nextDailyClaimAt, setNextDailyClaimAt] = useState<number | null>(null);
-  const [remainingClaimTime, setRemainingClaimTime] = useState<string | null>(null);
-  const [hasDailyClaimHistory, setHasDailyClaimHistory] = useState(false);
-  const [dailyClaimStreak, setDailyClaimStreak] = useState<DailyClaimStreak | null>(null);
+  const [dailyClaimHistory, setDailyClaimHistory] = useState<DailyClaimHistory | null>(null);
+  const [dailyClaimRefresh, setDailyClaimRefresh] = useState(0);
+  const [claimClock, setClaimClock] = useState(Date.now);
+  const currentClaimHistory = dailyClaimHistory?.wallet === address ? dailyClaimHistory : null;
+  const claimHistoryReady = currentClaimHistory?.status === "ready";
+  const claimProgress = currentClaimHistory?.status === "ready"
+    ? getDailyClaimProgress(currentClaimHistory.claim, claimClock)
+    : null;
+  const remainingClaimTime = claimProgress && claimProgress.remainingCooldownMs > 0
+    ? formatDuration(claimProgress.remainingCooldownMs)
+    : null;
+  const claimWindowLabel = !address
+    ? "Connect wallet"
+    : currentClaimHistory?.status === "error"
+      ? "History unavailable"
+      : !claimHistoryReady
+        ? "Checking claim history..."
+        : remainingClaimTime
+          ? `Next claim: ${remainingClaimTime}`
+          : "Claim window open";
   const [hasRecentQualifyingPurchase, setHasRecentQualifyingPurchase] = useState(false);
   const [dailyClaimsSummary, setDailyClaimsSummary] = useState<DailyClaimsSummary | null>(null);
   const [dailyClaimsSummaryLoading, setDailyClaimsSummaryLoading] = useState(true);
@@ -440,71 +457,63 @@ export default function HomeTest() {
   }, [address, checkVerification, isTelegramVerified]);
 
   useEffect(() => {
-    const fetchLatestDailyClaim = async () => {
-      if (!address) {
-        setHasDailyClaimHistory(false);
-        setNextDailyClaimAt(null);
-        setDailyClaimStreak(null);
-        return;
-      }
-
-      try {
-        const res = await fetch(`/api/epwx/daily-claims?wallet=${address}&limit=1`);
-        const data = await res.json();
-        const latestClaim = Array.isArray(data.claims) ? data.claims[0] : null;
-
-        if (!latestClaim?.claimedAt) {
-          setHasDailyClaimHistory(false);
-          setNextDailyClaimAt(null);
-          setDailyClaimStreak(null);
-          return;
-        }
-
-        setHasDailyClaimHistory(true);
-        const latestClaimTime = new Date(latestClaim.claimedAt).getTime();
-        const nextClaimTime = latestClaimTime + 24 * 60 * 60 * 1000;
-        setNextDailyClaimAt(nextClaimTime);
-        const streakDay = Number(latestClaim.streakDay || 1);
-        const drawEntries = Number(latestClaim.drawEntries || 1);
-        setDailyClaimStreak(Date.now() - latestClaimTime <= 48 * 60 * 60 * 1000
-          ? { day: streakDay, drawEntries }
-          : null);
-      } catch {
-        setHasDailyClaimHistory(false);
-        setNextDailyClaimAt(null);
-        setDailyClaimStreak(null);
-      }
-    };
-
-    fetchLatestDailyClaim();
-  }, [address, claimStatus]);
-
-  useEffect(() => {
-    if (!nextDailyClaimAt) {
-      setRemainingClaimTime(null);
+    if (!address) {
+      setDailyClaimHistory(null);
       return;
     }
-
-    const updateRemainingTime = () => {
-      const msLeft = nextDailyClaimAt - Date.now();
-
-      if (msLeft <= 0) {
-        setRemainingClaimTime(null);
-        setNextDailyClaimAt(null);
-        return;
+    const controller = new AbortController();
+    let cancelled = false;
+    setDailyClaimHistory({ wallet: address, status: "loading" });
+    const fetchLatestDailyClaim = async () => {
+      try {
+        const res = await fetch(`/api/epwx/daily-claims?wallet=${address}&limit=1`, {
+          cache: "no-store",
+          signal: controller.signal,
+        });
+        if (!res.ok) throw new Error(`Unable to load daily claim history (HTTP ${res.status}).`);
+        const data = await res.json();
+        const claim = parseLatestDailyClaim(data);
+        if (!cancelled) {
+          setClaimClock(Date.now());
+          setDailyClaimHistory({ wallet: address, status: "ready", claim });
+        }
+      } catch (error) {
+        if (cancelled) return;
+        console.error("[daily-claim] Failed to load claim history:", error);
+        setDailyClaimHistory({
+          wallet: address,
+          status: "error",
+          error: error instanceof Error ? error.message : "Unable to load daily claim history.",
+        });
       }
-
-      setRemainingClaimTime(formatDuration(msLeft));
     };
 
-    updateRemainingTime();
-    const intervalId = window.setInterval(updateRemainingTime, 1000);
-    return () => window.clearInterval(intervalId);
-  }, [nextDailyClaimAt]);
+    void fetchLatestDailyClaim();
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [address, dailyClaimRefresh]);
+
+  useEffect(() => {
+    if (!address) return;
+    const updateClock = () => setClaimClock(Date.now());
+    updateClock();
+    const intervalId = window.setInterval(updateClock, 1000);
+    window.addEventListener("focus", updateClock);
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", updateClock);
+    };
+  }, [address]);
 
   const handleDailyClaim = async () => {
     if (!address) {
       setClaimStatus("Connect your wallet first.");
+      return;
+    }
+    if (!claimHistoryReady || remainingClaimTime) {
+      setClaimStatus("Wait for claim history to load and the 24-hour cooldown to finish before claiming.");
       return;
     }
     if (emailEligibility !== "verified") {
@@ -536,6 +545,8 @@ export default function HomeTest() {
       });
       const data = await res.json();
       if (data.success) {
+        setDailyClaimHistory({ wallet: address, status: "loading" });
+        setDailyClaimRefresh((value) => value + 1);
         const claimedAmount = Number(data.amount || DEFAULT_DAILY_REWARD).toLocaleString();
         const referralMessage = formatReferralRewardMessage(data.referralReward);
         const partnerMessage = data.partnerReward?.partnerName
@@ -621,7 +632,7 @@ export default function HomeTest() {
               {isTelegramVerified ? 'Telegram Verified' : 'Telegram Unverified'}
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-300/30 bg-cyan-400/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em] text-cyan-200">
-              {remainingClaimTime ? `Next claim: ${remainingClaimTime}` : 'Claim Ready'}
+              {claimWindowLabel}
             </span>
           </div>
           <a
@@ -629,7 +640,7 @@ export default function HomeTest() {
             onClick={() => setActiveShortcutSection('daily-claim')}
             className="mt-3 flex items-center justify-center rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-black uppercase tracking-[0.08em] text-slate-950 transition-colors hover:bg-emerald-400"
           >
-            {remainingClaimTime ? 'View Claim Status' : 'Claim Daily Reward'}
+            {!claimHistoryReady || remainingClaimTime ? 'View Claim Status' : 'Claim Daily Reward'}
           </a>
         </div>
       </section>
@@ -680,7 +691,7 @@ export default function HomeTest() {
                 </div>
                 <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-slate-300">
                   <div className="uppercase tracking-[0.14em] text-slate-400">Claim Window</div>
-                  <div className="mt-1 font-black text-cyan-200">{remainingClaimTime ? remainingClaimTime : "Available"}</div>
+                  <div className="mt-1 font-black text-cyan-200">{claimWindowLabel}</div>
                 </div>
               </div>
             </div>
@@ -836,7 +847,7 @@ export default function HomeTest() {
                     <div className="grid gap-px bg-white/10 sm:grid-cols-2">
                       <div className="bg-slate-950/25 p-5 text-center sm:text-left">
                         <div className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-100/70">
-                          {remainingClaimTime ? "Next reward" : "Available now"}
+                          {!claimHistoryReady ? "Estimated reward" : remainingClaimTime ? "Next reward" : "Claim window open"}
                         </div>
                         <div className="mt-2 text-3xl font-black text-white">
                           {(isTelegramVerified === false ? Math.floor(currentDailyReward / 2) : currentDailyReward).toLocaleString()} EPWX
@@ -860,42 +871,81 @@ export default function HomeTest() {
                       </div>
                     </div>
                     <div className="p-5">
-                      <details className="group mb-5 rounded-lg border border-white/15 bg-slate-950/25">
-                        <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 marker:content-none">
-                          <div className="min-w-0">
-                            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">7-day streak</div>
-                            <div className="mt-0.5 truncate text-sm font-black text-white">
-                              {dailyClaimStreak
-                                ? `Day ${dailyClaimStreak.day} of 7 · ${dailyClaimStreak.drawEntries} draw ${dailyClaimStreak.drawEntries === 1 ? 'entry' : 'entries'}`
-                                : 'Start today · Day 7 earns 5 draw entries'}
+                      <div className="mb-5 rounded-lg border border-amber-300/25 bg-slate-950/25 p-4">
+                        <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-100">Your 7-day claim streak</h3>
+                        {!claimProgress ? (
+                          currentClaimHistory?.status === "error" ? (
+                            <div className="mt-3 text-sm text-amber-100" role="alert">
+                              <p>{currentClaimHistory.error} Your streak and claim window could not be checked.</p>
+                              <button
+                                type="button"
+                                onClick={() => setDailyClaimRefresh((value) => value + 1)}
+                                className="mt-2 min-h-11 font-semibold underline hover:text-white"
+                              >
+                                Retry claim history
+                              </button>
                             </div>
-                          </div>
-                          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded border border-white/15 text-lg text-white/70 transition-transform group-open:rotate-180" aria-hidden="true">⌄</span>
-                        </summary>
-                        <div className="border-t border-white/10 px-4 pb-4 pt-3">
-                          <div className="grid grid-cols-7 gap-1.5" aria-label={`${dailyClaimStreak?.day || 0} of 7 streak days completed`}>
-                            {Array.from({ length: 7 }, (_, index) => {
-                              const day = index + 1;
-                              const completed = day <= (dailyClaimStreak?.day || 0);
-                              return (
-                                <div
-                                  key={day}
-                                  className={`flex aspect-square items-center justify-center rounded text-xs font-black ${completed ? 'bg-amber-300 text-slate-950' : 'border border-white/15 bg-white/5 text-white/45'}`}
-                                >
-                                  {day}
-                                </div>
-                              );
-                            })}
-                          </div>
-                          <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs leading-5 text-white/60">
-                            <span>Claim again within 48 hours to advance. A new cycle begins after day 7.</span>
-                            <Link className="font-semibold text-amber-100 underline hover:text-white" href="/blog/daily-claim-step-by-step">
-                              View streak rules
-                            </Link>
-                          </div>
+                          ) : <p className="mt-3 text-sm text-white/70" role="status">Checking your claim history...</p>
+                        ) : (
+                          <>
+                            <p className="mt-2 text-lg font-black text-white">
+                              {claimProgress.expired
+                                ? "Start a fresh streak today"
+                                : claimProgress.cycleComplete
+                                  ? "Seven-day cycle complete!"
+                                  : claimProgress.completedDays > 0
+                                    ? `${claimProgress.completedDays} of 7 streak days completed`
+                                    : "Start today. Build toward 5 draw entries."}
+                            </p>
+                            <p className="mt-1 text-sm text-amber-100">
+                              {claimProgress.cycleComplete ? "New cycle" : "Next successful claim"}: day {claimProgress.nextDay} earns {claimProgress.nextDrawEntries} draw {claimProgress.nextDrawEntries === 1 ? "entry" : "entries"}.
+                            </p>
+                            <ol className="mt-4 grid grid-cols-4 gap-1 sm:grid-cols-7" aria-label={`${claimProgress.completedDays} of 7 streak days completed`}>
+                              {DAILY_CLAIM_ENTRY_SCHEDULE.map((entries, index) => {
+                                const day = index + 1;
+                                const completed = day <= claimProgress.completedDays;
+                                const next = day === claimProgress.nextDay && !claimProgress.cycleComplete;
+                                return (
+                                  <li
+                                    key={day}
+                                    aria-current={next ? "step" : undefined}
+                                    aria-label={`Day ${day}: ${entries} draw ${entries === 1 ? "entry" : "entries"}${completed ? ", completed" : next ? ", next claim" : ""}`}
+                                    className={`rounded-lg border px-0.5 py-3 text-center ${completed ? "border-amber-300 bg-amber-300 text-slate-950" : next ? "border-emerald-300 bg-emerald-400/15 text-emerald-100" : "border-white/15 bg-white/5 text-white/70"}`}
+                                  >
+                                    <div className="text-[10px] font-semibold sm:text-xs">Day {day}</div>
+                                    <div className="mt-1 text-base font-black sm:text-lg">{entries}</div>
+                                    <div className="text-[9px] sm:text-[10px]">{entries === 1 ? "entry" : "entries"}</div>
+                                    <span className="sr-only">{completed ? "Completed" : next ? "Next claim" : "Upcoming"}</span>
+                                  </li>
+                                );
+                              })}
+                            </ol>
+                            <div className="mt-4 rounded-lg border border-white/10 bg-white/5 p-3 text-sm text-white/85">
+                              <p className="font-bold text-emerald-100">{remainingClaimTime ? `Claim again in ${remainingClaimTime}` : "Your claim window is open"}</p>
+                              {remainingClaimTime && claimProgress.readyAt !== null ? (
+                                <p className="mt-1 text-white/70">
+                                  Return at <time dateTime={new Date(claimProgress.readyAt).toISOString()}>{new Date(claimProgress.readyAt).toLocaleString()}</time> (your local time).
+                                </p>
+                              ) : null}
+                              <p className="mt-2 text-xs leading-5 text-white/70">
+                                {claimProgress.expired
+                                  ? "More than 48 hours have passed since your last claim. Your next successful claim restarts at day 1."
+                                  : claimProgress.cycleComplete
+                                    ? "Your next successful claim begins a new seven-day cycle at day 1."
+                                    : claimProgress.streakDeadline !== null
+                                      ? `Complete your next claim within ${formatDuration(claimProgress.remainingStreakMs)} to keep this streak.`
+                                      : "Claim every 24 hours. Complete each next claim within 48 hours of the previous one to keep your streak."}
+                              </p>
+                            </div>
+                          </>
+                        )}
+                        <p className="mt-3 text-xs leading-5 text-white/60">Streaks increase draw entries, not your token reward. Entries do not guarantee a win. Existing eligibility rules apply.</p>
+                        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2 text-xs">
+                          <a href="#daily-claim-email-settings" className="inline-flex min-h-11 items-center font-semibold text-emerald-100 underline hover:text-white">Manage claim-ready email reminders</a>
+                          <Link className="inline-flex min-h-11 items-center font-semibold text-amber-100 underline hover:text-white" href="/blog/daily-claim-step-by-step">View streak rules</Link>
                         </div>
-                      </details>
-                      <div className="mb-5">
+                      </div>
+                      <div id="daily-claim-email-settings" className="mb-5 scroll-mt-36">
                         <DailyClaimEmailSignup wallet={address} onEligibilityChange={setEmailEligibility} />
                       </div>
                       <div className="flex items-start gap-3">
@@ -928,11 +978,13 @@ export default function HomeTest() {
                       </div>
                       <button
                         onClick={handleDailyClaim}
-                        disabled={claiming || !agreed || !!remainingClaimTime || emailEligibility !== "verified"}
-                        className={`mt-4 flex min-h-12 w-full items-center justify-center rounded-lg bg-emerald-500 px-6 py-3 text-base font-black text-slate-950 transition-colors hover:bg-emerald-400 ${claiming || !agreed || !!remainingClaimTime || emailEligibility !== "verified" ? 'cursor-not-allowed opacity-50' : ''}`}
+                        disabled={claiming || !claimHistoryReady || !agreed || !!remainingClaimTime || emailEligibility !== "verified"}
+                        className={`mt-4 flex min-h-12 w-full items-center justify-center rounded-lg bg-emerald-500 px-6 py-3 text-base font-black text-slate-950 transition-colors hover:bg-emerald-400 ${claiming || !claimHistoryReady || !agreed || !!remainingClaimTime || emailEligibility !== "verified" ? 'cursor-not-allowed opacity-50' : ''}`}
                       >
                         {claiming
                           ? 'Claiming...'
+                          : !claimHistoryReady
+                            ? currentClaimHistory?.status === "error" ? 'Retry Claim History Above' : 'Checking Claim History...'
                           : remainingClaimTime
                             ? `Next claim in ${remainingClaimTime}`
                             : emailEligibility === "verified"
