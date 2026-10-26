@@ -17,6 +17,7 @@ import { formatEpwxBalance, formatDuration } from "@/utils/homeFormat";
 import {
   DAILY_CLAIM_ENTRY_SCHEDULE,
   getDailyClaimProgress,
+  getDailyClaimReturnMessage,
   parseLatestDailyClaim,
   type DailyClaimHistory,
 } from "@/utils/dailyClaimProgress";
@@ -126,6 +127,7 @@ export default function HomeTest() {
   const { signMessageAsync } = useSignMessage();
   const [claiming, setClaiming] = useState(false);
   const [claimStatus, setClaimStatus] = useState<string | null>(null);
+  const [successfulClaimWallet, setSuccessfulClaimWallet] = useState<string | null>(null);
   const [emailEligibility, setEmailEligibility] = useState<EmailEligibilityStatus>("unknown");
   const [showClaimUpgradePrompt, setShowClaimUpgradePrompt] = useState(false);
   const [dailyClaimHistory, setDailyClaimHistory] = useState<DailyClaimHistory | null>(null);
@@ -135,6 +137,10 @@ export default function HomeTest() {
   const claimHistoryReady = currentClaimHistory?.status === "ready";
   const claimProgress = currentClaimHistory?.status === "ready"
     ? getDailyClaimProgress(currentClaimHistory.claim, claimClock)
+    : null;
+  const claimReturnMessage = successfulClaimWallet === address
+    && currentClaimHistory?.status === "ready" && currentClaimHistory.claim
+    ? getDailyClaimReturnMessage(currentClaimHistory.claim, claimClock)
     : null;
   const remainingClaimTime = claimProgress && claimProgress.remainingCooldownMs > 0
     ? formatDuration(claimProgress.remainingCooldownMs)
@@ -522,6 +528,7 @@ export default function HomeTest() {
     }
 
     setClaiming(true);
+    setSuccessfulClaimWallet(null);
     setClaimStatus(null);
     setShowClaimUpgradePrompt(false);
     try {
@@ -545,6 +552,7 @@ export default function HomeTest() {
       });
       const data = await res.json();
       if (data.success) {
+        setSuccessfulClaimWallet(address);
         setDailyClaimHistory({ wallet: address, status: "loading" });
         setDailyClaimRefresh((value) => value + 1);
         const claimedAmount = Number(data.amount || DEFAULT_DAILY_REWARD).toLocaleString();
@@ -995,6 +1003,12 @@ export default function HomeTest() {
                       </button>
                       {claimStatus && (
                         <div className="mt-4 text-center text-base font-semibold text-white">{claimStatus}</div>
+                      )}
+                      {claimReturnMessage && (
+                        <div className="mt-3 rounded-lg border border-emerald-300/25 bg-emerald-400/10 p-4 text-sm text-emerald-100" role="status">
+                          <p>{claimReturnMessage}</p>
+                          <a href="#daily-claim-email-settings" className="mt-2 inline-flex min-h-11 items-center font-semibold underline hover:text-white">Manage claim-ready email reminders</a>
+                        </div>
                       )}
                       {!isTelegramVerified ? (
                         <div className="mt-4 rounded-lg border border-amber-300/25 bg-amber-500/10 p-4 text-sm text-amber-100">

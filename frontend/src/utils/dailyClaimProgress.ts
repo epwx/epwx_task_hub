@@ -60,3 +60,13 @@ export function getDailyClaimProgress(claim: LatestDailyClaim | null, now: numbe
     cycleComplete: completedDays === 7,
   };
 }
+
+export function getDailyClaimReturnMessage(claim: LatestDailyClaim, now: number): string | null {
+  const progress = getDailyClaimProgress(claim, now);
+  if (progress.remainingCooldownMs <= 0 || progress.readyAt === null) return null;
+  const entries = `${progress.nextDrawEntries} draw ${progress.nextDrawEntries === 1 ? "entry" : "entries"}`;
+  const benefit = progress.cycleComplete
+    ? `start a new cycle at Day 1 with ${entries}`
+    : `reach Day ${progress.nextDay} with ${entries}`;
+  return `Day ${claim.streakDay} complete. Return at ${new Date(progress.readyAt).toLocaleString()} (your local time) to ${benefit}.`;
+}

@@ -6,6 +6,7 @@ import {
   DAILY_CLAIM_STREAK_WINDOW_MS,
   DAILY_CLAIM_ENTRY_SCHEDULE,
   getDailyClaimProgress,
+  getDailyClaimReturnMessage,
   parseLatestDailyClaim,
 } from "../src/utils/dailyClaimProgress.ts";
 
@@ -17,6 +18,22 @@ const {
 } = require("../../backend/src/utils/dailyClaimStreak.cjs");
 const claimedAt = Date.parse("2026-10-24T12:00:00.000Z");
 const claim = { claimedAt, streakDay: 4, drawEntries: 2 };
+
+test("post-claim message uses the recorded claim's next eligible local time and benefit", () => {
+  const message = getDailyClaimReturnMessage(claim, claimedAt);
+  assert.equal(message, `Day 4 complete. Return at ${new Date(claimedAt + DAILY_CLAIM_COOLDOWN_MS).toLocaleString()} (your local time) to reach Day 5 with 3 draw entries.`);
+});
+
+test("post-claim message explains cycle rollover and singular entries", () => {
+  const message = getDailyClaimReturnMessage({ ...claim, streakDay: 7 }, claimedAt);
+  assert.match(message, /Day 7 complete/);
+  assert.match(message, /start a new cycle at Day 1 with 1 draw entry\./);
+});
+
+test("post-claim return invitation disappears once the return time is reached", () => {
+  assert.equal(getDailyClaimReturnMessage(claim, claimedAt + DAILY_CLAIM_COOLDOWN_MS), null);
+  assert.equal(getDailyClaimReturnMessage(claim, claimedAt + DAILY_CLAIM_STREAK_WINDOW_MS + 1), null);
+});
 
 test("frontend policy matches the existing backend streak policy", () => {
   assert.deepEqual(DAILY_CLAIM_ENTRY_SCHEDULE, STREAK_ENTRY_SCHEDULE);

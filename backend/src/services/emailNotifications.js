@@ -5,7 +5,7 @@ import DailyClaim from '../models/DailyClaim.js';
 import Merchant from '../models/Merchant.js';
 import dailyClaimEmailUtils from '../utils/dailyClaimEmail.cjs';
 
-const { isReadyReminderEligible, isSuccessRetryEligible } = dailyClaimEmailUtils;
+const { buildReadyReminderCopy, isReadyReminderEligible, isSuccessRetryEligible } = dailyClaimEmailUtils;
 
 let transporter;
 
@@ -180,16 +180,17 @@ export async function sendPendingDailyClaimSuccessEmails() {
   return { checked: preferences.length, sent, failed };
 }
 
-async function sendDailyClaimReadyEmail({ preference, unsubscribeToken }) {
+async function sendDailyClaimReadyEmail({ preference, claim, unsubscribeToken, now }) {
   const config = getEmailConfig();
   const claimUrl = `${config.frontendUrl}/#daily-claim`;
   const unsubscribeUrl = `${config.frontendUrl}/email/unsubscribe?token=${encodeURIComponent(unsubscribeToken)}`;
   const oneClickUnsubscribeUrl = `${config.publicApiUrl}/epwx/daily-claim/email/unsubscribe?token=${encodeURIComponent(unsubscribeToken)}`;
+  const copy = buildReadyReminderCopy(claim, now);
   return sendEmail({
     to: preference.email,
-    subject: 'Your EPWX Daily Claim is ready',
-    text: `Your next EPWX Daily Claim is ready. Claim now: ${claimUrl}\n\nUnsubscribe: ${unsubscribeUrl}`,
-    html: `<h1>Your Daily Claim is ready</h1><p>Your next EPWX reward is available now.</p><p><a href="${escapeHtml(claimUrl)}">Claim Daily EPWX</a></p><p><a href="${escapeHtml(unsubscribeUrl)}">Unsubscribe from Daily Claim emails</a></p>`,
+    subject: copy.subject,
+    text: `${copy.paragraphs.join('\n\n')}\n\nClaim now: ${claimUrl}\n\nUnsubscribe: ${unsubscribeUrl}`,
+    html: `<h1>Your Daily Claim is ready</h1>${copy.paragraphs.map(paragraph => `<p>${escapeHtml(paragraph)}</p>`).join('')}<p><a href="${escapeHtml(claimUrl)}">Claim Daily EPWX</a></p><p><a href="${escapeHtml(unsubscribeUrl)}">Unsubscribe from Daily Claim emails</a></p>`,
     headers: {
       'List-Unsubscribe': `<${oneClickUnsubscribeUrl}>`,
       'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
@@ -221,7 +222,7 @@ export async function sendReadyDailyClaimReminders(now = new Date()) {
       preference.unsubscribeTokenHash = createHash('sha256').update(unsubscribeToken).digest('hex');
       await preference.save();
 
-      const result = await sendDailyClaimReadyEmail({ preference, unsubscribeToken });
+      const result = await sendDailyClaimReadyEmail({ preference, claim: latestClaim, unsubscribeToken, now });
       if (result.sent) {
         preference.lastReminderClaimId = latestClaim.id;
         await preference.save();
