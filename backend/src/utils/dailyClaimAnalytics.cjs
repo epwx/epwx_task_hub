@@ -65,16 +65,21 @@ function calculateRetentionAnalytics({ claims = [], firstClaimByWallet = [], now
   }
 
   const cutoff1Day = nowTime - DAY_MS;
+  const cutoff2Days = nowTime - (2 * DAY_MS);
   const cutoff7Days = nowTime - (7 * DAY_MS);
+  const cutoff14Days = nowTime - (14 * DAY_MS);
   const cutoff30Days = nowTime - (30 * DAY_MS);
   const cutoff37Days = nowTime - (37 * DAY_MS);
   const cutoff60Days = nowTime - (60 * DAY_MS);
-  const activeWallets = cutoff => new Set(
-    normalizedClaims.filter(claim => claim.claimedAt >= cutoff).map(claim => claim.wallet),
+  const activeWalletsBetween = (start, end = Infinity) => new Set(
+    normalizedClaims.filter(claim => claim.claimedAt >= start && claim.claimedAt < end).map(claim => claim.wallet),
   );
-  const dailyWallets = activeWallets(cutoff1Day);
-  const weeklyWallets = activeWallets(cutoff7Days);
-  const monthlyWallets = activeWallets(cutoff30Days);
+  const dailyWallets = activeWalletsBetween(cutoff1Day);
+  const previousDailyWallets = activeWalletsBetween(cutoff2Days, cutoff1Day);
+  const weeklyWallets = activeWalletsBetween(cutoff7Days);
+  const previousWeeklyWallets = activeWalletsBetween(cutoff14Days, cutoff7Days);
+  const monthlyWallets = activeWalletsBetween(cutoff30Days);
+  const previousMonthlyWallets = activeWalletsBetween(cutoff60Days, cutoff30Days);
   const newWallets = new Set();
   const returningWallets = new Set();
 
@@ -147,8 +152,11 @@ function calculateRetentionAnalytics({ claims = [], firstClaimByWallet = [], now
     generatedAt: new Date(nowTime).toISOString(),
     activity: {
       dailyActiveWallets: dailyWallets.size,
+      previousDailyActiveWallets: previousDailyWallets.size,
       weeklyActiveWallets: weeklyWallets.size,
+      previousWeeklyActiveWallets: previousWeeklyWallets.size,
       monthlyActiveWallets: monthlyWallets.size,
+      previousMonthlyActiveWallets: previousMonthlyWallets.size,
     },
     walletMixLast30Days: {
       newWallets: newWallets.size,

@@ -29,8 +29,11 @@ describe('Daily Claim retention analytics', () => {
 
     expect(analytics.activity).toEqual({
       dailyActiveWallets: 3,
+      previousDailyActiveWallets: 1,
       weeklyActiveWallets: 3,
+      previousWeeklyActiveWallets: 1,
       monthlyActiveWallets: 4,
+      previousMonthlyActiveWallets: 2,
     });
     expect(analytics.walletMixLast30Days).toEqual({ newWallets: 2, returningWallets: 2 });
     expect(analytics.retention.sevenDay).toEqual({ eligible: 1, returned: 1, rate: 100 });
@@ -52,5 +55,21 @@ describe('Daily Claim retention analytics', () => {
     expect(analytics.retention.thirtyDay.rate).toBe(0);
     expect(analytics.streaks.resetRate).toBe(0);
     expect(analytics.rewards.averagePaidPerReturningWallet).toBe('0');
+  });
+
+  it('compares distinct rolling 30-day periods without double-counting the boundary', () => {
+    const analytics = calculateRetentionAnalytics({
+      now,
+      claims: [
+        { wallet: '0xCurrent', claimedAt: daysAgo(30), streakDay: 1 },
+        { wallet: '0xPrevious', claimedAt: daysAgo(30.1), streakDay: 1 },
+        { wallet: '0xOldest', claimedAt: daysAgo(60), streakDay: 1 },
+        { wallet: '0xTooOld', claimedAt: daysAgo(60.1), streakDay: 1 },
+      ],
+      firstClaimByWallet: [],
+    });
+
+    expect(analytics.activity.monthlyActiveWallets).toBe(1);
+    expect(analytics.activity.previousMonthlyActiveWallets).toBe(2);
   });
 });

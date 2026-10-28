@@ -16,8 +16,11 @@ type RetentionAnalytics = {
   generatedAt: string;
   activity: {
     dailyActiveWallets: number;
+    previousDailyActiveWallets: number;
     weeklyActiveWallets: number;
+    previousWeeklyActiveWallets: number;
     monthlyActiveWallets: number;
+    previousMonthlyActiveWallets: number;
   };
   walletMixLast30Days: {
     newWallets: number;
@@ -60,12 +63,35 @@ function formatEpwx(value: string) {
   }
 }
 
-function Metric({ label, value, detail }: { label: string; value: string | number; detail: string }) {
+function formatWalletChange(current: number, previous: number, period: string) {
+  const change = current - previous;
+  const signedChange = `${change > 0 ? "+" : ""}${change}`;
+  if (previous === 0) {
+    return `${signedChange} wallets vs preceding ${period} (no baseline)`;
+  }
+
+  const percentage = ((change / previous) * 100).toFixed(1);
+  const signedPercentage = `${change > 0 ? "+" : ""}${percentage}`;
+  return `${signedChange} wallets (${signedPercentage}%) vs preceding ${period} (${previous})`;
+}
+
+function Metric({
+  label,
+  value,
+  detail,
+  comparison,
+}: {
+  label: string;
+  value: string | number;
+  detail: string;
+  comparison?: string;
+}) {
   return (
     <div className={`${panelClass} min-w-0 p-4`}>
       <div className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">{label}</div>
       <div className="mt-2 text-2xl font-black text-white">{value}</div>
       <div className="mt-1 text-xs leading-5 text-slate-400">{detail}</div>
+      {comparison ? <div className="mt-1 text-xs leading-5 text-emerald-200">{comparison}</div> : null}
     </div>
   );
 }
@@ -160,9 +186,36 @@ export default function AdminRetentionPage() {
                 <div className="text-xs text-slate-500">Updated {new Date(analytics.generatedAt).toLocaleString()}</div>
               </div>
               <div className="grid gap-3 sm:grid-cols-3">
-                <Metric label="Daily active" value={analytics.activity.dailyActiveWallets} detail="Unique wallets claiming in the last 24 hours" />
-                <Metric label="Weekly active" value={analytics.activity.weeklyActiveWallets} detail="Unique wallets claiming in the last 7 days" />
-                <Metric label="Monthly active" value={analytics.activity.monthlyActiveWallets} detail="Unique wallets claiming in the last 30 days" />
+                <Metric
+                  label="Daily active"
+                  value={analytics.activity.dailyActiveWallets}
+                  detail="Unique wallets claiming in the last 24 hours"
+                  comparison={formatWalletChange(
+                    analytics.activity.dailyActiveWallets,
+                    analytics.activity.previousDailyActiveWallets,
+                    "24 hours",
+                  )}
+                />
+                <Metric
+                  label="Weekly active"
+                  value={analytics.activity.weeklyActiveWallets}
+                  detail="Unique wallets claiming in the last 7 days"
+                  comparison={formatWalletChange(
+                    analytics.activity.weeklyActiveWallets,
+                    analytics.activity.previousWeeklyActiveWallets,
+                    "7 days",
+                  )}
+                />
+                <Metric
+                  label="Monthly active"
+                  value={analytics.activity.monthlyActiveWallets}
+                  detail="Unique wallets claiming in the last 30 days"
+                  comparison={formatWalletChange(
+                    analytics.activity.monthlyActiveWallets,
+                    analytics.activity.previousMonthlyActiveWallets,
+                    "30 days",
+                  )}
+                />
               </div>
             </section>
 
@@ -180,12 +233,12 @@ export default function AdminRetentionPage() {
                   <Metric
                     label="7-day return"
                     value={`${analytics.retention.sevenDay.rate}%`}
-                    detail={`${analytics.retention.sevenDay.returned} of ${analytics.retention.sevenDay.eligible} mature new-wallet cohorts returned`}
+                    detail={`${analytics.retention.sevenDay.returned} of ${analytics.retention.sevenDay.eligible} eligible new wallets claimed again within 7 days of their first claim`}
                   />
                   <Metric
                     label="30-day return"
                     value={`${analytics.retention.thirtyDay.rate}%`}
-                    detail={`${analytics.retention.thirtyDay.returned} of ${analytics.retention.thirtyDay.eligible} mature new-wallet cohorts returned`}
+                    detail={`${analytics.retention.thirtyDay.returned} of ${analytics.retention.thirtyDay.eligible} eligible new wallets claimed again within 30 days of their first claim`}
                   />
                 </div>
               </div>
@@ -238,7 +291,8 @@ export default function AdminRetentionPage() {
               <ul className="mt-3 list-disc space-y-2 pl-5 leading-6">
                 <li>Activity windows are rolling 24-hour, 7-day, and 30-day periods.</li>
                 <li>New versus existing is determined by the wallet&apos;s first-ever Daily Claim.</li>
-                <li>Return rate measures whether a mature first-claim cohort submitted another claim within 7 or 30 days.</li>
+                <li>Return rates count eligible new wallets with at least one claim after their first-ever claim and no later than 7 or 30 days afterward. Only wallets whose full return window has elapsed are included.</li>
+                <li>Each activity comparison is against the immediately preceding, non-overlapping window of the same duration; a wallet can be counted in both windows if it claimed in both.</li>
                 <li>A reset is a repeat claim recorded as day 1 unless the previous claim completed day 7.</li>
                 <li>Reward totals include Daily Claims marked paid; pending rewards are excluded.</li>
               </ul>
