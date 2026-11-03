@@ -105,19 +105,25 @@ async function getWalletClaimStatusByCampaignId(wallet) {
   }
 
   const claimedCampaigns = await Claim.findAll({
-    attributes: ['twitterCampaignId', 'status'],
+    attributes: ['twitterCampaignId', 'status', 'verificationStatus', 'verificationDecision', 'payoutStatus', 'rejectionComment'],
     where: {
       customer: wallet,
       claimType: { [Op.in]: TWITTER_CLAIM_TYPES },
       twitterCampaignId: { [Op.ne]: null },
-      status: { [Op.in]: ['pending', 'paid'] },
+      status: { [Op.in]: ['pending', 'approved', 'paid'] },
     },
     order: [['createdAt', 'DESC']],
   });
 
   return new Map(
     claimedCampaigns
-      .map(claim => [claim.twitterCampaignId, claim.status])
+      .map(claim => [claim.twitterCampaignId, {
+        status: claim.status,
+        verificationStatus: claim.verificationStatus,
+        verificationDecision: claim.verificationDecision,
+        payoutStatus: claim.payoutStatus,
+        rejectionComment: claim.rejectionComment,
+      }])
       .filter(([campaignId]) => Number.isInteger(campaignId))
   );
 }
@@ -216,9 +222,10 @@ router.get('/active', async (req, res) => {
 
     const activeCampaigns = campaigns
       .filter(campaign => {
-        const claimStatus = claimStatusByCampaignId.get(campaign.id);
+        const claimState = claimStatusByCampaignId.get(campaign.id);
+        const claimStatus = claimState?.status;
 
-        if (claimStatus === 'pending') {
+        if (claimStatus === 'pending' || claimStatus === 'approved') {
           return true;
         }
 
@@ -236,7 +243,8 @@ router.get('/active', async (req, res) => {
         tweetUrl: campaign.tweetUrl,
         rewardAmount: campaign.rewardAmount,
         expiresAt: campaign.expiresAt,
-        claimStatus: claimStatusByCampaignId.get(campaign.id) || null,
+        claimStatus: claimStatusByCampaignId.get(campaign.id)?.status || null,
+        claimState: claimStatusByCampaignId.get(campaign.id) || null,
       }));
 
     const total = activeCampaigns.length;
@@ -302,9 +310,10 @@ router.get('/:id', async (req, res) => {
 
     const wallet = typeof req.query.wallet === 'string' ? req.query.wallet.trim().toLowerCase() : '';
     const claimStatusByCampaignId = await getWalletClaimStatusByCampaignId(wallet);
-    const claimStatus = claimStatusByCampaignId.get(campaign.id) || null;
+    const claimState = claimStatusByCampaignId.get(campaign.id) || null;
+    const claimStatus = claimState?.status || null;
 
-    if ((!campaign.isActive || isCampaignExpired(campaign)) && claimStatus !== 'pending') {
+    if ((!campaign.isActive || isCampaignExpired(campaign)) && !['pending', 'approved'].includes(claimStatus)) {
       return res.status(404).json({ error: 'Campaign is inactive or expired' });
     }
 
@@ -317,6 +326,7 @@ router.get('/:id', async (req, res) => {
       rewardAmount: campaign.rewardAmount,
       expiresAt: campaign.expiresAt,
       claimStatus,
+      claimState,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });

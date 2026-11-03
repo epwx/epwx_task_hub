@@ -15,7 +15,14 @@ type TwitterCampaign = {
   tweetUrl: string;
   rewardAmount: string;
   expiresAt?: string | null;
-  claimStatus?: 'pending' | 'paid' | null;
+  claimStatus?: 'pending' | 'approved' | 'paid' | 'rejected' | null;
+  claimState?: {
+    status: string;
+    verificationStatus?: string | null;
+    verificationDecision?: string | null;
+    payoutStatus?: string | null;
+    rejectionComment?: string | null;
+  } | null;
 };
 
 function getTaskIntentUrl(tweetUrl: string, taskType: 'retweet' | 'comment' | 'poll' | 'rating') {
@@ -224,6 +231,7 @@ function TwitterRetweetClaimPage() {
             taskType={campaign.taskType}
             rewardAmount={campaign.rewardAmount}
             claimStatus={campaign.claimStatus}
+            claimState={campaign.claimState}
           />
         )}
       </main>

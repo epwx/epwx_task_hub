@@ -91,6 +91,7 @@ import { epwxTokenWithSigner } from './services/blockchain.js';
 import { sendPendingDailyClaimSuccessEmails, sendReadyDailyClaimReminders } from './services/emailNotifications.js';
 import dailyDrawPayoutUtils from './utils/dailyDrawPayout.cjs';
 import { announceDailyDraw, startDailyDrawAnnouncementRetries } from './services/dailyDrawAnnouncements.js';
+import { runSocialClaimVerificationBatch, settleApprovedSocialClaims } from './services/socialClaimAutomation.js';
 
 const AUTO_DAILY_DRAW_ENABLED = ['1', 'true', 'yes', 'on'].includes(String(process.env.AUTO_DAILY_DRAW_ENABLED || 'false').toLowerCase());
 const { getSettlementDrawId, isAutomaticDrawPayoutEnabled } = dailyDrawPayoutUtils;
@@ -113,6 +114,13 @@ const AUTO_PARTNER_SETTLEMENT_LOCK_KEY = Number.parseInt(String(process.env.AUTO
 const DAILY_CLAIM_EMAIL_REMINDERS_ENABLED = ['1', 'true', 'yes', 'on'].includes(String(process.env.DAILY_CLAIM_EMAIL_REMINDERS_ENABLED || 'false').toLowerCase());
 const DAILY_CLAIM_EMAIL_REMINDER_INTERVAL_MINUTES = Number.parseInt(String(process.env.DAILY_CLAIM_EMAIL_REMINDER_INTERVAL_MINUTES || '15'), 10);
 const DAILY_CLAIM_EMAIL_REMINDER_LOCK_KEY = Number.parseInt(String(process.env.DAILY_CLAIM_EMAIL_REMINDER_LOCK_KEY || '90412023'), 10);
+const SOCIAL_CLAIM_AUTOMATION_INTERVAL_MINUTES = Number.parseInt(String(process.env.SOCIAL_CLAIM_AUTOMATION_INTERVAL_MINUTES || '2'), 10);
+const SOCIAL_CLAIM_AUTOMATION_LOCK_KEY = Number.parseInt(String(process.env.SOCIAL_CLAIM_AUTOMATION_LOCK_KEY || '90412024'), 10);
+const SOCIAL_CLAIM_AUTOMATION_ENABLED = ['1', 'true', 'yes', 'on'].includes(
+  String(process.env.SOCIAL_CLAIM_AUTO_VERIFICATION_ENABLED || 'false').toLowerCase()
+) || ['1', 'true', 'yes', 'on'].includes(
+  String(process.env.SOCIAL_CLAIM_AUTO_SETTLEMENT_ENABLED || 'false').toLowerCase()
+);
 
 function normalizePositiveInt(value, fallback) {
   return Number.isInteger(value) && value > 0 ? value : fallback;
@@ -435,6 +443,57 @@ function startDailyClaimEmailReminderScheduler() {
   executeDailyClaimEmailReminders().finally(scheduleNextRun);
 }
 
+async function executeSocialClaimAutomation() {
+  const rows = await DailyDraw.sequelize.query(
+    'SELECT pg_try_advisory_lock(:lockKey) AS acquired',
+    {
+      replacements: { lockKey: SOCIAL_CLAIM_AUTOMATION_LOCK_KEY },
+      type: QueryTypes.SELECT,
+    }
+  );
+  const acquired = [true, 't', 1].includes(rows?.[0]?.acquired);
+  if (!acquired) {
+    console.log('[social-claim-automation] Skipping run because another backend instance owns the lock.');
+    return;
+  }
+
+  try {
+    const verification = await runSocialClaimVerificationBatch();
+    const settlement = await settleApprovedSocialClaims();
+    if (verification.processed || settlement.processed) {
+      console.log('[social-claim-automation] Run complete.', { verification, settlement });
+    }
+  } catch (error) {
+    console.error('[social-claim-automation] Scheduled run failed:', error);
+  } finally {
+    try {
+      await DailyDraw.sequelize.query(
+        'SELECT pg_advisory_unlock(:lockKey)',
+        {
+          replacements: { lockKey: SOCIAL_CLAIM_AUTOMATION_LOCK_KEY },
+          type: QueryTypes.SELECT,
+        }
+      );
+    } catch (error) {
+      console.error('[social-claim-automation] Failed to release scheduler lock:', error);
+    }
+  }
+}
+
+function startSocialClaimAutomationScheduler() {
+  if (!SOCIAL_CLAIM_AUTOMATION_ENABLED) {
+    console.log('[social-claim-automation] Scheduler disabled.');
+    return;
+  }
+  const intervalMinutes = normalizePositiveInt(SOCIAL_CLAIM_AUTOMATION_INTERVAL_MINUTES, 2);
+  const intervalMs = intervalMinutes * 60 * 1000;
+  const scheduleNextRun = () => setTimeout(async () => {
+    await executeSocialClaimAutomation();
+    scheduleNextRun();
+  }, intervalMs);
+  executeSocialClaimAutomation().finally(scheduleNextRun);
+}
+
 app.use('/api/auth', authRouter);
 app.use('/api/campaigns', campaignsRouter);
 app.use('/api/tasks', tasksRouter);
@@ -476,6 +535,7 @@ app.listen(PORT, () => {
   startDailyDrawAnnouncementRetries();
   startAutoPartnerSettlementScheduler();
   startDailyClaimEmailReminderScheduler();
+  startSocialClaimAutomationScheduler();
 });
 
 export default app;

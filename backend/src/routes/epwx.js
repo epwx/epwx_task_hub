@@ -11,7 +11,8 @@ import { notifyDailyClaimPaid } from '../services/telegramNotifications.js';
 import { notifyDailyClaimSuccess, notifyMerchantCodeClaimStatus, sendDailyClaimVerificationEmail } from '../services/emailNotifications.js';
 import { recordPartnerEarning } from '../services/partnerService.js';
 import { ethers } from 'ethers';
-import { epwxTokenContract, epwxTokenWithSigner } from '../services/blockchain.js';
+import { epwxTokenContract, EPWX_TOKEN_ADDRESS } from '../services/blockchain.js';
+import { distributeEpwxReward } from '../services/rewardTransfer.js';
 import dailyClaimSignatureUtils from '../utils/dailyClaimSignature.cjs';
 import dailyClaimRewardUtils from '../utils/dailyClaimReward.cjs';
 import dailyClaimStreakUtils from '../utils/dailyClaimStreak.cjs';
@@ -33,7 +34,6 @@ const MEGA_TIER_DAILY_REWARD_THRESHOLD = 1_000_000_000_000;
 const DEFAULT_DAILY_DRAW_WINNER_COUNT = 5;
 const DEFAULT_DAILY_DRAW_PRIZE_AMOUNT = '100000';
 const EPWX_TOKEN_DECIMALS = 9;
-const EPWX_REWARD_TRANSFER_FEE_BPS = Number(process.env.EPWX_REWARD_TRANSFER_FEE_BPS || '600');
 const DAILY_REWARD_TIERS = [
   {
     minimumBalance: MEGA_TIER_DAILY_REWARD_THRESHOLD,
@@ -555,43 +555,11 @@ export async function runDailyDraw({ drawDate, winnerCount, prizeAmount, runBy }
   }
 }
 
-function getGrossRewardAmount(amount) {
-  const normalizedAmount = BigInt(String(amount));
-
-  if (!Number.isFinite(EPWX_REWARD_TRANSFER_FEE_BPS) || EPWX_REWARD_TRANSFER_FEE_BPS <= 0) {
-    return normalizedAmount;
-  }
-
-  if (EPWX_REWARD_TRANSFER_FEE_BPS >= 10_000) {
-    throw new Error('EPWX_REWARD_TRANSFER_FEE_BPS must be less than 10000.');
-  }
-
-  const denominator = 10_000n - BigInt(EPWX_REWARD_TRANSFER_FEE_BPS);
-  return (normalizedAmount * 10_000n + denominator - 1n) / denominator;
-}
-
-async function distributeEpwxReward(wallet, amount) {
-  if (!epwxTokenWithSigner) {
-    console.error('[epwx-payout] Token signer is unavailable. Check blockchain environment configuration.');
-    return { paid: false, txHash: null };
-  }
-
-  const grossAmount = getGrossRewardAmount(amount);
-  const tx = await epwxTokenWithSigner.transfer(wallet, ethers.parseUnits(grossAmount.toString(), EPWX_TOKEN_DECIMALS));
-  const receipt = await tx.wait();
-
-  return {
-    paid: receipt?.status === 1,
-    txHash: tx.hash,
-  };
-}
-
 export async function settleDailyDrawWinners(drawId) {
   const winners = await DailyDrawWinner.findAll({
     where: { drawId, status: 'pending' },
     order: [['rank', 'ASC']],
   });
-
   return settlePendingDrawWinners({
     winners,
     payWinner: (winner) => distributeEpwxReward(winner.wallet, winner.prizeAmount),
@@ -602,10 +570,7 @@ export async function settleDailyDrawWinners(drawId) {
       await winner.save();
     },
     onFailure: async (winner, error) => {
-      console.error(
-        `[daily-reward-draw] Automatic payout failed for draw=${drawId}, winner=${winner.id}, wallet=${winner.wallet}:`,
-        error?.message || error
-      );
+      console.error(`[daily-reward-draw] Automatic payout failed for draw=${drawId}, winner=${winner.id}:`, error);
     },
   });
 }
@@ -831,6 +796,9 @@ router.post('/claims/mark-paid', async (req, res) => {
       console.log('[mark-paid] Claim not found for id:', claimId);
       return res.status(404).json({ error: 'Claim not found' });
     }
+    if (claim.status === 'paid') {
+      return res.status(409).json({ error: 'Claim is already paid.' });
+    }
     // Debug: log claim object to inspect wallet field
     console.log('[mark-paid] claim object:', claim);
     if (!txHash) {
@@ -848,11 +816,46 @@ router.post('/claims/mark-paid', async (req, res) => {
       console.error('[mark-paid] Error fetching tx receipt:', err);
       return res.status(500).json({ error: 'Failed to fetch transaction receipt.' });
     }
-    // Optionally: decode input data to verify transfer details
-    // For now, just log the receipt
+    const existingTransactionClaim = await Claim.findOne({
+      where: {
+        txHash,
+        id: { [Op.ne]: claim.id },
+      },
+    });
+    if (existingTransactionClaim) {
+      return res.status(409).json({ error: 'Transaction has already been credited to another claim.' });
+    }
+    const transaction = await provider.getTransaction(txHash);
+    if (!transaction?.to || ethers.getAddress(transaction.to) !== ethers.getAddress(EPWX_TOKEN_ADDRESS)) {
+      return res.status(400).json({ error: 'Transaction does not call the EPWX token contract.' });
+    }
+    const transferInterface = new ethers.Interface(['function transfer(address to, uint256 amount)']);
+    let decodedTransfer;
+    try {
+      decodedTransfer = transferInterface.parseTransaction({ data: transaction.data, value: transaction.value });
+    } catch {
+      return res.status(400).json({ error: 'Transaction is not an EPWX transfer.' });
+    }
+    const expectedRecipient = isCashbackClaim ? claim.wallet : claim.customer;
+    if (!ethers.isAddress(expectedRecipient)) {
+      return res.status(400).json({ error: 'Claim recipient is invalid.' });
+    }
+    const expectedAmount = ethers.parseUnits(
+      String(isCashbackClaim ? '1000000000' : (claim.bill || claim.cashbackAmount || '100000')),
+      EPWX_TOKEN_DECIMALS,
+    );
+    if (
+      !decodedTransfer
+      || ethers.getAddress(decodedTransfer.args[0]) !== ethers.getAddress(expectedRecipient)
+      || decodedTransfer.args[1] !== expectedAmount
+    ) {
+      return res.status(400).json({ error: 'Transaction recipient or amount does not match this claim.' });
+    }
     console.log('[mark-paid] Verified on-chain tx:', txHash, 'for claim:', claimId);
     claim.status = 'paid';
     claim.txHash = txHash;
+    claim.paidAt = new Date();
+    claim.payoutStatus = 'paid';
     if (isCashbackClaim) {
       claim.cashbackAmount = '1000000000';
     }
@@ -888,7 +891,9 @@ router.post('/claims/mark-paid', async (req, res) => {
         epwx_amount: epwxAmount,
         fiat_value: null,
         transaction_hash: txHash,
-        notes: 'Cashback claim paid'
+        notes: isCashbackClaim ? 'Cashback claim paid' : 'Claim paid',
+        source_type: isCashbackClaim ? 'cashback_claim' : (String(claim.claimType || '').startsWith('twitter_') ? 'social_engagement_claim' : 'merchant_claim'),
+        source_id: String(claim.id),
       });
       console.log('[RewardLedger] Insert successful, entry id:', ledgerEntry.id);
     } catch (ledgerErr) {

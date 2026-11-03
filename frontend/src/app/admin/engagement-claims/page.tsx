@@ -2,8 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { ConnectKitButton } from "connectkit";
-import { useAccount, usePublicClient, useWriteContract } from "wagmi";
-import { ethers } from "ethers";
+import { useAccount } from "wagmi";
 import MerchantClaimsTable from "@/components/MerchantClaimsTable";
 import { parseJsonResponse } from "@/utils/apiErrors";
 
@@ -18,6 +17,19 @@ type TwitterClaim = {
   rejectionComment?: string;
   campaignCode?: string;
   twitterUsername?: string;
+  verificationStatus?: string | null;
+  verificationDecision?: string | null;
+  verificationConfidence?: string | number | null;
+  payoutStatus?: string | null;
+  payoutLastError?: string | null;
+  verificationAttemptsHistory?: Array<{
+    id: number;
+    decision?: string | null;
+    confidence?: string | number | null;
+    reasonCodes?: string[];
+    signals?: Record<string, unknown>;
+    errorCode?: string | null;
+  }>;
 };
 
 type TwitterTaskType = "retweet" | "comment" | "poll" | "rating";
@@ -123,8 +135,6 @@ export default function AdminEngagementClaimsPage() {
   const TWITTER_CLAIMS_PAGE_SIZE = 5;
   const TWITTER_CAMPAIGNS_PAGE_SIZE = 3;
   const { address } = useAccount();
-  const publicClient = usePublicClient();
-  const { writeContractAsync } = useWriteContract();
   const [claims, setClaims] = useState<TwitterClaim[]>([]);
   const [campaigns, setCampaigns] = useState<TwitterCampaign[]>([]);
   const [claimsPage, setClaimsPage] = useState(1);
@@ -161,20 +171,6 @@ export default function AdminEngagementClaimsPage() {
     expiresAt: "",
   });
   const [campaignUpdating, setCampaignUpdating] = useState(false);
-
-  const EPWX_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_EPWX_TOKEN as `0x${string}`) || "0x0000000000000000000000000000000000000000";
-  const EPWX_TOKEN_ABI = [
-    {
-      inputs: [
-        { internalType: "address", name: "to", type: "address" },
-        { internalType: "uint256", name: "amount", type: "uint256" },
-      ],
-      name: "transfer",
-      outputs: [{ internalType: "bool", name: "", type: "bool" }],
-      stateMutability: "nonpayable",
-      type: "function",
-    },
-  ];
 
   const isAdmin = !!address && ADMIN_WALLETS.includes(address.toLowerCase());
 
@@ -401,37 +397,27 @@ export default function AdminEngagementClaimsPage() {
     setError(null);
 
     try {
-      const rewardAmount = claim.bill || "100000";
-      const amount = ethers.parseUnits(String(rewardAmount), 9).toString();
-      const txHash = await writeContractAsync({
-        address: EPWX_TOKEN_ADDRESS,
-        abi: EPWX_TOKEN_ABI,
-        functionName: "transfer",
-        args: [claim.customer as `0x${string}`, amount],
-      });
-
-      if (!publicClient) {
-        setError("Public client not available");
-        setMarking(null);
-        return;
+      if (claim.status === "pending") {
+        const approvalResponse = await fetch(`/api/claims/${claim.id}/mark-status`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            admin: address,
+            status: "approved",
+            overrideReason: "Approved by administrator after proof review.",
+          }),
+        });
+        await parseJsonResponse<{ success?: boolean }>(approvalResponse, "Failed to approve claim");
       }
-
-      const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
-      if (receipt.status !== "success") {
-        setError("Token transfer failed or was reverted");
-        setMarking(null);
-        return;
-      }
-
-      const response = await fetch("/api/epwx/claims/mark-paid", {
+      const response = await fetch(`/api/claims/${claim.id}/settle`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ admin: address, claimId: claim.id, txHash, claimSource: "claim" }),
+        body: JSON.stringify({ admin: address }),
       });
-      const data = await parseJsonResponse<{ success?: boolean; error?: string }>(response, "Failed to mark claim as paid");
+      const data = await parseJsonResponse<{ success?: boolean; error?: string }>(response, "Failed to settle claim");
 
       if (!data.success) {
-        setError(data.error || "Failed to mark claim as paid");
+        setError(data.error || "Failed to settle claim");
       } else {
         await fetchClaims();
       }
@@ -674,6 +660,7 @@ export default function AdminEngagementClaimsPage() {
             className={selectClass}
           >
             <option value="pending" className={selectOptionClass}>Pending</option>
+            <option value="approved" className={selectOptionClass}>Approved</option>
             <option value="paid" className={selectOptionClass}>Paid</option>
             <option value="rejected" className={selectOptionClass}>Rejected</option>
           </select>

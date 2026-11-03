@@ -3,7 +3,7 @@ console.log('BACKEND ENV ADMIN_WALLETS:', process.env.ADMIN_WALLETS);
 
 
 import express from 'express';
-import { Claim, Merchant, MerchantClaimCode, TwitterCampaign } from '../models/index.js';
+import { Claim, Merchant, MerchantClaimCode, SocialClaimDecisionAudit, SocialClaimVerificationAttempt, TwitterCampaign } from '../models/index.js';
 import { Op } from 'sequelize';
 import sequelize from '../config/database.js';
 import { hashMerchantClaimCode, normalizeMerchantClaimCode } from '../utils/merchantClaimCode.js';
@@ -11,6 +11,8 @@ import { notifyMerchantCodeClaimStatus } from '../services/emailNotifications.js
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { validateAndFingerprintSocialProof, SocialProofValidationError } from '../services/socialProofImage.js';
+import { settleApprovedSocialClaims } from '../services/socialClaimAutomation.js';
 // Set up admin wallets from environment variable (lowercase, trimmed)
 const adminWallets = (process.env.ADMIN_WALLETS || '').split(',').map(a => a.trim().toLowerCase());
 
@@ -29,6 +31,16 @@ const storage = multer.diskStorage({
   }
 });
 const upload = multer({ storage });
+const socialUpload = multer({
+  storage,
+  limits: {
+    fileSize: Number.parseInt(process.env.SOCIAL_CLAIM_MAX_IMAGE_BYTES || '5242880', 10),
+    files: 1,
+  },
+  fileFilter: (req, file, callback) => {
+    callback(null, ['image/png', 'image/jpeg', 'image/webp'].includes(file.mimetype));
+  },
+});
 
 const router = express.Router();
 const TWITTER_TASK_TYPE_TO_CLAIM_TYPE = {
@@ -49,6 +61,39 @@ function getTwitterClaimType(taskType) {
 
 function toUrlPath(filePath) {
   return String(filePath || '').replace(/\\+/g, '/');
+}
+
+function isSocialClaim(claim) {
+  return String(claim?.claimType || '').startsWith('twitter_');
+}
+
+function isEnabled(value) {
+  return ['1', 'true', 'yes', 'on'].includes(String(value || 'false').toLowerCase());
+}
+
+function toUserSafeSocialClaim(claim) {
+  return {
+    id: claim.id,
+    customer: claim.customer,
+    status: claim.status,
+    claimType: claim.claimType,
+    campaignCode: claim.campaignCode,
+    twitterCampaignId: claim.twitterCampaignId,
+    verificationStatus: claim.verificationStatus,
+    verificationDecision: claim.verificationDecision,
+    rejectionComment: claim.rejectionComment,
+    payoutStatus: claim.payoutStatus,
+    txHash: claim.txHash,
+    createdAt: claim.createdAt,
+    updatedAt: claim.updatedAt,
+  };
+}
+
+async function removeUploadedFile(file) {
+  if (!file?.path) return;
+  await fs.promises.unlink(file.path).catch((error) => {
+    if (error?.code !== 'ENOENT') throw error;
+  });
 }
 
 
@@ -226,6 +271,22 @@ router.get('/', async (req, res) => {
     const claims = await Claim.findAll({
       where,
       attributes: { exclude: ['customerEmail', 'emailNotificationConsent', 'lastEmailNotificationStatus'] },
+      include: admin && adminWallets.includes(String(admin).toLowerCase()) ? [
+        {
+          model: SocialClaimVerificationAttempt,
+          as: 'verificationAttemptsHistory',
+          required: false,
+          separate: true,
+          order: [['attemptNumber', 'DESC']],
+        },
+        {
+          model: SocialClaimDecisionAudit,
+          as: 'decisionAudits',
+          required: false,
+          separate: true,
+          order: [['createdAt', 'DESC']],
+        },
+      ] : [],
       order: [['createdAt', 'DESC']],
     });
     res.json({ claims });
@@ -245,6 +306,10 @@ async function createTwitterCampaignClaim(req, res, expectedTaskType) {
   if (!customer || !twitterCampaignId || !req.file) {
     return res.status(400).json({ error: 'Customer wallet, campaign, and screenshot are required.' });
   }
+  if (!/^0x[a-fA-F0-9]{40}$/.test(String(customer).trim())) {
+    await removeUploadedFile(req.file);
+    return res.status(400).json({ error: 'A valid customer wallet is required.' });
+  }
 
   const campaignId = Number.parseInt(String(twitterCampaignId), 10);
   if (!Number.isInteger(campaignId) || campaignId <= 0) {
@@ -257,32 +322,52 @@ async function createTwitterCampaignClaim(req, res, expectedTaskType) {
   }
 
   try {
+    let proof;
+    try {
+      proof = await validateAndFingerprintSocialProof(req.file.path);
+    } catch (error) {
+      await removeUploadedFile(req.file);
+      if (error instanceof SocialProofValidationError) {
+        return res.status(400).json({ error: error.message, code: error.code });
+      }
+      throw error;
+    }
+
     const campaign = await TwitterCampaign.findByPk(campaignId);
     if (!campaign || !campaign.isActive) {
+      await removeUploadedFile(req.file);
       return res.status(404).json({ error: 'Campaign not found or inactive.' });
     }
 
     if (campaign.taskType !== normalizedTaskType) {
+      await removeUploadedFile(req.file);
       return res.status(400).json({ error: 'Campaign task type does not match this claim route.' });
     }
 
     if (campaign.expiresAt && new Date(campaign.expiresAt) < new Date()) {
+      await removeUploadedFile(req.file);
       return res.status(400).json({ error: 'Campaign has expired.' });
     }
 
     const customerLc = String(customer).trim().toLowerCase();
+    const normalizedTwitterUsername = twitterUsername ? String(twitterUsername).trim().replace(/^@/, '') : null;
+    if (normalizedTwitterUsername && !/^[A-Za-z0-9_]{1,15}$/.test(normalizedTwitterUsername)) {
+      await removeUploadedFile(req.file);
+      return res.status(400).json({ error: 'Enter a valid social username.' });
+    }
     const claimType = getTwitterClaimType(normalizedTaskType);
     const existingClaim = await Claim.findOne({
       where: {
         customer: customerLc,
         twitterCampaignId: campaign.id,
         claimType,
-        status: { [Op.in]: ['pending', 'paid'] },
+        status: { [Op.in]: ['pending', 'approved', 'paid'] },
       },
       order: [['createdAt', 'DESC']],
     });
 
     if (existingClaim) {
+      await removeUploadedFile(req.file);
       return res.status(409).json({ error: existingClaim.status === 'paid' ? 'Campaign reward already paid.' : 'You already submitted this campaign for review.' });
     }
 
@@ -293,45 +378,114 @@ async function createTwitterCampaignClaim(req, res, expectedTaskType) {
       claimType,
       campaignCode: campaign.code,
       twitterCampaignId: campaign.id,
-      twitterUsername: twitterUsername ? String(twitterUsername).trim().replace(/^@/, '') : null,
+      twitterUsername: normalizedTwitterUsername,
       status: 'pending',
       ip,
       receiptImage: receiptImagePath,
+      verificationStatus: isEnabled(process.env.SOCIAL_CLAIM_AUTO_VERIFICATION_ENABLED) ? 'queued' : 'manual_review',
+      verificationDecision: isEnabled(process.env.SOCIAL_CLAIM_AUTO_VERIFICATION_ENABLED) ? null : 'manual_review',
+      proofSha256: proof.proofSha256,
+      proofPerceptualHash: proof.proofPerceptualHash,
     });
 
-    return res.json({ success: true, claim });
+    return res.json({ success: true, claim: toUserSafeSocialClaim(claim) });
   } catch (err) {
+    await removeUploadedFile(req.file);
     return res.status(500).json({ error: err.message });
   }
 }
 
-router.post('/twitter-retweet', upload.single('receiptImage'), async (req, res) => createTwitterCampaignClaim(req, res, 'retweet'));
-router.post('/twitter-comment', upload.single('receiptImage'), async (req, res) => createTwitterCampaignClaim(req, res, 'comment'));
-router.post('/twitter-poll', upload.single('receiptImage'), async (req, res) => createTwitterCampaignClaim(req, res, 'poll'));
-router.post('/twitter-rating', upload.single('receiptImage'), async (req, res) => createTwitterCampaignClaim(req, res, 'rating'));
+function handleSocialClaimUpload(taskType) {
+  return (req, res) => {
+    socialUpload.single('receiptImage')(req, res, async (error) => {
+      if (error) {
+        const message = error.code === 'LIMIT_FILE_SIZE'
+          ? 'Screenshot exceeds the allowed file size.'
+          : 'Screenshot upload could not be processed.';
+        return res.status(400).json({ error: message, code: error.code || 'INVALID_UPLOAD' });
+      }
+      return createTwitterCampaignClaim(req, res, taskType);
+    });
+  };
+}
+
+router.post('/twitter-retweet', handleSocialClaimUpload('retweet'));
+router.post('/twitter-comment', handleSocialClaimUpload('comment'));
+router.post('/twitter-poll', handleSocialClaimUpload('poll'));
+router.post('/twitter-rating', handleSocialClaimUpload('rating'));
 
 // POST /api/claims/:id/mark-status - Update claim status (admin only)
 router.post('/:id/mark-status', async (req, res) => {
-  const { admin, status, rejectionComment } = req.body;
+  const { admin, status, rejectionComment, overrideReason } = req.body;
   if (!admin || !adminWallets.length || !adminWallets.includes(admin.toLowerCase())) {
     return res.status(403).json({ error: 'Unauthorized' });
   }
   if (!status) return res.status(400).json({ error: 'status is required' });
+  if (!['pending', 'approved', 'rejected'].includes(status)) {
+    return res.status(400).json({ error: 'Invalid claim status.' });
+  }
   try {
     const claim = await Claim.findByPk(req.params.id);
     if (!claim) return res.status(404).json({ error: 'Claim not found' });
+    if (claim.status === 'paid') {
+      return res.status(409).json({ error: 'Paid claims cannot be changed.' });
+    }
+    if (isSocialClaim(claim) && !String(overrideReason || rejectionComment || '').trim()) {
+      return res.status(400).json({ error: 'An override reason is required for social claims.' });
+    }
+    const previousDecision = claim.verificationDecision || claim.status;
     claim.status = status;
     if (status === 'rejected') {
       claim.rejectionComment = rejectionComment || null;
     } else {
       claim.rejectionComment = null;
     }
+    if (isSocialClaim(claim)) {
+      claim.verificationDecision = status === 'approved' ? 'approve' : status === 'rejected' ? 'reject' : 'manual_review';
+      claim.verificationStatus = 'completed';
+      claim.verificationCompletedAt = new Date();
+      claim.approvedAt = status === 'approved' ? new Date() : null;
+      claim.approvedBy = status === 'approved' ? String(admin).toLowerCase() : null;
+      claim.payoutStatus = status === 'approved' ? 'pending' : claim.payoutStatus;
+    }
     await claim.save();
+    if (isSocialClaim(claim)) {
+      await SocialClaimDecisionAudit.create({
+        claimId: claim.id,
+        actor: String(admin).toLowerCase(),
+        previousDecision,
+        nextDecision: claim.verificationDecision,
+        reason: String(overrideReason || rejectionComment).trim(),
+      });
+    }
     await notifyMerchantCodeClaimStatus(claim, status);
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+router.post('/:id/settle', async (req, res) => {
+  const { admin } = req.body;
+  if (!admin || !adminWallets.includes(String(admin).toLowerCase())) {
+    return res.status(403).json({ error: 'Unauthorized' });
+  }
+  const claim = await Claim.findByPk(req.params.id);
+  if (!claim || !isSocialClaim(claim)) {
+    return res.status(404).json({ error: 'Social engagement claim not found.' });
+  }
+  if (claim.status === 'paid') {
+    return res.status(409).json({ error: 'Claim is already paid.' });
+  }
+  if (claim.status !== 'approved') {
+    return res.status(409).json({ error: 'Claim must be approved before settlement.' });
+  }
+
+  const result = await settleApprovedSocialClaims({ force: true, claimId: claim.id });
+  if (!result.paid) {
+    return res.status(502).json({ error: 'Claim settlement did not complete.', result });
+  }
+  return res.json({ success: true, result });
 });
 
 export default router;

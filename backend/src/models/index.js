@@ -23,6 +23,8 @@ import PartnerEarning from './PartnerEarning.js';
 import TelegramGroupOwner from './TelegramGroupOwner.js';
 import TelegramGroupReward from './TelegramGroupReward.js';
 import DailyClaimEmailPreference from './DailyClaimEmailPreference.js';
+import SocialClaimVerificationAttempt from './SocialClaimVerificationAttempt.js';
+import SocialClaimDecisionAudit from './SocialClaimDecisionAudit.js';
 
 const RewardDistributionLedger = RewardDistributionLedgerDef(sequelize, DataTypes);
 
@@ -66,5 +68,11 @@ Merchant.hasMany(MerchantClaimCode, { foreignKey: 'merchantId', as: 'claimCodes'
 MerchantClaimCode.belongsTo(Merchant, { foreignKey: 'merchantId', as: 'merchant' });
 MerchantClaimCode.hasOne(Claim, { foreignKey: 'merchantClaimCodeId', as: 'claim' });
 Claim.belongsTo(MerchantClaimCode, { foreignKey: 'merchantClaimCodeId', as: 'merchantClaimCode' });
+TwitterCampaign.hasMany(Claim, { foreignKey: 'twitterCampaignId', as: 'claims' });
+Claim.belongsTo(TwitterCampaign, { foreignKey: 'twitterCampaignId', as: 'twitterCampaign' });
+Claim.hasMany(SocialClaimVerificationAttempt, { foreignKey: 'claimId', as: 'verificationAttemptsHistory' });
+SocialClaimVerificationAttempt.belongsTo(Claim, { foreignKey: 'claimId', as: 'claim' });
+Claim.hasMany(SocialClaimDecisionAudit, { foreignKey: 'claimId', as: 'decisionAudits' });
+SocialClaimDecisionAudit.belongsTo(Claim, { foreignKey: 'claimId', as: 'claim' });
 
-export { User, Campaign, TaskSubmission, CashbackClaim, DailyClaim, DailyDraw, DailyDrawWinner, DailyDrawAnnouncement, SpecialClaim, Merchant, Claim, MerchantClaimCode, TwitterCampaign, RewardDistributionLedger, WalletReferral, PlatformStats, Partner, PartnerReferral, PartnerEarning, TelegramGroupOwner, TelegramGroupReward, DailyClaimEmailPreference };
+export { User, Campaign, TaskSubmission, CashbackClaim, DailyClaim, DailyDraw, DailyDrawWinner, DailyDrawAnnouncement, SpecialClaim, Merchant, Claim, MerchantClaimCode, TwitterCampaign, RewardDistributionLedger, WalletReferral, PlatformStats, Partner, PartnerReferral, PartnerEarning, TelegramGroupOwner, TelegramGroupReward, DailyClaimEmailPreference, SocialClaimVerificationAttempt, SocialClaimDecisionAudit };

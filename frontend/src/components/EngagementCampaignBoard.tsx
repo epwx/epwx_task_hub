@@ -14,7 +14,11 @@ type EngagementCampaign = {
   tweetUrl: string;
   rewardAmount?: string | null;
   expiresAt?: string | null;
-  claimStatus?: "pending" | "paid" | null;
+  claimStatus?: "pending" | "approved" | "paid" | "rejected" | null;
+  claimState?: {
+    verificationStatus?: string | null;
+    payoutStatus?: string | null;
+  } | null;
 };
 
 type CampaignPagination = {
@@ -122,7 +126,7 @@ export default function EngagementCampaignBoard({ wallet }: { wallet?: string })
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-200/80">Community Engagement Rewards</p>
             <h2 className="mt-2 text-3xl font-black">Active Social Campaigns</h2>
             <p className="mx-auto mt-3 max-w-3xl text-sm text-white/75">
-              Open a campaign, complete the requested social task, and upload a clear screenshot for manual review.
+              Open a campaign, complete the requested social task, and upload a clear screenshot for automated verification with manual review fallback.
             </p>
           </div>
 
@@ -156,7 +160,11 @@ export default function EngagementCampaignBoard({ wallet }: { wallet?: string })
                         View Post
                       </a>
                       <Link href={`/claim/engagement?campaignId=${campaign.id}`} className="inline-flex items-center justify-center rounded-xl bg-emerald-500 px-4 py-3 text-center text-sm font-bold text-slate-950 hover:bg-emerald-400">
-                        {campaign.claimStatus === "pending" ? "View Pending Claim" : getTaskAction(campaign.taskType)}
+                        {campaign.claimStatus === "pending"
+                          ? (campaign.claimState?.verificationStatus === "processing" ? "Verification Processing" : "View Pending Claim")
+                          : campaign.claimStatus === "approved"
+                            ? "View Approved Claim"
+                            : getTaskAction(campaign.taskType)}
                       </Link>
                     </div>
                   </article>

@@ -14,11 +14,11 @@ const RewardDistributionLedger = (sequelize, DataTypes) => {
       },
       merchant_id: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
       },
       merchant_name: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       customer_id: {
         type: DataTypes.STRING,
@@ -44,11 +44,26 @@ const RewardDistributionLedger = (sequelize, DataTypes) => {
         type: DataTypes.TEXT,
         allowNull: true,
       },
+      source_type: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      source_id: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
     },
     {
       sequelize,
       modelName: "RewardDistributionLedger",
       tableName: "RewardDistributionLedger",
+      indexes: [
+        {
+          unique: true,
+          fields: ["source_type", "source_id"],
+          name: "reward_ledger_source_unique",
+        },
+      ],
     }
   );
   return RewardDistributionLedgerClass;

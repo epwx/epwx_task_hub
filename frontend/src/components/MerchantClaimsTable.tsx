@@ -14,6 +14,19 @@ interface MerchantClaim {
   claimType?: string;
   campaignCode?: string;
   twitterUsername?: string;
+  verificationStatus?: string | null;
+  verificationDecision?: string | null;
+  verificationConfidence?: string | number | null;
+  payoutStatus?: string | null;
+  payoutLastError?: string | null;
+  verificationAttemptsHistory?: Array<{
+    id: number;
+    decision?: string | null;
+    confidence?: string | number | null;
+    reasonCodes?: string[];
+    signals?: Record<string, unknown>;
+    errorCode?: string | null;
+  }>;
 }
 
 function getTwitterClaimFallbackLabel(claimType?: string) {
@@ -148,6 +161,20 @@ const MerchantClaimsTable: React.FC<MerchantClaimsTableProps> = ({ claims, isAdm
               </td>
               <td className="bg-transparent px-2 py-3 capitalize text-slate-100 sm:px-4">
                 {claim.status}
+                {context === 'twitter' && claim.verificationStatus ? (
+                  <div className="mt-1 text-xs normal-case text-cyan-200">
+                    Verification: {claim.verificationStatus.replace(/_/g, ' ')}
+                    {claim.verificationConfidence != null ? ` (${Math.round(Number(claim.verificationConfidence) * 100)}%)` : ''}
+                  </div>
+                ) : null}
+                {context === 'twitter' && claim.payoutStatus ? (
+                  <div className="mt-1 text-xs normal-case text-emerald-200">Payout: {claim.payoutStatus.replace(/_/g, ' ')}</div>
+                ) : null}
+                {context === 'twitter' && claim.verificationAttemptsHistory?.[0]?.reasonCodes?.length ? (
+                  <div className="mt-1 max-w-56 text-xs normal-case text-slate-400">
+                    {claim.verificationAttemptsHistory[0].reasonCodes.join(', ')}
+                  </div>
+                ) : null}
                 {claim.status === "rejected" && claim.rejectionComment && (
                   <div className="mt-1 text-xs text-rose-200">Reason: {claim.rejectionComment}</div>
                 )}
@@ -162,22 +189,22 @@ const MerchantClaimsTable: React.FC<MerchantClaimsTableProps> = ({ claims, isAdm
               </td>
               {isAdmin && (
                 <td className="bg-transparent px-2 py-3 sm:px-4">
-                  {claim.status === "pending" ? (
+                  {claim.status === "pending" || claim.status === "approved" ? (
                     <div className="flex flex-col gap-2">
                       <button
                         className="rounded-xl bg-cyan-500 px-2 py-1 text-xs text-slate-950 transition-colors hover:bg-cyan-400 disabled:opacity-50 sm:px-4 sm:py-2 sm:text-sm"
                         disabled={marking === claim.id}
                         onClick={() => onDistribute && onDistribute(claim)}
                       >
-                        {marking === claim.id ? "Distributing..." : `Distribute EPWX`}
+                        {marking === claim.id ? "Processing..." : claim.status === "approved" ? "Distribute EPWX" : "Approve & Distribute"}
                       </button>
-                      <button
+                      {claim.status === "pending" ? <button
                         className="rounded-xl bg-rose-500 px-2 py-1 text-xs text-white transition-colors hover:bg-rose-400 sm:px-4 sm:py-2 sm:text-sm"
                         onClick={() => setRejectingId(claim.id)}
                       >
                         Reject
-                      </button>
-                      {rejectingId === claim.id && (
+                      </button> : null}
+                      {claim.status === "pending" && rejectingId === claim.id && (
                         <div className="mt-2 flex flex-col gap-1 rounded-2xl border border-white/10 bg-white/[0.04] p-3">
                           <textarea
                             className="rounded-xl border border-white/15 bg-slate-950/40 p-2 text-xs text-white placeholder-slate-500"
