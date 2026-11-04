@@ -3,7 +3,7 @@
   "info": {
     "title": "EPWX Public Supply API",
     "version": "1.0.0",
-    "description": "Public endpoints for real-time, on-chain EPWX token supply data. All values are formatted with 9 decimals. Base URL: https://api.epowex.com/api"
+    "description": "Public endpoints for real-time, on-chain EPWX token supply data. Successful responses contain only a JSON numerical value, as required by CoinMarketCap Annex C. Base URL: https://api.epowex.com/api"
   },
   "servers": [
     { "url": "https://api.epowex.com/api" }
@@ -11,18 +11,16 @@
   "paths": {
     "/supply": {
       "get": {
-        "summary": "Get total supply",
-        "description": "Returns the total supply of EPWX.",
+        "summary": "Get total supply net of burns",
+        "description": "Returns the contract total supply minus the verifiably burned dead-wallet balance.",
         "responses": {
           "200": {
             "description": "Total supply response",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "totalSupply": { "type": "string", "example": "500000000000000.0" }
-                  }
+                  "type": "number",
+                  "example": 31636112613662.907941756
                 }
               }
             }
@@ -40,10 +38,8 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "circulatingSupply": { "type": "string", "example": "47735101557879.49916245" }
-                  }
+                  "type": "number",
+                  "example": 31534662490294.9022976
                 }
               }
             }
@@ -61,10 +57,8 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "burnedSupply": { "type": "string", "example": "452219794766432.065945108" }
-                  }
+                  "type": "number",
+                  "example": 468363887386337.092058244
                 }
               }
             }

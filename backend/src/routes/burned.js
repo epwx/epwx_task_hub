@@ -6,7 +6,7 @@ const router = express.Router();
 router.get('/burned', async (req, res) => {
   try {
     const burnedSupply = await getBurnedSupply();
-    res.json({ burnedSupply });
+    res.type('application/json').send(burnedSupply);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch burned supply' });
   }

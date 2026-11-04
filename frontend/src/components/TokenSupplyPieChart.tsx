@@ -64,17 +64,17 @@ export function TokenSupplyPieChart() {
         ]);
 
         const [totalPayload, circulatingPayload, burnedPayload] = await Promise.all([
-          parseJsonResponse<{ totalSupply?: number; error?: string }>(totalResponse, 'Failed to fetch token supply data.'),
-          parseJsonResponse<{ circulatingSupply?: number; error?: string }>(circulatingResponse, 'Failed to fetch token supply data.'),
-          parseJsonResponse<{ burnedSupply?: number; error?: string }>(burnedResponse, 'Failed to fetch token supply data.'),
+          parseJsonResponse<number>(totalResponse, 'Failed to fetch token supply data.'),
+          parseJsonResponse<number>(circulatingResponse, 'Failed to fetch token supply data.'),
+          parseJsonResponse<number>(burnedResponse, 'Failed to fetch token supply data.'),
         ]);
 
         if (cancelled) return;
 
         setSnapshot({
-          totalSupply: Number(totalPayload.totalSupply || 0),
-          circulatingSupply: Number(circulatingPayload.circulatingSupply || 0),
-          burnedSupply: Number(burnedPayload.burnedSupply || 0),
+          totalSupply: Number(totalPayload || 0),
+          circulatingSupply: Number(circulatingPayload || 0),
+          burnedSupply: Number(burnedPayload || 0),
         });
         setError(null);
       } catch (fetchError: any) {
@@ -102,7 +102,8 @@ export function TokenSupplyPieChart() {
       return { slices: [] as SupplySlice[], totalSupply: 0 };
     }
 
-    const lockedSupply = Math.max(snapshot.totalSupply - snapshot.circulatingSupply - snapshot.burnedSupply, 0);
+    const lockedSupply = Math.max(snapshot.totalSupply - snapshot.circulatingSupply, 0);
+    const originalSupply = snapshot.totalSupply + snapshot.burnedSupply;
     const nextSlices: SupplySlice[] = [
       { label: 'Circulating', value: Math.max(snapshot.circulatingSupply, 0), color: '#22c55e' },
       { label: 'Burned', value: Math.max(snapshot.burnedSupply, 0), color: '#9ca3af' },
@@ -112,7 +113,7 @@ export function TokenSupplyPieChart() {
       nextSlices.push({ label: 'Non-circulating', value: lockedSupply, color: '#38bdf8' });
     }
 
-    return { slices: nextSlices, totalSupply: snapshot.totalSupply };
+    return { slices: nextSlices, totalSupply: originalSupply };
   }, [snapshot]);
 
   const selectedSlice = useMemo(() => {
@@ -171,7 +172,7 @@ export function TokenSupplyPieChart() {
                     );
                   })}
                   <circle cx="120" cy="120" r="52" fill="#0f172a" fillOpacity="0.9" />
-                  <text x="120" y="110" textAnchor="middle" className="fill-white text-[10px] uppercase tracking-[0.28em]">Total Supply</text>
+                  <text x="120" y="110" textAnchor="middle" className="fill-white text-[10px] uppercase tracking-[0.28em]">Original Supply</text>
                   <text x="120" y="136" textAnchor="middle" className="fill-white text-[16px] font-bold">{formatWhole(totalSupply)}</text>
                 </svg>
               )}
@@ -197,7 +198,7 @@ export function TokenSupplyPieChart() {
                   </div>
                   <div className="mt-3 break-words text-3xl font-black text-white">{formatWhole(selectedSlice.value)} EPWX</div>
                   <div className="mt-1 text-sm font-semibold text-white/75">
-                    {totalSupply > 0 ? ((selectedSlice.value / totalSupply) * 100).toFixed(2) : '0.00'}% of total supply
+                    {totalSupply > 0 ? ((selectedSlice.value / totalSupply) * 100).toFixed(2) : '0.00'}% of original supply
                   </div>
                 </div>
               ) : null}

@@ -36,15 +36,15 @@ async function fetchSupplySnapshot(): Promise<SupplySnapshot> {
   ]);
 
   const [totalPayload, circulatingPayload, burnedPayload] = await Promise.all([
-    parseJsonResponse<{ totalSupply?: string; error?: string }>(totalResponse, 'Failed to fetch total supply'),
-    parseJsonResponse<{ circulatingSupply?: string; error?: string }>(circulatingResponse, 'Failed to fetch circulating supply'),
-    parseJsonResponse<{ burnedSupply?: string; error?: string }>(burnedResponse, 'Failed to fetch burned supply'),
+    parseJsonResponse<number>(totalResponse, 'Failed to fetch total supply'),
+    parseJsonResponse<number>(circulatingResponse, 'Failed to fetch circulating supply'),
+    parseJsonResponse<number>(burnedResponse, 'Failed to fetch burned supply'),
   ]);
 
   return {
-    totalSupply: String(totalPayload.totalSupply || '0'),
-    circulatingSupply: String(circulatingPayload.circulatingSupply || '0'),
-    burnedSupply: String(burnedPayload.burnedSupply || '0'),
+    totalSupply: String(totalPayload || 0),
+    circulatingSupply: String(circulatingPayload || 0),
+    burnedSupply: String(burnedPayload || 0),
   };
 }
 

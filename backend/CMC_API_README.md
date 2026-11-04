@@ -13,12 +13,10 @@ https://api.epowex.com/api
 
 ### 1. Get Total Supply
 - **Endpoint:** `GET /api/supply`
-- **Description:** Returns the total supply of EPWX.
+- **Description:** Returns the EPWX contract total supply minus tokens held by the verified burn address.
 - **Example Response:**
 ```json
-{
-  "totalSupply": "500000000000000.0"
-}
+31636112613662.907941756
 ```
 
 ---
@@ -28,9 +26,7 @@ https://api.epowex.com/api
 - **Description:** Returns the circulating supply (total supply minus burned and treasury-locked tokens).
 - **Example Response:**
 ```json
-{
-  "circulatingSupply": "47735101557879.49916245"
-}
+31534662490294.9022976
 ```
 
 ---
@@ -40,9 +36,7 @@ https://api.epowex.com/api
 - **Description:** Returns the total amount of EPWX sent to the burn (dead) address.
 - **Example Response:**
 ```json
-{
-  "burnedSupply": "452219794766432.065945108"
-}
+468363887386337.092058244
 ```
 
 ---
@@ -58,7 +52,10 @@ https://api.epowex.com/api/docs
 
 ## Notes
 - All endpoints are public and require no authentication.
-- All values are formatted with 9 decimals.
+- Successful responses contain only the numerical JSON value, matching the CoinMarketCap Annex C sample API format.
+- Total supply is the contract supply minus the verifiably burned dead-wallet balance.
+- Circulating supply is the contract supply minus burned and treasury-locked balances.
+- Values use the token's 9-decimal on-chain precision without converting through JavaScript `Number`.
 - Data is fetched directly from the EPWX token contract on Base.
 - Treasury-locked addresses are disclosed in project documentation.
 - For questions, contact: [your contact email or support link]
@@ -80,4 +77,5 @@ curl https://api.epowex.com/api/burned
 ---
 
 ## Changelog
+- 2026-11-03: Aligned response bodies and net total-supply calculation with CoinMarketCap Annex C.
 - 2026-01-02: Initial release of public supply APIs for CMC compliance.
