@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { parseJsonResponse } from '@/utils/apiErrors';
 import { getApiBaseUrl } from '@/utils/apiBaseUrl';
+import { WhitepaperAddress } from '@/components/WhitepaperAddress';
 import {
   EPWX_TOKEN_ADDRESS,
   EPWX_WETH_PAIR_ADDRESS,
@@ -27,6 +28,25 @@ type SnapshotState = {
 };
 
 const API_BASE_URL = getApiBaseUrl();
+const BASESCAN_ADDRESS_URL = 'https://basescan.org/address/';
+const REQUEST_TIMEOUT_MS = 10000;
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timeoutId = window.setTimeout(() => reject(new Error('Live data request timed out')), timeoutMs);
+
+    promise.then(
+      (value) => {
+        window.clearTimeout(timeoutId);
+        resolve(value);
+      },
+      (error: unknown) => {
+        window.clearTimeout(timeoutId);
+        reject(error);
+      },
+    );
+  });
+}
 
 async function fetchSupplySnapshot(): Promise<SupplySnapshot> {
   const [totalResponse, circulatingResponse, burnedResponse] = await Promise.all([
@@ -67,7 +87,7 @@ function formatSupply(value: string) {
   return numericValue.toLocaleString(undefined, { maximumFractionDigits: 0 });
 }
 
-const statCardClass = 'border-t border-slate-200 py-5 dark:border-slate-800';
+const statCardClass = 'border-b border-r border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/50';
 
 export function WhitepaperTokenSnapshot() {
   const [state, setState] = useState<SnapshotState>({
@@ -82,34 +102,30 @@ export function WhitepaperTokenSnapshot() {
     let cancelled = false;
 
     const loadSnapshot = async () => {
-      try {
-        const [priceData, supplyData] = await Promise.all([
-          fetchEpwxPriceData(),
-          fetchSupplySnapshot(),
-        ]);
+      const [priceResult, supplyResult] = await Promise.allSettled([
+        withTimeout(fetchEpwxPriceData(), REQUEST_TIMEOUT_MS),
+        withTimeout(fetchSupplySnapshot(), REQUEST_TIMEOUT_MS),
+      ]);
 
-        if (cancelled) {
-          return;
-        }
-
-        setState({
-          priceData,
-          supplyData,
-          lastUpdated: new Date(),
-          error: null,
-          loading: false,
-        });
-      } catch (error: any) {
-        if (cancelled) {
-          return;
-        }
-
-        setState((current) => ({
-          ...current,
-          error: error?.message || 'Failed to load token snapshot',
-          loading: false,
-        }));
+      if (cancelled) {
+        return;
       }
+
+      const priceData = priceResult.status === 'fulfilled' ? priceResult.value : null;
+      const supplyData = supplyResult.status === 'fulfilled' ? supplyResult.value : null;
+      const failedRequests = Number(!priceData) + Number(!supplyData);
+
+      setState({
+        priceData,
+        supplyData,
+        lastUpdated: priceData || supplyData ? new Date() : null,
+        error: failedRequests === 0
+          ? null
+          : failedRequests === 2
+            ? 'Live metrics are temporarily unavailable. Deployment details below remain current.'
+            : 'Some live metrics are temporarily unavailable. Available values are shown below.',
+        loading: false,
+      });
     };
 
     loadSnapshot();
@@ -122,11 +138,7 @@ export function WhitepaperTokenSnapshot() {
   }, []);
 
   const stats = useMemo(() => {
-    if (!state.priceData || !state.supplyData) {
-      return [];
-    }
-
-    return [
+    const priceStats = state.priceData ? [
       {
         label: 'Current Price',
         value: formatCurrency(state.priceData.priceUSD, 12),
@@ -142,6 +154,8 @@ export function WhitepaperTokenSnapshot() {
         value: formatCurrency(state.priceData.liquidityUSD, 2),
         caption: 'Current pool depth',
       },
+    ] : [];
+    const supplyStats = state.supplyData ? [
       {
         label: 'Circulating Supply',
         value: formatLargeNumber(Number(state.supplyData.circulatingSupply)),
@@ -157,52 +171,59 @@ export function WhitepaperTokenSnapshot() {
         value: formatSupply(state.supplyData.burnedSupply),
         caption: 'Sent to dead address',
       },
-    ];
+    ] : [];
+
+    return [...priceStats, ...supplyStats];
   }, [state.priceData, state.supplyData]);
 
   return (
-    <section id="token-snapshot" className="scroll-mt-24 py-10 md:py-14">
+    <section id="token-snapshot" className="scroll-mt-24 py-12 md:py-16">
       <div>
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <div className="text-xs font-bold uppercase tracking-[0.18em] text-sky-700 dark:text-sky-300">Live token snapshot</div>
-            <h2 className="mt-3 text-3xl font-bold text-slate-950 dark:text-white">EPWX at a glance</h2>
+            <div className="flex items-center gap-4">
+              <span className="font-mono text-sm text-sky-600 dark:text-sky-400">01</span>
+              <div className="text-xs font-bold uppercase tracking-[0.22em] text-sky-700 dark:text-sky-300">Live token snapshot</div>
+            </div>
+            <h2 className="mt-4 text-3xl font-bold tracking-tight text-slate-950 dark:text-white md:text-4xl">EPWX at a glance</h2>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300">
-              This section combines live market data with on-chain supply reporting so the public whitepaper page can act as a current reference for listings, partners, and community research.
+              Live market data and on-chain supply reporting provide a current reference for listings, partners, and community research.
             </p>
           </div>
           <div className="shrink-0 border-l border-sky-500 pl-3 text-xs font-medium text-slate-500 dark:text-slate-400">
-            {state.lastUpdated ? `Updated ${state.lastUpdated.toLocaleTimeString()}` : 'Updating live data'}
+            {state.lastUpdated ? `Updated ${state.lastUpdated.toLocaleTimeString()}` : state.loading ? 'Updating live data' : 'Static details available'}
           </div>
         </div>
 
         {state.error ? (
-          <div className="mt-6 border-l-2 border-amber-500 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:bg-amber-500/10 dark:text-amber-200">
+          <div className="mt-7 border-l-2 border-amber-500 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:bg-amber-500/10 dark:text-amber-200" role="status">
             {state.error}
           </div>
         ) : null}
 
-        <div className="mt-8 grid gap-x-8 sm:grid-cols-2 xl:grid-cols-3">
-          {(state.loading ? new Array(6).fill(null) : stats).map((stat, index) => (
-            <div key={stat ? stat.label : index} className={statCardClass}>
-              {stat ? (
-                <>
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">{stat.label}</div>
-                  <div className="mt-3 break-words text-xl font-bold text-slate-950 dark:text-white md:text-2xl">{stat.value}</div>
-                  <div className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">{stat.caption}</div>
-                </>
-              ) : (
-                <div className="animate-pulse space-y-3">
-                  <div className="h-3 w-28 rounded bg-slate-200 dark:bg-slate-700" />
-                  <div className="h-8 w-40 rounded bg-slate-200 dark:bg-slate-700" />
-                  <div className="h-3 w-44 rounded bg-slate-200 dark:bg-slate-700" />
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+        {state.loading || stats.length > 0 ? (
+          <div className="mt-8 grid border-l border-t border-slate-200 sm:grid-cols-2 xl:grid-cols-3 dark:border-slate-800">
+            {(state.loading ? new Array(6).fill(null) : stats).map((stat, index) => (
+              <div key={stat ? stat.label : index} className={statCardClass}>
+                {stat ? (
+                  <>
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">{stat.label}</div>
+                    <div className="mt-3 break-words text-xl font-bold text-slate-950 dark:text-white md:text-2xl">{stat.value}</div>
+                    <div className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">{stat.caption}</div>
+                  </>
+                ) : (
+                  <div className="animate-pulse space-y-3">
+                    <div className="h-3 w-28 rounded bg-slate-200 dark:bg-slate-700" />
+                    <div className="h-8 w-40 rounded bg-slate-200 dark:bg-slate-700" />
+                    <div className="h-3 w-44 rounded bg-slate-200 dark:bg-slate-700" />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : null}
 
-        <div className="mt-2 grid gap-x-8 lg:grid-cols-3">
+        <div className="mt-8 grid border-l border-t border-slate-200 lg:grid-cols-3 dark:border-slate-800">
           <div className={statCardClass}>
             <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">Network</div>
             <div className="mt-3 text-lg font-bold text-slate-950 dark:text-white">Base</div>
@@ -210,22 +231,24 @@ export function WhitepaperTokenSnapshot() {
           </div>
           <div className={statCardClass}>
             <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">Token Contract</div>
-            <div className="mt-3 break-all font-mono text-xs leading-5 text-slate-950 dark:text-white">{EPWX_TOKEN_ADDRESS}</div>
+            <div className="mt-3">
+              <WhitepaperAddress address={EPWX_TOKEN_ADDRESS} href={`${BASESCAN_ADDRESS_URL}${EPWX_TOKEN_ADDRESS}`} />
+            </div>
           </div>
           <div className={statCardClass}>
             <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">Trading Infrastructure</div>
-            <div className="mt-3 space-y-2 font-mono text-xs leading-5 text-slate-600 dark:text-slate-300">
+            <div className="mt-3 space-y-3 text-xs leading-5 text-slate-600 dark:text-slate-300">
               <div>
-                <span className="font-semibold text-slate-950 dark:text-white">WETH:</span>{' '}
-                <span className="break-all">{WETH_TOKEN_ADDRESS}</span>
+                <span className="mb-1 block font-semibold text-slate-950 dark:text-white">WETH</span>
+                <WhitepaperAddress address={WETH_TOKEN_ADDRESS} href={`${BASESCAN_ADDRESS_URL}${WETH_TOKEN_ADDRESS}`} compact />
               </div>
               <div>
-                <span className="font-semibold text-slate-950 dark:text-white">Pair:</span>{' '}
-                <span className="break-all">{EPWX_WETH_PAIR_ADDRESS}</span>
+                <span className="mb-1 block font-semibold text-slate-950 dark:text-white">Pair</span>
+                <WhitepaperAddress address={EPWX_WETH_PAIR_ADDRESS} href={`${BASESCAN_ADDRESS_URL}${EPWX_WETH_PAIR_ADDRESS}`} compact />
               </div>
               <div>
-                <span className="font-semibold text-slate-950 dark:text-white">Router:</span>{' '}
-                <span className="break-all">{PANCAKESWAP_ROUTER_ADDRESS}</span>
+                <span className="mb-1 block font-semibold text-slate-950 dark:text-white">Router</span>
+                <WhitepaperAddress address={PANCAKESWAP_ROUTER_ADDRESS} href={`${BASESCAN_ADDRESS_URL}${PANCAKESWAP_ROUTER_ADDRESS}`} compact />
               </div>
             </div>
           </div>
