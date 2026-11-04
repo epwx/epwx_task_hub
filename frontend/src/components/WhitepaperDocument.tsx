@@ -5,6 +5,7 @@ import { WhitepaperTokenSnapshot } from '@/components/WhitepaperTokenSnapshot';
 const TOKEN_ADDRESS = '0xef5f5751cf3eca6cc3572768298b7783d33d60eb';
 const TASK_MANAGER_ADDRESS = '0x792896b951380eBC7E52f370Ec6208c5D260A210';
 const BASESCAN_ADDRESS_URL = 'https://basescan.org/address/';
+const TOKEN_BASESCAN_URL = `https://basescan.org/token/${TOKEN_ADDRESS}`;
 
 const sectionClass = 'scroll-mt-24 border-t border-slate-200 py-12 dark:border-slate-800 md:py-16';
 const eyebrowClass = 'text-xs font-bold uppercase tracking-[0.22em] text-sky-700 dark:text-sky-300';
@@ -154,7 +155,7 @@ export function WhitepaperDocument() {
                   Explore the utility model
                 </a>
                 <a
-                  href={`${BASESCAN_ADDRESS_URL}${TOKEN_ADDRESS}`}
+                  href={TOKEN_BASESCAN_URL}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-800 transition-colors hover:border-sky-500 hover:text-sky-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-sky-500 dark:hover:text-sky-300"
@@ -172,7 +173,7 @@ export function WhitepaperDocument() {
               <div className="mt-6 space-y-5">
                 <div>
                   <div className="mb-2 text-xs font-semibold text-slate-500 dark:text-slate-400">EPWX token</div>
-                  <WhitepaperAddress address={TOKEN_ADDRESS} href={`${BASESCAN_ADDRESS_URL}${TOKEN_ADDRESS}`} compact />
+                  <WhitepaperAddress address={TOKEN_ADDRESS} href={TOKEN_BASESCAN_URL} compact />
                 </div>
                 <div>
                   <div className="mb-2 text-xs font-semibold text-slate-500 dark:text-slate-400">TaskManager</div>

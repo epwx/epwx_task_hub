@@ -29,6 +29,7 @@ type SnapshotState = {
 
 const API_BASE_URL = getApiBaseUrl();
 const BASESCAN_ADDRESS_URL = 'https://basescan.org/address/';
+const TOKEN_BASESCAN_URL = `https://basescan.org/token/${EPWX_TOKEN_ADDRESS}`;
 const REQUEST_TIMEOUT_MS = 10000;
 
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
@@ -232,7 +233,7 @@ export function WhitepaperTokenSnapshot() {
           <div className={statCardClass}>
             <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">Token Contract</div>
             <div className="mt-3">
-              <WhitepaperAddress address={EPWX_TOKEN_ADDRESS} href={`${BASESCAN_ADDRESS_URL}${EPWX_TOKEN_ADDRESS}`} />
+              <WhitepaperAddress address={EPWX_TOKEN_ADDRESS} href={TOKEN_BASESCAN_URL} />
             </div>
           </div>
           <div className={statCardClass}>
