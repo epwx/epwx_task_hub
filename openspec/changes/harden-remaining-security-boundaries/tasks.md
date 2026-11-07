@@ -23,4 +23,4 @@
 - [x] 4.1 Add focused authorization and evidence-link regression tests.
 - [x] 4.2 Run backend syntax checks and the frontend production build.
 - [x] 4.3 Validate the OpenSpec change strictly.
-- [ ] 4.4 Deploy and verify production security guards.
+- [x] 4.4 Deploy and verify production security guards.
