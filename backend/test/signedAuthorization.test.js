@@ -1,6 +1,7 @@
 import { Wallet } from 'ethers';
 import { jest } from '@jest/globals';
 import {
+  createAdminAuthorizationPurpose,
   createAdminClaimAuthorizationMessage,
   createAdminRequestAuthorizationMessage,
   createReferralAuthorizationMessage,
@@ -98,25 +99,31 @@ describe('signed authorization', () => {
       const wallet = Wallet.createRandom();
       const issuedAt = new Date().toISOString();
       const nonce = 'fedcba0987654321fedcba0987654321';
+      const requestPath = `/api/twitter-campaigns/list?admin=${wallet.address}&page=1&limit=3&status=active`;
       const message = createAdminRequestAuthorizationMessage({
         wallet: wallet.address,
         method: 'PATCH',
-        requestPath: '/api/partners/7/status',
+        requestPath,
         body: JSON.stringify({ status: 'approved' }),
         issuedAt,
         nonce,
       });
       const signature = await wallet.signMessage(message);
+      const purpose = createAdminAuthorizationPurpose({
+        method: 'PATCH',
+        requestPath,
+      });
       const result = await verifyAndConsumeAuthorization({
         authorization: { issuedAt, nonce, signature },
         expectedWallet: wallet.address,
-        purpose: 'admin:PATCH:/api/partners/7/status',
+        purpose,
         message,
         allowedWallets: [wallet.address.toLowerCase()],
         authorizationModel: { create: jest.fn().mockResolvedValue({}) },
       });
 
       expect(result.ok).toBe(true);
+      expect(purpose).toHaveLength(76);
   });
 
   it('requires the referred wallet to sign the exact referral relationship', async () => {

@@ -1,5 +1,6 @@
 import { SecurityAuthorization } from '../models/index.js';
 import {
+  createAdminAuthorizationPurpose,
   createAdminRequestAuthorizationMessage,
   verifyAndConsumeAuthorization,
 } from '../utils/signedAuthorization.js';
@@ -30,7 +31,10 @@ export async function authorizeSignedAdmin(req, res) {
   const result = await verifyAndConsumeAuthorization({
     authorization,
     expectedWallet: authorization.wallet,
-    purpose: `admin:${req.method}:${req.originalUrl}`,
+    purpose: createAdminAuthorizationPurpose({
+      method: req.method,
+      requestPath: req.originalUrl,
+    }),
     message,
     allowedWallets: getAdminWallets(),
     authorizationModel: SecurityAuthorization,

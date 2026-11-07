@@ -72,6 +72,10 @@ export function createAdminRequestAuthorizationMessage({
   ].join('\n');
 }
 
+export function createAdminAuthorizationPurpose({ method, requestPath }) {
+  return `admin:${String(method).toUpperCase()}:${hashText(requestPath)}`;
+}
+
 export function createReferralAuthorizationMessage({
   referrerWallet,
   referredWallet,
