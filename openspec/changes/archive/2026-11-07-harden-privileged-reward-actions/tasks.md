@@ -24,4 +24,4 @@
 - [x] 4.1 Add route-specific rate limits for signer-backed task submissions and claim administration.
 - [x] 4.2 Run focused backend tests and frontend type-check/build.
 - [x] 4.3 Validate this OpenSpec change strictly.
-- [ ] 4.4 Deploy the migration before the application update and monitor signer activity.
+- [x] 4.4 Deploy the migration before the application update and monitor signer activity.
