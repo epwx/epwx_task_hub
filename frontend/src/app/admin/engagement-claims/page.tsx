@@ -5,7 +5,7 @@ import { ConnectKitButton } from "connectkit";
 import { useAccount, useSignMessage } from "wagmi";
 import MerchantClaimsTable from "@/components/MerchantClaimsTable";
 import { parseJsonResponse } from "@/utils/apiErrors";
-import { createAdminClaimAuthorization } from "@/utils/signedAuthorization";
+import { adminAuthorizedFetch, createAdminClaimAuthorization } from "@/utils/signedAuthorization";
 
 type TwitterClaim = {
   id: number | string;
@@ -200,7 +200,7 @@ export default function AdminEngagementClaimsPage() {
         params.set("claimType", TASK_TYPE_TO_CLAIM_TYPE[claimsTaskTypeFilter]);
       }
 
-      const response = await fetch(`/api/claims?${params.toString()}`);
+      const response = await adminAuthorizedFetch({ url: `/api/claims?${params.toString()}`, wallet: address, signMessage: signMessageAsync });
       const data = await parseJsonResponse<{ claims?: TwitterClaim[] }>(response, "Failed to fetch engagement claims");
       setClaims(data.claims || []);
     } catch (fetchError: any) {
@@ -208,7 +208,7 @@ export default function AdminEngagementClaimsPage() {
     }
 
     setLoading(false);
-  }, [address, claimsTaskTypeFilter, isAdmin, statusFilter]);
+  }, [address, claimsTaskTypeFilter, isAdmin, signMessageAsync, statusFilter]);
 
   const fetchCampaigns = useCallback(async (page = campaignsPage) => {
     if (!address || !isAdmin) {
@@ -224,7 +224,7 @@ export default function AdminEngagementClaimsPage() {
       if (campaignsTaskTypeFilter !== 'all') {
         params.set('taskType', campaignsTaskTypeFilter);
       }
-      const response = await fetch(`/api/twitter-campaigns/list?${params.toString()}`);
+      const response = await adminAuthorizedFetch({ url: `/api/twitter-campaigns/list?${params.toString()}`, wallet: address, signMessage: signMessageAsync });
       const data = await parseJsonResponse<{
         campaigns?: TwitterCampaign[];
         pagination?: CampaignPagination;
@@ -243,7 +243,7 @@ export default function AdminEngagementClaimsPage() {
     } catch (fetchError: any) {
       setError(fetchError?.message || "Failed to fetch engagement campaigns");
     }
-  }, [address, campaignsPage, campaignsStatusFilter, campaignsTaskTypeFilter, isAdmin]);
+  }, [address, campaignsPage, campaignsStatusFilter, campaignsTaskTypeFilter, isAdmin, signMessageAsync]);
 
   useEffect(() => {
     fetchClaims();
@@ -285,11 +285,11 @@ export default function AdminEngagementClaimsPage() {
     setError(null);
 
     try {
-      const response = await fetch("/api/twitter-campaigns/add", {
+      const response = await adminAuthorizedFetch({ url: "/api/twitter-campaigns/add", wallet: address!, signMessage: signMessageAsync, init: {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...campaignForm, admin: address, expiresAt: toIsoDateTime(campaignForm.expiresAt) }),
-      });
+      } });
       const data = await parseJsonResponse<{ success?: boolean; error?: string }>(response, "Failed to create campaign");
 
       if (!data.success) {
@@ -310,11 +310,11 @@ export default function AdminEngagementClaimsPage() {
     setError(null);
 
     try {
-      const response = await fetch(`/api/twitter-campaigns/${campaign.id}`, {
+      const response = await adminAuthorizedFetch({ url: `/api/twitter-campaigns/${campaign.id}`, wallet: address!, signMessage: signMessageAsync, init: {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ admin: address, isActive: !campaign.isActive }),
-      });
+      } });
       const data = await parseJsonResponse<{ success?: boolean; error?: string }>(response, "Failed to update campaign");
 
       if (!data.success) {
@@ -350,11 +350,11 @@ export default function AdminEngagementClaimsPage() {
     setError(null);
 
     try {
-      const response = await fetch(`/api/twitter-campaigns/${campaignId}`, {
+      const response = await adminAuthorizedFetch({ url: `/api/twitter-campaigns/${campaignId}`, wallet: address!, signMessage: signMessageAsync, init: {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...editCampaignForm, admin: address, expiresAt: toIsoDateTime(editCampaignForm.expiresAt) }),
-      });
+      } });
       const data = await parseJsonResponse<{ success?: boolean; error?: string }>(response, "Failed to save campaign changes");
 
       if (!data.success) {

@@ -53,6 +53,63 @@ export function createAdminClaimAuthorizationMessage({
   ].join('\n');
 }
 
+export function createAdminRequestAuthorizationMessage({
+  wallet,
+  method,
+  requestPath,
+  body,
+  issuedAt,
+  nonce,
+}) {
+  return [
+    'EPWX Administrative Request',
+    `Wallet: ${String(wallet).toLowerCase()}`,
+    `Method: ${String(method).toUpperCase()}`,
+    `Path: ${requestPath}`,
+    `Body SHA-256: ${hashText(body || '')}`,
+    `Issued At: ${issuedAt}`,
+    `Nonce: ${nonce}`,
+  ].join('\n');
+}
+
+export function createReferralAuthorizationMessage({
+  referrerWallet,
+  referredWallet,
+  issuedAt,
+  nonce,
+}) {
+  return [
+    'EPWX Wallet Referral',
+    `Referrer: ${String(referrerWallet).toLowerCase()}`,
+    `Referred Wallet: ${String(referredWallet).toLowerCase()}`,
+    `Issued At: ${issuedAt}`,
+    `Nonce: ${nonce}`,
+  ].join('\n');
+}
+
+export function createWalletLoginMessage({
+  wallet,
+  domain,
+  chainId,
+  issuedAt,
+  expiresAt,
+  nonce,
+}) {
+  return [
+    'EPWX Task Hub Login',
+    `Domain: ${domain}`,
+    `Wallet: ${String(wallet).toLowerCase()}`,
+    `Chain ID: ${chainId}`,
+    `Issued At: ${issuedAt}`,
+    `Expires At: ${expiresAt}`,
+    `Nonce: ${nonce}`,
+  ].join('\n');
+}
+
+export function hashAuthorizationValue(value) {
+  return hashText(value);
+}
+
 export async function verifyAndConsumeAuthorization({
   authorization,
   expectedWallet,

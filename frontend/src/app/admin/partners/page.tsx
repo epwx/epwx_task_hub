@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useAccount } from "wagmi";
+import { useAccount, useSignMessage } from "wagmi";
 import toast from "react-hot-toast";
+import { adminAuthorizedFetch } from "@/utils/signedAuthorization";
 
 interface PendingPartner {
   id: string;
@@ -19,6 +20,7 @@ const ADMIN_WALLETS = (process.env.NEXT_PUBLIC_ADMIN_WALLETS || "").split(",").m
 
 export default function AdminPartnerPage() {
   const { address } = useAccount();
+  const { signMessageAsync } = useSignMessage();
   const [partners, setPartners] = useState<PendingPartner[]>([]);
   const [loading, setLoading] = useState(false);
   const [actionInProgress, setActionInProgress] = useState<string | null>(null);
@@ -30,11 +32,7 @@ export default function AdminPartnerPage() {
   const fetchPendingPartners = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/partners/admin/pending", {
-        headers: {
-          "x-admin-wallet": address || "",
-        },
-      });
+      const response = await adminAuthorizedFetch({ url: "/api/partners/admin/pending", wallet: address!, signMessage: signMessageAsync });
 
       const data = await response.json();
 
@@ -49,7 +47,7 @@ export default function AdminPartnerPage() {
     } finally {
       setLoading(false);
     }
-  }, [address]);
+  }, [address, signMessageAsync]);
 
   useEffect(() => {
     if (isAdmin) {
@@ -60,16 +58,13 @@ export default function AdminPartnerPage() {
   const handleApprove = async (partnerId: string) => {
     try {
       setActionInProgress(partnerId);
-      const response = await fetch(`/api/partners/${partnerId}/status`, {
+      const response = await adminAuthorizedFetch({ url: `/api/partners/${partnerId}/status`, wallet: address!, signMessage: signMessageAsync, init: {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "x-admin-wallet": address || "",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           status: "approved",
         }),
-      });
+      } });
 
       const data = await response.json();
 
@@ -98,17 +93,14 @@ export default function AdminPartnerPage() {
 
     try {
       setActionInProgress(partnerId);
-      const response = await fetch(`/api/partners/${partnerId}/status`, {
+      const response = await adminAuthorizedFetch({ url: `/api/partners/${partnerId}/status`, wallet: address!, signMessage: signMessageAsync, init: {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "x-admin-wallet": address || "",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           status: "rejected",
           reason,
         }),
-      });
+      } });
 
       const data = await response.json();
 
@@ -226,14 +218,14 @@ export default function AdminPartnerPage() {
                           Twitter Followers Screenshot
                         </p>
                         <a
-                          href={`/${partner.verificationImagePath}`}
+                          href={partner.verificationImagePath}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-block"
                         >
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
-                            src={`/${partner.verificationImagePath}`}
+                            src={partner.verificationImagePath}
                             alt="Verification"
                             className="max-h-40 rounded-lg border border-white/10 hover:opacity-90"
                           />

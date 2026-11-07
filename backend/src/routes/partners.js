@@ -14,6 +14,8 @@ import {
   rejectPartner
 } from '../services/partnerService.js';
 import { Partner, User } from '../models/index.js';
+import { requireSignedAdmin } from '../middleware/adminAuthorization.js';
+import { createEvidenceUrl } from '../utils/evidenceAccess.js';
 
 const uploadDir = path.join(process.cwd(), 'uploads/partner-verification');
 if (!fs.existsSync(uploadDir)) {
@@ -100,12 +102,10 @@ router.post('/register', upload.single('verificationImage'), async (req, res) =>
   }
 });
 
-router.get('/admin/pending', async (req, res) => {
+router.get('/admin/pending', requireSignedAdmin, async (req, res) => {
   try {
-    const adminWallet = req.headers['x-admin-wallet']?.toString().toLowerCase();
-    if (!isAdminWallet(adminWallet)) return res.status(403).json({ success: false, message: 'Only admins can view pending partners' });
     const pendingPartners = await getPendingPartners();
-    res.json({ success: true, partners: pendingPartners.map(p => ({ id: p.id, name: p.name, walletAddress: p.walletAddress, status: p.status, verificationImagePath: p.verificationImagePath, telegramChannel: p.telegramChannel, xProfile: p.xProfile, createdAt: p.createdAt })) });
+    res.json({ success: true, partners: pendingPartners.map(p => ({ id: p.id, name: p.name, walletAddress: p.walletAddress, status: p.status, verificationImagePath: createEvidenceUrl(p.verificationImagePath), telegramChannel: p.telegramChannel, xProfile: p.xProfile, createdAt: p.createdAt })) });
   } catch (error) {
     console.error('Get pending error:', error);
     res.status(500).json({ success: false, message: error.message });
@@ -128,7 +128,19 @@ router.get('/', async (req, res) => {
   try {
     const { status } = req.query;
     const partners = await getAllPartners(status);
-    res.json({ success: true, partners });
+    res.json({
+      success: true,
+      partners: partners.map(partner => ({
+        id: partner.id,
+        name: partner.name,
+        walletAddress: partner.walletAddress,
+        status: partner.status,
+        referralCode: partner.referralCode,
+        totalReferrals: partner.totalReferrals,
+        totalEarnings: partner.totalEarnings,
+        createdAt: partner.createdAt,
+      })),
+    });
   } catch (error) {
     console.error('Get partners error:', error);
     res.status(500).json({ success: false, message: error.message });
@@ -199,12 +211,11 @@ router.get('/:partnerId/earnings', async (req, res) => {
   }
 });
 
-router.patch('/:partnerId/status', async (req, res) => {
+router.patch('/:partnerId/status', requireSignedAdmin, async (req, res) => {
   try {
     const { partnerId } = req.params;
     const { status, reason } = req.body;
-    const adminWallet = req.headers['x-admin-wallet']?.toString().toLowerCase();
-    if (!isAdminWallet(adminWallet)) return res.status(403).json({ success: false, message: 'Only admins can update partner status' });
+    const adminWallet = req.adminWallet;
     if (!status || !['approved', 'rejected'].includes(status)) return res.status(400).json({ success: false, message: 'Status must be approved or rejected' });
     let partner;
     if (status === 'approved') {

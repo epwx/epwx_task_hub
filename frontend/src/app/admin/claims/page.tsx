@@ -10,7 +10,7 @@ type Claim = {
   // add other fields if needed
 };
 import { useAccount, useSignMessage } from "wagmi";
-import { createAdminClaimAuthorization } from "@/utils/signedAuthorization";
+import { adminAuthorizedFetch, createAdminClaimAuthorization } from "@/utils/signedAuthorization";
 
 const ADMIN_WALLETS = (process.env.NEXT_PUBLIC_ADMIN_WALLETS || "")
   .split(",")
@@ -29,7 +29,11 @@ export default function AdminClaimsPage() {
   useEffect(() => {
     if (!address || !ADMIN_WALLETS.includes(address.toLowerCase())) return;
     setLoading(true);
-    fetch(`/api/claims?admin=${address}&status=${statusFilter}`)
+    adminAuthorizedFetch({
+      url: `/api/claims?admin=${address}&status=${statusFilter}`,
+      wallet: address,
+      signMessage: signMessageAsync,
+    })
       .then(res => res.json())
       .then(data => {
         setClaims(data.claims || []);
@@ -39,7 +43,7 @@ export default function AdminClaimsPage() {
         setError("Failed to fetch claims");
         setLoading(false);
       });
-  }, [address, statusFilter]);
+  }, [address, signMessageAsync, statusFilter]);
 
 
   const updateStatus = async (id: number, status: string) => {

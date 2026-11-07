@@ -14,6 +14,8 @@ import {
   createAdminClaimAuthorizationMessage,
   verifyAndConsumeAuthorization,
 } from '../utils/signedAuthorization.js';
+import { requireSignedAdmin } from '../middleware/adminAuthorization.js';
+import { createEvidenceUrl } from '../utils/evidenceAccess.js';
 // Set up admin wallets from environment variable (lowercase, trimmed)
 const adminWallets = (process.env.ADMIN_WALLETS || '').split(',').map(a => a.trim().toLowerCase());
 
@@ -139,7 +141,7 @@ router.post('/add', upload.single('receiptImage'), async (req, res) => {
   if (distance > 100) {
     return res.status(403).json({ error: `You must be at the shop to claim. Distance: ${distance.toFixed(1)} meters.` });
   }
-  const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.connection?.remoteAddress || req.socket?.remoteAddress;
+  const ip = req.ip || req.socket?.remoteAddress;
   const now = new Date();
   const since = new Date(now.getTime() - 1 * 60 * 1000); // 1 minute window
   const customerLc = customer.toLowerCase();
@@ -204,7 +206,7 @@ router.post('/redeem-code', async (req, res) => {
   }
 
   const customerLc = String(customer).trim().toLowerCase();
-  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.connection?.remoteAddress || req.socket?.remoteAddress || 'unknown';
+  const ip = req.ip || req.socket?.remoteAddress || 'unknown';
   const transaction = await sequelize.transaction();
 
   try {
@@ -262,24 +264,22 @@ router.post('/redeem-code', async (req, res) => {
 // GET /api/claims - List claims
 // - If merchantId is provided, return claims for that merchant (view-only, no admin required)
 // - If admin is provided, return all claims (optionally filter by status)
-router.get('/', async (req, res) => {
-  const { admin, status, merchantId, claimType } = req.query;
+router.get('/', requireSignedAdmin, async (req, res) => {
+  const { status, merchantId, claimType } = req.query;
   try {
-    let where = {};
+    let where = merchantId ? { merchantId } : {};
     if (merchantId) {
       where = { merchantId };
-    } else if (admin && adminWallets.includes(admin.toLowerCase())) {
+    } else {
       if (status) where = { status };
       if (claimType) {
         where = { ...where, claimType: String(claimType).trim() };
       }
-    } else {
-      return res.status(403).json({ error: 'Unauthorized' });
     }
     const claims = await Claim.findAll({
       where,
       attributes: { exclude: ['customerEmail', 'emailNotificationConsent', 'lastEmailNotificationStatus'] },
-      include: admin && adminWallets.includes(String(admin).toLowerCase()) ? [
+      include: [
         {
           model: SocialClaimVerificationAttempt,
           as: 'verificationAttemptsHistory',
@@ -294,10 +294,15 @@ router.get('/', async (req, res) => {
           separate: true,
           order: [['createdAt', 'DESC']],
         },
-      ] : [],
+      ],
       order: [['createdAt', 'DESC']],
     });
-    res.json({ claims });
+    res.json({
+      claims: claims.map(claim => ({
+        ...claim.toJSON(),
+        receiptImage: createEvidenceUrl(claim.receiptImage),
+      })),
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -379,7 +384,7 @@ async function createTwitterCampaignClaim(req, res, expectedTaskType) {
       return res.status(409).json({ error: existingClaim.status === 'paid' ? 'Campaign reward already paid.' : 'You already submitted this campaign for review.' });
     }
 
-    const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.connection?.remoteAddress || req.socket?.remoteAddress;
+    const ip = req.ip || req.socket?.remoteAddress;
     const claim = await Claim.create({
       customer: customerLc,
       bill: campaign.rewardAmount,

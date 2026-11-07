@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ConnectKitButton } from "connectkit";
 import { ethers } from "ethers";
-import { useAccount, usePublicClient, useWriteContract } from "wagmi";
+import { useAccount, usePublicClient, useSignMessage, useWriteContract } from "wagmi";
 import { parseJsonResponse } from "@/utils/apiErrors";
+import { adminAuthorizedFetch } from "@/utils/signedAuthorization";
 
 type DailyDraw = {
   id: number;
@@ -89,6 +90,7 @@ const WINNERS_PER_PAGE = 5;
 
 export default function AdminDailyDrawsPage() {
   const { address } = useAccount();
+  const { signMessageAsync } = useSignMessage();
   const publicClient = usePublicClient();
   const { writeContractAsync } = useWriteContract();
 
@@ -166,7 +168,7 @@ export default function AdminDailyDrawsPage() {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(`/api/epwx/daily-draws?admin=${address}&limit=20`, { cache: "no-store" });
+      const response = await adminAuthorizedFetch({ url: `/api/epwx/daily-draws?admin=${address}&limit=20`, wallet: address, signMessage: signMessageAsync, init: { cache: "no-store" } });
       const data = await parseJsonResponse<{ draws?: DailyDraw[] }>(response, "Failed to fetch Daily Reward Draws");
       const nextDraws = data.draws || [];
       setDraws(nextDraws);
@@ -189,7 +191,7 @@ export default function AdminDailyDrawsPage() {
     } finally {
       setLoading(false);
     }
-  }, [address, fetchWinners, isAdmin, selectedDrawId]);
+  }, [address, fetchWinners, isAdmin, selectedDrawId, signMessageAsync]);
 
   useEffect(() => {
     fetchDraws();
@@ -226,7 +228,7 @@ export default function AdminDailyDrawsPage() {
         return;
       }
 
-      const response = await fetch("/api/epwx/daily-draws/run", {
+      const response = await adminAuthorizedFetch({ url: "/api/epwx/daily-draws/run", wallet: address, signMessage: signMessageAsync, init: {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -235,7 +237,7 @@ export default function AdminDailyDrawsPage() {
           winnerCount,
           prizeAmount: normalizedPrizeAmount,
         }),
-      });
+      } });
 
       const data = await parseJsonResponse<{ draw: DailyDraw; winners: DailyDrawWinner[] }>(response, "Failed to run Daily Reward Draw");
       setSelectedDraw(data.draw);
@@ -282,11 +284,11 @@ export default function AdminDailyDrawsPage() {
         throw new Error("Token transfer failed or reverted");
       }
 
-      const response = await fetch(`/api/epwx/daily-draws/winners/${winner.id}/mark-paid`, {
+      const response = await adminAuthorizedFetch({ url: `/api/epwx/daily-draws/winners/${winner.id}/mark-paid`, wallet: address, signMessage: signMessageAsync, init: {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ admin: address, txHash }),
-      });
+      } });
 
       await parseJsonResponse<{ winner: DailyDrawWinner }>(response, "Failed to mark winner as paid");
 

@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
-import { useWalletClient, useWriteContract } from "wagmi";
+import { useSignMessage, useWalletClient, useWriteContract } from "wagmi";
 import { ethers } from "ethers";
+import { adminAuthorizedFetch } from "@/utils/signedAuthorization";
 
 export function EPWXCashbackClaim() {
   const { address } = useAccount();
   const { data: walletClient } = useWalletClient();
   const { writeContractAsync } = useWriteContract();
+  const { signMessageAsync } = useSignMessage();
 
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -87,11 +89,11 @@ export function EPWXCashbackClaim() {
         args: [tx.wallet, amount],
       });
       // Mark as paid in backend
-      const res = await fetch("/api/epwx/claims/mark-paid", {
+      const res = await adminAuthorizedFetch({ url: "/api/epwx/claims/mark-paid", wallet: address, signMessage: signMessageAsync, init: {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ admin: address, claimId: tx.id, claimSource: "cashback" }),
-      });
+      } });
       const data = await res.json();
       if (data.success) {
         setClaimed((prev) => ({ ...prev, [tx.txHash]: true }));

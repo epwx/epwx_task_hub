@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import DailyClaimsTable from "@/components/DailyClaimsTable";
-import { useAccount, usePublicClient, useWriteContract } from "wagmi";
+import { useAccount, usePublicClient, useSignMessage, useWriteContract } from "wagmi";
 import { ConnectKitButton } from "connectkit";
 import { ethers } from "ethers";
+import { adminAuthorizedFetch } from "@/utils/signedAuthorization";
 
 const getAdminWallets = () => {
   if (typeof window !== "undefined") {
@@ -41,6 +42,7 @@ export default function AdminPage() {
   const [marking, setMarking] = useState<number | null>(null);
 
   const { address } = useAccount();
+  const { signMessageAsync } = useSignMessage();
   const { writeContractAsync } = useWriteContract();
   const publicClient = usePublicClient();
 
@@ -67,33 +69,38 @@ export default function AdminPage() {
   ];
 
   useEffect(() => {
+    if (!address || !getAdminWallets().includes(address.toLowerCase())) return;
     setLoading(true);
-    const adminWallets = getAdminWallets();
-    const admin = adminWallets[0] || "";
-    Promise.all([
-      fetch(`/api/epwx/claims?admin=${admin}`).then((res) => res.json()),
-      fetch(`/api/epwx/daily-claims?admin=${admin}`).then((res) => res.json()),
-      fetch(`/api/epwx/special-claim/list?admin=${admin}`).then((res) => res.json()),
-    ])
-      .then(([claimsData, dailyClaimsData, specialClaimsData]) => {
+    const loadAdminData = async () => {
+      try {
+        const claimsResponse = await adminAuthorizedFetch({ url: `/api/epwx/claims?admin=${address}`, wallet: address, signMessage: signMessageAsync });
+        const dailyClaimsResponse = await adminAuthorizedFetch({ url: `/api/epwx/daily-claims?admin=${address}`, wallet: address, signMessage: signMessageAsync });
+        const specialClaimsResponse = await adminAuthorizedFetch({ url: `/api/epwx/special-claim/list?admin=${address}`, wallet: address, signMessage: signMessageAsync });
+        const [claimsData, dailyClaimsData, specialClaimsData] = await Promise.all([
+          claimsResponse.json(),
+          dailyClaimsResponse.json(),
+          specialClaimsResponse.json(),
+        ]);
         setClaims(claimsData.claims || []);
         setDailyClaims(dailyClaimsData.claims || []);
         setSpecialClaims(specialClaimsData.claims || []);
+      } finally {
         setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
+      }
+    };
+    loadAdminData();
+  }, [address, signMessageAsync]);
 
   const handleAddSpecialWallet = async () => {
     setSpecialLoading(true);
     setSpecialError(null);
     setSpecialResult(null);
     try {
-      const res = await fetch("/api/epwx/special-claim/add", {
+      const res = await adminAuthorizedFetch({ url: "/api/epwx/special-claim/add", wallet: address!, signMessage: signMessageAsync, init: {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ wallet: specialWallet, admin: address }),
-      });
+      } });
       const data = await res.json();
       if (data.success) {
         setSpecialResult(data.results);
@@ -124,11 +131,11 @@ export default function AdminPage() {
         functionName: "transfer",
         args: [wallet, specialAmount],
       });
-      const res = await fetch("/api/epwx/special-claim/approve", {
+      const res = await adminAuthorizedFetch({ url: "/api/epwx/special-claim/approve", wallet: address, signMessage: signMessageAsync, init: {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ wallet, admin: address }),
-      });
+      } });
       const data = await res.json();
       if (data.success) {
         setSpecialClaims((prev) => prev.map((c) => (c.wallet === wallet ? { ...c, status: "claimed" } : c)));
@@ -170,11 +177,11 @@ export default function AdminPage() {
         setMarking(null);
         return;
       }
-      const res = await fetch("/api/epwx/daily-claims/mark-paid", {
+      const res = await adminAuthorizedFetch({ url: "/api/epwx/daily-claims/mark-paid", wallet: address, signMessage: signMessageAsync, init: {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ admin: address, claimId: claim.id, txHash: tx }),
-      });
+      } });
       const data = await res.json();
       if (data.success) {
         setDailyClaims((prev) => prev.map((c: any) => (c.id === claim.id ? { ...c, status: "paid", txHash: tx } : c)));
@@ -220,11 +227,11 @@ export default function AdminPage() {
         setMarking(null);
         return;
       }
-      const res = await fetch("/api/epwx/claims/mark-paid", {
+      const res = await adminAuthorizedFetch({ url: "/api/epwx/claims/mark-paid", wallet: address, signMessage: signMessageAsync, init: {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ admin: address, claimId: claim.id, txHash: tx, claimSource: "cashback" }),
-      });
+      } });
       const data = await res.json();
       if (data.success) {
         setClaims((prev) => prev.map((c: any) => (c.id === claim.id ? { ...c, status: "paid", txHash: tx } : c)));

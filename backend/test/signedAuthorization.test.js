@@ -2,6 +2,8 @@ import { Wallet } from 'ethers';
 import { jest } from '@jest/globals';
 import {
   createAdminClaimAuthorizationMessage,
+  createAdminRequestAuthorizationMessage,
+  createReferralAuthorizationMessage,
   createTaskSubmissionAuthorizationMessage,
   verifyAndConsumeAuthorization,
 } from '../src/utils/signedAuthorization.js';
@@ -90,5 +92,53 @@ describe('signed authorization', () => {
       status: 409,
       error: 'This wallet authorization has already been used.',
     });
+  });
+
+  it('binds an administrative signature to method, path, and body', async () => {
+      const wallet = Wallet.createRandom();
+      const issuedAt = new Date().toISOString();
+      const nonce = 'fedcba0987654321fedcba0987654321';
+      const message = createAdminRequestAuthorizationMessage({
+        wallet: wallet.address,
+        method: 'PATCH',
+        requestPath: '/api/partners/7/status',
+        body: JSON.stringify({ status: 'approved' }),
+        issuedAt,
+        nonce,
+      });
+      const signature = await wallet.signMessage(message);
+      const result = await verifyAndConsumeAuthorization({
+        authorization: { issuedAt, nonce, signature },
+        expectedWallet: wallet.address,
+        purpose: 'admin:PATCH:/api/partners/7/status',
+        message,
+        allowedWallets: [wallet.address.toLowerCase()],
+        authorizationModel: { create: jest.fn().mockResolvedValue({}) },
+      });
+
+      expect(result.ok).toBe(true);
+  });
+
+  it('requires the referred wallet to sign the exact referral relationship', async () => {
+      const referrer = Wallet.createRandom();
+      const referred = Wallet.createRandom();
+      const issuedAt = new Date().toISOString();
+      const nonce = '00112233445566778899aabbccddeeff';
+      const message = createReferralAuthorizationMessage({
+        referrerWallet: referrer.address,
+        referredWallet: referred.address,
+        issuedAt,
+        nonce,
+      });
+      const signature = await referred.signMessage(message);
+      const result = await verifyAndConsumeAuthorization({
+        authorization: { issuedAt, nonce, signature },
+        expectedWallet: referred.address,
+        purpose: `wallet-referral:${referred.address.toLowerCase()}`,
+        message,
+        authorizationModel: { create: jest.fn().mockResolvedValue({}) },
+      });
+
+      expect(result.ok).toBe(true);
   });
 });

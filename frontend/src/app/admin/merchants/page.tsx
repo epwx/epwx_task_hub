@@ -6,7 +6,7 @@ import { ethers } from "ethers";
 import { ConnectKitButton } from "connectkit";
 import MerchantClaimsTable from "@/components/MerchantClaimsTable";
 import MerchantQRCode from "@/components/MerchantQRCode";
-import { createAdminClaimAuthorization } from "@/utils/signedAuthorization";
+import { adminAuthorizedFetch, createAdminClaimAuthorization } from "@/utils/signedAuthorization";
 
 
   // ...existing code...
@@ -62,7 +62,7 @@ export default function MerchantAdminPage() {
       if (data.success) {
         // Refetch claims for this merchant after rejection
         try {
-          const res = await fetch(`/api/claims?merchantId=${claim.merchantId}`);
+          const res = await adminAuthorizedFetch({ url: `/api/claims?merchantId=${claim.merchantId}`, wallet: address, signMessage: signMessageAsync });
           const data = await res.json();
           setClaims(claims => ({ ...claims, [claim.merchantId]: data.claims || [] }));
         } catch (e) {}
@@ -171,11 +171,11 @@ export default function MerchantAdminPage() {
     e.preventDefault();
     setEditState(prev => ({ ...prev, loading: true, error: null }));
     try {
-      const res = await fetch(`/api/merchants/${editState.merchant.id}`, {
+      const res = await adminAuthorizedFetch({ url: `/api/merchants/${editState.merchant.id}`, wallet: address!, signMessage: signMessageAsync, init: {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...editState.form, admin: address }),
-      });
+      } });
       const data = await res.json();
       if (data.success) {
         setEditState(prev => ({ ...prev, loading: false, open: false }));
@@ -209,14 +209,14 @@ export default function MerchantAdminPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/merchants/list?admin=${address}`);
+      const res = await adminAuthorizedFetch({ url: `/api/merchants/list?admin=${address}`, wallet: address!, signMessage: signMessageAsync });
       const data = await res.json();
       setMerchants(data.merchants || []);
     } catch (e: any) {
       setError(e?.message || "Failed to fetch merchants");
     }
     setLoading(false);
-  }, [address]);
+  }, [address, signMessageAsync]);
 
   useEffect(() => {
     if (isAdmin) {
@@ -234,11 +234,11 @@ export default function MerchantAdminPage() {
     setError(null);
     setSuccess(null);
     try {
-      const res = await fetch("/api/merchants/add", {
+      const res = await adminAuthorizedFetch({ url: "/api/merchants/add", wallet: address!, signMessage: signMessageAsync, init: {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...form, admin: address }),
-      });
+      } });
       const data = await res.json();
       if (data.success) {
         setSuccess("Merchant added successfully!");
@@ -281,16 +281,16 @@ export default function MerchantAdminPage() {
         await provider.waitForTransaction(tx);
       }
       // Mark as paid in backend, include tx hash
-      const res = await fetch("/api/epwx/claims/mark-paid", {
+      const res = await adminAuthorizedFetch({ url: "/api/epwx/claims/mark-paid", wallet: address, signMessage: signMessageAsync, init: {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ admin: address, claimId: claim.id, txHash: tx, claimSource: "claim" }),
-      });
+      } });
       const data = await res.json();
       if (data.success) {
         // Always refetch claims for this merchant after distribution
         try {
-          const res = await fetch(`/api/claims?merchantId=${claim.merchantId}`);
+          const res = await adminAuthorizedFetch({ url: `/api/claims?merchantId=${claim.merchantId}`, wallet: address, signMessage: signMessageAsync });
           const data = await res.json();
           console.log('[claims refetch after distribute]', data.claims);
           setClaims(claims => ({ ...claims, [claim.merchantId]: data.claims || [] }));
@@ -301,7 +301,7 @@ export default function MerchantAdminPage() {
       } else {
         // Fallback: refetch claims for this merchant
         try {
-          const res = await fetch(`/api/claims?merchantId=${claim.merchantId}`);
+          const res = await adminAuthorizedFetch({ url: `/api/claims?merchantId=${claim.merchantId}`, wallet: address, signMessage: signMessageAsync });
           const data = await res.json();
           setClaims(claims => ({ ...claims, [claim.merchantId]: data.claims || [] }));
         } catch {}
@@ -319,7 +319,7 @@ export default function MerchantAdminPage() {
       setClaimsLoading(cl => ({ ...cl, [merchantId]: true }));
       setClaimsError(cl => ({ ...cl, [merchantId]: null }));
       try {
-        const res = await fetch(`/api/claims?merchantId=${merchantId}`);
+        const res = await adminAuthorizedFetch({ url: `/api/claims?merchantId=${merchantId}`, wallet: address!, signMessage: signMessageAsync });
         const data = await res.json();
         setClaims(cl => ({ ...cl, [merchantId]: data.claims || [] }));
       } catch (e: any) {

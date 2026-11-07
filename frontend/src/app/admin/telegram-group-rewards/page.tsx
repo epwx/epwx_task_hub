@@ -3,7 +3,8 @@
 import React from "react";
 import { ethers } from "ethers";
 import { ConnectKitButton } from "connectkit";
-import { useAccount, usePublicClient, useWriteContract } from "wagmi";
+import { useAccount, usePublicClient, useSignMessage, useWriteContract } from "wagmi";
+import { adminAuthorizedFetch } from "@/utils/signedAuthorization";
 
 type GroupOwner = {
   id: string;
@@ -45,6 +46,7 @@ const getAdminWallets = () => {
 
 export default function TelegramGroupRewardsAdminPage() {
   const { address } = useAccount();
+  const { signMessageAsync } = useSignMessage();
   const { writeContractAsync } = useWriteContract();
   const publicClient = usePublicClient();
   const [statusFilter, setStatusFilter] = React.useState<string>("pending");
@@ -82,9 +84,8 @@ export default function TelegramGroupRewardsAdminPage() {
     setError(null);
 
     try {
-      const res = await fetch(`/api/telegram-miniapp/group-owner/rewards/admin?admin=${encodeURIComponent(address)}&status=${encodeURIComponent(statusFilter)}&limit=200`, {
-        cache: "no-store",
-      });
+      const url = `/api/telegram-miniapp/group-owner/rewards/admin?admin=${encodeURIComponent(address)}&status=${encodeURIComponent(statusFilter)}&limit=200`;
+      const res = await adminAuthorizedFetch({ url, wallet: address, signMessage: signMessageAsync, init: { cache: "no-store" } });
       const data = (await res.json()) as ApiResponse;
       if (!res.ok || !data.success) {
         throw new Error(data.error || "Failed to load rewards");
@@ -96,7 +97,7 @@ export default function TelegramGroupRewardsAdminPage() {
     } finally {
       setLoading(false);
     }
-  }, [address, isAdmin, statusFilter]);
+  }, [address, isAdmin, signMessageAsync, statusFilter]);
 
   React.useEffect(() => {
     fetchRewards();
@@ -130,11 +131,12 @@ export default function TelegramGroupRewardsAdminPage() {
         throw new Error("Token transfer failed or was reverted");
       }
 
-      const res = await fetch(`/api/telegram-miniapp/group-owner/rewards/${encodeURIComponent(reward.id)}/mark-paid`, {
+      const url = `/api/telegram-miniapp/group-owner/rewards/${encodeURIComponent(reward.id)}/mark-paid`;
+      const res = await adminAuthorizedFetch({ url, wallet: address, signMessage: signMessageAsync, init: {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ admin: address, txHash }),
-      });
+      } });
 
       const data = (await res.json()) as { success?: boolean; error?: string; reward?: GroupReward };
       if (!res.ok || !data.success || !data.reward) {

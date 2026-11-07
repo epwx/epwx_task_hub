@@ -1,7 +1,51 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
-import { User } from '../models/index.js';
+import crypto from 'crypto';
+import { ethers } from 'ethers';
+import { Op } from 'sequelize';
+import { SecurityAuthorization, User } from '../models/index.js';
+import { createWalletLoginMessage, hashAuthorizationValue } from '../utils/signedAuthorization.js';
 const router = express.Router();
+const LOGIN_NONCE_TTL_MS = 5 * 60 * 1000;
+
+router.post('/nonce', async (req, res) => {
+  try {
+    const walletAddress = String(req.body.walletAddress || '').toLowerCase();
+    if (!ethers.isAddress(walletAddress)) {
+      return res.status(400).json({ error: 'A valid wallet address is required.' });
+    }
+
+    const nonce = crypto.randomBytes(24).toString('hex');
+    const issuedAt = new Date();
+    const expiresAt = new Date(issuedAt.getTime() + LOGIN_NONCE_TTL_MS);
+    const domain = req.get('host');
+    const chainId = Number.parseInt(String(req.body.chainId || '8453'), 10);
+    await SecurityAuthorization.create({
+      authorizationHash: hashAuthorizationValue(`wallet-login:${nonce}`),
+      walletAddress,
+      purpose: 'wallet-login-challenge',
+      expiresAt,
+    });
+    return res.json({
+      nonce,
+      issuedAt: issuedAt.toISOString(),
+      expiresAt: expiresAt.toISOString(),
+      domain,
+      chainId,
+      message: createWalletLoginMessage({
+        wallet: walletAddress,
+        domain,
+        chainId,
+        issuedAt: issuedAt.toISOString(),
+        expiresAt: expiresAt.toISOString(),
+        nonce,
+      }),
+    });
+  } catch (error) {
+    console.error('Auth nonce error:', error);
+    return res.status(500).json({ error: 'Unable to create wallet login challenge.' });
+  }
+});
 
 /**
  * POST /api/auth/connect
@@ -9,18 +53,54 @@ const router = express.Router();
  */
 router.post('/connect', async (req, res) => {
   try {
-    const { walletAddress, signature } = req.body;
-    
-    if (!walletAddress) {
-      return res.status(400).json({ error: 'Wallet address required' });
+    const { walletAddress, signature, nonce, issuedAt, expiresAt, domain, chainId } = req.body;
+    const normalizedWallet = String(walletAddress || '').toLowerCase();
+
+    if (!ethers.isAddress(normalizedWallet) || !signature || !nonce) {
+      return res.status(400).json({ error: 'A valid wallet authorization is required.' });
+    }
+
+    const challenge = await SecurityAuthorization.findOne({
+      where: {
+        authorizationHash: hashAuthorizationValue(`wallet-login:${nonce}`),
+        walletAddress: normalizedWallet,
+        purpose: 'wallet-login-challenge',
+        expiresAt: { [Op.gt]: new Date() },
+      },
+    });
+    if (!challenge || domain !== req.get('host')) {
+      return res.status(401).json({ error: 'Wallet login challenge is invalid or expired.' });
+    }
+    const message = createWalletLoginMessage({
+      wallet: normalizedWallet,
+      domain,
+      chainId,
+      issuedAt,
+      expiresAt,
+      nonce,
+    });
+    let recoveredWallet;
+    try {
+      recoveredWallet = ethers.verifyMessage(message, signature).toLowerCase();
+    } catch {
+      return res.status(401).json({ error: 'Invalid wallet signature.' });
+    }
+    if (recoveredWallet !== normalizedWallet || Date.parse(expiresAt) <= Date.now()) {
+      return res.status(401).json({ error: 'Invalid wallet authorization.' });
+    }
+    const consumed = await SecurityAuthorization.destroy({ where: { id: challenge.id } });
+    if (consumed !== 1) {
+      return res.status(409).json({ error: 'Wallet login challenge has already been used.' });
     }
     
     // Find or create user
-    let user = await User.findOne({ where: { walletAddress: walletAddress.toLowerCase() } });
+    let user = await User.findOne({ where: { walletAddress: normalizedWallet } });
     
     if (!user) {
       user = await User.create({
-        walletAddress: walletAddress.toLowerCase()
+        walletAddress: normalizedWallet,
+        username: normalizedWallet,
+        password: crypto.randomBytes(32).toString('hex'),
       });
     }
     

@@ -76,3 +76,67 @@ export async function createAdminClaimAuthorization({
   const signature = await signMessage({ message });
   return { wallet: normalizedWallet, issuedAt, nonce, signature };
 }
+
+export async function adminAuthorizedFetch({
+  url,
+  wallet,
+  signMessage,
+  init = {},
+}: {
+  url: string;
+  wallet: string;
+  signMessage: SignMessage;
+  init?: RequestInit;
+}) {
+  const issuedAt = new Date().toISOString();
+  const nonce = createNonce();
+  const method = String(init.method || "GET").toUpperCase();
+  const normalizedWallet = wallet.toLowerCase();
+  const body = method === "GET" || method === "HEAD" ? "" : String(init.body || "");
+  const bodyHash = await sha256(body);
+  const message = [
+    "EPWX Administrative Request",
+    `Wallet: ${normalizedWallet}`,
+    `Method: ${method}`,
+    `Path: ${url}`,
+    `Body SHA-256: ${bodyHash}`,
+    `Issued At: ${issuedAt}`,
+    `Nonce: ${nonce}`,
+  ].join("\n");
+  const signature = await signMessage({ message });
+  const headers = new Headers(init.headers);
+  headers.set("x-admin-wallet", normalizedWallet);
+  headers.set("x-admin-issued-at", issuedAt);
+  headers.set("x-admin-nonce", nonce);
+  headers.set("x-admin-signature", signature);
+  return fetch(url, { ...init, headers });
+}
+
+export async function createReferralAuthorization({
+  referrerWallet,
+  referredWallet,
+  signMessage,
+}: {
+  referrerWallet: string;
+  referredWallet: string;
+  signMessage: SignMessage;
+}) {
+  const issuedAt = new Date().toISOString();
+  const nonce = createNonce();
+  const normalizedReferrer = referrerWallet.toLowerCase();
+  const normalizedReferred = referredWallet.toLowerCase();
+  const message = [
+    "EPWX Wallet Referral",
+    `Referrer: ${normalizedReferrer}`,
+    `Referred Wallet: ${normalizedReferred}`,
+    `Issued At: ${issuedAt}`,
+    `Nonce: ${nonce}`,
+  ].join("\n");
+  const signature = await signMessage({ message });
+  return {
+    wallet: normalizedReferred,
+    issuedAt,
+    nonce,
+    signature,
+  };
+}

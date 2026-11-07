@@ -1,14 +1,10 @@
 import 'dotenv/config';
 import express from 'express';
-import path from 'path';
 import { QueryTypes } from 'sequelize';
 
 // Debug: Print backend working directory on startup
 console.log('Backend CWD:', process.cwd());
 const app = express();
-
-// Serve uploads directory as static files
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 import cors from 'cors';
 import helmet from 'helmet';
@@ -76,6 +72,7 @@ import circulatingRouter from './routes/circulating.js';
 import burnedRouter from './routes/burned.js';
 import swaggerRouter from './routes/swagger.js';
 import epwxRouter from './routes/epwx.js';
+import evidenceRouter from './routes/evidence.js';
 
 
 import merchantsRouter from './routes/merchants.js';
@@ -504,6 +501,7 @@ app.use('/api', circulatingRouter);
 app.use('/api', burnedRouter);
 app.use('/api/docs', swaggerRouter);
 app.use('/api/epwx', epwxRouter);
+app.use('/api/evidence', evidenceRouter);
 
 // Merchant onboarding routes (admin only)
 

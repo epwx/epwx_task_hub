@@ -21,6 +21,9 @@ import dailyDrawSelectionUtils from '../utils/dailyDrawSelection.cjs';
 import dailyDrawEligibilityUtils from '../utils/dailyDrawEligibility.cjs';
 import dailyDrawPayoutUtils from '../utils/dailyDrawPayout.cjs';
 import { announceDailyDraw } from '../services/dailyDrawAnnouncements.js';
+import { authorizeSignedAdmin, requireSignedAdmin } from '../middleware/adminAuthorization.js';
+import { createReferralAuthorizationMessage, verifyAndConsumeAuthorization } from '../utils/signedAuthorization.js';
+import { SecurityAuthorization } from '../models/index.js';
 const router = express.Router();
 
 const REFERRAL_REWARD_AMOUNT = '1000000';
@@ -263,7 +266,7 @@ function getUtcDateBounds(dateString) {
 }
 
 function getRequestIp(req) {
-  return req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.connection.remoteAddress || req.socket?.remoteAddress || null;
+  return req.ip || req.socket?.remoteAddress || null;
 }
 
 function verifyGroupContextToken(groupContextToken) {
@@ -739,6 +742,7 @@ router.get('/wallet-referrals/stats', async (req, res) => {
 router.post('/wallet-referrals/register', async (req, res) => {
   const referrerWallet = normalizeWallet(req.body.referrerWallet);
   const referredWallet = normalizeWallet(req.body.referredWallet);
+  const authorization = req.body.authorization;
 
   if (!referrerWallet || !referredWallet) {
     return res.status(400).json({ error: 'referrerWallet and referredWallet are required' });
@@ -749,6 +753,23 @@ router.post('/wallet-referrals/register', async (req, res) => {
   }
 
   try {
+    const message = createReferralAuthorizationMessage({
+      referrerWallet,
+      referredWallet,
+      issuedAt: authorization?.issuedAt,
+      nonce: authorization?.nonce,
+    });
+    const authorizationResult = await verifyAndConsumeAuthorization({
+      authorization,
+      expectedWallet: referredWallet,
+      purpose: `wallet-referral:${referredWallet}`,
+      message,
+      authorizationModel: SecurityAuthorization,
+    });
+    if (!authorizationResult.ok) {
+      return res.status(authorizationResult.status).json({ error: authorizationResult.error });
+    }
+
     const existingClaim = await DailyClaim.findOne({ where: { wallet: referredWallet } });
     if (existingClaim) {
       return res.status(409).json({ error: 'This wallet has already completed its first claim.' });
@@ -776,16 +797,10 @@ router.post('/wallet-referrals/register', async (req, res) => {
 });
 
 // POST /api/epwx/claims/mark-paid - Mark claim as paid (admin only)
-router.post('/claims/mark-paid', async (req, res) => {
+router.post('/claims/mark-paid', requireSignedAdmin, async (req, res) => {
   // DEBUG: Log route hit and admin values for troubleshooting
   console.log('--- mark-paid route HIT ---');
-  console.log('admin:', req.body.admin, 'ADMIN_WALLETS:', process.env.ADMIN_WALLETS);
-  const { admin, claimId, txHash, claimSource } = req.body;
-  // Support multiple admin wallets (comma-separated, case-insensitive)
-  const adminWallets = (process.env.ADMIN_WALLETS || '').split(',').map(a => a.trim().toLowerCase());
-  if (!admin || !adminWallets.length || !adminWallets.includes(admin.toLowerCase())) {
-    return res.status(403).json({ error: 'Unauthorized' });
-  }
+  const { claimId, txHash, claimSource } = req.body;
   try {
     const isCashbackClaim = String(claimSource || '').toLowerCase() === 'cashback';
     const claim = isCashbackClaim
@@ -909,12 +924,7 @@ router.post('/claims/mark-paid', async (req, res) => {
 
 
 // GET /api/epwx/special-claim/list (admin only)
-router.get('/special-claim/list', async (req, res) => {
-  const { admin } = req.query;
-  const adminWallets = (process.env.ADMIN_WALLETS || '').split(',').map(a => a.trim().toLowerCase());
-  if (!admin || !adminWallets.length || !adminWallets.includes(admin.toLowerCase())) {
-    return res.status(403).json({ error: 'Unauthorized' });
-  }
+router.get('/special-claim/list', requireSignedAdmin, async (req, res) => {
   try {
     const claims = await SpecialClaim.findAll({ order: [['createdAt', 'DESC']] });
     res.json({ claims });
@@ -924,12 +934,8 @@ router.get('/special-claim/list', async (req, res) => {
 });
 
 // POST /api/epwx/special-claim/add (admin only)
-router.post('/special-claim/add', async (req, res) => {
-  const { admin, wallet } = req.body;
-  const adminWallets = (process.env.ADMIN_WALLETS || '').split(',').map(a => a.trim().toLowerCase());
-  if (!admin || !adminWallets.length || !adminWallets.includes(admin.toLowerCase())) {
-    return res.status(403).json({ error: 'Unauthorized' });
-  }
+router.post('/special-claim/add', requireSignedAdmin, async (req, res) => {
+  const { wallet } = req.body;
   if (!wallet) return res.status(400).json({ error: 'wallet is required' });
   try {
     const now = new Date();
@@ -990,12 +996,8 @@ router.post('/special-claim/claim', async (req, res) => {
 });
 
 // POST /api/epwx/special-claim/approve (admin only)
-router.post('/special-claim/approve', async (req, res) => {
-  const { admin, wallet } = req.body;
-  const adminWallets = (process.env.ADMIN_WALLETS || '').split(',').map(a => a.trim().toLowerCase());
-  if (!admin || !adminWallets.length || !adminWallets.includes(admin.toLowerCase())) {
-    return res.status(403).json({ error: 'Unauthorized' });
-  }
+router.post('/special-claim/approve', requireSignedAdmin, async (req, res) => {
+  const { wallet } = req.body;
   if (!wallet) return res.status(400).json({ error: 'wallet is required' });
   try {
     // Find latest pending claim within 3 hours
@@ -1109,10 +1111,8 @@ router.get('/telegram-verified', async (req, res) => {
 router.get('/daily-claims', async (req, res) => {
   const { admin, wallet, status, limit } = req.query;
   if (admin) {
-    const ADMIN_WALLETS = (process.env.ADMIN_WALLETS || '').split(',').map(w => w.trim().toLowerCase()).filter(Boolean);
-    if (!ADMIN_WALLETS.includes(admin.toLowerCase())) {
-      return res.status(403).json({ error: 'Unauthorized' });
-    }
+    const authorizedAdmin = await authorizeSignedAdmin(req, res);
+    if (!authorizedAdmin) return;
     try {
       const where = {};
       if (status) where.status = status;
@@ -1285,11 +1285,8 @@ router.get('/daily-draws/latest', async (req, res) => {
 });
 
 // GET /api/epwx/daily-draws?admin=0x...&limit=10
-router.get('/daily-draws', async (req, res) => {
-  const { admin, limit } = req.query;
-  if (!isAdminWallet(admin)) {
-    return res.status(403).json({ error: 'Unauthorized' });
-  }
+router.get('/daily-draws', requireSignedAdmin, async (req, res) => {
+  const { limit } = req.query;
 
   const parsedLimit = Number.parseInt(String(limit || '10'), 10);
   const safeLimit = Number.isInteger(parsedLimit) && parsedLimit > 0 ? Math.min(parsedLimit, 50) : 10;
@@ -1454,18 +1451,15 @@ router.get('/daily-draws/:drawId/winners', async (req, res) => {
 });
 
 // POST /api/epwx/daily-draws/run
-router.post('/daily-draws/run', async (req, res) => {
-  const { admin, drawDate, winnerCount, prizeAmount } = req.body;
-  if (!isAdminWallet(admin)) {
-    return res.status(403).json({ error: 'Unauthorized' });
-  }
+router.post('/daily-draws/run', requireSignedAdmin, async (req, res) => {
+  const { drawDate, winnerCount, prizeAmount } = req.body;
 
   try {
     const result = await runDailyDraw({
       drawDate,
       winnerCount,
       prizeAmount,
-      runBy: admin,
+      runBy: req.adminWallet,
     });
 
     return res.json({ success: true, ...result });
@@ -1482,14 +1476,10 @@ router.post('/daily-draws/run', async (req, res) => {
 });
 
 // POST /api/epwx/daily-draws/winners/:winnerId/mark-paid
-router.post('/daily-draws/winners/:winnerId/mark-paid', async (req, res) => {
-  const { admin, txHash } = req.body;
+router.post('/daily-draws/winners/:winnerId/mark-paid', requireSignedAdmin, async (req, res) => {
+  const { txHash } = req.body;
   const winnerId = Number.parseInt(String(req.params.winnerId), 10);
   const txHashRaw = String(txHash || '').trim();
-
-  if (!isAdminWallet(admin)) {
-    return res.status(403).json({ error: 'Unauthorized' });
-  }
 
   if (!Number.isInteger(winnerId) || winnerId <= 0) {
     return res.status(400).json({ error: 'Invalid winner id.' });
@@ -1538,12 +1528,8 @@ router.post('/daily-draws/winners/:winnerId/mark-paid', async (req, res) => {
 });
 
 // POST /api/epwx/daily-claims/mark-paid
-router.post('/daily-claims/mark-paid', async (req, res) => {
-  const { admin, claimId, txHash, amount } = req.body;
-  const ADMIN_WALLETS = (process.env.ADMIN_WALLETS || '').split(',').map(w => w.trim().toLowerCase()).filter(Boolean);
-  if (!ADMIN_WALLETS.includes(admin.toLowerCase())) {
-    return res.status(403).json({ error: 'Unauthorized' });
-  }
+router.post('/daily-claims/mark-paid', requireSignedAdmin, async (req, res) => {
+  const { claimId, txHash, amount } = req.body;
   try {
     const claim = await DailyClaim.findByPk(claimId);
     if (!claim) return res.status(404).json({ error: 'Claim not found' });
@@ -2102,11 +2088,8 @@ router.post('/claim', async (req, res) => {
 router.get('/claims', async (req, res) => {
   const { admin, wallet } = req.query;
   if (admin) {
-    // Only allow admin wallet(s) to access all claims
-    const ADMIN_WALLETS = (process.env.ADMIN_WALLETS || '').split(',').map(w => w.trim().toLowerCase()).filter(Boolean);
-    if (!ADMIN_WALLETS.includes(admin.toLowerCase())) {
-      return res.status(403).json({ error: 'Unauthorized' });
-    }
+    const authorizedAdmin = await authorizeSignedAdmin(req, res);
+    if (!authorizedAdmin) return;
     try {
       const claims = await CashbackClaim.findAll({ order: [['claimedAt', 'DESC']] });
       res.json({

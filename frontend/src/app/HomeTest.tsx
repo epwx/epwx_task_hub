@@ -41,6 +41,7 @@ import {
   DAILY_REWARD_TIERS,
 } from "./homeConstants";
 import type { HomeShortcutSection } from "./homeConstants";
+import { createReferralAuthorization } from "@/utils/signedAuthorization";
 
 interface DailyClaimsSummary {
   todayUtc: string;
@@ -366,12 +367,18 @@ export default function HomeTest() {
           }
         } else {
           try {
+            const authorization = await createReferralAuthorization({
+              referrerWallet: pendingReferralWallet,
+              referredWallet: normalizedWallet,
+              signMessage: signMessageAsync,
+            });
             const res = await fetch("/api/epwx/wallet-referrals/register", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 referrerWallet: pendingReferralWallet,
                 referredWallet: normalizedWallet,
+                authorization,
               }),
             });
             const data = await res.json();
@@ -398,7 +405,7 @@ export default function HomeTest() {
     return () => {
       cancelled = true;
     };
-  }, [address, claimStatus]);
+  }, [address, claimStatus, signMessageAsync]);
 
   const checkVerification = useCallback(async () => {
     const API_URL = getApiBaseUrl();

@@ -4,6 +4,7 @@ import { Merchant, MerchantClaimCode } from '../models/index.js';
 import { Op } from 'sequelize';
 import { verifyMessage } from 'ethers';
 import { createMerchantCodeAuthorizationMessage, generateMerchantClaimCode, hashMerchantClaimCode, hashMerchantCodeAuthorization } from '../utils/merchantClaimCode.js';
+import { requireSignedAdmin } from '../middleware/adminAuthorization.js';
 
 const router = express.Router();
 
@@ -19,22 +20,13 @@ router.get('/wallets', async (req, res) => {
 });
 
 // Admin-only middleware (supports multiple admin wallets from env)
-function requireAdmin(req, res, next) {
-  const admin = req.headers['x-admin-wallet'] || req.body.admin || req.query.admin;
-  const adminWallets = (process.env.ADMIN_WALLETS || '').split(',').map(w => w.trim().toLowerCase()).filter(Boolean);
-  if (!admin || !adminWallets.includes(admin.toLowerCase())) {
-    return res.status(403).json({ error: 'Unauthorized' });
-  }
-  next();
-}
-
 function isAdminWallet(wallet) {
   const adminWallets = (process.env.ADMIN_WALLETS || '').split(',').map(value => value.trim().toLowerCase()).filter(Boolean);
   return Boolean(wallet) && adminWallets.includes(String(wallet).toLowerCase());
 }
 
 // POST /api/merchants/add - Add a new merchant (admin only)
-router.post('/add', requireAdmin, async (req, res) => {
+router.post('/add', requireSignedAdmin, async (req, res) => {
   const { name, wallet, address, longitude, latitude } = req.body;
   if (!name || !address || longitude == null || latitude == null) {
     return res.status(400).json({ error: 'Missing required fields' });
@@ -48,7 +40,7 @@ router.post('/add', requireAdmin, async (req, res) => {
 });
 
 // GET /api/merchants/list - List all merchants (admin only)
-router.get('/list', requireAdmin, async (req, res) => {
+router.get('/list', requireSignedAdmin, async (req, res) => {
   try {
     const merchants = await Merchant.findAll({ order: [['createdAt', 'DESC']] });
     res.json({ merchants });
@@ -120,7 +112,7 @@ router.post('/:id/claim-codes', async (req, res) => {
 
 
 // PUT /api/merchants/:id - Edit merchant details (admin only)
-router.put('/:id', requireAdmin, async (req, res) => {
+router.put('/:id', requireSignedAdmin, async (req, res) => {
   const { name, wallet, address, longitude, latitude } = req.body;
   try {
     const merchant = await Merchant.findByPk(req.params.id);

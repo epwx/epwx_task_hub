@@ -1,6 +1,7 @@
 import express from 'express';
 import { Op } from 'sequelize';
 import { Claim, TwitterCampaign } from '../models/index.js';
+import { requireSignedAdmin } from '../middleware/adminAuthorization.js';
 
 const router = express.Router();
 const FIXED_TWITTER_REWARD_AMOUNT = '100000';
@@ -23,21 +24,6 @@ function getClaimTypeForTaskType(taskType) {
     default:
       return 'twitter_retweet';
   }
-}
-
-function getAdminWallets() {
-  return (process.env.ADMIN_WALLETS || '').split(',').map(wallet => wallet.trim().toLowerCase()).filter(Boolean);
-}
-
-function requireAdmin(req, res, next) {
-  const admin = req.headers['x-admin-wallet'] || req.body.admin || req.query.admin;
-  const adminWallets = getAdminWallets();
-
-  if (!admin || !adminWallets.includes(String(admin).toLowerCase())) {
-    return res.status(403).json({ error: 'Unauthorized' });
-  }
-
-  next();
 }
 
 function isCampaignExpired(campaign) {
@@ -128,7 +114,7 @@ async function getWalletClaimStatusByCampaignId(wallet) {
   );
 }
 
-router.post('/add', requireAdmin, async (req, res) => {
+router.post('/add', requireSignedAdmin, async (req, res) => {
   const { code, title, tweetUrl, expiresAt, taskType } = req.body;
 
   if (!code || !title || !tweetUrl) {
@@ -162,7 +148,7 @@ router.post('/add', requireAdmin, async (req, res) => {
   }
 });
 
-router.get('/list', requireAdmin, async (req, res) => {
+router.get('/list', requireSignedAdmin, async (req, res) => {
   try {
     const taskType = req.query.taskType ? normalizeTaskType(req.query.taskType) : null;
     if (req.query.taskType && !taskType) {
@@ -267,7 +253,7 @@ router.get('/active', async (req, res) => {
   }
 });
 
-router.put('/:id', requireAdmin, async (req, res) => {
+router.put('/:id', requireSignedAdmin, async (req, res) => {
   try {
     const campaign = await TwitterCampaign.findByPk(req.params.id);
     if (!campaign) {

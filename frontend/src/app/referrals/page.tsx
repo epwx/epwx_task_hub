@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ConnectKitButton } from "connectkit";
-import { useAccount } from "wagmi";
+import { useAccount, useSignMessage } from "wagmi";
 import { ShareIcon, TelegramIcon, WhatsAppIcon, XIcon } from "@/components/icons/SocialIcons";
 import { PENDING_REFERRAL_STORAGE_KEY } from "@/app/homeConstants";
+import { createReferralAuthorization } from "@/utils/signedAuthorization";
 
 interface ReferralStatsResponse {
   stats?: {
@@ -69,6 +70,7 @@ function getReferralShareLinks(referralLink: string) {
 
 export default function ReferralsPage() {
   const { address, isConnected } = useAccount();
+  const { signMessageAsync } = useSignMessage();
   const [incomingReferralWallet, setIncomingReferralWallet] = useState<string | null>(null);
   const [referralStats, setReferralStats] = useState<ReferralStatsResponse | null>(null);
   const [referralStatus, setReferralStatus] = useState<string | null>(null);
@@ -122,12 +124,18 @@ export default function ReferralsPage() {
           }
         } else {
           try {
+            const authorization = await createReferralAuthorization({
+              referrerWallet: pendingReferralWallet,
+              referredWallet: normalizedWallet,
+              signMessage: signMessageAsync,
+            });
             const res = await fetch("/api/epwx/wallet-referrals/register", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 referrerWallet: pendingReferralWallet,
                 referredWallet: normalizedWallet,
+                authorization,
               }),
             });
             const data = await res.json();
@@ -170,7 +178,7 @@ export default function ReferralsPage() {
     return () => {
       cancelled = true;
     };
-  }, [address]);
+  }, [address, signMessageAsync]);
 
   const handleCopyReferralLink = async () => {
     if (!referralLink) {

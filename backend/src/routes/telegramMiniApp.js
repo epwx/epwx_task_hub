@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import { ethers } from 'ethers';
 import { Op } from 'sequelize';
 import { User, TelegramGroupOwner, TelegramGroupReward, RewardDistributionLedger } from '../models/index.js';
+import { requireSignedAdmin } from '../middleware/adminAuthorization.js';
 
 const router = express.Router();
 
@@ -829,15 +830,10 @@ router.get('/group-owner/rewards', async (req, res) => {
   }
 });
 
-router.get('/group-owner/rewards/admin', async (req, res) => {
-  const admin = normalizeWallet(req.query.admin);
+router.get('/group-owner/rewards/admin', requireSignedAdmin, async (req, res) => {
   const status = String(req.query.status || '').trim().toLowerCase();
   const limitRaw = Number.parseInt(String(req.query.limit || '100'), 10);
   const limit = Number.isInteger(limitRaw) && limitRaw > 0 ? Math.min(limitRaw, 500) : 100;
-
-  if (!isAdminWallet(admin)) {
-    return res.status(403).json({ error: 'Unauthorized' });
-  }
 
   const where = {};
   if (['pending', 'paid', 'blocked'].includes(status)) {
@@ -872,14 +868,9 @@ router.get('/group-owner/rewards/admin', async (req, res) => {
   }
 });
 
-router.post('/group-owner/rewards/:rewardId/mark-paid', async (req, res) => {
+router.post('/group-owner/rewards/:rewardId/mark-paid', requireSignedAdmin, async (req, res) => {
   const rewardId = String(req.params.rewardId || '').trim();
-  const admin = normalizeWallet(req.body.admin);
   const txHashRaw = String(req.body.txHash || '').trim();
-
-  if (!isAdminWallet(admin)) {
-    return res.status(403).json({ error: 'Unauthorized' });
-  }
 
   if (!rewardId) {
     return res.status(400).json({ error: 'rewardId is required.' });
