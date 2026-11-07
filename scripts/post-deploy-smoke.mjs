@@ -211,7 +211,7 @@ async function main() {
       name: "Telegram group rewards admin guard",
       method: "GET",
       url: `${API_BASE_URL}/api/telegram-miniapp/group-owner/rewards/admin?admin=0x0000000000000000000000000000000000000000&status=pending&limit=1`,
-      expectStatus: [403],
+      expectStatus: [401],
     },
   ];
 
