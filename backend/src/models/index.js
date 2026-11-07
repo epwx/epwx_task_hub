@@ -25,6 +25,7 @@ import TelegramGroupReward from './TelegramGroupReward.js';
 import DailyClaimEmailPreference from './DailyClaimEmailPreference.js';
 import SocialClaimVerificationAttempt from './SocialClaimVerificationAttempt.js';
 import SocialClaimDecisionAudit from './SocialClaimDecisionAudit.js';
+import SecurityAuthorization from './SecurityAuthorization.js';
 
 const RewardDistributionLedger = RewardDistributionLedgerDef(sequelize, DataTypes);
 
@@ -75,4 +76,4 @@ SocialClaimVerificationAttempt.belongsTo(Claim, { foreignKey: 'claimId', as: 'cl
 Claim.hasMany(SocialClaimDecisionAudit, { foreignKey: 'claimId', as: 'decisionAudits' });
 SocialClaimDecisionAudit.belongsTo(Claim, { foreignKey: 'claimId', as: 'claim' });
 
-export { User, Campaign, TaskSubmission, CashbackClaim, DailyClaim, DailyDraw, DailyDrawWinner, DailyDrawAnnouncement, SpecialClaim, Merchant, Claim, MerchantClaimCode, TwitterCampaign, RewardDistributionLedger, WalletReferral, PlatformStats, Partner, PartnerReferral, PartnerEarning, TelegramGroupOwner, TelegramGroupReward, DailyClaimEmailPreference, SocialClaimVerificationAttempt, SocialClaimDecisionAudit };
+export { User, Campaign, TaskSubmission, CashbackClaim, DailyClaim, DailyDraw, DailyDrawWinner, DailyDrawAnnouncement, SpecialClaim, Merchant, Claim, MerchantClaimCode, TwitterCampaign, RewardDistributionLedger, WalletReferral, PlatformStats, Partner, PartnerReferral, PartnerEarning, TelegramGroupOwner, TelegramGroupReward, DailyClaimEmailPreference, SocialClaimVerificationAttempt, SocialClaimDecisionAudit, SecurityAuthorization };

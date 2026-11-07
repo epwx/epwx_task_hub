@@ -1,11 +1,12 @@
 
 "use client";
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { useWalletClient, useWriteContract, useAccount } from "wagmi";
+import { useWalletClient, useWriteContract, useAccount, useSignMessage } from "wagmi";
 import { ethers } from "ethers";
 import { ConnectKitButton } from "connectkit";
 import MerchantClaimsTable from "@/components/MerchantClaimsTable";
 import MerchantQRCode from "@/components/MerchantQRCode";
+import { createAdminClaimAuthorization } from "@/utils/signedAuthorization";
 
 
   // ...existing code...
@@ -44,10 +45,18 @@ export default function MerchantAdminPage() {
         setMarking(null);
         return;
       }
+      const authorization = await createAdminClaimAuthorization({
+        wallet: address,
+        claimId: claim.id,
+        action: "mark-status",
+        status: "rejected",
+        reason: rejectionComment,
+        signMessage: signMessageAsync,
+      });
       const res = await fetch(`/api/claims/${claim.id}/mark-status`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ admin: address, status: "rejected", rejectionComment }),
+        body: JSON.stringify({ status: "rejected", rejectionComment, authorization }),
       });
       const data = await res.json();
       if (data.success) {
@@ -69,6 +78,7 @@ export default function MerchantAdminPage() {
 
   // Use connected wallet address
   const { address } = useAccount();
+  const { signMessageAsync } = useSignMessage();
   const ADMIN_WALLETS = useMemo(() => {
     return (process.env.NEXT_PUBLIC_ADMIN_WALLETS || "")
       .split(",")

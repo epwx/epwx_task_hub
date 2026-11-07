@@ -9,7 +9,8 @@ type Claim = {
   status: string;
   // add other fields if needed
 };
-import { useAccount } from "wagmi";
+import { useAccount, useSignMessage } from "wagmi";
+import { createAdminClaimAuthorization } from "@/utils/signedAuthorization";
 
 const ADMIN_WALLETS = (process.env.NEXT_PUBLIC_ADMIN_WALLETS || "")
   .split(",")
@@ -18,6 +19,7 @@ const ADMIN_WALLETS = (process.env.NEXT_PUBLIC_ADMIN_WALLETS || "")
 
 export default function AdminClaimsPage() {
   const { address } = useAccount();
+  const { signMessageAsync } = useSignMessage();
   const [claims, setClaims] = useState<Claim[]>([]);
   const [statusFilter, setStatusFilter] = useState("pending");
   const [loading, setLoading] = useState(false);
@@ -45,10 +47,18 @@ export default function AdminClaimsPage() {
     setError("");
     setSuccess("");
     try {
+      if (!address) return;
+      const authorization = await createAdminClaimAuthorization({
+        wallet: address,
+        claimId: id,
+        action: "mark-status",
+        status,
+        signMessage: signMessageAsync,
+      });
       const res = await fetch(`/api/claims/${id}/mark-status`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ admin: address, status }),
+        body: JSON.stringify({ status, authorization }),
       });
       const data = await res.json();
       if (data.success) {

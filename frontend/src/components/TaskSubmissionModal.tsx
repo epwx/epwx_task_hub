@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useAccount } from 'wagmi';
+import { useAccount, useSignMessage } from 'wagmi';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { TwitterConnect } from './TwitterConnect';
 import { getApiBaseUrl } from '@/utils/apiBaseUrl';
+import { createTaskSubmissionAuthorization } from '@/utils/signedAuthorization';
 
 const API_URL = getApiBaseUrl();
 
@@ -27,6 +28,7 @@ export function TaskSubmissionModal({
   onSuccess
 }: TaskSubmissionModalProps) {
   const { address } = useAccount();
+  const { signMessageAsync } = useSignMessage();
   const [twitterUsername, setTwitterUsername] = useState('');
   const [loading, setLoading] = useState(false);
   const [checkingTwitter, setCheckingTwitter] = useState(true);
@@ -80,6 +82,12 @@ export function TaskSubmissionModal({
 
     setLoading(true);
     try {
+      const authorization = await createTaskSubmissionAuthorization({
+        wallet: address,
+        campaignId,
+        twitterUsername: cleanUsername,
+        signMessage: signMessageAsync,
+      });
       const response = await axios.post(
         `${API_URL}/api/tasks/submit`,
         {
@@ -87,7 +95,8 @@ export function TaskSubmissionModal({
           walletAddress: address,
           taskType,
           targetUrl,
-          twitterUsername: cleanUsername
+          twitterUsername: cleanUsername,
+          authorization,
         },
         { withCredentials: true }
       );

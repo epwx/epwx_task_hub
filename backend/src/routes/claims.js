@@ -1,9 +1,5 @@
-// DEBUG: Print admin wallets env variable on backend startup
-console.log('BACKEND ENV ADMIN_WALLETS:', process.env.ADMIN_WALLETS);
-
-
 import express from 'express';
-import { Claim, Merchant, MerchantClaimCode, SocialClaimDecisionAudit, SocialClaimVerificationAttempt, TwitterCampaign } from '../models/index.js';
+import { Claim, Merchant, MerchantClaimCode, SecurityAuthorization, SocialClaimDecisionAudit, SocialClaimVerificationAttempt, TwitterCampaign } from '../models/index.js';
 import { Op } from 'sequelize';
 import sequelize from '../config/database.js';
 import { hashMerchantClaimCode, normalizeMerchantClaimCode } from '../utils/merchantClaimCode.js';
@@ -13,6 +9,11 @@ import path from 'path';
 import fs from 'fs';
 import { validateAndFingerprintSocialProof, SocialProofValidationError } from '../services/socialProofImage.js';
 import { settleApprovedSocialClaims } from '../services/socialClaimAutomation.js';
+import rateLimit from 'express-rate-limit';
+import {
+  createAdminClaimAuthorizationMessage,
+  verifyAndConsumeAuthorization,
+} from '../utils/signedAuthorization.js';
 // Set up admin wallets from environment variable (lowercase, trimmed)
 const adminWallets = (process.env.ADMIN_WALLETS || '').split(',').map(a => a.trim().toLowerCase());
 
@@ -43,6 +44,13 @@ const socialUpload = multer({
 });
 
 const router = express.Router();
+const adminClaimActionLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many administrative claim actions. Please try again later.' },
+});
 const TWITTER_TASK_TYPE_TO_CLAIM_TYPE = {
   retweet: 'twitter_retweet',
   comment: 'twitter_comment',
@@ -415,16 +423,36 @@ router.post('/twitter-poll', handleSocialClaimUpload('poll'));
 router.post('/twitter-rating', handleSocialClaimUpload('rating'));
 
 // POST /api/claims/:id/mark-status - Update claim status (admin only)
-router.post('/:id/mark-status', async (req, res) => {
-  const { admin, status, rejectionComment, overrideReason } = req.body;
-  if (!admin || !adminWallets.length || !adminWallets.includes(admin.toLowerCase())) {
-    return res.status(403).json({ error: 'Unauthorized' });
-  }
+router.post('/:id/mark-status', adminClaimActionLimiter, async (req, res) => {
+  const { status, rejectionComment, overrideReason, authorization } = req.body;
   if (!status) return res.status(400).json({ error: 'status is required' });
   if (!['pending', 'approved', 'rejected'].includes(status)) {
     return res.status(400).json({ error: 'Invalid claim status.' });
   }
   try {
+    const reason = String(overrideReason || rejectionComment || '').trim();
+    const authorizationMessage = createAdminClaimAuthorizationMessage({
+      wallet: authorization?.wallet,
+      claimId: req.params.id,
+      action: 'mark-status',
+      status,
+      reason,
+      issuedAt: authorization?.issuedAt,
+      nonce: authorization?.nonce,
+    });
+    const authorizationResult = await verifyAndConsumeAuthorization({
+      authorization,
+      expectedWallet: authorization?.wallet,
+      purpose: `claim:${req.params.id}:mark-status`,
+      message: authorizationMessage,
+      allowedWallets: adminWallets,
+      authorizationModel: SecurityAuthorization,
+    });
+    if (!authorizationResult.ok) {
+      return res.status(authorizationResult.status).json({ error: authorizationResult.error });
+    }
+    const admin = authorizationResult.wallet;
+
     const claim = await Claim.findByPk(req.params.id);
     if (!claim) return res.status(404).json({ error: 'Claim not found' });
     if (claim.status === 'paid') {
@@ -465,27 +493,48 @@ router.post('/:id/mark-status', async (req, res) => {
   }
 });
 
-router.post('/:id/settle', async (req, res) => {
-  const { admin } = req.body;
-  if (!admin || !adminWallets.includes(String(admin).toLowerCase())) {
-    return res.status(403).json({ error: 'Unauthorized' });
-  }
-  const claim = await Claim.findByPk(req.params.id);
-  if (!claim || !isSocialClaim(claim)) {
-    return res.status(404).json({ error: 'Social engagement claim not found.' });
-  }
-  if (claim.status === 'paid') {
-    return res.status(409).json({ error: 'Claim is already paid.' });
-  }
-  if (claim.status !== 'approved') {
-    return res.status(409).json({ error: 'Claim must be approved before settlement.' });
-  }
+router.post('/:id/settle', adminClaimActionLimiter, async (req, res) => {
+  try {
+    const { authorization } = req.body;
+    const authorizationMessage = createAdminClaimAuthorizationMessage({
+      wallet: authorization?.wallet,
+      claimId: req.params.id,
+      action: 'settle',
+      issuedAt: authorization?.issuedAt,
+      nonce: authorization?.nonce,
+    });
+    const authorizationResult = await verifyAndConsumeAuthorization({
+      authorization,
+      expectedWallet: authorization?.wallet,
+      purpose: `claim:${req.params.id}:settle`,
+      message: authorizationMessage,
+      allowedWallets: adminWallets,
+      authorizationModel: SecurityAuthorization,
+    });
+    if (!authorizationResult.ok) {
+      return res.status(authorizationResult.status).json({ error: authorizationResult.error });
+    }
 
-  const result = await settleApprovedSocialClaims({ force: true, claimId: claim.id });
-  if (!result.paid) {
-    return res.status(502).json({ error: 'Claim settlement did not complete.', result });
+    const claim = await Claim.findByPk(req.params.id);
+    if (!claim || !isSocialClaim(claim)) {
+      return res.status(404).json({ error: 'Social engagement claim not found.' });
+    }
+    if (claim.status === 'paid') {
+      return res.status(409).json({ error: 'Claim is already paid.' });
+    }
+    if (claim.status !== 'approved') {
+      return res.status(409).json({ error: 'Claim must be approved before settlement.' });
+    }
+
+    const result = await settleApprovedSocialClaims({ force: true, claimId: claim.id });
+    if (!result.paid) {
+      return res.status(502).json({ error: 'Claim settlement did not complete.', result });
+    }
+    return res.json({ success: true, result });
+  } catch (error) {
+    console.error('Settle social claim error:', error);
+    return res.status(500).json({ error: 'Failed to settle claim.' });
   }
-  return res.json({ success: true, result });
 });
 
 export default router;

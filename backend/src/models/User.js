@@ -30,6 +30,18 @@ const User = sequelize.define('User', {
     unique: true,
     allowNull: true
   },
+  twitterUsername: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  twitterAccessToken: {
+    type: DataTypes.TEXT,
+    allowNull: true
+  },
+  twitterRefreshToken: {
+    type: DataTypes.TEXT,
+    allowNull: true
+  },
   email: {
     type: DataTypes.STRING,
     allowNull: true,

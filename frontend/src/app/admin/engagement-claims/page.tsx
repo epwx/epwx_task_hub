@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { ConnectKitButton } from "connectkit";
-import { useAccount } from "wagmi";
+import { useAccount, useSignMessage } from "wagmi";
 import MerchantClaimsTable from "@/components/MerchantClaimsTable";
 import { parseJsonResponse } from "@/utils/apiErrors";
+import { createAdminClaimAuthorization } from "@/utils/signedAuthorization";
 
 type TwitterClaim = {
   id: number | string;
@@ -135,6 +136,7 @@ export default function AdminEngagementClaimsPage() {
   const TWITTER_CLAIMS_PAGE_SIZE = 5;
   const TWITTER_CAMPAIGNS_PAGE_SIZE = 3;
   const { address } = useAccount();
+  const { signMessageAsync } = useSignMessage();
   const [claims, setClaims] = useState<TwitterClaim[]>([]);
   const [campaigns, setCampaigns] = useState<TwitterCampaign[]>([]);
   const [claimsPage, setClaimsPage] = useState(1);
@@ -373,10 +375,19 @@ export default function AdminEngagementClaimsPage() {
     setError(null);
 
     try {
+      if (!address) return;
+      const authorization = await createAdminClaimAuthorization({
+        wallet: address,
+        claimId: claim.id,
+        action: "mark-status",
+        status: "rejected",
+        reason: rejectionComment,
+        signMessage: signMessageAsync,
+      });
       const response = await fetch(`/api/claims/${claim.id}/mark-status`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ admin: address, status: "rejected", rejectionComment }),
+        body: JSON.stringify({ status: "rejected", rejectionComment, authorization }),
       });
       const data = await parseJsonResponse<{ success?: boolean; error?: string }>(response, "Failed to reject claim");
 
@@ -397,22 +408,38 @@ export default function AdminEngagementClaimsPage() {
     setError(null);
 
     try {
+      if (!address) return;
       if (claim.status === "pending") {
+        const overrideReason = "Approved by administrator after proof review.";
+        const approvalAuthorization = await createAdminClaimAuthorization({
+          wallet: address,
+          claimId: claim.id,
+          action: "mark-status",
+          status: "approved",
+          reason: overrideReason,
+          signMessage: signMessageAsync,
+        });
         const approvalResponse = await fetch(`/api/claims/${claim.id}/mark-status`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            admin: address,
             status: "approved",
-            overrideReason: "Approved by administrator after proof review.",
+            overrideReason,
+            authorization: approvalAuthorization,
           }),
         });
         await parseJsonResponse<{ success?: boolean }>(approvalResponse, "Failed to approve claim");
       }
+      const settlementAuthorization = await createAdminClaimAuthorization({
+        wallet: address,
+        claimId: claim.id,
+        action: "settle",
+        signMessage: signMessageAsync,
+      });
       const response = await fetch(`/api/claims/${claim.id}/settle`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ admin: address }),
+        body: JSON.stringify({ authorization: settlementAuthorization }),
       });
       const data = await parseJsonResponse<{ success?: boolean; error?: string }>(response, "Failed to settle claim");
 
