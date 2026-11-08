@@ -26,6 +26,21 @@ The system SHALL discard client-provided forwarding values at the edge and deriv
 - **WHEN** a caller supplies an arbitrary forwarding header
 - **THEN** the application records the edge-observed client address instead
 
+### Requirement: Daily Claims enforce wallet and trusted-IP cooldowns
+The system SHALL accept a Daily Claim only when the claimant proves control of the wallet, has a verified email, and neither the wallet nor the trusted client address has completed another Daily Claim during the preceding 24 hours.
+
+#### Scenario: Wallet repeats a claim during the cooldown
+- **WHEN** a wallet that completed a Daily Claim during the preceding 24 hours submits another claim
+- **THEN** the request is rejected with HTTP 429
+
+#### Scenario: Another wallet claims from an address in cooldown
+- **WHEN** a different wallet submits a Daily Claim from a trusted client address that completed a claim during the preceding 24 hours
+- **THEN** the request is rejected with HTTP 429
+
+#### Scenario: Wallet has no verified email
+- **WHEN** a wallet without a verified email submits a Daily Claim
+- **THEN** the request is rejected without creating or paying a claim
+
 ### Requirement: Evidence files are private
 The system SHALL not expose uploaded receipts or verification evidence through a public static directory.
 
