@@ -7,6 +7,17 @@ type Authorization = {
   signature: `0x${string}`;
 };
 
+let adminSignatureQueue: Promise<void> = Promise.resolve();
+
+function requestAdminSignature(signMessage: SignMessage, message: string) {
+  const signatureRequest = adminSignatureQueue.then(() => signMessage({ message }));
+  adminSignatureQueue = signatureRequest.then(
+    () => undefined,
+    () => undefined,
+  );
+  return signatureRequest;
+}
+
 async function sha256(value: string) {
   const bytes = new TextEncoder().encode(value);
   const digest = await crypto.subtle.digest("SHA-256", bytes);
@@ -103,7 +114,7 @@ export async function adminAuthorizedFetch({
     `Issued At: ${issuedAt}`,
     `Nonce: ${nonce}`,
   ].join("\n");
-  const signature = await signMessage({ message });
+  const signature = await requestAdminSignature(signMessage, message);
   const headers = new Headers(init.headers);
   headers.set("x-admin-wallet", normalizedWallet);
   headers.set("x-admin-issued-at", issuedAt);
