@@ -253,7 +253,7 @@ Telegram membership status is stored and checked for gated claim types, strength
 
 ### Duplicate Prevention
 
-The platform uses wallet-level and IP-level rules to reduce repeated claims, including cooldown enforcement for daily claims and duplicate campaign claim protection for Twitter retweet campaigns.
+The platform uses wallet-level cooldowns and trusted-IP request rate limits to reduce repeated claims, while duplicate campaign claim protection prevents repeated Twitter engagement submissions.
 
 ### Admin Gating
 

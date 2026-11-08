@@ -26,16 +26,20 @@ The system SHALL discard client-provided forwarding values at the edge and deriv
 - **WHEN** a caller supplies an arbitrary forwarding header
 - **THEN** the application records the edge-observed client address instead
 
-### Requirement: Daily Claims enforce wallet and trusted-IP cooldowns
-The system SHALL accept a Daily Claim only when the claimant proves control of the wallet, has a verified email, and neither the wallet nor the trusted client address has completed another Daily Claim during the preceding 24 hours.
+### Requirement: Daily Claims enforce wallet cooldowns and trusted-IP rate controls
+The system SHALL accept a Daily Claim only when the claimant proves control of the wallet, has a verified email, and the wallet has not completed another Daily Claim during the preceding 24 hours. Trusted client addresses SHALL be recorded and rate-limited, but SHALL NOT be used as a person-level eligibility identity because unrelated users can share a public address.
 
 #### Scenario: Wallet repeats a claim during the cooldown
 - **WHEN** a wallet that completed a Daily Claim during the preceding 24 hours submits another claim
 - **THEN** the request is rejected with HTTP 429
 
-#### Scenario: Another wallet claims from an address in cooldown
-- **WHEN** a different wallet submits a Daily Claim from a trusted client address that completed a claim during the preceding 24 hours
-- **THEN** the request is rejected with HTTP 429
+#### Scenario: Different verified wallets share a public address
+- **WHEN** an otherwise eligible wallet submits a Daily Claim from a trusted client address previously used by another wallet
+- **THEN** the earlier claim alone does not make the new wallet ineligible
+
+#### Scenario: One address generates excessive attempts
+- **WHEN** a trusted client address exceeds the configured Daily Claim request rate
+- **THEN** further attempts are temporarily rejected with HTTP 429
 
 #### Scenario: Wallet has no verified email
 - **WHEN** a wallet without a verified email submits a Daily Claim
