@@ -81,7 +81,7 @@ Other security facts: contract verified/open-source, ownership renounced (owner 
 
 ## Listing Registry
 
-Status as of 2026-11-05 22:00 ET. Update this table whenever a submission, response, or correction happens.
+Status as of 2026-11-08 08:00 ET. Update this table whenever a submission, response, or correction happens.
 
 ### Already indexed (no action)
 
@@ -92,6 +92,7 @@ Status as of 2026-11-05 22:00 ET. Update this table whenever a submission, respo
 | DEXTools | Indexed |
 | DexScreener | Indexed |
 | DexPaprika | Indexed |
+| Moontok | DEX tracker; `moontok.io/en/base/0xef5f…d60eb` auto-indexed. No free submission or update form (paid Advertise only). |
 
 ### Submitted / in review
 
@@ -105,6 +106,9 @@ Status as of 2026-11-05 22:00 ET. Update this table whenever a submission, respo
 | CoinMooner | Account dashboard | `info@epowex.com` | 2026-11-05 | **Live**; update request sent via contact form | `https://coinmooner.com/coins/epowerx-on-base-epwx`. Live entry still shows website `epowex.com`; website/whitepaper correction requested. |
 | CoinVote | Account dashboard | `info@epowex.com` | 2026-11-05 | Awaiting validation | No edit path while pending. Submitted with website `epowex.com`; correct after approval. |
 | FreshCoins | Account dashboard | `info@epowex.com` | 2026-11-05 (denied), resubmitted 2026-11-05 with rebuttal | Under verification | First denial cited contract verification, website, and supply distribution. Resubmission description preempts all three (verified contract, burn + Biconomy custody explanation, website/whitepaper/APIs) and uses `tasks.epowex.com/whitepaper`. Website field still `epowex.com`; correct after review. Do not resubmit again until a decision arrives. |
+| Coinboom | `coinboom.net/submit` → "Submit Token Information Update" | none | Update 2026-11-08 | "Update sent successfully" | `coinboom.net/base/0xef5f…d60eb`. Pre-existed via auto-indexing with stale data (name `ePowerX`, `epowex.com`, Telegram `ePowerX_EPWX`, **500T raw supply shown**). Update sets name, description with post-burn supply, website, Telegram, X. Supply figure is derived on-chain by the site; description notes the burn. |
+| Top100Token | `top100token.com/submit` (same platform as Coinboom) | none | Update 2026-11-08 | "Update sent successfully" | Same stale pre-indexed entry and same update as Coinboom. |
+| CoinCatapult | Account dashboard + contact form | `info@epowex.com` | Claim request 2026-11-08 | "Message received", reply within 24h | `coincatapult.com/coin/epowerx-epwx-ef5f57` pre-existed via crawler with no owner. New-listing form rejected as `duplicate_claim`. Ownership claim sent via contact form (category "Listing my coin") with contract, network, account email, and the corrected name/website/whitepaper/socials to apply after transfer. Account created without email verification. |
 
 ### Blocked / not viable
 
@@ -115,6 +119,20 @@ Status as of 2026-11-05 22:00 ET. Update this table whenever a submission, respo
 | CoinMarketCap | Same volume gate as CoinGecko. | Apply after CoinGecko approval, citing the CoinGecko page. |
 | DappRadar | Platform shut down November 2025. | None. |
 | CryptoRank | No public submission form. | Low priority; contact only if a listing manager is identified. |
+| Coinscope | Signup is Google or X OAuth only; no email/password path, so automation cannot create the account. | A team member signs in with the project Google or `@epowex` X account and submits using the canonical record. |
+| Gemfinder | Chain list has no Base (BSC, ETH, Polygon, Solana, TRON, KCC, Fantom, Harmony, ADA, AVAX, WAX, Arbitrum). Account `info@epowex.com` created 2026-11-08 without email verification. | Re-check periodically; submit if Base is added. Do not list under another chain. |
+| CoinTopList | Open form, but networks are ETH/BSC/SOL only. | None unless Base is added. |
+| CoinsGem / CoinGem | Solana-only. | None. |
+| mycoinvote.com | Cloudflare 403 to automation. | Optional manual attempt from a normal browser; low value. |
+| cryptonextgem.com | Cloudflare challenge to automation. | Optional manual attempt; low value. |
+| coindiscovery.app | Loads blank, no form found. | None. |
+| coinxhigh.com | Domain repurposed as a casino site. | None. Treat any pitch listing it as stale. |
+| coinbusters.cc | Domain does not resolve. | None. |
+| gemsradar.com | Connection refused. | None. |
+
+### Note on third-party "listing service" pitches
+
+A Telegram pitch received 2026-11-08 offered paid submission to 17 sites. Of the 14 not already handled, 3 were dead or hijacked, 3 do not support Base, 3 block automation or have no form, 1 needs OAuth, and the 4 viable ones already had EPWX auto-indexed and only needed free updates. Every working site on such lists has a free self-serve path; do not pay for them.
 
 ## Decisions
 
@@ -145,4 +163,5 @@ Repeated reloads to force Google reCAPTCHA triggered rate-limiting. If the widge
 
 - Add the Token Transparency section (tracked in `tasks.md`).
 - Consider consolidating the Uniswap v2 pool into PancakeSwap v2 to concentrate liquidity before the CoinGecko reapplication.
-- Rotate the shared listing-account password and store it only in the team password manager; it was transmitted in a chat session during account creation.
+- Rotate the shared listing-account passwords and store them only in the team password manager; they were transmitted in a chat session during account creation. Two credential sets exist: one for FreshCoins, CoinSniper, CoinMooner, CoinVote (2026-11-05) and one for Gemfinder, CoinCatapult (2026-11-08).
+- Discovery sites that auto-index from DEX data (Coinboom, Top100Token, CoinCatapult, Moontok) all surfaced the 500T raw supply and the legacy `epowex.com`/`ePowerX_EPWX` links. The Token Transparency section and consistent on-site metadata are the only way to correct this at the source for future indexers.

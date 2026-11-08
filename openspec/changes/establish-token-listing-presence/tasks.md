@@ -4,7 +4,7 @@
 
 - [x] 1.1 Record the canonical token metadata, markets, descriptions, and supply distribution facts in `design.md`; verify every value against Basescan, GeckoTerminal, GoPlus, and the live supply APIs.
 - [x] 1.2 Record the listing registry with channel, account, submission date, status, public URL, and next action for every site attempted; verify each row reflects the last confirmed response from that site.
-- [ ] 1.3 Rotate the shared listing-account password and store it only in the team password manager; verify no credential appears in the repository or OpenSpec artifacts.
+- [ ] 1.3 Rotate both shared listing-account passwords (2026-11-05 set and 2026-11-08 set) and store them only in the team password manager; verify no credential appears in the repository or OpenSpec artifacts.
 
 ## 2. Tracker And Directory Submissions
 
@@ -16,6 +16,11 @@
 - [x] 2.6 Resubmit to FreshCoins with a description that preempts the three denial reasons; verify the "under verification" confirmation.
 - [ ] 2.7 Submit the corrected LiveCoinWatch request manually from a standard browser using the canonical record (website `tasks.epowex.com`, whitepaper in description, correction note); verify the "Success!" confirmation and update the registry.
 - [ ] 2.8 After CoinVote and FreshCoins decisions arrive, file website/whitepaper corrections through each site's update channel; verify the public pages show `tasks.epowex.com`.
+- [x] 2.9 Triage the 14 additional discovery sites from the 2026-11-08 listing pitch; verify each is recorded in the registry as submitted, blocked, dead, or unsupported-chain.
+- [x] 2.10 File metadata updates for the pre-indexed Coinboom and Top100Token entries (name, website, Telegram, X, post-burn supply in description); verify "Update sent successfully" on both.
+- [x] 2.11 Create a CoinCatapult account and send the ownership claim for the crawler-indexed entry with the canonical record; verify "Message received".
+- [ ] 2.12 After CoinCatapult transfers ownership, edit the listing from the dashboard to the canonical record; verify the public page shows `tasks.epowex.com` and the whitepaper link.
+- [ ] 2.13 A team member signs in to Coinscope with the project Google or `@epowex` X account and submits using the canonical record; verify the confirmation and update the registry.
 
 ## 3. Token Transparency Section
 
