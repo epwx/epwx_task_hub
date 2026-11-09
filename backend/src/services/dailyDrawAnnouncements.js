@@ -5,9 +5,11 @@ import dailyDrawX from '../utils/dailyDrawX.cjs';
 import winnerImage from '../utils/dailyDrawWinnerImage.cjs';
 import cleanup from '../utils/dailyDrawXCleanup.cjs';
 import { buildDailyDrawPublishedMessage, sendTelegramGroupPhoto } from './telegramNotifications.js';
+import listingVoteLinks from '../utils/listingVoteLinks.cjs';
 
 const { POST_URL, MEDIA_URL, MAX_ATTEMPTS, readConfig, authorizationHeader, createDispatcher } = dailyDrawX;
 const { deleteUrl, createCleanup } = cleanup;
+const { readVoteLinks } = listingVoteLinks;
 
 const cleanupRepository = {
   async listPublished() {
@@ -136,7 +138,14 @@ export async function relayDailyDrawToTelegram(drawId) {
       console.error(`[daily-draw-x] draw=${drawId} telegram_not_configured; link not shared`);
       return;
     }
-    const message = buildDailyDrawPublishedMessage({ drawDate: record.draw?.drawDate, postId: record.postId });
+    const voteConfig = readVoteLinks();
+    if (voteConfig.invalid.length) {
+      const detail = voteConfig.invalid.map((entry) => `#${entry.index}:${entry.reason}`).join(' ');
+      console.error(`[daily-draw-x] draw=${drawId} LISTING_VOTE_LINKS_INVALID_ENTRIES ${detail}; valid links still sent`);
+    }
+    const message = buildDailyDrawPublishedMessage({
+      drawDate: record.draw?.drawDate, postId: record.postId, voteLinks: voteConfig.links,
+    });
     if (!Buffer.isBuffer(record.winnerImage) || !record.winnerImage.length) {
       await DailyDrawAnnouncement.update({
         telegramStatus: 'failed', telegramErrorCode: 'TELEGRAM_WINNER_IMAGE_MISSING',

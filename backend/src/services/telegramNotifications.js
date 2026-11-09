@@ -1,4 +1,7 @@
 import axios from 'axios';
+import listingVoteLinks from '../utils/listingVoteLinks.cjs';
+
+const { renderTelegramVoteBlock } = listingVoteLinks;
 
 const TELEGRAM_BOT_USERNAME = String(process.env.TELEGRAM_BOT_USERNAME || 'epwx_bot').replace(/^@/, '');
 const TELEGRAM_BOT_GROUP_LINK = `https://t.me/${encodeURIComponent(TELEGRAM_BOT_USERNAME)}?startgroup=true`;
@@ -237,15 +240,22 @@ export async function sendTelegramGroupPhoto(caption, image) {
   }
 }
 
-export function buildDailyDrawPublishedMessage({ drawDate, postId }) {
+export const TELEGRAM_CAPTION_LIMIT = 1024;
+
+export function buildDailyDrawPublishedMessage({ drawDate, postId, voteLinks = [] }) {
   if (!/^\d+$/.test(String(postId || '')) || !/^\d{4}-\d{2}-\d{2}$/.test(drawDate || '')) {
     throw new Error('Invalid daily draw announcement link or date');
   }
-  return [
+  const base = [
     '<b>EPWX Daily Draw Winners</b>',
     `<b>Draw date</b>: ${escapeHtml(drawDate)}`,
     '',
     'The winners announcement is now live on X!',
     `<a href="https://x.com/i/status/${postId}">View the winners on X</a>`,
   ].join('\n');
+  const voteBlock = renderTelegramVoteBlock(voteLinks, escapeHtml);
+  if (!voteBlock) return base;
+  const combined = `${base}\n${voteBlock}`;
+  // The vote block is optional; never let it displace or truncate the announcement itself.
+  return combined.length <= TELEGRAM_CAPTION_LIMIT ? combined : base;
 }

@@ -79,6 +79,8 @@ function reset() {
   staleCount = 0;
   delete process.env.TELEGRAM_BOT_TOKEN;
   delete process.env.TELEGRAM_GROUP_ID;
+  delete process.env.LISTING_VOTE_LINKS_ENABLED;
+  delete process.env.LISTING_VOTE_LINKS;
   process.env.DAILY_DRAW_X_DELETE_PREVIOUS = 'false';
   Object.assign(process.env, {
     DAILY_DRAW_X_ENABLED: 'true',
@@ -248,6 +250,52 @@ test('interrupted Telegram sends become uncertain rather than sending twice', as
   assert.equal(record.telegramStatus, 'uncertain');
   assert.equal(record.telegramErrorCode, 'TELEGRAM_INTERRUPTED_SEND');
   assert.equal(telegramCalls().length, 0);
+});
+
+test('vote reminders are appended to the Telegram caption only when enabled and never touch the X post', async () => {
+  const voteList = 'CoinSniper|https://coinsniper.net/coin/95195,CoinMooner|https://coinmooner.com/coins/epowerx-on-base-epwx';
+
+  reset();
+  enableTelegram();
+  process.env.LISTING_VOTE_LINKS = voteList; // flag absent → disabled
+  assert.equal((await announceDailyDraw(10)).status, 'published');
+  const disabledCaption = telegramCalls()[0][1].get('caption');
+  const disabledPostBody = JSON.stringify(postCalls()[0][1]);
+  assert.ok(!disabledCaption.includes('Support EPWX'));
+  assert.ok(!disabledCaption.includes('coinsniper.net'));
+
+  reset();
+  enableTelegram();
+  process.env.LISTING_VOTE_LINKS_ENABLED = 'true';
+  process.env.LISTING_VOTE_LINKS = `${voteList},Broken|http://insecure.example`;
+  assert.equal((await announceDailyDraw(10)).status, 'published');
+  assert.equal(record.telegramStatus, 'sent');
+  const enabledCaption = telegramCalls()[0][1].get('caption');
+  assert.ok(enabledCaption.startsWith(disabledCaption), 'base caption must be preserved verbatim');
+  assert.ok(enabledCaption.includes('<b>Support EPWX</b>'));
+  assert.ok(enabledCaption.includes('<a href="https://coinsniper.net/coin/95195">CoinSniper</a>'));
+  assert.ok(enabledCaption.includes('<a href="https://coinmooner.com/coins/epowerx-on-base-epwx">CoinMooner</a>'));
+  assert.ok(!enabledCaption.includes('insecure.example'), 'invalid entries are skipped');
+  assert.ok(enabledCaption.length <= 1024);
+  assert.equal(JSON.stringify(postCalls()[0][1]), disabledPostBody, 'X request body must not change');
+  assert.equal(calls.filter(([url]) => /coinsniper|coinmooner/.test(url)).length, 0, 'no request to vote sites');
+});
+
+test('vote block is dropped rather than truncating the announcement when it would exceed the caption limit', async () => {
+  reset();
+  enableTelegram();
+  const { buildDailyDrawPublishedMessage, TELEGRAM_CAPTION_LIMIT } =
+    await import('../src/services/telegramNotifications.js');
+  const base = buildDailyDrawPublishedMessage({ drawDate: '2026-10-19', postId: '1234' });
+  const longLinks = Array.from({ length: 8 }, (_, i) => ({
+    label: `Listing Site Number ${i}`.slice(0, 32), url: `https://site${i}.example/${'p'.repeat(90)}`,
+  }));
+  const withLinks = buildDailyDrawPublishedMessage({ drawDate: '2026-10-19', postId: '1234', voteLinks: longLinks });
+  assert.equal(TELEGRAM_CAPTION_LIMIT, 1024);
+  assert.equal(withLinks, base, 'overflowing block is dropped and base caption is untouched');
+  const fits = buildDailyDrawPublishedMessage({ drawDate: '2026-10-19', postId: '1234', voteLinks: longLinks.slice(0, 2) });
+  assert.ok(fits.startsWith(base) && fits.includes('Support EPWX') && fits.length <= 1024);
+  assert.equal(buildDailyDrawPublishedMessage({ drawDate: '2026-10-19', postId: '1234', voteLinks: [] }), base);
 });
 
 test('daily-claim notifications still use the same group and HTML formatting', async () => {
