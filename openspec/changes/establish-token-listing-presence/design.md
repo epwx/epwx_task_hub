@@ -157,6 +157,80 @@ Repeated reloads to force Google reCAPTCHA triggered rate-limiting. If the widge
 
 MintMe is a small custodial exchange with community tooling (posts to followers, airdrop and bounty campaigns, polls, token shop). Its order-book volume carries little weight with aggregators. Opening an EPWX market there requires seeding liquidity from project-held EPWX into MintMe custody and paying a MINTME fee; with PancakeSwap depth already thin, a third, custodial venue with an empty book would hurt the CoinGecko reapplication. Use MintMe for posts mirroring Task Hub campaigns and for small airdrop/bounty campaigns whose tasks funnel users to `t.me/ePowerX_On_Base` and `tasks.epowex.com`. Revisit opening the ETH or MINTME market once DEX liquidity improves, and only with the Automatic Order Maker enabled.
 
+### MintMe posts are manual; the public API has no posts endpoint
+
+MintMe's API v2 (`/dev/api/v2/*`) covers markets, order books, orders, and wallet operations only. There is no endpoint to create a post, so draw and campaign announcements cannot be automated from the backend the way the X announcement is. Posts are published from the token page composer by a logged-in owner (`info@epowex.com`), either by a team member or by an assistant driving the browser on request.
+
+## MintMe Posting Guide
+
+Composer: token page → "Latest News" → Title + Content → Post. Owner login required.
+
+Rules learned 2026-11-09:
+
+- Content limit is 1,000 characters and the validator counts HTML, so keep plain text under ~750 characters.
+- Do not use apostrophes or curly quotes. MintMe renders them as `&#039;` and turns `#039` into a hashtag link. Write "the previous day of claims", not "yesterday's".
+- Leave "Use Bonus Tokens as Reward" and the reward fields at zero unless the team decides to pay MintMe users to engage.
+- The sticky transaction ticker overlaps the Post button in a small viewport; scroll it clear or widen the window before clicking.
+- Every post links to `https://tasks.epowex.com` and, where relevant, `https://tasks.epowex.com/#latest-winners`.
+
+Cadence: draw results two or three times a week (not daily), plus one post per campaign launch, cashback promotion, or merchant addition.
+
+### Template — Daily Reward Draw
+
+Data: `GET https://api.epowex.com/api/epwx/daily-draws/latest` (`draw.id`, `draw.drawDate`, `draw.winnerCount`, `draw.prizeAmount`, `draw.entropyBlockNumber`, `winners[].wallet`, `pagination.totalDraws`). Rules: `GET https://api.epowex.com/api/epwx/daily-draws/rules`.
+
+```
+Title: Daily Reward Draw #<draw.id> — <winnerCount> winners paid <prizeAmount formatted> EPWX each
+
+The free Daily Reward Draw for <drawDate> is settled: <winnerCount> winners, each paid <prizeAmount> EPWX on-chain within 30 seconds of the draw.
+
+Winners:
+1. 0x<first 4>…<last 4>
+2. …
+
+How it works
+• Runs daily at 00:05 UTC for the previous day of claims
+• Provably fair: winners derived from Base block <entropyBlockNumber> hash + a published pool hash — anyone can audit
+• Streak boosts odds: 1 entry on days 1–2, 2 on days 3–4, 3 on days 5–6, 5 on day 7
+• No purchase, no holding, no gas required
+
+<totalDraws> draws since launch — every one settled on-chain.
+
+Join the next draw: connect your wallet at https://tasks.epowex.com and claim your free 100,000 EPWX. Winner board: https://tasks.epowex.com/#latest-winners
+```
+
+### Template — Campaign launch
+
+```
+Title: New campaign: <campaign title> — earn <reward> EPWX
+
+<One sentence on what the campaign rewards and who can join.>
+
+How to take part
+• Connect your wallet at https://tasks.epowex.com
+• <Task 1, e.g. follow @epowex on X and verify>
+• <Task 2>
+• Rewards are paid in EPWX on Base after verification
+
+Runs <start> to <end> (UTC). Community: https://t.me/ePowerX_On_Base
+```
+
+### Template — Transparency / token facts
+
+```
+Title: EPWX token facts: burn, supply and where it trades
+
+• 93.67% of the original supply is permanently burned; post-burn total supply is 31,634,877,433,144 EPWX
+• Live supply APIs: https://api.epowex.com/api/supply · /api/circulating · /api/burned
+• Contract on Base: 0xef5f5751cf3eca6cc3572768298b7783d33d60eb — verified, ownership renounced, not mintable
+• Largest non-burn holder is the Biconomy exchange custody wallet
+• Trades on Biconomy (EPWX/USDT) and PancakeSwap v2 on Base (EPWX/WETH)
+
+Whitepaper: https://tasks.epowex.com/whitepaper
+```
+
+Posts published: 2026-11-09 "Daily Reward Draw #146 — 5 winners paid 1,000,000 EPWX each".
+
 ## Risks / Trade-offs
 
 - **Name mismatch.** Forms say "ePowerX On Base"; the contract says "ePowerX". Some aggregators normalize to the contract name. Accept this; if challenged, point to `@epowex`, `@ePowerX_On_Base`, and the CoinGecko request history.
