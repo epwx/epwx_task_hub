@@ -54,7 +54,7 @@ Labels and URLs are passed through the module's existing `escapeHtml` before int
 Initial production value (from the listing registry as of 2026-11-09):
 
 ```
-LISTING_VOTE_LINKS=CoinSniper|https://coinsniper.net/coin/95195,CoinMooner|https://coinmooner.com/coins/epowerx-on-base-epwx,Coinboom|https://coinboom.net/base/0xef5f5751cf3eca6cc3572768298b7783d33d60eb,Top100Token|https://top100token.com/base/0xef5f5751cf3eca6cc3572768298b7783d33d60eb,CoinCatapult|https://www.coincatapult.com/coin/epowerx-epwx-ef5f57
+LISTING_VOTE_LINKS=CoinSniper|https://coinsniper.net/coin/95195,CoinMooner|https://coinmooner.com/coins/epowerx-on-base-epwx,Coinboom|https://coinboom.net/base/0xef5f5751cf3eca6cc3572768298b7783d33d60eb,Top100Token|https://top100token.com/base/0xef5f5751cf3eca6cc3572768298b7783d33d60eb,CoinCatapult|https://www.coincatapult.com/coin/epowerx-epwx-ef5f57,CoinVote|https://coinvote.cc/coin/ePowerX-On-Base
 ```
 
-Add CoinVote and FreshCoins once their listings are approved and their public URLs are known.
+CoinVote was approved and added 2026-11-09. Add FreshCoins once its listing is approved and its public URL is known.

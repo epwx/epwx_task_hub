@@ -15,7 +15,7 @@
 - [x] 2.5 File update requests for the pre-existing CoinSniper entry and the live CoinMooner entry correcting name, website, Telegram, whitepaper, and description; verify "Update Request Submitted" and "feedback received" confirmations.
 - [x] 2.6 Resubmit to FreshCoins with a description that preempts the three denial reasons; verify the "under verification" confirmation.
 - [ ] 2.7 Submit the corrected LiveCoinWatch request manually from a standard browser using the canonical record (website `tasks.epowex.com`, whitepaper in description, correction note); verify the "Success!" confirmation and update the registry.
-- [ ] 2.8 After CoinVote and FreshCoins decisions arrive, file website/whitepaper corrections through each site's update channel; verify the public pages show `tasks.epowex.com`.
+- [x] 2.8 After CoinVote and FreshCoins decisions arrive, file website/whitepaper corrections through each site's update channel; verify the public pages show `tasks.epowex.com`. CoinVote approved and already shows `tasks.epowex.com` (2026-11-09); FreshCoins still pending.
 - [x] 2.9 Triage the 14 additional discovery sites from the 2026-11-08 listing pitch; verify each is recorded in the registry as submitted, blocked, dead, or unsupported-chain.
 - [x] 2.10 File metadata updates for the pre-indexed Coinboom and Top100Token entries (name, website, Telegram, X, post-burn supply in description); verify "Update sent successfully" on both.
 - [x] 2.11 Create a CoinCatapult account and send the ownership claim for the crawler-indexed entry with the canonical record; verify "Message received".
