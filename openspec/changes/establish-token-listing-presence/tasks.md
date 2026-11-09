@@ -21,6 +21,9 @@
 - [x] 2.11 Create a CoinCatapult account and send the ownership claim for the crawler-indexed entry with the canonical record; verify "Message received".
 - [ ] 2.12 After CoinCatapult transfers ownership, edit the listing from the dashboard to the canonical record; verify the public page shows `tasks.epowex.com` and the whitepaper link.
 - [ ] 2.13 A team member signs in to Coinscope with the project Google or `@epowex` X account and submits using the canonical record; verify the confirmation and update the registry.
+- [x] 2.14 Bring the MintMe token profile to the canonical record (description, website `tasks.epowex.com` with domain verification via `/mintme.html`); verify "Changes saved" and "Website confirmed" and that the public page shows the new description.
+- [ ] 2.15 Publish MintMe posts mirroring Task Hub activity (campaign launches, daily-draw winners, cashback, transparency facts) on a recurring cadence; verify each post links to `tasks.epowex.com`.
+- [ ] 2.16 Decide on and, if approved, fund a small MintMe airdrop or bounty campaign whose tasks are "join `t.me/ePowerX_On_Base`" and "visit `tasks.epowex.com`"; verify the campaign terms and EPWX amount are recorded in the registry before funding.
 
 ## 3. Token Transparency Section
 

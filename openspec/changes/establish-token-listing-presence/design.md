@@ -109,6 +109,7 @@ Status as of 2026-11-08 08:00 ET. Update this table whenever a submission, respo
 | Coinboom | `coinboom.net/submit` → "Submit Token Information Update" | none | Update 2026-11-08 | "Update sent successfully" | `coinboom.net/base/0xef5f…d60eb`. Pre-existed via auto-indexing with stale data (name `ePowerX`, `epowex.com`, Telegram `ePowerX_EPWX`, **500T raw supply shown**). Update sets name, description with post-burn supply, website, Telegram, X. Supply figure is derived on-chain by the site; description notes the burn. |
 | Top100Token | `top100token.com/submit` (same platform as Coinboom) | none | Update 2026-11-08 | "Update sent successfully" | Same stale pre-indexed entry and same update as Coinboom. |
 | CoinCatapult | Account dashboard + contact form | `info@epowex.com` | Claim request 2026-11-08 | "Message received", reply within 24h | `coincatapult.com/coin/epowerx-epwx-ef5f57` pre-existed via crawler with no owner. New-listing form rejected as `duplicate_claim`. Ownership claim sent via contact form (category "Listing my coin") with contract, network, account email, and the corrected name/website/whitepaper/socials to apply after transfer. Account created without email verification. |
+| MintMe | Token settings dashboard | `info@epowex.com` (owner) | Listed ~2026-10-30; profile updated 2026-11-09 | **Live**, profile canonical | `mintme.com/token/ePowerX-On-Base`. Description replaced with canonical structured copy (Task Hub features, burn/supply facts, APIs, markets, links, roadmap). Website changed `epowex.com` → `tasks.epowex.com` and **domain-verified** via `/mintme.html` (token `efd6dfce-…`, served from `frontend/public/mintme.html`, commit `f65f205`). X and Telegram already correct. No market opened — see Decisions. |
 
 ### Blocked / not viable
 
@@ -151,6 +152,10 @@ A public Token Transparency section lists the burn address, the Biconomy custody
 ### Never submit from automation when a CAPTCHA fails to render
 
 Repeated reloads to force Google reCAPTCHA triggered rate-limiting. If the widget does not render after one reload, hand the form to a human in a normal browser using the canonical data pack.
+
+### Use MintMe as a community channel, not a trading venue (for now)
+
+MintMe is a small custodial exchange with community tooling (posts to followers, airdrop and bounty campaigns, polls, token shop). Its order-book volume carries little weight with aggregators. Opening an EPWX market there requires seeding liquidity from project-held EPWX into MintMe custody and paying a MINTME fee; with PancakeSwap depth already thin, a third, custodial venue with an empty book would hurt the CoinGecko reapplication. Use MintMe for posts mirroring Task Hub campaigns and for small airdrop/bounty campaigns whose tasks funnel users to `t.me/ePowerX_On_Base` and `tasks.epowex.com`. Revisit opening the ETH or MINTME market once DEX liquidity improves, and only with the Automatic Order Maker enabled.
 
 ## Risks / Trade-offs
 
