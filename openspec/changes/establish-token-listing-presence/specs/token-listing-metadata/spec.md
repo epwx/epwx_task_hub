@@ -26,17 +26,17 @@ Submissions SHALL report total and circulating supply from `https://api.epowex.c
 
 #### Scenario: Form asks for locked or team wallets
 - **WHEN** a form asks for team, locked, or vested addresses
-- **THEN** no address is supplied as team-held, and the Biconomy custody wallet is described as a third-party exchange wallet, not excluded
+- **THEN** no address is supplied as team-held, and the Biconomy custody wallet is described as the single pooled wallet holding EPWX deposited by Biconomy CEX users, counted as circulating because those tokens are tradable, not excluded
 
 ### Requirement: Distribution facts are disclosed proactively
-Submissions SHALL state, in the description or notes, that 93.67% of raw supply is held by the burn address, that the largest live holder `0xfdb836cdcdcfeb34b309a7bd5dc1adfaa63690d3` is the Biconomy exchange custody wallet, and that EPWX trades on both Biconomy (EPWX/USDT) and PancakeSwap v2 on Base (EPWX/WETH).
+Submissions SHALL state, in the description or notes, that 93.67% of raw supply is held by the burn address, that the largest live holder `0xfdb836cdcdcfeb34b309a7bd5dc1adfaa63690d3` is the Biconomy exchange custody wallet pooling EPWX deposited by Biconomy CEX users (counted as circulating because those tokens are tradable), and that EPWX trades on both Biconomy (EPWX/USDT) and PancakeSwap v2 on Base (EPWX/WETH).
 
 #### Scenario: Reviewer flags holder concentration
 - **WHEN** a listing is denied or questioned on "supply distribution" or "holding patterns"
 - **THEN** the resubmission cites the burn address, identifies the Biconomy custody wallet, and links the Token Transparency section
 
 ### Requirement: Task Hub publishes a Token Transparency section
-The Task Hub website SHALL publish a Token Transparency section listing the contract address, burn address, Biconomy custody address, exchange markets, holder count, and the three supply API endpoints.
+The Task Hub website SHALL publish a Token Transparency section listing the contract address, burn address, Biconomy custody address (described as the pooled custody wallet for Biconomy CEX deposits and counted as circulating), exchange markets, holder count, and the three supply API endpoints.
 
 #### Scenario: Reviewer visits the website
 - **WHEN** a listing reviewer opens `https://tasks.epowex.com`
