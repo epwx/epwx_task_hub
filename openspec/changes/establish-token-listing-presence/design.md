@@ -155,7 +155,7 @@ A Telegram pitch received 2026-11-08 offered paid submission to 17 sites. Of the
 - "Buy EPWX" button now goes to Biconomy `EPWX_USDT` (was a Coinbase converter link).
 - Exchange marquee reduced to Biconomy, Azbit and CoinMarketCap (CoinBase, Indoex and Bitstorage entries removed).
 - Roadmap section and the `ROADMAP` header menu item removed. Key benefits are labelled "(planned)".
-- Left unchanged: the top "Buy Now" button still links to Bitstorage, pending confirmation.
+- Both hero "Buy Now" buttons (Bitstorage and DEXTools) now link to `https://tasks.epowex.com`. The Task Hub has no `/buy-epwx` page; its `/buy-epwx` links return a soft 404, so they are not used here.
 
 Pre-edit Elementor JSON for both pages is kept in the Copilot session files (`epowex-home-elementor-backup-2026-11-09.txt`, `epowex-whitepaper-elementor-backup-2026-11-09.txt`), not in the repo.
 
