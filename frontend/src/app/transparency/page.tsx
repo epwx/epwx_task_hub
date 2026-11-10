@@ -272,7 +272,9 @@ export default function TransparencyPage() {
             <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Supply methodology</div>
             <p className="mt-3 text-sm leading-7 text-slate-700 dark:text-slate-300">
               Total supply equals the contract total supply minus the balance of the burn address. Circulating supply additionally excludes
-              treasury-locked balances.                             Exchange custody wallets, including the pooled Biconomy custody wallet, hold tokens on behalf of their users and are                            counted as circulating because those tokens are tradable. The burn address is permanently removed and excluded. Max supply equals the current total supply because the contract cannot mint.
+              treasury-locked balances. Exchange custody wallets, including the pooled Biconomy custody wallet, hold tokens on behalf of
+              their users and are counted as circulating because those tokens are tradable. The burn address is permanently removed and
+              excluded. Max supply equals the current total supply because the contract cannot mint.
             </p>
           </div>
         </section>
