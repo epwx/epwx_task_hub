@@ -34,6 +34,7 @@ Use these values verbatim on every form. Where a form offers no field, put the v
 | Token standard | ERC-20 |
 | Launch / first pool | 2025-06-25 (PancakeSwap v2 EPWX/WETH pool created 2025-06-25T02:50Z) |
 | Website | `https://tasks.epowex.com` |
+| Token Transparency page | `https://tasks.epowex.com/transparency` — contract facts, live supply, burn, largest holders, markets, supply APIs, canonical links. Paste this on any form that asks about distribution or supply. |
 | Whitepaper | `https://tasks.epowex.com/whitepaper` |
 | Terms / Privacy | `https://tasks.epowex.com/terms`, `https://tasks.epowex.com/privacy` |
 | Logo (source) | `https://tasks.epowex.com/logo.webp` (1000x1000; convert to PNG with `sharp` for forms that reject WebP) |

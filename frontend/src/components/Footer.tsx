@@ -9,6 +9,8 @@ export default function Footer() {
         <span className="hidden md:block text-gray-600 dark:text-gray-400">•</span>
         <a href="/whitepaper" className="hover:text-blue-400 transition-colors">Whitepaper</a>
         <span className="hidden md:block text-gray-600 dark:text-gray-400">•</span>
+        <a href="/transparency" className="hover:text-blue-400 transition-colors">Token Transparency</a>
+        <span className="hidden md:block text-gray-600 dark:text-gray-400">•</span>
         <a href="/terms" className="hover:text-blue-400 transition-colors">Terms of Service</a>
         <span className="hidden md:block text-gray-600 dark:text-gray-400">•</span>
         <a href="/privacy" className="hover:text-blue-400 transition-colors">Privacy Policy</a>

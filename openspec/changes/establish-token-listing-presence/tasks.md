@@ -27,8 +27,8 @@
 
 ## 3. Token Transparency Section
 
-- [ ] 3.1 Add a Token Transparency section to the Task Hub frontend listing the contract, burn address, Biconomy custody address, markets, holder count, and links to `/api/supply`, `/api/circulating`, and `/api/burned`; verify it is reachable from the footer or main navigation without login and passes frontend type-check and build.
-- [ ] 3.2 Link the Token Transparency section from the whitepaper page; verify the link resolves on production.
+- [x] 3.1 Add a Token Transparency section to the Task Hub frontend listing the contract, burn address, Biconomy custody address, markets, holder count, and links to `/api/supply`, `/api/circulating`, and `/api/burned`; verify it is reachable from the footer or main navigation without login and passes frontend type-check and build. Implemented as `/transparency` (`frontend/src/app/transparency/page.tsx` + `TransparencySupplyFigures`), linked from the footer and the Stats menu.
+- [x] 3.2 Link the Token Transparency section from the whitepaper page; verify the link resolves on production. Added to the "Supply transparency" card in `WhitepaperDocument`.
 
 ## 4. Aggregator Reapplication
 

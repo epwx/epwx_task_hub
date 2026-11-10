@@ -85,6 +85,7 @@ export default function Header({ darkMode, setDarkMode }: HeaderProps) {
       items: [
         { href: '/platform-stats', label: 'Platform Stats' },
         { href: '/whitepaper', label: 'Whitepaper' },
+        { href: '/transparency', label: 'Token Transparency' },
         { href: '/#latest-winners', label: 'Reward Activity' },
       ],
     },

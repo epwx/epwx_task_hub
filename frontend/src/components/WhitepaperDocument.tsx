@@ -322,6 +322,13 @@ export function WhitepaperDocument() {
                 <p className="mt-5 text-sm leading-8 text-slate-600 dark:text-slate-300">
                   Public APIs expose total, circulating, and burned supply. Circulating supply is derived from on-chain total supply minus burned and treasury-locked balances, formatted at 9 decimals for listing platforms, analytics dashboards, and ecosystem monitoring.
                 </p>
+                <p className="mt-3 text-sm leading-8 text-slate-600 dark:text-slate-300">
+                  Contract status, live supply, the burn, the largest holders, and every market are documented on the{' '}
+                  <a href="/transparency" className="font-semibold text-sky-700 underline-offset-4 hover:underline dark:text-sky-300">
+                    Token Transparency page
+                  </a>
+                  .
+                </p>
                 <div className="mt-6 border-t border-slate-200 pt-5 dark:border-slate-800">
                   <span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">Settlement network</span>
                   <div className="mt-2 text-xl font-bold text-slate-950 dark:text-white">Base</div>
