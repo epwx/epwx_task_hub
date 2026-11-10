@@ -120,7 +120,7 @@ Status as of 2026-11-09 22:00 ET. Update this table whenever a submission, respo
 
 | Site | Reason | Next action |
 | --- | --- | --- |
-| CoinGecko | Request `CL0211260004` rejected 2026-11-02; no reason given. DEX volume ~$22/day at the time. Biconomy market was already live (since 2025-10) so it is not "new evidence". | Reapply after ~3–4 weeks of improved DEX liquidity/volume. Cite both markets, all three supply APIs, burn address, Biconomy custody wallet, and 12K+ holders. Post the verification message from `@epowex` as required. |
+| CoinGecko | Request `CL0211260004` rejected 2026-11-02; no reason given. DEX volume ~$22/day at the time. Biconomy market was already live (since 2025-10) so it is not "new evidence". | Reapply target 2026-12-07 (not before 2026-12-02, 30 days after rejection), only after measurable DEX growth. Cite both markets, all three supply APIs, burn address, Biconomy custody wallet as pooled custody for CEX deposits (counted as circulating, per the statement in Supply Distribution Facts), and 12K+ holders. Post the verification message from `@epowex` as required. |
 | CoinPaprika | Free-tier form auto-rejects on volume/liquidity; only the $1,000 Fast Track is offered. | Retry free tier after CoinGecko approval; do not pay. |
 | DappRadar | Platform shut down November 2025. | None. |
 | CryptoRank | No public submission form. | Low priority; contact only if a listing manager is identified. |

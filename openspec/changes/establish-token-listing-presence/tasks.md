@@ -35,7 +35,7 @@
 ## 4. Aggregator Reapplication
 
 - [ ] 4.1 Consolidate or document the decision on the secondary Uniswap v2 pool and track DEX liquidity and 24h volume weekly for at least three weeks; verify the figures are recorded in `design.md` before reapplying.
-- [ ] 4.2 Reapply to CoinGecko citing both markets, all three supply APIs, burn and custody disclosures, and holder count, and post the verification message from `@epowex`; verify the new request ID is recorded in the registry.
+- [ ] 4.2 Reapply to CoinGecko on or after 2026-12-07 (not before 2026-12-02), citing both markets, all three supply APIs, burn and custody disclosures (Biconomy pooled custody wallet, counted as circulating), and holder count, and post the verification message from `@epowex`; verify the new request ID is recorded in the registry.
 - [ ] 4.3 After CoinGecko approval, retry the CoinPaprika free tier citing the CoinGecko and CoinMarketCap pages; verify confirmations and update the registry. (CoinMarketCap is already listed — UCID 38657 — so no application is needed there.)
 
 ## Workflow follow-up

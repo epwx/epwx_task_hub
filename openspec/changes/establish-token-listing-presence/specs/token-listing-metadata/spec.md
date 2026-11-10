@@ -72,7 +72,7 @@ The team SHALL NOT purchase fast-track, premium, or priority listing products in
 - **THEN** the stated deficiency is addressed and the free path is reattempted first
 
 ### Requirement: Aggregator reapplication is evidence-based
-A CoinGecko reapplication SHALL be filed only after measurable DEX liquidity and volume improvement and SHALL cite both markets, all three supply APIs, the burn address, the Biconomy custody wallet, and holder count; CoinMarketCap and CoinPaprika free-tier applications SHALL follow a CoinGecko approval.
+A CoinGecko reapplication SHALL NOT be filed before 30 days after the 2026-11-02 rejection (2026-12-02), SHALL be filed only after measurable DEX liquidity and volume improvement, and SHALL cite both markets, all three supply APIs, the burn address, the Biconomy custody wallet as pooled custody for CEX deposits (counted as circulating), and holder count; CoinMarketCap and CoinPaprika free-tier applications SHALL follow a CoinGecko approval.
 
 #### Scenario: Reapplying to CoinGecko
 - **WHEN** the team submits a new CoinGecko request
