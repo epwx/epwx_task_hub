@@ -1225,6 +1225,8 @@ export default function HomeTest() {
             <span className="hidden md:block text-slate-600">•</span>
             <a href="/privacy" className="transition-colors hover:text-cyan-300">Privacy Policy</a>
             <span className="hidden md:block text-slate-600">•</span>
+            <a href="/transparency" className="transition-colors hover:text-cyan-300">Token Transparency</a>
+            <span className="hidden md:block text-slate-600">•</span>
             <a href="/user-guide" className="transition-colors hover:text-cyan-300">User Guide</a>
             <span className="hidden md:block text-slate-600">•</span>
             <a href="https://twitter.com/epowex" target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-cyan-300">Twitter</a>
