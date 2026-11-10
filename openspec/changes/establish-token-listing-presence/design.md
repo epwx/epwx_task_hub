@@ -46,8 +46,9 @@ Use these values verbatim on every form. Where a form offers no field, put the v
 | Total supply API | `https://api.epowex.com/api/supply` (plain number) |
 | Circulating supply API | `https://api.epowex.com/api/circulating` (plain number) |
 | Burned supply API | `https://api.epowex.com/api/burned` (plain number) |
-| Total supply (2026-11-05) | `31634877433144` |
-| Circulating supply (2026-11-05) | `31533270199522` |
+| Total supply (2026-11-09) | `31618624104081` |
+| Circulating supply (2026-11-09) | `31517459972530` |
+| Burned supply (2026-11-09) | `468381375895918` |
 | Max supply | Report as equal to circulating supply (no further minting; contract is not mintable) |
 | Raw minted supply | 500,000,000,000,000 (of which ~468T is burned; do not report this as max supply) |
 | Categories | Utility Token, Rewards Token, Payment System; ERC-20; Base Ecosystem; Deflationary |
@@ -56,7 +57,7 @@ Use these values verbatim on every form. Where a form offers no field, put the v
 
 | Venue | Pair | Notes |
 | --- | --- | --- |
-| Biconomy (CEX) | `EPWX_USDT` | Primary volume venue. ~$28K / 24h on 2026-11-05. Public ticker: `https://www.biconomy.com/api/v1/tickers`. Listed via paid listing + marketing package. Tracked by CoinGecko and CoinMarketCap. |
+| Biconomy (CEX) | `EPWX_USDT` | Primary volume venue. ~$41K / 24h on 2026-11-09 (last price 7.48e-10 USDT, -0.13% 24h). Public ticker: `https://www.biconomy.com/api/v1/tickers`. Listed via paid listing + marketing package. Tracked by CoinGecko and CoinMarketCap. |
 | PancakeSwap v2 (Base) | EPWX/WETH | Main DEX pool, ~$8K liquidity, low organic volume. Trade URL: `https://pancakeswap.finance/swap?chain=base&outputCurrency=0xef5f5751cf3eca6cc3572768298b7783d33d60eb` |
 | Uniswap v2 (Base) | EPWX/WETH | Secondary pool, ~$735 liquidity. Candidate for consolidation into the PancakeSwap pool. |
 
