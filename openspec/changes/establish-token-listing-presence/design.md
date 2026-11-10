@@ -151,6 +151,11 @@ A Telegram pitch received 2026-11-08 offered paid submission to 17 sites. Of the
 - Tokenomics card: total supply now "~31.6 Trillion EPWX (net of burn)" linking to `tasks.epowex.com/transparency`; contract features changed from "Pausable, Ownable, Anti-whale protection" (false) to "Verified source, ownership renounced, not mintable, 6% buy / 5.91% sell tax".
 - Distribution card and pie chart refreshed to ~6.32% circulating / ~93.68% burnt of the 500T original mint.
 - `/whitepaper` (page id 1208, obsolete 500T / "Pausable, Ownable" content) now redirects instantly (meta refresh + JS, with a visible link) to `https://tasks.epowex.com/whitepaper`. A true 301 would need the Redirection plugin or an hPanel rule; not done.
+- FAQ "How much is 1 EPWX?" no longer quotes a fixed price; it links to the live CoinMarketCap page.
+- "Buy EPWX" button now goes to Biconomy `EPWX_USDT` (was a Coinbase converter link).
+- Exchange marquee reduced to Biconomy, Azbit and CoinMarketCap (CoinBase, Indoex and Bitstorage entries removed).
+- Roadmap section and the `ROADMAP` header menu item removed. Key benefits are labelled "(planned)".
+- Left unchanged: the top "Buy Now" button still links to Bitstorage, pending confirmation.
 
 Pre-edit Elementor JSON for both pages is kept in the Copilot session files (`epowex-home-elementor-backup-2026-11-09.txt`, `epowex-whitepaper-elementor-backup-2026-11-09.txt`), not in the repo.
 
