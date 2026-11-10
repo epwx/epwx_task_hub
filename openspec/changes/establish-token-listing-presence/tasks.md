@@ -29,12 +29,14 @@
 
 - [x] 3.1 Add a Token Transparency section to the Task Hub frontend listing the contract, burn address, Biconomy custody address, markets, holder count, and links to `/api/supply`, `/api/circulating`, and `/api/burned`; verify it is reachable from the footer or main navigation without login and passes frontend type-check and build. Implemented as `/transparency` (`frontend/src/app/transparency/page.tsx` + `TransparencySupplyFigures`), linked from the footer and the Stats menu.
 - [x] 3.2 Link the Token Transparency section from the whitepaper page; verify the link resolves on production. Added to the "Supply transparency" card in `WhitepaperDocument`.
+- [x] 3.3 Bring `epowex.com` (WordPress) in line with the canonical record: Telegram link, whitepaper button, tokenomics supply and contract-features text, distribution figures, and redirect `/whitepaper` to `tasks.epowex.com/whitepaper`; verify the public pages after clearing Elementor and LiteSpeed caches. Done 2026-11-09.
+- [ ] 3.4 Replace the `/whitepaper` meta-refresh with a true 301 (Redirection plugin or Hostinger hPanel rule); verify with a HEAD request.
 
 ## 4. Aggregator Reapplication
 
 - [ ] 4.1 Consolidate or document the decision on the secondary Uniswap v2 pool and track DEX liquidity and 24h volume weekly for at least three weeks; verify the figures are recorded in `design.md` before reapplying.
 - [ ] 4.2 Reapply to CoinGecko citing both markets, all three supply APIs, burn and custody disclosures, and holder count, and post the verification message from `@epowex`; verify the new request ID is recorded in the registry.
-- [ ] 4.3 After CoinGecko approval, apply to CoinMarketCap and retry the CoinPaprika free tier citing the CoinGecko page; verify confirmations and update the registry.
+- [ ] 4.3 After CoinGecko approval, retry the CoinPaprika free tier citing the CoinGecko and CoinMarketCap pages; verify confirmations and update the registry. (CoinMarketCap is already listed — UCID 38657 — so no application is needed there.)
 
 ## Workflow follow-up
 

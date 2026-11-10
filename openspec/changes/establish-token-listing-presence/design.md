@@ -82,12 +82,13 @@ Other security facts: contract verified/open-source, ownership renounced (owner 
 
 ## Listing Registry
 
-Status as of 2026-11-08 08:00 ET. Update this table whenever a submission, response, or correction happens.
+Status as of 2026-11-09 22:00 ET. Update this table whenever a submission, response, or correction happens.
 
 ### Already indexed (no action)
 
 | Site | Status |
 | --- | --- |
+| CoinMarketCap | **Listed** at `coinmarketcap.com/currencies/epowerx-on-base/` (UCID 38657, rank ~#3535, tracked — not self-reported; website already `tasks.epowex.com`; max supply shown ~31.78T). Discovered 2026-11-09; the earlier "blocked" assumption was wrong. Optional: claim the profile via CMC's "Update Token Info" form to add whitepaper/Transparency links. |
 | Basescan | Token info verified |
 | GeckoTerminal | Indexed, logo present |
 | DEXTools | Indexed |
@@ -118,7 +119,6 @@ Status as of 2026-11-08 08:00 ET. Update this table whenever a submission, respo
 | --- | --- | --- |
 | CoinGecko | Request `CL0211260004` rejected 2026-11-02; no reason given. DEX volume ~$22/day at the time. Biconomy market was already live (since 2025-10) so it is not "new evidence". | Reapply after ~3–4 weeks of improved DEX liquidity/volume. Cite both markets, all three supply APIs, burn address, Biconomy custody wallet, and 12K+ holders. Post the verification message from `@epowex` as required. |
 | CoinPaprika | Free-tier form auto-rejects on volume/liquidity; only the $1,000 Fast Track is offered. | Retry free tier after CoinGecko approval; do not pay. |
-| CoinMarketCap | Same volume gate as CoinGecko. | Apply after CoinGecko approval, citing the CoinGecko page. |
 | DappRadar | Platform shut down November 2025. | None. |
 | CryptoRank | No public submission form. | Low priority; contact only if a listing manager is identified. |
 | Coinscope | Signup is Google or X OAuth only; no email/password path, so automation cannot create the account. | A team member signs in with the project Google or `@epowex` X account and submits using the canonical record. |
@@ -141,6 +141,18 @@ A Telegram pitch received 2026-11-08 offered paid submission to 17 sites. Of the
 ### Standardize on the Task Hub as the public website
 
 `tasks.epowex.com` is the live product, hosts the whitepaper, terms, and privacy pages, and is the Base-specific landing page the Base Ecosystem review requires. `epowex.com` remains valid but is no longer the primary URL on listing forms.
+
+### Keep epowex.com (WordPress) consistent with the canonical record
+
+`epowex.com` is a Hostinger-hosted WordPress site (Hello Elementor theme, Elementor + Qi Addons, LiteSpeed Cache; no redirect plugin). Reviewers do land on it, so it must not contradict the listing metadata. Corrected 2026-11-09 by editing the home page's `_elementor_data` via the WP REST API (exact-string replacements, then **Elementor → Tools → Clear Files & Data** and **LiteSpeed → Purge All**; Elementor renders from its element cache, so a cache clear is required for edits to show):
+
+- Footer Telegram `t.me/ePowerX_EPWX` → `t.me/ePowerX_On_Base`.
+- Hero "Whitepaper" button → `https://tasks.epowex.com/whitepaper`.
+- Tokenomics card: total supply now "~31.6 Trillion EPWX (net of burn)" linking to `tasks.epowex.com/transparency`; contract features changed from "Pausable, Ownable, Anti-whale protection" (false) to "Verified source, ownership renounced, not mintable, 6% buy / 5.91% sell tax".
+- Distribution card and pie chart refreshed to ~6.32% circulating / ~93.68% burnt of the 500T original mint.
+- `/whitepaper` (page id 1208, obsolete 500T / "Pausable, Ownable" content) now redirects instantly (meta refresh + JS, with a visible link) to `https://tasks.epowex.com/whitepaper`. A true 301 would need the Redirection plugin or an hPanel rule; not done.
+
+Pre-edit Elementor JSON for both pages is kept in the Copilot session files (`epowex-home-elementor-backup-2026-11-09.txt`, `epowex-whitepaper-elementor-backup-2026-11-09.txt`), not in the repo.
 
 ### Keep the Biconomy custody wallet in circulating supply
 
