@@ -58,7 +58,7 @@ const holders = [
     name: 'Biconomy exchange custody',
     address: BICONOMY_CUSTODY_ADDRESS,
     href: basescanHolder(BICONOMY_CUSTODY_ADDRESS),
-    role: 'Third-party exchange wallet holding Biconomy user deposits and the EPWX paid for the Biconomy listing and marketing package. Not a team or treasury wallet; counted as circulating.',
+    role: 'Single pooled wallet where Biconomy holds EPWX deposited by its CEX users, plus the EPWX paid for the Biconomy listing and marketing package. Third party, not a team or treasury wallet. Counted as circulating because those tokens are tradable on Biconomy.',
     share: 'Largest non-burn holder',
   },
   {
@@ -272,8 +272,8 @@ export default function TransparencyPage() {
             <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Supply methodology</div>
             <p className="mt-3 text-sm leading-7 text-slate-700 dark:text-slate-300">
               Total supply equals the contract total supply minus the balance of the burn address. Circulating supply additionally excludes
-              treasury-locked balances. Exchange custody wallets, including Biconomy, hold tokens on behalf of their users and are counted as
-              circulating. Max supply equals the current total supply because the contract cannot mint.
+              treasury-locked balances.               Exchange custody wallets, including Biconomy's pooled custody wallet, hold tokens on behalf of their users and are
+                            counted as circulating because those tokens are tradable. The burn address is permanently removed and excluded. Max supply equals the current total supply because the contract cannot mint.
             </p>
           </div>
         </section>
