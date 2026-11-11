@@ -77,7 +77,8 @@ Captured from GoPlus token security on 2026-11-05. These are the facts reviewers
 | --- | --- | --- |
 | `0x0000000000000000000000000000000000000000` | 93.67% | Permanent burn. Excluded from `/api/supply` and `/api/circulating`. |
 | `0xfdb836cdcdcfeb34b309a7bd5dc1adfaa63690d3` | 3.76% (~59% of live circulating) | **Biconomy exchange custody wallet.** First EPWX inbound 2025-10-16. Pooled custody for EPWX deposited by Biconomy CEX users (the wallet also received the listing/marketing fee payment). Third party; counted as circulating. |
-| `0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735` | 0.0296% (147,962,196,085.74 EPWX) | **Project transfer-fee wallet** (team-controlled). The EPWX contract sends a fee on each transfer to this wallet. **Excluded from circulating supply** by our APIs (subtracted like the burn address). Disclose as team-controlled. |
+| `0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735` | 0.0296% (147,962,196,085.74 EPWX) | **Project transfer-fee wallet** (team-controlled). The EPWX contract sends a fee on each transfer to this wallet. **Excluded from circulating supply** by our APIs (verified: `/api/supply` minus `/api/circulating` equals this balance plus the deployer wallet balance on 2026-11-10). Disclose as team-controlled. |
+| `0xDaF6EfAA287d5B8A5271a48Bcb8954296ac3Ba45` | ~0% (51.34 EPWX) | **Project deployer wallet** (team-controlled, used for the Uniswap liquidity removal). **Excluded from circulating supply** by our APIs. |
 | Remaining | ~2.6% | 12,000+ holders. |
 
 Custody statement for forms (use verbatim): "About 59% of circulating supply sits in the Biconomy exchange custody wallet `0xfdb836cdcdcfeb34b309a7bd5dc1adfaa63690d3`, which pools EPWX deposited by Biconomy CEX users. It is counted as circulating because those tokens are tradable on Biconomy (EPWX_USDT). The 93.67% in the burn address is permanently removed and excluded from circulating supply."
