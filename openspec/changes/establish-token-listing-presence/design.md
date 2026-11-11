@@ -59,7 +59,7 @@ Use these values verbatim on every form. Where a form offers no field, put the v
 | --- | --- | --- |
 | Biconomy (CEX) | `EPWX_USDT` | Primary volume venue. ~$41K / 24h on 2026-11-09 (last price 7.48e-10 USDT, -0.13% 24h). Public ticker: `https://www.biconomy.com/api/v1/tickers`. Listed via paid listing + marketing package. Tracked by CoinGecko and CoinMarketCap. |
 | PancakeSwap v2 (Base) | EPWX/WETH | Main DEX pool, ~$8K liquidity, low organic volume. Trade URL: `https://pancakeswap.finance/swap?chain=base&outputCurrency=0xef5f5751cf3eca6cc3572768298b7783d33d60eb` |
-| Uniswap v2 (Base) | EPWX/WETH | Secondary pool, ~$735 liquidity. Candidate for consolidation into the PancakeSwap pool. |
+| Uniswap v2 (Base) | EPWX/WETH | Liquidity removed by the team on 2026-11-10 (tx `0x2d591edc8ee87c08221fff1036bc908cde8bfb1ec99f9784be38725272254369`, signer `0xDaF6EfAA...96ac3Ba45`): 378,635,645,430.41 EPWX and 0.15146 ETH returned to the signer. The pool should now be empty; confirm on GeckoTerminal and DexScreener before filing. |
 
 ### Short description (≤ 200 characters)
 
@@ -263,6 +263,6 @@ Posts published: 2026-11-09 "Daily Reward Draw #146 — 5 winners paid 1,000,000
 ## Follow-ups
 
 - Add the Token Transparency section (tracked in `tasks.md`).
-- Consider consolidating the Uniswap v2 pool into PancakeSwap v2 to concentrate liquidity before the CoinGecko reapplication.
+- Uniswap v2 pool consolidation: Uniswap liquidity removed by the team on 2026-11-10 (see venue table). Liquidity now sits on PancakeSwap v2 only. No team buy is planned; any team purchase must be disclosed as such.
 - Rotate the shared listing-account passwords and store them only in the team password manager; they were transmitted in a chat session during account creation. Two credential sets exist: one for FreshCoins, CoinSniper, CoinMooner, CoinVote (2026-11-05) and one for Gemfinder, CoinCatapult (2026-11-08).
 - Discovery sites that auto-index from DEX data (Coinboom, Top100Token, CoinCatapult, Moontok) all surfaced the 500T raw supply and the legacy `epowex.com`/`ePowerX_EPWX` links. The Token Transparency section and consistent on-site metadata are the only way to correct this at the source for future indexers.
