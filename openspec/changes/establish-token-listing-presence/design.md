@@ -75,13 +75,13 @@ Captured from GoPlus token security on 2026-11-05. These are the facts reviewers
 
 | Holder | Share of raw supply | Identity |
 | --- | --- | --- |
-| `0x0000000000000000000000000000000000000000` | 93.67% | Permanent burn. Excluded from `/api/supply` and `/api/circulating`. |
+| `0x000000000000000000000000000000000000dEaD` | 93.70% (468,477,077,746,716.18 EPWX) | Permanent burn. Subtracted in `/api/supply` and `/api/circulating`. |
 | `0xfdb836cdcdcfeb34b309a7bd5dc1adfaa63690d3` | 3.76% (~59% of live circulating) | **Biconomy exchange custody wallet.** First EPWX inbound 2025-10-16. Pooled custody for EPWX deposited by Biconomy CEX users (the wallet also received the listing/marketing fee payment). Third party; counted as circulating. |
 | `0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735` | 0.0296% (147,962,196,085.74 EPWX) | **Project transfer-fee wallet** (team-controlled). The EPWX contract sends a fee on each transfer to this wallet. **Excluded from circulating supply** by our APIs (verified: `/api/supply` minus `/api/circulating` equals this balance plus the deployer wallet balance on 2026-11-10). Disclose as team-controlled. |
 | `0xDaF6EfAA287d5B8A5271a48Bcb8954296ac3Ba45` | ~0% (51.34 EPWX) | **Project deployer wallet** (team-controlled, used for the Uniswap liquidity removal). **Excluded from circulating supply** by our APIs. |
 | Remaining | ~2.6% | 12,000+ holders. |
 
-Custody statement for forms (use verbatim): "About 59% of circulating supply sits in the Biconomy exchange custody wallet `0xfdb836cdcdcfeb34b309a7bd5dc1adfaa63690d3`, which pools EPWX deposited by Biconomy CEX users. It is counted as circulating because those tokens are tradable on Biconomy (EPWX_USDT). The 93.67% in the burn address is permanently removed and excluded from circulating supply."
+Custody statement for forms (use verbatim): "About 59% of circulating supply sits in the Biconomy exchange custody wallet `0xfdb836cdcdcfeb34b309a7bd5dc1adfaa63690d3`, which pools EPWX deposited by Biconomy CEX users. It is counted as circulating because those tokens are tradable on Biconomy (EPWX_USDT). The 93.70% in the burn address `0x…dEaD` is permanently removed and excluded from circulating supply."
 
 Other security facts: contract verified/open-source, ownership renounced (owner = zero address), not mintable, not a honeypot, buy tax 6.0%, sell tax 5.91%.
 
@@ -244,7 +244,7 @@ Runs <start> to <end> (UTC). Community: https://t.me/ePowerX_On_Base
 ```
 Title: EPWX token facts: burn, supply and where it trades
 
-• 93.67% of the original supply is permanently burned; post-burn total supply is 31,634,877,433,144 EPWX
+• 93.70% of the original supply is permanently burned; post-burn total supply is 31,634,877,433,144 EPWX
 • Live supply APIs: https://api.epowex.com/api/supply · /api/circulating · /api/burned
 • Contract on Base: 0xef5f5751cf3eca6cc3572768298b7783d33d60eb — verified, ownership renounced, not mintable
 • Largest non-burn holder is the Biconomy exchange custody wallet

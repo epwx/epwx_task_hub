@@ -6,7 +6,7 @@ import { EPWX_TOKEN_ADDRESS, EPWX_WETH_PAIR_ADDRESS, EPWX_DECIMALS } from '@/uti
 const SITE_URL = 'https://tasks.epowex.com';
 const PUBLIC_API_URL = 'https://api.epowex.com';
 const BASE_CHAIN_ID = 8453;
-const BURN_ADDRESS = '0x0000000000000000000000000000000000000000';
+const BURN_ADDRESS = '0x000000000000000000000000000000000000dEaD';
 const BICONOMY_CUSTODY_ADDRESS = '0xfdb836cdcdcfeb34b309a7bd5dc1adfaa63690d3';
 
 const basescanToken = `https://basescan.org/token/${EPWX_TOKEN_ADDRESS}`;
@@ -52,7 +52,7 @@ const holders = [
     address: BURN_ADDRESS,
     href: basescanHolder(BURN_ADDRESS),
     role: 'Permanent burn. Tokens here can never move. Excluded from total and circulating supply.',
-    share: '93.67% of the original mint',
+    share: '93.70% of the original mint',
   },
   {
     name: 'Biconomy exchange custody',

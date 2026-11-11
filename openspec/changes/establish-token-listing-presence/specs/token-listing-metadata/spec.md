@@ -29,7 +29,7 @@ Submissions SHALL report total and circulating supply from `https://api.epowex.c
 - **THEN** no address is supplied as team-held, and the Biconomy custody wallet is described as the single pooled wallet holding EPWX deposited by Biconomy CEX users, counted as circulating because those tokens are tradable, not excluded
 
 ### Requirement: Distribution facts are disclosed proactively
-Submissions SHALL state, in the description or notes, that 93.67% of raw supply is held by the burn address, that the largest live holder `0xfdb836cdcdcfeb34b309a7bd5dc1adfaa63690d3` is the Biconomy exchange custody wallet pooling EPWX deposited by Biconomy CEX users (counted as circulating because those tokens are tradable), and that EPWX trades on both Biconomy (EPWX/USDT) and PancakeSwap v2 on Base (EPWX/WETH).
+Submissions SHALL state, in the description or notes, that 93.70% of raw supply is held by the burn address `0x000000000000000000000000000000000000dEaD`, that the largest live holder `0xfdb836cdcdcfeb34b309a7bd5dc1adfaa63690d3` is the Biconomy exchange custody wallet pooling EPWX deposited by Biconomy CEX users (counted as circulating because those tokens are tradable), and that EPWX trades on both Biconomy (EPWX/USDT) and PancakeSwap v2 on Base (EPWX/WETH).
 
 #### Scenario: Reviewer flags holder concentration
 - **WHEN** a listing is denied or questioned on "supply distribution" or "holding patterns"

@@ -4,7 +4,7 @@
 
 EPWX is indexed by on-chain trackers (Basescan, GeckoTerminal, DEXTools, DexScreener, DexPaprika) but has no presence on market-data aggregators or discovery directories. A CoinGecko application (request `CL0211260004`) was rejected and a CoinPaprika free-tier submission was auto-blocked, both on volume/liquidity grounds measured against DEX activity only. A FreshCoins submission was denied citing "token supply distribution and holding patterns".
 
-Investigation showed the underlying facts are defensible but undocumented: 93.67% of raw supply is permanently burned, the largest live holder is the Biconomy exchange custody wallet (EPWX/USDT trades there with ~$28K daily volume), and the project already publishes public supply APIs. Listing reviewers cannot see this context because the project never states it in one place, and earlier submissions used inconsistent names, websites, and whitepaper links.
+Investigation showed the underlying facts are defensible but undocumented: 93.70% of raw supply is permanently burned, the largest live holder is the Biconomy exchange custody wallet (EPWX/USDT trades there with ~$28K daily volume), and the project already publishes public supply APIs. Listing reviewers cannot see this context because the project never states it in one place, and earlier submissions used inconsistent names, websites, and whitepaper links.
 
 ## What Changes
 
