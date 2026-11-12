@@ -46,12 +46,13 @@ Use these values verbatim on every form. Where a form offers no field, put the v
 | Total supply API | `https://api.epowex.com/api/supply` (plain number) |
 | Circulating supply API | `https://api.epowex.com/api/circulating` (plain number) |
 | Burned supply API | `https://api.epowex.com/api/burned` (plain number) |
-| Total supply (2026-11-09) | `31618624104081` |
-| Circulating supply (2026-11-09) | `31517459972530` |
-| Burned supply (2026-11-09) | `468381375895918` |
+| Total supply (2026-11-11) | `31522922202449` |
+| Circulating supply (2026-11-11) | `31374959924912` |
+| Burned supply (2026-11-11) | `468477077797550` |
 | Max supply | Report as equal to circulating supply (no further minting; contract is not mintable) |
 | Raw minted supply | 500,000,000,000,000 (of which ~468T is burned; do not report this as max supply) |
 | Categories | Utility Token, Rewards Token, Payment System; ERC-20; Base Ecosystem; Deflationary |
+| Security audit | Cyberscope, "EpowerX Token Audit", November 2025, contract `0xef5f…3d60eb` on BASE. Report: `https://d15am3n51kmde.cloudfront.net/epwx/6924465f8ebd2a692382f53f.pdf`; public page `https://app.cyberscope.io/audits/epwx`. Findings: 0 critical, 0 medium, 10 minor/informative, **all 10 unresolved** (none marked resolved or acknowledged). Cite the report and these counts accurately; do not describe findings as fixed. |
 
 ### Markets
 
@@ -87,14 +88,14 @@ Other security facts: contract verified/open-source, ownership renounced (owner 
 
 ## Listing Registry
 
-Status as of 2026-11-09 22:00 ET. Update this table whenever a submission, response, or correction happens.
+Status as of 2026-11-11 00:10 ET. Update this table whenever a submission, response, or correction happens.
 
 ### Already indexed (no action)
 
 | Site | Status |
 | --- | --- |
 | CoinMarketCap | **Listed** at `coinmarketcap.com/currencies/epowerx-on-base/` (UCID 38657, rank ~#3535, tracked — not self-reported; website already `tasks.epowex.com`; max supply shown ~31.78T). Discovered 2026-11-09; the earlier "blocked" assumption was wrong. Optional: claim the profile via CMC's "Update Token Info" form to add whitepaper/Transparency links. |
-| Basescan | Token info verified |
+| Basescan | **Token Update form submitted 2026-11-11** (account email `info@epowex.com`). Included the burn-address holder balance (468,477,077,797,550.946746864 EPWX) with `https://api.epowex.com/api/burned`, website `https://tasks.epowex.com`, and Icon Logo `https://tasks.epowex.com/logo-basescan.svg` (32x32 SVG). Confirmation: "Thank you for your submission", with instructions expected by email in 3-5 business days. Next action: watch `info@epowex.com` and follow up if no reply by 2026-11-18. Max supply on the explorer is read from the contract and cannot be edited there. |
 | GeckoTerminal | Indexed, logo present |
 | DEXTools | Indexed |
 | DexScreener | Indexed |
@@ -136,6 +137,7 @@ Status as of 2026-11-09 22:00 ET. Update this table whenever a submission, respo
 | coinxhigh.com | Domain repurposed as a casino site. | None. Treat any pitch listing it as stale. |
 | coinbusters.cc | Domain does not resolve. | None. |
 | gemsradar.com | Connection refused. | None. |
+| Trust Wallet (`trustwallet/assets` PR) | Requires a completed full audit (now available: Cyberscope, Nov 2025, but 10 findings unresolved), 10,000+ holders (count not yet re-verified) and 15,000+ transactions (unverified), plus a non-refundable PR fee of 500 TWT or 2.5 BNB. Team cannot pay the fee now. | On hold. Staged logo PNG (512×512) and `info.json` are in the session `files/trustwallet/` folder, not the repo. Revisit when the fee is affordable, or ask partnerships@trustwallet.com about a waiver. Confirm the transaction count on BaseScan first. |
 
 ### Note on third-party "listing service" pitches
 
@@ -244,7 +246,7 @@ Runs <start> to <end> (UTC). Community: https://t.me/ePowerX_On_Base
 ```
 Title: EPWX token facts: burn, supply and where it trades
 
-• 93.70% of the original supply is permanently burned; post-burn total supply is 31,634,877,433,144 EPWX
+• 93.70% of the original supply is permanently burned; post-burn total supply is 31,521,522,028,680 EPWX (as of the 2026-11 API check; the figure moves as burns occur, so re-read `/api/supply` before quoting it)
 • Live supply APIs: https://api.epowex.com/api/supply · /api/circulating · /api/burned
 • Contract on Base: 0xef5f5751cf3eca6cc3572768298b7783d33d60eb — verified, ownership renounced, not mintable
 • Largest non-burn holder is the Biconomy exchange custody wallet

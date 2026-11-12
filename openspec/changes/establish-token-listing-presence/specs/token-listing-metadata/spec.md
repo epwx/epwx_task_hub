@@ -64,6 +64,20 @@ Credentials for listing-site accounts SHALL be stored only in the team password 
 - **WHEN** a new listing-site account is registered
 - **THEN** the registry records only the account email, and the password is stored in the password manager
 
+### Requirement: Security audit is disclosed accurately
+Submissions that mention an audit SHALL cite the Cyberscope report for `0xef5f5751cf3eca6cc3572768298b7783d33d60eb` (November 2025, BASE) and its finding counts (0 critical, 0 medium, 10 minor/informative, all unresolved). Submissions SHALL NOT describe findings as resolved unless the report status changes.
+
+#### Scenario: Form asks for audit information
+- **WHEN** a listing form asks for an audit or security review
+- **THEN** the Cyberscope report link and finding counts are provided as stated in the change design, with the open minor findings disclosed
+
+### Requirement: Processing fees are not paid without approval
+Listing or pull-request processing fees (for example, the Trust Wallet PR fee of 500 TWT or 2.5 BNB) SHALL NOT be paid without an explicit budget decision recorded in the registry. Fee-based submissions stay on hold until then.
+
+#### Scenario: Submission requires a fee
+- **WHEN** a site or repository requires a fee before review
+- **THEN** the submission is recorded as on hold in the registry and the team is asked for a budget decision
+
 ### Requirement: Paid fast-track listings are not purchased
 The team SHALL NOT purchase fast-track, premium, or priority listing products in response to a free-tier rejection unless the rejection reason is confirmed to be unfixable.
 
@@ -72,7 +86,7 @@ The team SHALL NOT purchase fast-track, premium, or priority listing products in
 - **THEN** the stated deficiency is addressed and the free path is reattempted first
 
 ### Requirement: Aggregator reapplication is evidence-based
-A CoinGecko reapplication SHALL NOT be filed before 30 days after the 2026-11-02 rejection (2026-12-02), SHALL be filed only after measurable DEX liquidity and volume improvement, and SHALL cite both markets, all three supply APIs, the burn address, the Biconomy custody wallet as pooled custody for CEX deposits (counted as circulating), and holder count; CoinMarketCap and CoinPaprika free-tier applications SHALL follow a CoinGecko approval.
+A CoinGecko reapplication SHALL NOT be filed before 30 days after the 2026-11-02 rejection (2026-12-02), SHALL be filed only after measurable DEX liquidity and volume improvement, and SHALL cite both markets, all three supply APIs, the burn address, the Biconomy custody wallet as pooled custody for CEX deposits (counted as circulating), and holder count; CoinPaprika free-tier applications SHALL follow a CoinGecko approval. CoinMarketCap is already listed and is maintained through its own profile update form, not gated on CoinGecko.
 
 #### Scenario: Reapplying to CoinGecko
 - **WHEN** the team submits a new CoinGecko request

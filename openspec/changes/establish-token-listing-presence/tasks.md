@@ -23,6 +23,8 @@
 - [ ] 2.13 A team member signs in to Coinscope with the project Google or `@epowex` X account and submits using the canonical record; verify the confirmation and update the registry.
 - [x] 2.14 Bring the MintMe token profile to the canonical record (description, website `tasks.epowex.com` with domain verification via `/mintme.html`); verify "Changes saved" and "Website confirmed" and that the public page shows the new description.
 - [ ] 2.15 Publish MintMe posts mirroring Task Hub activity (campaign launches, daily-draw winners, cashback, transparency facts) on a recurring cadence using the templates in `design.md`; verify each post links to `tasks.epowex.com`. First post published 2026-11-09 (Daily Reward Draw #146).
+- [x] 2.17 Submit the BaseScan Token Update form with the canonical record, burn-address evidence, and Icon Logo `https://tasks.epowex.com/logo-basescan.svg`; verify the "Thank you for your submission" confirmation and update the registry.
+- [ ] 2.18 Read the BaseScan reply at `info@epowex.com` (expected within 3-5 business days, by 2026-11-18); apply any requested corrections and update the registry the same day.
 - [ ] 2.16 Decide on and, if approved, fund a small MintMe airdrop or bounty campaign whose tasks are "join `t.me/ePowerX_On_Base`" and "visit `tasks.epowex.com`"; verify the campaign terms and EPWX amount are recorded in the registry before funding.
 
 ## 3. Token Transparency Section
