@@ -101,6 +101,7 @@ Status as of 2026-11-11 00:10 ET. Update this table whenever a submission, respo
 | DexScreener | Indexed |
 | DexPaprika | Indexed |
 | Moontok | DEX tracker; `moontok.io/en/base/0xef5f…d60eb` auto-indexed. No free submission or update form (paid Advertise only). |
+| Binance Wallet | **Listed** (token page) at `web3.binance.com/en/token/base/0xef5f5751cf3eca6cc3572768298b7783d33d60eb`. No submission made by us; no update form used. |
 
 ### Submitted / in review
 
@@ -127,9 +128,9 @@ All free self-serve paths. No paid fast-track, no paid boost. Submit one at a ti
 | --- | --- | --- | --- | --- |
 | CoinCarp | Free listing form | `info@epowex.com` (when created) | Not submitted | Check for an existing auto-indexed entry before submitting to avoid a duplicate. |
 | CoinStats | Free listing form | `info@epowex.com` (when created) | Not submitted | Confirm the Base network and the contract address on the form. |
-| CoinLib | Free listing form | `info@epowex.com` (when created) | Not submitted | Check for an existing entry first. |
+| CoinLib | Free listing form | `info@epowex.com` (when created) | Not submitted | Checked 2026-11-11: `coinlib.io/add-coin` returned 404 and no EPWX page was found. CoinLib's market list comes from CoinGecko, so filing is deferred until CoinGecko lists EPWX. |
 | Base ecosystem page | Covered by Base Ecosystem row above | none | Submitted | Listed above; do not resubmit. |
-| Dune dashboard | Free account, public dashboard | `info@epowex.com` (when created) | Not submitted | Could publish supply, burn, and holder charts. Build from the supply APIs; do not present it as an official data source. |
+| Dune dashboard | Free account, public dashboard | `info@epowex.com` | Blocked on free plan (2026-11-11) | Account exists (`epwx`). The free plan disables Run in the query editor and shows "Trial ended". Building requires a paid plan, which needs approval. |
 | Medium / Mirror | Free blog post | `info@epowex.com` (when created) | Not submitted | Transparency write-up linking `tasks.epowex.com/transparency`. Account-creation step needs the team password manager. |
 
 Excluded for now: CoinPaprika (gated on CoinGecko approval, see Blocked), Trust Wallet (fee, see Blocked), and any site that asks for payment.
