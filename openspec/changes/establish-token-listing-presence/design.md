@@ -52,7 +52,7 @@ Use these values verbatim on every form. Where a form offers no field, put the v
 | Max supply | Report as equal to circulating supply (no further minting; contract is not mintable) |
 | Raw minted supply | 500,000,000,000,000 (of which ~468T is burned; do not report this as max supply) |
 | Categories | Utility Token, Rewards Token, Payment System; ERC-20; Base Ecosystem; Deflationary |
-| Security audit | Cyberscope, "EpowerX Token Audit", November 2025, contract `0xef5f…3d60eb` on BASE. Report: `https://d15am3n51kmde.cloudfront.net/epwx/6924465f8ebd2a692382f53f.pdf`; public page `https://app.cyberscope.io/audits/epwx`. Findings: 0 critical, 0 medium, 10 minor/informative, **all 10 unresolved** (none marked resolved or acknowledged). Cite the report and these counts accurately; do not describe findings as fixed. The report flagged owner-privileged functions. In the report's function table (page 30), the Mutability column ticks `renounceOwnership` and `transferOwnership` (both `onlyOwner`). That tick means the function changes state, not that an owner is active. Ownership was renounced on 2025-07-03 01:14:47 UTC (tx `0x0df8a5067f2a26a77d06c7dc6a7f7dd5ec7b140cae208734b0df0ca51c9e9939`, method `renounceOwnership`, from the deployer), four months before the November 2025 audit. The `onlyOwner` functions (`setSwapBackSettings`, `transferOwnership`, `renounceOwnership`) can no longer be called by anyone. The report still lists the finding as unresolved, so state that ownership was renounced before the audit and that the owner functions are inert, rather than claiming the report marked it resolved. |
+| Security audit | Cyberscope, "EpowerX Token Audit", November 2025, contract `0xef5f…3d60eb` on BASE. Report: `https://d15am3n51kmde.cloudfront.net/epwx/6924465f8ebd2a692382f53f.pdf`; public page `https://app.cyberscope.io/audits/epwx`. Findings: 0 critical, 0 medium, 10 minor/informative, **all 10 unresolved** (none marked resolved or acknowledged). Cite the report and these counts accurately; do not describe findings as fixed. The report flagged owner-privileged functions. In the report's function table (page 30), the Mutability column ticks `renounceOwnership` and `transferOwnership` (both `onlyOwner`). That tick means the function changes state, not that an owner is active. Ownership was renounced on 2025-07-03 01:14:47 UTC (tx `0x0df8a5067f2a26a77d06c7dc6a7f7dd5ec7b140cae208734b0df0ca51c9e9939`, method `renounceOwnership`, from the deployer), four months before the November 2025 audit. The `onlyOwner` functions (`setSwapBackSettings`, `transferOwnership`, `renounceOwnership`) can no longer be called by anyone. The report still lists the finding as unresolved, so state that ownership was renounced before the audit and that the owner functions are inert, rather than claiming the report marked it resolved. Scope: the report names the token `0xef5f…3d60eb` but not the implementation `0xEE76…666dE` and does not mention a proxy (checked in the PDF text, 2026-11-11). Describe the audit as covering the token contract at `0xef5f…3d60eb`; do not say the implementation logic was audited. |
 
 ### Markets
 
@@ -118,6 +118,21 @@ Status as of 2026-11-11 00:10 ET. Update this table whenever a submission, respo
 | Top100Token | `top100token.com/submit` (same platform as Coinboom) | none | Update 2026-11-08 | "Update sent successfully" | Same stale pre-indexed entry and same update as Coinboom. |
 | CoinCatapult | Account dashboard + contact form | `info@epowex.com` | Claim request 2026-11-08 | "Message received", reply within 24h | `coincatapult.com/coin/epowerx-epwx-ef5f57` pre-existed via crawler with no owner. New-listing form rejected as `duplicate_claim`. Ownership claim sent via contact form (category "Listing my coin") with contract, network, account email, and the corrected name/website/whitepaper/socials to apply after transfer. Account created without email verification. |
 | MintMe | Token settings dashboard | `info@epowex.com` (owner) | Listed ~2026-10-30; profile updated 2026-11-09 | **Live**, profile canonical | `mintme.com/token/ePowerX-On-Base`. Description replaced with canonical structured copy (Task Hub features, burn/supply facts, APIs, markets, links, roadmap). Website changed `epowex.com` → `tasks.epowex.com` and **domain-verified** via `/mintme.html` (token `efd6dfce-…`, served from `frontend/public/mintme.html`, commit `f65f205`). X and Telegram already correct. No market opened — see Decisions. |
+
+### Free candidates (not yet submitted)
+
+All free self-serve paths. No paid fast-track, no paid boost. Submit one at a time, using the canonical record, and record each result here before moving on.
+
+| Site | Channel | Account | Status | Notes |
+| --- | --- | --- | --- | --- |
+| CoinCarp | Free listing form | `info@epowex.com` (when created) | Not submitted | Check for an existing auto-indexed entry before submitting to avoid a duplicate. |
+| CoinStats | Free listing form | `info@epowex.com` (when created) | Not submitted | Confirm the Base network and the contract address on the form. |
+| CoinLib | Free listing form | `info@epowex.com` (when created) | Not submitted | Check for an existing entry first. |
+| Base ecosystem page | Covered by Base Ecosystem row above | none | Submitted | Listed above; do not resubmit. |
+| Dune dashboard | Free account, public dashboard | `info@epowex.com` (when created) | Not submitted | Could publish supply, burn, and holder charts. Build from the supply APIs; do not present it as an official data source. |
+| Medium / Mirror | Free blog post | `info@epowex.com` (when created) | Not submitted | Transparency write-up linking `tasks.epowex.com/transparency`. Account-creation step needs the team password manager. |
+
+Excluded for now: CoinPaprika (gated on CoinGecko approval, see Blocked), Trust Wallet (fee, see Blocked), and any site that asks for payment.
 
 ### Blocked / not viable
 
