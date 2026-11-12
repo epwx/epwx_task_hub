@@ -52,7 +52,7 @@ Use these values verbatim on every form. Where a form offers no field, put the v
 | Max supply | Report as equal to circulating supply (no further minting; contract is not mintable) |
 | Raw minted supply | 500,000,000,000,000 (of which ~468T is burned; do not report this as max supply) |
 | Categories | Utility Token, Rewards Token, Payment System; ERC-20; Base Ecosystem; Deflationary |
-| Security audit | Cyberscope, "EpowerX Token Audit", November 2025, contract `0xef5f…3d60eb` on BASE. Report: `https://d15am3n51kmde.cloudfront.net/epwx/6924465f8ebd2a692382f53f.pdf`; public page `https://app.cyberscope.io/audits/epwx`. Findings: 0 critical, 0 medium, 10 minor/informative, **all 10 unresolved** (none marked resolved or acknowledged). Cite the report and these counts accurately; do not describe findings as fixed. |
+| Security audit | Cyberscope, "EpowerX Token Audit", November 2025, contract `0xef5f…3d60eb` on BASE. Report: `https://d15am3n51kmde.cloudfront.net/epwx/6924465f8ebd2a692382f53f.pdf`; public page `https://app.cyberscope.io/audits/epwx`. Findings: 0 critical, 0 medium, 10 minor/informative, **all 10 unresolved** (none marked resolved or acknowledged). Cite the report and these counts accurately; do not describe findings as fixed. The report flagged owner-privileged functions. In the report's function table (page 30), the Mutability column ticks `renounceOwnership` and `transferOwnership` (both `onlyOwner`). That tick means the function changes state, not that an owner is active. Ownership is now renounced (`owner()` = zero address), so no account can call the `onlyOwner` functions (`setSwapBackSettings`, `transferOwnership`, `renounceOwnership`). Confirm the renounce transaction came before or after the audit date before stating that the owner-function finding is closed in practice; the report still lists it as unresolved. |
 
 ### Markets
 
@@ -80,11 +80,11 @@ Captured from GoPlus token security on 2026-11-05. These are the facts reviewers
 | `0xfdb836cdcdcfeb34b309a7bd5dc1adfaa63690d3` | 3.76% (~59% of live circulating) | **Biconomy exchange custody wallet.** First EPWX inbound 2025-10-16. Pooled custody for EPWX deposited by Biconomy CEX users (the wallet also received the listing/marketing fee payment). Third party; counted as circulating. |
 | `0xc3F5E57Ed34fA3492616e9b20a0621a87FdD2735` | 0.0296% (147,962,196,085.74 EPWX) | **Project transfer-fee wallet** (team-controlled). The EPWX contract sends a fee on each transfer to this wallet. **Excluded from circulating supply** by our APIs (verified: `/api/supply` minus `/api/circulating` equals this balance plus the deployer wallet balance on 2026-11-10). Disclose as team-controlled. |
 | `0xDaF6EfAA287d5B8A5271a48Bcb8954296ac3Ba45` | ~0% (51.34 EPWX) | **Project deployer wallet** (team-controlled, used for the Uniswap liquidity removal). **Excluded from circulating supply** by our APIs. |
-| Remaining | ~2.6% | 12,000+ holders. |
+| Remaining | ~2.6% | 12,052 holders (BaseScan Overview, checked 2026-11-11). |
 
 Custody statement for forms (use verbatim): "About 59% of circulating supply sits in the Biconomy exchange custody wallet `0xfdb836cdcdcfeb34b309a7bd5dc1adfaa63690d3`, which pools EPWX deposited by Biconomy CEX users. It is counted as circulating because those tokens are tradable on Biconomy (EPWX_USDT). The 93.70% in the burn address `0x…dEaD` is permanently removed and excluded from circulating supply."
 
-Other security facts: contract verified/open-source, ownership renounced (owner = zero address), not mintable, not a honeypot, buy tax 6.0%, sell tax 5.91%.
+Other security facts: contract verified/open-source, ownership renounced (owner = zero address, verified 2026-11-11 via BaseScan Read Contract `owner()` and a direct Base RPC `eth_call`), not mintable, not a honeypot, buy tax 6.0%, sell tax 5.91%. Proxy: the token `0xef5f…3d60eb` is an EIP-1167 minimal proxy (immutable, no upgrade or admin function) whose logic is implementation `0xEE76261Ea9DF2b54B49FdAE11EFd2A202dE666dE` (BaseScan "Minimal Proxy", verified contract name `LiquidityFeeToken`). Ownership state and the renounce event live on the token address, not the implementation. Confirm the Cyberscope report names this implementation before describing audit scope.
 
 ## Listing Registry
 
@@ -137,7 +137,7 @@ Status as of 2026-11-11 00:10 ET. Update this table whenever a submission, respo
 | coinxhigh.com | Domain repurposed as a casino site. | None. Treat any pitch listing it as stale. |
 | coinbusters.cc | Domain does not resolve. | None. |
 | gemsradar.com | Connection refused. | None. |
-| Trust Wallet (`trustwallet/assets` PR) | Requires a completed full audit (now available: Cyberscope, Nov 2025, but 10 findings unresolved), 10,000+ holders (count not yet re-verified) and 15,000+ transactions (unverified), plus a non-refundable PR fee of 500 TWT or 2.5 BNB. Team cannot pay the fee now. | On hold. Staged logo PNG (512×512) and `info.json` are in the session `files/trustwallet/` folder, not the repo. Revisit when the fee is affordable, or ask partnerships@trustwallet.com about a waiver. Confirm the transaction count on BaseScan first. |
+| Trust Wallet (`trustwallet/assets` PR) | Requires a completed full audit (now available: Cyberscope, Nov 2025, but 10 findings unresolved), 10,000+ holders (12,052 per BaseScan, checked 2026-11-11) and 15,000+ transactions (unverified), plus a non-refundable PR fee of 500 TWT or 2.5 BNB. Team cannot pay the fee now. | On hold. Staged logo PNG (512×512) and `info.json` are in the session `files/trustwallet/` folder, not the repo. Revisit when the fee is affordable, or ask partnerships@trustwallet.com about a waiver. Confirm the transaction count on BaseScan first. |
 
 ### Note on third-party "listing service" pitches
 
@@ -248,7 +248,7 @@ Title: EPWX token facts: burn, supply and where it trades
 
 • 93.70% of the original supply is permanently burned; post-burn total supply is 31,521,522,028,680 EPWX (as of the 2026-11 API check; the figure moves as burns occur, so re-read `/api/supply` before quoting it)
 • Live supply APIs: https://api.epowex.com/api/supply · /api/circulating · /api/burned
-• Contract on Base: 0xef5f5751cf3eca6cc3572768298b7783d33d60eb — verified, ownership renounced, not mintable
+• Contract on Base: 0xef5f5751cf3eca6cc3572768298b7783d33d60eb — verified EIP-1167 proxy (logic `0xEE76261Ea9DF2b54B49FdAE11EFd2A202dE666dE`), ownership renounced (`owner()` = zero address), not mintable. BaseScan's "Total Burned" figure is dated Oct 19, 2026 and is stale; cite the live `/api/burned` value and date instead.
 • Largest non-burn holder is the Biconomy exchange custody wallet
 • Trades on Biconomy (EPWX/USDT) and PancakeSwap v2 on Base (EPWX/WETH)
 
