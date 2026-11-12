@@ -125,7 +125,7 @@ All free self-serve paths. No paid fast-track, no paid boost. Submit one at a ti
 
 | Site | Channel | Account | Status | Notes |
 | --- | --- | --- | --- | --- |
-| CoinCarp | Already listed: `coincarp.com/currencies/epowex/` (seen 2026-11-11). Do not submit a new request. | `info@epowex.com` for owner update | Listed, needs update | The live page says "no price data" and "not listed on any exchange", which is stale because DEX pools exist. It also shows total supply 500T (the max). Use the page's owner-update path (or email `hello@coincarp.com`) to correct these. The form at `coincarp.com/submit` was blocked by a Cloudflare bot check on 2026-11-11. |
+| CoinCarp | Free listing form | `info@epowex.com` (when created) | Not submitted | Check for an existing auto-indexed entry before submitting to avoid a duplicate. |
 | CoinStats | Free listing form | `info@epowex.com` (when created) | Not submitted | Confirm the Base network and the contract address on the form. |
 | CoinLib | Free listing form | `info@epowex.com` (when created) | Not submitted | Check for an existing entry first. |
 | Base ecosystem page | Covered by Base Ecosystem row above | none | Submitted | Listed above; do not resubmit. |
