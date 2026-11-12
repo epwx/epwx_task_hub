@@ -130,7 +130,7 @@ All free self-serve paths. No paid fast-track, no paid boost. Submit one at a ti
 | CoinStats | Free listing form | `info@epowex.com` (when created) | Not submitted | Confirm the Base network and the contract address on the form. |
 | CoinLib | Free listing form | `info@epowex.com` (when created) | Not submitted | Checked 2026-11-11: `coinlib.io/add-coin` returned 404 and no EPWX page was found. CoinLib's market list comes from CoinGecko, so filing is deferred until CoinGecko lists EPWX. |
 | Base ecosystem page | Covered by Base Ecosystem row above | none | Submitted | Listed above; do not resubmit. |
-| Dune dashboard | Free account, public dashboard | `info@epowex.com` | Blocked on free plan (2026-11-11) | Account exists (`epwx`). The free plan disables Run in the query editor and shows "Trial ended". Building requires a paid plan, which needs approval. |
+| Dune dashboard | Free account, public dashboard | `info@epowex.com` | Dropped (2026-11-11) | Account exists (`epwx`). The free plan disables Run in the query editor, so no dashboard will be built. Not pursuing. |
 | Medium / Mirror | Free blog post | `info@epowex.com` (when created) | Not submitted | Transparency write-up linking `tasks.epowex.com/transparency`. Account-creation step needs the team password manager. |
 
 Excluded for now: CoinPaprika (gated on CoinGecko approval, see Blocked), Trust Wallet (fee, see Blocked), and any site that asks for payment.
