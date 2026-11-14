@@ -26,6 +26,19 @@ function getClaimTypeForTaskType(taskType) {
   }
 }
 
+function normalizeRewardAmount(rewardAmount) {
+  if (rewardAmount === undefined || rewardAmount === null || String(rewardAmount).trim() === '') {
+    return FIXED_TWITTER_REWARD_AMOUNT;
+  }
+
+  const normalized = String(rewardAmount).trim();
+  if (!/^\d+(\.\d+)?$/.test(normalized) || Number(normalized) <= 0) {
+    return undefined;
+  }
+
+  return normalized;
+}
+
 function isCampaignExpired(campaign) {
   return !!campaign.expiresAt && new Date(campaign.expiresAt) < new Date();
 }
@@ -115,7 +128,7 @@ async function getWalletClaimStatusByCampaignId(wallet) {
 }
 
 router.post('/add', requireSignedAdmin, async (req, res) => {
-  const { code, title, tweetUrl, expiresAt, taskType } = req.body;
+  const { code, title, tweetUrl, expiresAt, taskType, rewardAmount } = req.body;
 
   if (!code || !title || !tweetUrl) {
     return res.status(400).json({ error: 'Code, title, and tweet URL are required.' });
@@ -132,12 +145,17 @@ router.post('/add', requireSignedAdmin, async (req, res) => {
       return res.status(400).json({ error: 'Invalid expiry date.' });
     }
 
+    const normalizedRewardAmount = normalizeRewardAmount(rewardAmount);
+    if (normalizedRewardAmount === undefined) {
+      return res.status(400).json({ error: 'Reward amount must be a positive number.' });
+    }
+
     const campaign = await TwitterCampaign.create({
       code: String(code).trim().toLowerCase(),
       title: String(title).trim(),
       taskType: normalizedTaskType,
       tweetUrl: String(tweetUrl).trim(),
-      rewardAmount: FIXED_TWITTER_REWARD_AMOUNT,
+      rewardAmount: normalizedRewardAmount,
       expiresAt: normalizedExpiresAt,
       isActive: true,
     });
@@ -260,9 +278,10 @@ router.put('/:id', requireSignedAdmin, async (req, res) => {
       return res.status(404).json({ error: 'Campaign not found' });
     }
 
-    const { code, title, tweetUrl, expiresAt, isActive } = req.body;
+    const { code, title, tweetUrl, expiresAt, isActive, rewardAmount } = req.body;
     const nextTaskType = req.body.taskType !== undefined ? normalizeTaskType(req.body.taskType) : campaign.taskType;
     const normalizedExpiresAt = expiresAt !== undefined ? normalizeExpiresAt(expiresAt) : campaign.expiresAt;
+    const normalizedRewardAmount = rewardAmount !== undefined ? normalizeRewardAmount(rewardAmount) : campaign.rewardAmount;
 
     if (req.body.taskType !== undefined && !nextTaskType) {
       return res.status(400).json({ error: 'Invalid task type.' });
@@ -272,11 +291,15 @@ router.put('/:id', requireSignedAdmin, async (req, res) => {
       return res.status(400).json({ error: 'Invalid expiry date.' });
     }
 
+    if (normalizedRewardAmount === undefined) {
+      return res.status(400).json({ error: 'Reward amount must be a positive number.' });
+    }
+
     if (code !== undefined) campaign.code = String(code).trim().toLowerCase();
     if (title !== undefined) campaign.title = String(title).trim();
     if (req.body.taskType !== undefined) campaign.taskType = nextTaskType;
     if (tweetUrl !== undefined) campaign.tweetUrl = String(tweetUrl).trim();
-    campaign.rewardAmount = FIXED_TWITTER_REWARD_AMOUNT;
+    campaign.rewardAmount = normalizedRewardAmount;
     if (expiresAt !== undefined) campaign.expiresAt = normalizedExpiresAt;
     if (isActive !== undefined) campaign.isActive = Boolean(isActive);
 
