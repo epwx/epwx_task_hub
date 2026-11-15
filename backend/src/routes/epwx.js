@@ -15,7 +15,6 @@ import { epwxTokenContract, EPWX_TOKEN_ADDRESS } from '../services/blockchain.js
 import { distributeEpwxReward } from '../services/rewardTransfer.js';
 import dailyClaimSignatureUtils from '../utils/dailyClaimSignature.cjs';
 import dailyClaimRewardUtils from '../utils/dailyClaimReward.cjs';
-import dailyClaimCapUtils from '../utils/dailyClaimCap.cjs';
 import dailyClaimStreakUtils from '../utils/dailyClaimStreak.cjs';
 import dailyClaimAnalyticsUtils from '../utils/dailyClaimAnalytics.cjs';
 import dailyDrawSelectionUtils from '../utils/dailyDrawSelection.cjs';
@@ -59,7 +58,6 @@ const DAILY_REWARD_TIERS = [
   },
 ];
 const DAILY_CLAIM_STATS_KEY = 'daily_claims';
-const DAILY_CLAIM_DAILY_CAP_EPWX = dailyClaimCapUtils.parseDailyClaimCap(process.env.DAILY_CLAIM_DAILY_CAP_EPWX);
 const TELEGRAM_GROUP_MEMBERSHIP_REQUIRED = ['1', 'true', 'yes', 'on'].includes(String(process.env.TELEGRAM_GROUP_MEMBERSHIP_REQUIRED || 'true').toLowerCase());
 const ALLOW_LEGACY_TELEGRAM_VERIFIED_CLAIMS = ['1', 'true', 'yes', 'on'].includes(String(process.env.ALLOW_LEGACY_TELEGRAM_VERIFIED_CLAIMS || 'true').toLowerCase());
 const TELEGRAM_API_TIMEOUT_MS = Number(process.env.TELEGRAM_API_TIMEOUT_MS || 8000);
@@ -1879,23 +1877,6 @@ router.post('/daily-claim', dailyClaimSubmissionLimiter, async (req, res) => {
     return res.status(429).json({ error: `Wallet already claimed. Try again in ${hours}h ${minutes}m.` });
   }
 
-  // Check if IP claimed in last 24h
-  const ipClaim = await DailyClaim.findOne({
-    where: {
-      ip,
-      claimedAt: { [Op.gte]: since }
-    }
-  });
-  if (ipClaim) {
-    const lastClaim = new Date(ipClaim.claimedAt);
-    const nextClaim = new Date(lastClaim.getTime() + 24 * 60 * 60 * 1000);
-    const nowTime = new Date();
-    const msLeft = nextClaim - nowTime;
-    const hours = Math.floor(msLeft / (1000 * 60 * 60));
-    const minutes = Math.floor((msLeft % (1000 * 60 * 60)) / (1000 * 60));
-    return res.status(429).json({ error: `IP address already claimed. Try again in ${hours}h ${minutes}m.` });
-  }
-
   // TODO: Send EPWX to wallet here (call contract or queue for admin)
   const rewardDetails = await getDailyRewardDetails(normalizedWallet);
   const rewardBreakdown = calculateDailyClaimReward(
@@ -1904,7 +1885,7 @@ router.post('/daily-claim', dailyClaimSubmissionLimiter, async (req, res) => {
     Boolean(emailPreference?.emailVerifiedAt),
   );
   const streak = calculateDailyClaimStreak(previousClaim, now);
-  const requestedAmount = rewardBreakdown.amount;
+  const amount = rewardBreakdown.amount;
   if (!officialGroupMembership.isMember) {
     console.log('[daily-claim] applying 50% reward for wallet without official Telegram group verification', {
       wallet: normalizedWallet,
@@ -1914,29 +1895,7 @@ router.post('/daily-claim', dailyClaimSubmissionLimiter, async (req, res) => {
       adjustedAmount: rewardBreakdown.telegramAdjustedAmount,
     });
   }
-  const reservation = await DailyClaim.sequelize.transaction(async (transaction) => {
-    await getOrCreateDailyClaimStats();
-    await PlatformStats.findOne({
-      where: { statsKey: DAILY_CLAIM_STATS_KEY },
-      lock: transaction.LOCK.UPDATE,
-      transaction,
-    });
-    const [reservedRows] = await DailyClaim.sequelize.query(`
-      SELECT COALESCE(SUM(CAST("amount" AS NUMERIC)), 0) AS "reservedAmount"
-      FROM "daily_claims"
-      WHERE "status" IN ('paid', 'pending')
-        AND "claimedAt" >= :startOfTodayUtc
-    `, { replacements: { startOfTodayUtc: utcDate }, transaction });
-    const cap = dailyClaimCapUtils.calculateCappedDailyClaimAmount({
-      requestedAmount,
-      reservedTodayAmount: reservedRows?.[0]?.reservedAmount || '0',
-      dailyCap: DAILY_CLAIM_DAILY_CAP_EPWX,
-    });
-    if (cap.amount === '0') {
-      return null;
-    }
-    const amount = cap.amount;
-    const createdClaim = await DailyClaim.create({ 
+  const claim = await DailyClaim.create({ 
     wallet: normalizedWallet, 
     ip, 
     claimedAt: now, 
@@ -1953,26 +1912,7 @@ router.post('/daily-claim', dailyClaimSubmissionLimiter, async (req, res) => {
     eligibilityCountryCode,
     partnerReferralId: partnerReferral?.id || null,
     partnerId: partnerId || null
-    });
-    return { claim: createdClaim, capped: cap.capped, remainingBeforeClaim: cap.remainingBeforeClaim };
   });
-
-  if (!reservation) {
-    return res.status(409).json({
-      error: 'The daily EPWX distribution cap has been reached for today. Claims reopen at 00:00 UTC.',
-      code: 'DAILY_CLAIM_CAP_REACHED',
-    });
-  }
-
-  const { claim } = reservation;
-  if (reservation.capped) {
-    console.log('[daily-claim] partial payment due to daily cap', {
-      wallet: normalizedWallet,
-      requestedAmount,
-      paidAmount: claim.amount,
-      remainingBeforeClaim: reservation.remainingBeforeClaim,
-    });
-  }
 
   try {
     await updateDailyClaimStats({ claimCountDelta: '1' });
@@ -1993,7 +1933,7 @@ router.post('/daily-claim', dailyClaimSubmissionLimiter, async (req, res) => {
   }
 
   try {
-    const payout = await distributeEpwxReward(normalizedWallet, claim.amount);
+    const payout = await distributeEpwxReward(normalizedWallet, amount);
     if (payout.paid) {
       claim.status = 'paid';
       claim.txHash = payout.txHash;
@@ -2029,14 +1969,6 @@ router.post('/daily-claim', dailyClaimSubmissionLimiter, async (req, res) => {
     }
   } catch (error) {
     console.error('[daily-claim] Automatic daily payout failed:', error);
-    if (claim.status !== 'paid') {
-      try {
-        claim.status = 'failed';
-        await claim.save();
-      } catch (saveErr) {
-        console.error('[daily-claim] Failed to mark claim as failed:', saveErr);
-      }
-    }
   }
 
   let referralReward = null;
@@ -2062,8 +1994,6 @@ router.post('/daily-claim', dailyClaimSubmissionLimiter, async (req, res) => {
     success: true,
     message: claim.status === 'paid' ? 'Daily claim successful and paid!' : 'Daily claim successful and queued for payout.',
     amount: claim.amount,
-    requestedAmount,
-    dailyCapApplied: reservation.capped,
     rewardBreakdown,
     streak: {
       day: claim.streakDay,
