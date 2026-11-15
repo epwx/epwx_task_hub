@@ -567,10 +567,13 @@ export default function HomeTest() {
         const partnerMessage = data.partnerReward?.partnerName
           ? ` Partner reward attributed to ${data.partnerReward.partnerName}.`
           : "";
+        const capMessage = data.dailyCapApplied
+          ? ` Today's daily EPWX cap was almost reached, so you received a partial reward. Claims reopen at 00:00 UTC.`
+          : "";
         setClaimStatus(
           referralMessage
-            ? `Successfully claimed ${claimedAmount} EPWX! Your reward will be sent soon. ${referralMessage}${partnerMessage}`
-            : `Successfully claimed ${claimedAmount} EPWX! Your reward will be sent soon.${partnerMessage}`
+            ? `Successfully claimed ${claimedAmount} EPWX! Your reward will be sent soon. ${referralMessage}${partnerMessage}${capMessage}`
+            : `Successfully claimed ${claimedAmount} EPWX! Your reward will be sent soon.${partnerMessage}${capMessage}`
         );
         if (partnerReferralCode && typeof window !== "undefined") {
           localStorage.removeItem(PENDING_PARTNER_REFERRAL_CODE_STORAGE_KEY);
@@ -1224,8 +1227,6 @@ export default function HomeTest() {
             <a href="/terms" className="transition-colors hover:text-cyan-300">Terms of Service</a>
             <span className="hidden md:block text-slate-600">•</span>
             <a href="/privacy" className="transition-colors hover:text-cyan-300">Privacy Policy</a>
-            <span className="hidden md:block text-slate-600">•</span>
-            <a href="/transparency" className="transition-colors hover:text-cyan-300">Token Transparency</a>
             <span className="hidden md:block text-slate-600">•</span>
             <a href="/user-guide" className="transition-colors hover:text-cyan-300">User Guide</a>
             <span className="hidden md:block text-slate-600">•</span>

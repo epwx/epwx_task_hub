@@ -73,7 +73,7 @@ const DailyClaim = sequelize.define('DailyClaim', {
   status: {
     type: DataTypes.STRING,
     allowNull: false,
-    defaultValue: 'pending', // 'pending', 'paid'
+    defaultValue: 'pending', // 'pending', 'paid', 'failed' (failed claims are excluded from the daily cap)
   },
   partnerReferralId: {
     type: DataTypes.UUID,
