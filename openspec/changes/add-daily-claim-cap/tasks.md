@@ -19,16 +19,16 @@
 - [x] 3.1 Unit tests for cap parsing and capped-amount math in `backend/test/dailyClaimCap.test.js`
 - [x] 3.2 `node --check` on `backend/src/routes/epwx.js`
 - [x] 3.3 Frontend `tsc --noEmit`
-- [ ] 3.4 Integration test of `POST /daily-claim` against Postgres: partial payment, 409 at zero budget, and failed-payout release
-- [ ] 3.5 Concurrency check: parallel claims near the cap do not exceed the budget
+- [x] 3.4 Integration check against Postgres (local copy of production schema): partial payment, 409 at zero budget, and failed-payout release. It runs the route's reservation steps directly, not over HTTP.
+- [x] 3.5 Concurrency check: 6 parallel claims near the cap grant exactly the remaining budget and never exceed it
 
 ## 4. Release
 
-- [ ] 4.1 Commit only cap-related files
-- [ ] 4.2 Push to `origin main`
-- [ ] 4.3 Deploy on the droplet with `deployment/deploy.sh` and run the post-deploy smoke check
-- [ ] 4.4 After deploy, check for `pending` DailyClaim rows older than a day and decide whether to mark them `failed`
+- [x] 4.1 Commit only cap-related files (`fbc232a`)
+- [x] 4.2 Push to `origin main`
+- [x] 4.3 Deploy to the droplet (backend and frontend narrow commands, merge commit `0e29915`) and pass the post-deploy smoke check (6/6)
+- [x] 4.4 Checked production `daily_claims`: no `pending` rows, 5 `failed` rows, 8842 `paid`
 
 ## Follow-up (not in this change)
 
-- Pre-existing `pending` claims still count toward today's cap. Decide whether a one-time update to `failed` is needed.
+- No production `pending` claims remain, so no one-time cleanup is needed.
