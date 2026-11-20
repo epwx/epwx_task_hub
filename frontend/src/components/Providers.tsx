@@ -133,8 +133,12 @@ export function Providers({ children }: { children: ReactNode }) {
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <ConnectKitProvider 
+          customTheme={{
+            '--ck-qr-background': '#ffffff',
+            '--ck-qr-dot-color': '#000000',
+            '--ck-qr-border-color': '#ffffff',
+          }}
           options={{
-            // Disable WalletConnect modal to prevent connection errors
             hideNoWalletCTA: true,
             hideQuestionMarkCTA: true,
           }}
