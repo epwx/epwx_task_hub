@@ -25,7 +25,7 @@ const config = createConfig(
     appName: 'EPWX Task Platform',
     appDescription: 'Earn EPWX by completing campaigns and claiming rewards',
     appUrl: process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.NEXT_PUBLIC_PORT || 3000}`,
-    appIcon: 'https://epowex.com/logo.png',
+    appIcon: 'https://tasks.epowex.com/logo.webp',
   })
 );
 
