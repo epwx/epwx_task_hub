@@ -120,7 +120,7 @@ export default function EngagementCampaignBoard({ wallet }: { wallet?: string })
 
   return (
     <section id="engagement-campaigns" className="py-12 scroll-mt-36">
-      <div className="relative mx-auto w-full max-w-5xl overflow-hidden rounded-3xl border border-white/10 bg-slate-900/70 p-6 shadow-[0_24px_65px_rgba(2,6,23,0.5)] backdrop-blur-xl sm:p-8">
+      <div className="relative mx-auto w-full max-w-5xl overflow-hidden rounded-3xl border border-white/10 bg-slate-900/90 p-6 shadow-[0_24px_65px_rgba(2,6,23,0.5)] sm:p-8">
         <div className="relative z-10">
           <div className="mb-6 text-center text-white">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-200/80">Community Engagement Rewards</p>

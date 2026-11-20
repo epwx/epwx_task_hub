@@ -502,7 +502,6 @@ export default function LatestDailyWinnersBoard({ referralLink }: { referralLink
       <div className="flex flex-col items-center">
         <h2 className="text-2xl font-black mb-4 text-slate-100 text-center">Latest Daily Reward Draw Winners</h2>
         <div className={`${themedSectionClass} w-full max-w-5xl`}>
-          <div className="absolute top-0 left-0 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
           <div className="relative z-10 text-white">
             <div className="mb-6 text-center">
               <p className="text-sm uppercase tracking-[0.3em] text-white/80">Free Daily Reward Draw Results</p>

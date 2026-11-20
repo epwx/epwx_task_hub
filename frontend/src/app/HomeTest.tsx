@@ -509,16 +509,36 @@ export default function HomeTest() {
   }, [address, dailyClaimRefresh]);
 
   useEffect(() => {
-    if (!address) return;
-    const updateClock = () => setClaimClock(Date.now());
-    updateClock();
-    const intervalId = window.setInterval(updateClock, 1000);
-    window.addEventListener("focus", updateClock);
-    return () => {
-      window.clearInterval(intervalId);
-      window.removeEventListener("focus", updateClock);
+    if (!address || currentClaimHistory?.status !== "ready" || !currentClaimHistory.claim) return;
+
+    let timeoutId: number;
+    const updateClock = () => {
+      const now = Date.now();
+      setClaimClock(now);
+
+      const progress = getDailyClaimProgress(currentClaimHistory.claim, now);
+      const boundaryMs = Math.min(
+        progress.remainingCooldownMs > 0 ? progress.remainingCooldownMs : Number.POSITIVE_INFINITY,
+        progress.remainingStreakMs > 0 ? progress.remainingStreakMs : Number.POSITIVE_INFINITY,
+      );
+      const delayMs = boundaryMs <= 60_000
+        ? 1_000
+        : Math.min(60_000, Number.isFinite(boundaryMs) ? boundaryMs - 60_000 : 60_000);
+
+      timeoutId = window.setTimeout(updateClock, Math.max(1_000, delayMs));
     };
-  }, [address]);
+
+    updateClock();
+    const handleFocus = () => {
+      window.clearTimeout(timeoutId);
+      updateClock();
+    };
+    window.addEventListener("focus", handleFocus);
+    return () => {
+      window.clearTimeout(timeoutId);
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [address, currentClaimHistory]);
 
   const handleDailyClaim = async () => {
     if (!address) {
@@ -620,11 +640,7 @@ export default function HomeTest() {
 
   return (
     <div className="relative min-h-screen overflow-x-clip bg-slate-950 text-slate-100">
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-40 top-20 h-96 w-96 rounded-full bg-cyan-500/15 blur-[140px]" />
-        <div className="absolute -right-28 top-12 h-[28rem] w-[28rem] rounded-full bg-blue-600/20 blur-[150px]" />
-        <div className="absolute bottom-0 left-1/2 h-72 w-[42rem] -translate-x-1/2 rounded-full bg-emerald-400/10 blur-[150px]" />
-      </div>
+      <div aria-hidden="true" className="home-ambient-background pointer-events-none absolute inset-0" />
 
       {/* Mobile app-style summary hero */}
       <section className="relative z-10 px-3 pt-4 lg:hidden">
@@ -660,7 +676,7 @@ export default function HomeTest() {
         </div>
       </section>
 
-      <section className="sticky top-[76px] z-20 hidden border-b border-white/10 bg-slate-950/70 backdrop-blur-xl lg:block">
+      <section className="sticky top-[76px] z-20 hidden border-b border-white/10 bg-slate-950/95 lg:block">
         <div className="mx-auto flex w-full max-w-7xl items-center gap-4 px-4 py-2.5">
           <div className="min-w-0 pr-3">
             <div className="text-[11px] font-black uppercase tracking-[0.22em] text-cyan-300">Quick Actions</div>
@@ -690,8 +706,6 @@ export default function HomeTest() {
         {/* Wallet Connection & Verification Section */}
         <section id="wallet-verification" className="my-8 scroll-mt-36">
           <div className={`${themedSectionClass} mb-6 w-full max-w-5xl mx-auto`}>
-            <div className="absolute -right-16 top-0 h-44 w-44 rounded-full bg-cyan-300/10 blur-3xl" />
-            <div className="absolute -left-16 bottom-0 h-52 w-52 rounded-full bg-emerald-400/10 blur-3xl" />
             <div className={themedInnerClass}>
             <div className="mb-6 flex flex-col gap-4 border-b border-white/10 pb-5 sm:flex-row sm:items-end sm:justify-between">
               <div>
@@ -853,7 +867,6 @@ export default function HomeTest() {
         {/* Daily Claim Section */}
         <section id="daily-claim" className="py-12 scroll-mt-36">
           <div className={`${themedSectionClass} w-full max-w-4xl mx-auto`}>
-            <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
             <div className={themedInnerClass}>
             <h2 className="text-2xl font-black mb-4 text-white">Daily Claim</h2>
             {address ? (
@@ -1212,7 +1225,7 @@ export default function HomeTest() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-white/10 bg-slate-950/70 pb-24 pt-12 text-slate-200 backdrop-blur-xl lg:pb-12">
+      <footer className="border-t border-white/10 bg-slate-950 pb-24 pt-12 text-slate-200 lg:pb-12">
         <div className="container mx-auto px-4">
           <div className="text-center mb-8">
             <h3 className="text-2xl font-bold mb-2 text-cyan-200">EPWX Task Platform</h3>
@@ -1237,7 +1250,7 @@ export default function HomeTest() {
         </div>
       </footer>
       <nav
-        className="fixed inset-x-0 bottom-0 z-40 flex justify-between gap-1 border-t border-white/15 bg-slate-950/92 px-1.5 pt-2 shadow-[0_-8px_30px_rgba(2,6,23,0.45)] backdrop-blur-xl lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 flex justify-between gap-1 border-t border-white/15 bg-slate-950/95 px-1.5 pt-2 shadow-[0_-8px_30px_rgba(2,6,23,0.45)] lg:hidden"
         style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))', backgroundColor: 'rgba(2, 6, 23, 0.92)' }}
       >
         {mobileShortcutActionItems.map((item) => {
