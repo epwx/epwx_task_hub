@@ -69,6 +69,11 @@ export default function HomeScreen() {
       && accepted
       && !claiming,
   );
+  const emailConflictError = email?.blocked
+    ? email.error || 'This email address is linked to another wallet.'
+    : claimError.includes('linked to another wallet')
+      ? claimError
+      : '';
 
   const handleClaim = async () => {
     if (!address || !provider || providerType !== 'eip155') {
@@ -201,10 +206,24 @@ export default function HomeScreen() {
         contentContainerStyle={styles.content}
         refreshControl={<RefreshControl refreshing={loading} onRefresh={refresh} tintColor={colors.accent} />}
       >
-        <PageHeader eyebrow="Base Network rewards" title="Daily Claim" subtitle="Verify eligibility, sign once, and receive your EPWX reward." />
+        <PageHeader
+          eyebrow="Eligibility-based request"
+          title="Daily Claim"
+          subtitle="Verify eligibility and submit the existing EPWX reward request on Base."
+        />
+        <View style={styles.disclosure}>
+          <Text style={styles.disclosureTitle}>Token reward disclosure</Text>
+          <Text style={styles.disclosureText}>
+            EPWX is a tokenized digital asset with volatile or uncertain value. Rewards are not investments,
+            are not guaranteed, and may be delayed, denied, changed, or discontinued subject to eligibility,
+            available funds, technical conditions, applicable law, and the published terms.
+          </Text>
+        </View>
 
         {loadError ? <Text style={styles.error}>{loadError}</Text> : null}
-        {claimError ? <Text style={styles.error}>{claimError}</Text> : null}
+        {claimError && !emailConflictError ? (
+          <Text style={styles.error}>{claimError}</Text>
+        ) : null}
         {result ? <Text style={styles.success}>{result}</Text> : null}
 
         {!wallet ? (
@@ -244,39 +263,26 @@ export default function HomeScreen() {
             </View>
 
             <View style={styles.card}>
-              <Text style={styles.cardTitle}>Reward streak</Text>
-              <Text style={styles.streak}>
-                {progress.completedDays ? `Day ${progress.completedDays} complete` : 'Start Day 1'}
-              </Text>
-              <Text style={styles.body}>
-                Your next claim is Day {progress.nextDay} with {progress.nextDrawEntries} reward-draw {progress.nextDrawEntries === 1 ? 'entry' : 'entries'}.
-              </Text>
-              {progress.remainingStreakMs > 0 ? (
-                <Text style={styles.subtle}>
-                  Streak expires in {formatRemainingTime(progress.remainingStreakMs)}.
-                </Text>
-              ) : null}
-            </View>
-
-            <View style={styles.card}>
               <Text style={styles.cardTitle}>Eligibility confirmation</Text>
               <Text style={styles.body}>
-                Confirm that you meet the age and jurisdiction requirements before submitting this reward request.
+                Confirm that you are at least 18 and legally permitted to participate where you live before
+                submitting this request.
               </Text>
               <Pressable style={styles.checkboxRow} onPress={() => setAccepted((value) => !value)}>
                 <View style={[styles.checkbox, accepted && styles.checkboxChecked]}>
                   <Text style={styles.checkboxMark}>{accepted ? '✓' : ''}</Text>
                 </View>
-                <Text style={styles.checkboxText}>I meet the daily-draw eligibility requirements.</Text>
+                <Text style={styles.checkboxText}>I am at least 18 and eligible in my jurisdiction.</Text>
               </Pressable>
               {!email?.verified ? (
                 <View style={styles.emailPanel}>
                   <Text style={styles.emailTitle}>Email verification required</Text>
                   <Text style={styles.emailHelp}>
-                    {email?.blocked
-                      ? email.error || 'This email is linked to another wallet. Enter a different email.'
-                      : 'Add an email for this wallet, approve the wallet signature, then open the verification link sent to your inbox.'}
+                  Add an email for this wallet, approve the wallet signature, then open the verification link sent to your inbox.
                   </Text>
+                  {emailConflictError ? (
+                  <Text style={styles.emailConflict}>{emailConflictError} Use a different email address below.</Text>
+                  ) : null}
                   <TextInput
                     autoCapitalize="none"
                     autoCorrect={false}
@@ -395,6 +401,22 @@ export default function HomeScreen() {
             ) : null}
           </>
         )}
+        <View style={styles.legalPanel}>
+          <Text style={styles.legalTitle}>Policies and data requests</Text>
+          <Text style={styles.legalText}>
+            This app connects to an external non-custodial wallet. It does not provide custody, exchange,
+            trading, investment, borrowing, or mining services.
+          </Text>
+          <Pressable style={styles.linkButton} onPress={() => Linking.openURL('https://tasks.epowex.com/terms')}>
+            <Text style={styles.linkText}>Terms and reward rules</Text>
+          </Pressable>
+          <Pressable style={styles.linkButton} onPress={() => Linking.openURL('https://tasks.epowex.com/privacy')}>
+            <Text style={styles.linkText}>Privacy policy and data request details</Text>
+          </Pressable>
+          <Pressable style={styles.linkButton} onPress={() => Linking.openURL('mailto:info@epowex.com?subject=EPWX%20Mobile%20Data%20Request')}>
+            <Text style={styles.linkText}>Request account or data deletion</Text>
+          </Pressable>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -449,6 +471,7 @@ const styles = StyleSheet.create({
   emailHelp: { color: colors.muted, fontSize: 13, lineHeight: 19, marginTop: 5 },
   emailInput: { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: 10, borderWidth: 1, color: colors.text, fontSize: 15, marginTop: 12, padding: 13 },
   emailMessage: { color: colors.accent, fontSize: 13, lineHeight: 19, marginTop: 12 },
+  emailConflict: { backgroundColor: colors.dangerSurface, borderColor: colors.danger, borderRadius: 10, borderWidth: 1, color: colors.danger, fontSize: 13, lineHeight: 19, marginTop: 12, padding: 11 },
   refreshButton: { marginTop: 13, paddingVertical: 8 },
   refreshButtonText: { color: colors.accent, fontSize: 13, fontWeight: '800', textAlign: 'center' },
   settingsPanel: { backgroundColor: colors.accentSurface, borderRadius: 14, marginTop: 12, padding: spacing.md },
@@ -465,4 +488,12 @@ const styles = StyleSheet.create({
   transactionHint: { color: colors.muted, fontSize: 12, textAlign: 'center' },
   error: { backgroundColor: colors.dangerSurface, borderRadius: 12, color: colors.danger, padding: spacing.md },
   success: { backgroundColor: colors.accentSurface, borderRadius: 12, color: colors.accent, padding: spacing.md },
+  disclosure: { backgroundColor: colors.warningSurface, borderColor: colors.warningBorder, borderRadius: 16, borderWidth: 1, padding: spacing.md },
+  disclosureTitle: { color: colors.warning, fontSize: 14, fontWeight: '900' },
+  disclosureText: { color: colors.text, fontSize: 12, lineHeight: 18, marginTop: 6 },
+  legalPanel: { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: 16, borderWidth: 1, padding: spacing.md },
+  legalTitle: { color: colors.text, fontSize: 15, fontWeight: '900' },
+  legalText: { color: colors.muted, fontSize: 12, lineHeight: 18, marginTop: 6 },
+  linkButton: { paddingVertical: 10 },
+  linkText: { color: colors.accent, fontSize: 13, fontWeight: '800' },
 });

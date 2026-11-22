@@ -234,6 +234,24 @@ BaseScan.
 - **WHEN** no transaction hash is available
 - **THEN** the app does not create or open an invented transaction URL
 
+### Requirement: Safe Play-review scope and disclosures
+The Play-review application SHALL expose only Daily Claim and Wallet navigation.
+It SHALL NOT expose social campaign submission, draw participation, winner
+promotion, token sales, exchanges, custody, borrowing, or mining features.
+
+The app SHALL disclose token value uncertainty, that rewards are subject to
+eligibility and available funds, and that no payout, reward amount, investment
+return, or future availability is guaranteed. It SHALL link to terms, privacy,
+and a data-request contact without requiring a wallet connection.
+
+#### Scenario: Disconnected store review
+- **WHEN** an Android reviewer opens the app without connecting a wallet
+- **THEN** the app still displays terms, privacy, non-custodial, token-risk, and data-request disclosures
+
+#### Scenario: Claim terminology
+- **WHEN** the user views the Daily Claim screen
+- **THEN** the app does not present the token as a guaranteed investment, guaranteed lifetime reward, or guaranteed value
+
 ### Requirement: Safe navigation and responsive Android layout
 Bottom navigation SHALL respect Android safe-area and gesture-navigation insets.
 The tab bar SHALL display one label per destination and SHALL remain usable
@@ -241,7 +259,7 @@ without being covered by the system navigation area.
 
 #### Scenario: Gesture-navigation device
 - **WHEN** the app runs on a device with a bottom gesture bar
-- **THEN** Home, Tasks, Draw, and Wallet labels render above the system navigation area
+- **THEN** Daily Claim and Wallet labels render above the system navigation area
 
 ### Requirement: No client-side secrets or reward authority
 The mobile client SHALL NOT contain reward payout private keys, backend JWT

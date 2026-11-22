@@ -11,8 +11,9 @@ export default function PrivacyPolicyPage() {
         <p className="mt-4 mb-4 leading-7 text-slate-300">EPWX Task Hub is committed to protecting your privacy. This policy explains how we collect, use, and safeguard your information.</p>
         <h2 className="mt-8 mb-4 text-xl font-bold text-white">1. Information Collection</h2>
         <ul className="list-disc pl-6 mb-4">
-          <li>We collect information you provide during registration and task submissions.</li>
-          <li>We may collect technical data such as IP address, device information, and usage statistics.</li>
+          <li>We collect information you provide during registration, email verification, and task or reward submissions.</li>
+          <li>For mobile daily claims, we process the public wallet address, signed eligibility requests, verified email status, claim records, and related transaction information.</li>
+          <li>We may collect technical data such as IP address, device information, and usage statistics for security, eligibility, fraud prevention, and service operation.</li>
         </ul>
         <h2 className="mt-8 mb-4 text-xl font-bold text-white">2. Use of Information</h2>
         <ul className="list-disc pl-6 mb-4">
@@ -25,7 +26,10 @@ export default function PrivacyPolicyPage() {
         <p className="mb-4">EPWX Task Hub may use cookies to enhance your experience. You can disable cookies in your browser settings.</p>
         <h2 className="mt-8 mb-4 text-xl font-bold text-white">5. Changes to Policy</h2>
         <p className="mb-4">We may update this Privacy Policy periodically. Continued use of the platform constitutes acceptance of the revised policy.</p>
-        <h2 className="mt-8 mb-4 text-xl font-bold text-white">6. Contact</h2>
+        <h2 className="mt-8 mb-4 text-xl font-bold text-white">6. Account and Data Requests</h2>
+        <p className="mb-4">To request access, correction, deletion, or deactivation of mobile or platform data, email info@epowex.com from the email linked to the affected wallet. Include the public wallet address and specify the requested action. We may ask you to sign a message with that wallet to verify ownership before processing a request.</p>
+        <p className="mb-4">Records required for fraud prevention, legal compliance, accounting, transaction audit, security, or dispute resolution may be retained where permitted or required by law.</p>
+        <h2 className="mt-8 mb-4 text-xl font-bold text-white">7. Contact</h2>
         <p>If you have questions about this Privacy Policy, please contact info@epowex.com.</p>
           </div>
         </main>

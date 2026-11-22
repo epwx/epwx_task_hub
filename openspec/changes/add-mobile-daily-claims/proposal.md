@@ -15,7 +15,7 @@ prevention logic.
 
 ## What Changes
 
-- Add an Expo React Native Android application with Home, Tasks, Draw, and Wallet
+- Add an Expo React Native Android application with Daily Claim and Wallet
   navigation.
 - Authenticate a Base wallet through Reown/WalletConnect and the existing
   nonce-based backend authentication endpoints.
@@ -35,14 +35,16 @@ prevention logic.
   enrollment is rejected, while the earliest existing linkage owns legacy
   duplicate records and later wallets are blocked from claiming with that email.
 - Submit the exact wallet message and payload already accepted by the web DApp.
-- Keep social campaign submission, token purchases/swaps, and administration out
-  of the mobile claim flow.
+- Keep social campaigns, draw participation/winner promotion, token purchases or
+  swaps, and administration out of the Play-review mobile build.
 
 ## Safety and Compatibility
 
 - No existing frontend, backend, database, or smart-contract behavior is replaced.
 - No private key, seed phrase, backend secret, or unapproved transaction request
   is stored by or entered into the mobile application.
+- The Play-review client does not guarantee rewards, token value, investment
+  returns, lifetime availability, or payout timing.
 - The backend remains authoritative for signature verification, email status,
   eligibility policy, rate limits, cooldown, rewards, payout, and transaction status.
 - Public configuration uses `EXPO_PUBLIC_*`; secrets remain backend-only.

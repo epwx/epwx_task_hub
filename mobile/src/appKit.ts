@@ -65,8 +65,8 @@ export const appKit = isAppKitConfigured
         socials: false,
       },
       metadata: {
-        name: 'EPWX Tasks',
-        description: 'Complete campaigns and view EPWX rewards on Base.',
+        name: 'EPWX Daily Claim',
+        description: 'Request eligible fixed daily EPWX rewards on Base.',
         url: 'https://tasks.epowex.com',
         icons: ['https://tasks.epowex.com/logo.webp'],
         redirect: {

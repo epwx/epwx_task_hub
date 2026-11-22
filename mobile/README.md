@@ -18,10 +18,8 @@ Press `a` to open Android, or scan the QR code with Expo Go.
 
 The current app includes:
 
-- Loads active social campaigns.
 - Displays the daily-claim summary.
-- Displays the latest reward draw and winners.
-- Opens campaign URLs in the Android browser.
+- Displays recent daily claims and BaseScan transaction links.
 - Connects compatible wallets through Reown/WalletConnect.
 - Requests a backend-generated, one-time login nonce.
 - Signs the nonce with the wallet on Base.
@@ -29,8 +27,13 @@ The current app includes:
 - Stores only the resulting access token in Expo SecureStore.
 - Restores and validates the session when the app starts.
 
-Claims and screenshot submissions remain disabled in this milestone. The existing
-backend remains the only authority for reward eligibility and payouts.
+Daily Claims are enabled after wallet authentication and verification. Screenshot
+submission remains outside the mobile release scope. The existing backend remains
+the only authority for reward eligibility and payouts.
+
+The Play-review variant intentionally does not expose social campaigns, reward
+draws, winner selection, token sales, exchanges, or custody features. It includes
+token-risk, age/jurisdiction, privacy, terms, and account/data-request disclosures.
 
 ## Configuration
 
@@ -77,3 +80,15 @@ npx eas-cli@latest build --platform android --profile preview
 
 `eas.json` contains only public `EXPO_PUBLIC_*` configuration. Backend secrets
 must not be added to it.
+
+## Play Console safety declaration
+
+Declare that the app enables users to earn tokenized digital assets. Classify the
+wallet integration as an external, non-custodial connection, not an in-app
+custodial wallet or exchange. Exclude Play regions where the service is prohibited
+or where licensing evidence is unavailable.
+
+The store description must not promise a guaranteed reward, token value,
+investment return, lifetime availability, payout timing, or odds. Publish the
+public privacy, terms, support, age/jurisdiction, and data-deletion information
+before requesting review.

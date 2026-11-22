@@ -67,8 +67,8 @@ function ConnectedWalletPanel() {
         <Text style={styles.title}>{shortenWallet(user.walletAddress)}</Text>
         <Text style={styles.text}>Your one-time wallet signature was verified by the existing EPWX backend.</Text>
         <View style={styles.sessionRow}>
-          <Text style={styles.sessionLabel}>Tasks completed</Text>
-          <Text style={styles.sessionValue}>{user.tasksCompleted || 0}</Text>
+          <Text style={styles.sessionLabel}>Connection type</Text>
+          <Text style={styles.sessionValue}>Non-custodial</Text>
         </View>
         <Pressable style={styles.secondaryButton} onPress={disconnectAll}>
           <Text style={styles.secondaryButtonText}>Disconnect and sign out</Text>

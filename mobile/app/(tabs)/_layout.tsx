@@ -34,15 +34,7 @@ export default function TabsLayout() {
     >
       <Tabs.Screen
         name="index"
-        options={{ title: 'Home', tabBarIcon: () => null, tabBarLabel: ({ focused }) => <TabLabel label="HOME" focused={focused} /> }}
-      />
-      <Tabs.Screen
-        name="campaigns"
-        options={{ title: 'Campaigns', tabBarIcon: () => null, tabBarLabel: ({ focused }) => <TabLabel label="TASKS" focused={focused} /> }}
-      />
-      <Tabs.Screen
-        name="winners"
-        options={{ title: 'Winners', tabBarIcon: () => null, tabBarLabel: ({ focused }) => <TabLabel label="DRAW" focused={focused} /> }}
+        options={{ title: 'Daily Claim', tabBarIcon: () => null, tabBarLabel: ({ focused }) => <TabLabel label="DAILY CLAIM" focused={focused} /> }}
       />
       <Tabs.Screen
         name="wallet"

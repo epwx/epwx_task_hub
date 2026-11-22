@@ -12,47 +12,6 @@ async function request<T>(path: string): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-export type Campaign = {
-  id: number;
-  code: string;
-  title: string;
-  taskType: string;
-  tweetUrl: string;
-  rewardAmount: string;
-  expiresAt: string | null;
-};
-
-export type DailyClaimSummary = {
-  totalClaimsToday: number;
-  totalPaidToday: number;
-  totalClaimsTillNow: number;
-  totalEpwxDistributedTillNow: number;
-};
-
-export type DailyDraw = {
-  id: number;
-  drawDate: string;
-  winnerCount: number;
-  prizeAmount: string;
-  status: string;
-};
-
-export type DailyDrawWinner = {
-  id: number;
-  rank: number;
-  wallet: string;
-  status: string;
-};
-
-type CampaignResponse = { campaigns: Campaign[] };
-type DrawResponse = { draw: DailyDraw | null; winners: DailyDrawWinner[] };
-
-export const api = {
-  getCampaigns: () => request<CampaignResponse>('/api/twitter-campaigns/active?limit=24').then((body) => body.campaigns),
-  getDailyClaimSummary: () => request<DailyClaimSummary>('/api/epwx/daily-claims/summary'),
-  getLatestDraw: () => request<DrawResponse>('/api/epwx/daily-draws/latest'),
-};
-
 export type DailyClaimRecord = {
   id: number;
   wallet: string;
