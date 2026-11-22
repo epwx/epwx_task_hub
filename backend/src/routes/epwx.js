@@ -17,6 +17,7 @@ import dailyClaimSignatureUtils from '../utils/dailyClaimSignature.cjs';
 import dailyClaimRewardUtils from '../utils/dailyClaimReward.cjs';
 import dailyClaimStreakUtils from '../utils/dailyClaimStreak.cjs';
 import dailyClaimAnalyticsUtils from '../utils/dailyClaimAnalytics.cjs';
+import dailyClaimEmailIdentityUtils from '../utils/dailyClaimEmailIdentity.cjs';
 import dailyDrawSelectionUtils from '../utils/dailyDrawSelection.cjs';
 import dailyDrawEligibilityUtils from '../utils/dailyDrawEligibility.cjs';
 import dailyDrawPayoutUtils from '../utils/dailyDrawPayout.cjs';
@@ -82,6 +83,7 @@ const {
 const { calculateDailyClaimReward } = dailyClaimRewardUtils;
 const { calculateDailyClaimStreak } = dailyClaimStreakUtils;
 const { calculateRetentionAnalytics } = dailyClaimAnalyticsUtils;
+const { normalizeEmailIdentity, isEmailOwner } = dailyClaimEmailIdentityUtils;
 const {
   LEGACY_DAILY_DRAW_SELECTION_ALGORITHM,
   buildDailyDrawAudit,
@@ -1614,24 +1616,53 @@ router.post('/daily-claim/email/enroll', dailyClaimEmailEnrollmentLimiter, async
   try {
     const verificationToken = randomBytes(32).toString('hex');
     const unsubscribeToken = randomBytes(32).toString('hex');
-    const [preference] = await DailyClaimEmailPreference.findOrCreate({
-      where: { wallet: normalizedWallet },
-      defaults: {
-        email: normalizedEmail,
-        unsubscribeTokenHash: hashEmailToken(unsubscribeToken),
-      },
+    const enrollment = await DailyClaimEmailPreference.sequelize.transaction(async (transaction) => {
+      await DailyClaimEmailPreference.sequelize.query(
+        'SELECT pg_advisory_xact_lock(hashtext(:emailNormalized))',
+        { replacements: { emailNormalized: normalizedEmail }, transaction },
+      );
+
+      const linkedPreference = await DailyClaimEmailPreference.findOne({
+        where: {
+          emailNormalized: normalizedEmail,
+          wallet: { [Op.ne]: normalizedWallet },
+        },
+        transaction,
+      });
+      if (linkedPreference) {
+        return { conflict: true };
+      }
+
+      const [preference] = await DailyClaimEmailPreference.findOrCreate({
+        where: { wallet: normalizedWallet },
+        defaults: {
+          email: normalizedEmail,
+          emailNormalized: normalizedEmail,
+          unsubscribeTokenHash: hashEmailToken(unsubscribeToken),
+        },
+        transaction,
+      });
+
+      preference.email = normalizedEmail;
+      preference.emailNormalized = normalizedEmail;
+      preference.emailVerifiedAt = null;
+      preference.verificationTokenHash = hashEmailToken(verificationToken);
+      preference.verificationExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      preference.unsubscribeTokenHash = hashEmailToken(unsubscribeToken);
+      preference.remindersEnabled = Boolean(remindersEnabled);
+      preference.successEmailsEnabled = Boolean(successEmailsEnabled);
+      preference.timezone = typeof timezone === 'string' && timezone.length <= 64 ? timezone : 'UTC';
+      preference.unsubscribedAt = null;
+      await preference.save({ transaction });
+      return { preference };
     });
 
-    preference.email = normalizedEmail;
-    preference.emailVerifiedAt = null;
-    preference.verificationTokenHash = hashEmailToken(verificationToken);
-    preference.verificationExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
-    preference.unsubscribeTokenHash = hashEmailToken(unsubscribeToken);
-    preference.remindersEnabled = Boolean(remindersEnabled);
-    preference.successEmailsEnabled = Boolean(successEmailsEnabled);
-    preference.timezone = typeof timezone === 'string' && timezone.length <= 64 ? timezone : 'UTC';
-    preference.unsubscribedAt = null;
-    await preference.save();
+    if (enrollment.conflict) {
+      return res.status(409).json({
+        error: 'This email address is already linked to another wallet.',
+        code: 'EMAIL_ALREADY_LINKED',
+      });
+    }
 
     const emailResult = await sendDailyClaimVerificationEmail({ email: normalizedEmail, verificationToken });
     if (!emailResult.sent) {
@@ -1682,11 +1713,25 @@ router.get('/daily-claim/email/eligibility', async (req, res) => {
   try {
     const preference = await DailyClaimEmailPreference.findOne({
       where: { wallet: normalizedWallet },
-      attributes: ['emailVerifiedAt'],
+      attributes: ['id', 'wallet', 'email', 'emailNormalized', 'emailVerifiedAt', 'createdAt'],
     });
+    let isOwner = true;
+    if (preference?.emailVerifiedAt) {
+      const emailLinkages = await DailyClaimEmailPreference.findAll({
+        where: { emailNormalized: normalizeEmailIdentity(preference.emailNormalized || preference.email) },
+        attributes: ['id', 'wallet', 'email', 'emailVerifiedAt', 'createdAt'],
+        order: [['createdAt', 'ASC'], ['id', 'ASC']],
+      });
+      isOwner = isEmailOwner(emailLinkages, normalizedWallet);
+    }
     return res.json({
       enrolled: Boolean(preference),
-      verified: Boolean(preference?.emailVerifiedAt),
+      verified: Boolean(preference?.emailVerifiedAt) && isOwner,
+      ...(isOwner ? {} : {
+        blocked: true,
+        code: 'EMAIL_ALREADY_LINKED',
+        error: 'This email address is linked to another wallet.',
+      }),
     });
   } catch (error) {
     console.error('[daily-claim/email] Eligibility lookup failed:', error);
@@ -1816,12 +1861,24 @@ router.post('/daily-claim', dailyClaimSubmissionLimiter, async (req, res) => {
 
   const emailPreference = await DailyClaimEmailPreference.findOne({
     where: { wallet: normalizedWallet },
-    attributes: ['emailVerifiedAt'],
+    attributes: ['id', 'wallet', 'email', 'emailNormalized', 'emailVerifiedAt', 'createdAt'],
   });
   if (!emailPreference?.emailVerifiedAt) {
     return res.status(403).json({
       error: 'Verify an email address for this wallet before submitting a Daily Claim.',
       code: 'EMAIL_VERIFICATION_REQUIRED',
+    });
+  }
+
+  const emailLinkages = await DailyClaimEmailPreference.findAll({
+    where: { emailNormalized: normalizeEmailIdentity(emailPreference.emailNormalized || emailPreference.email) },
+    attributes: ['id', 'wallet', 'email', 'emailVerifiedAt', 'createdAt'],
+    order: [['createdAt', 'ASC'], ['id', 'ASC']],
+  });
+  if (!isEmailOwner(emailLinkages, normalizedWallet)) {
+    return res.status(409).json({
+      error: 'This email address is linked to another wallet and cannot be used for this claim.',
+      code: 'EMAIL_ALREADY_LINKED',
     });
   }
 

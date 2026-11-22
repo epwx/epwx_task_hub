@@ -1,0 +1,45 @@
+{
+  "cli": {
+    "version": ">= 16.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://tasks.epowex.com",
+        "EXPO_PUBLIC_WEB_URL": "https://tasks.epowex.com",
+        "EXPO_PUBLIC_BASE_CHAIN_ID": "8453",
+        "EXPO_PUBLIC_REOWN_PROJECT_ID": "3b7c2d359f09d288e3b7e3a5682d32be"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://tasks.epowex.com",
+        "EXPO_PUBLIC_WEB_URL": "https://tasks.epowex.com",
+        "EXPO_PUBLIC_BASE_CHAIN_ID": "8453",
+        "EXPO_PUBLIC_REOWN_PROJECT_ID": "3b7c2d359f09d288e3b7e3a5682d32be"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://tasks.epowex.com",
+        "EXPO_PUBLIC_WEB_URL": "https://tasks.epowex.com",
+        "EXPO_PUBLIC_BASE_CHAIN_ID": "8453",
+        "EXPO_PUBLIC_REOWN_PROJECT_ID": "3b7c2d359f09d288e3b7e3a5682d32be"
+      }
+    }
+  }
+}

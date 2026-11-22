@@ -17,6 +17,11 @@ const DailyClaimEmailPreference = sequelize.define('DailyClaimEmailPreference', 
     allowNull: false,
     validate: { isEmail: true },
   },
+  emailNormalized: {
+    type: DataTypes.STRING(254),
+    allowNull: false,
+    validate: { isEmail: true },
+  },
   emailVerifiedAt: DataTypes.DATE,
   verificationTokenHash: {
     type: DataTypes.STRING(64),

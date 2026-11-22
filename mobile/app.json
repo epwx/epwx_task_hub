@@ -1,0 +1,42 @@
+{
+  "expo": {
+    "name": "EPWX Tasks",
+    "slug": "epwx-tasks",
+    "owner": "epowerx-on-base-llc",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.epowex.tasks",
+      "adaptiveIcon": {
+        "backgroundColor": "#020817",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store"
+    ],
+    "scheme": "epwxtasks",
+    "extra": {
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "e4c8b1be-20b7-4849-bec0-fd50544d7511"
+      }
+    }
+  }
+}
