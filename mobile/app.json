@@ -25,7 +25,15 @@
     },
     "plugins": [
       "expo-router",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "extraProguardRules": "-dontwarn java.awt.**"
+          }
+        }
+      ]
     ],
     "scheme": "epwxtasks",
     "extra": {
