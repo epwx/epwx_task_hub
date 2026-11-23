@@ -40,4 +40,7 @@
 - [ ] 6.1 Build a standalone preview APK without Metro dependency.
 - [ ] 6.2 Complete internal Android device testing.
 - [ ] 6.3 Review Google Play crypto and reward-distribution policy.
-- [ ] 6.4 Submit a production Android bundle after policy and QA approval.
+- [ ] 6.4 Approve and document an initial Play country allowlist.
+- [ ] 6.5 Confirm Play Console and backend region controls match the approved allowlist.
+- [ ] 6.6 Submit a production Android bundle after policy, legal, and QA approval.
+- [ ] 6.7 Require a new regional review before enabling additional countries.

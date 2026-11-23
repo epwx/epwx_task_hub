@@ -40,6 +40,21 @@
         "EXPO_PUBLIC_BASE_CHAIN_ID": "8453",
         "EXPO_PUBLIC_REOWN_PROJECT_ID": "3b7c2d359f09d288e3b7e3a5682d32be"
       }
+    },
+    "play-review": {
+      "distribution": "store",
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://tasks.epowex.com",
+        "EXPO_PUBLIC_WEB_URL": "https://tasks.epowex.com",
+        "EXPO_PUBLIC_BASE_CHAIN_ID": "8453",
+        "EXPO_PUBLIC_REOWN_PROJECT_ID": "3b7c2d359f09d288e3b7e3a5682d32be",
+        "EXPO_PUBLIC_REVIEW_MODE": "true",
+        "EXPO_PUBLIC_REVIEW_USERNAME": "play-reviewer",
+        "EXPO_PUBLIC_REVIEW_PASSWORD": "EPWX-Play-Review-2026"
+      }
     }
   }
 }

@@ -252,6 +252,30 @@ and a data-request contact without requiring a wallet connection.
 - **WHEN** the user views the Daily Claim screen
 - **THEN** the app does not present the token as a guaranteed investment, guaranteed lifetime reward, or guaranteed value
 
+### Requirement: Limited-country Play production rollout
+The Play production release SHALL be distributed only in a documented,
+legally reviewed country allowlist. Countries SHALL remain disabled in Play
+Console until applicable crypto/token promotion, financial-feature, age,
+sanctions, sweepstakes/promotion, tax, privacy, and consumer-protection
+requirements have been reviewed.
+
+The backend's blocked-country list SHALL remain an independent enforcement
+control. Play availability alone SHALL NOT be treated as proof that a claim is
+legally permitted.
+
+#### Scenario: Initial production release
+- **WHEN** the app is submitted to Play production
+- **THEN** only approved countries are selected and all unreviewed countries remain unavailable
+
+#### Scenario: Blocked claim location
+- **WHEN** the backend identifies a blocked or unsupported request country
+- **THEN** the claim is rejected regardless of Play Store availability or client eligibility
+
+#### Scenario: Country expansion
+- **WHEN** a new country is proposed for availability
+- **THEN** distribution remains disabled until regional legal/policy review and
+  corresponding Play Console and backend controls are completed
+
 ### Requirement: Safe navigation and responsive Android layout
 Bottom navigation SHALL respect Android safe-area and gesture-navigation insets.
 The tab bar SHALL display one label per destination and SHALL remain usable

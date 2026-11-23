@@ -24,8 +24,10 @@ import {
 import { useAuthSession } from '../../src/providers/AuthSessionProvider';
 import { formatRemainingTime, useDailyClaim } from '../../src/hooks/useDailyClaim';
 import { colors, spacing } from '../../src/theme';
+import { REVIEW_MODE, useReviewAccess } from '../../src/providers/ReviewAccessProvider';
 
 export default function HomeScreen() {
+  const review = useReviewAccess();
   const { address, chainId } = useAccount();
   const { provider, providerType } = useProvider();
   const { user, restoring } = useAuthSession();
@@ -226,7 +228,9 @@ export default function HomeScreen() {
         ) : null}
         {result ? <Text style={styles.success}>{result}</Text> : null}
 
-        {!wallet ? (
+        {REVIEW_MODE && review.enabled ? (
+          <ReviewDailyClaim />
+        ) : !wallet ? (
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Connect your wallet</Text>
             <Text style={styles.body}>Open the Wallet tab, connect a Base wallet, and sign in before claiming.</Text>
@@ -422,6 +426,68 @@ export default function HomeScreen() {
   );
 }
 
+function ReviewDailyClaim() {
+  const [accepted, setAccepted] = useState(false);
+  const [result, setResult] = useState('');
+
+  return (
+    <>
+      <View style={styles.reviewBanner}>
+        <Text style={styles.reviewBannerTitle}>GOOGLE PLAY REVIEW MODE</Text>
+        <Text style={styles.body}>
+          This isolated demonstration does not access a wallet, backend account, database record, Base
+          transaction, or token transfer.
+        </Text>
+      </View>
+      <View style={styles.walletCard}>
+        <Text style={styles.eyebrow}>REVIEW WALLET</Text>
+        <Text style={styles.wallet}>0xReview...Demo</Text>
+        <Text style={styles.body}>All values below are simulated for review.</Text>
+      </View>
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Claim window</Text>
+        <Text style={styles.ready}>Available now</Text>
+        <Text style={styles.body}>Simulated 24-hour eligibility window.</Text>
+      </View>
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Eligibility checks</Text>
+        <StatusRow label="Reviewer access" value />
+        <StatusRow label="Base network" value />
+        <StatusRow label="Verified review email" value />
+        <StatusRow label="24-hour cooldown" value />
+      </View>
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Eligibility confirmation</Text>
+        <Text style={styles.body}>Confirm the simulated adult/jurisdiction requirement to test the claim interaction.</Text>
+        <Pressable style={styles.checkboxRow} onPress={() => setAccepted((value) => !value)}>
+          <View style={[styles.checkbox, accepted && styles.checkboxChecked]}>
+            <Text style={styles.checkboxMark}>{accepted ? '✓' : ''}</Text>
+          </View>
+          <Text style={styles.checkboxText}>I am at least 18 and eligible in my jurisdiction.</Text>
+        </Pressable>
+        <Pressable
+          disabled={!accepted}
+          onPress={() => setResult('Simulation complete. 100,000 demo EPWX were not transferred.')}
+          style={[styles.claimButton, !accepted && styles.claimButtonDisabled]}
+        >
+          <Text style={styles.claimButtonText}>Simulate daily claim</Text>
+        </Pressable>
+        {result ? <Text style={styles.success}>{result}</Text> : null}
+      </View>
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Simulated recent claim</Text>
+        <View style={styles.claimRow}>
+          <View style={styles.claimDetails}>
+            <Text style={styles.claimAmount}>100,000 demo EPWX</Text>
+            <Text style={styles.subtle}>No blockchain transaction created</Text>
+          </View>
+          <Text style={[styles.claimStatus, styles.pending]}>DEMO</Text>
+        </View>
+      </View>
+    </>
+  );
+}
+
 function StatusRow({ label, value, optional = false }: { label: string; value: boolean; optional?: boolean }) {
   return (
     <View style={styles.statusRow}>
@@ -488,6 +554,8 @@ const styles = StyleSheet.create({
   transactionHint: { color: colors.muted, fontSize: 12, textAlign: 'center' },
   error: { backgroundColor: colors.dangerSurface, borderRadius: 12, color: colors.danger, padding: spacing.md },
   success: { backgroundColor: colors.accentSurface, borderRadius: 12, color: colors.accent, padding: spacing.md },
+  reviewBanner: { backgroundColor: colors.warningSurface, borderColor: colors.warningBorder, borderRadius: 16, borderWidth: 1, padding: spacing.md },
+  reviewBannerTitle: { color: colors.warning, fontSize: 13, fontWeight: '900', letterSpacing: 1 },
   disclosure: { backgroundColor: colors.warningSurface, borderColor: colors.warningBorder, borderRadius: 16, borderWidth: 1, padding: spacing.md },
   disclosureTitle: { color: colors.warning, fontSize: 14, fontWeight: '900' },
   disclosureText: { color: colors.text, fontSize: 12, lineHeight: 18, marginTop: 6 },

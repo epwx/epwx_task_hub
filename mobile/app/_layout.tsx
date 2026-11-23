@@ -6,6 +6,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { colors } from '../src/theme';
 import { appKit } from '../src/appKit';
 import { AuthSessionProvider } from '../src/providers/AuthSessionProvider';
+import { ReviewAccessProvider } from '../src/providers/ReviewAccessProvider';
 
 export default function RootLayout() {
   const content = (
@@ -21,7 +22,9 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <StatusBar style="light" />
       <AuthSessionProvider>
-        {appKit ? <AppKitProvider instance={appKit}>{content}</AppKitProvider> : content}
+        <ReviewAccessProvider>
+          {appKit ? <AppKitProvider instance={appKit}>{content}</AppKitProvider> : content}
+        </ReviewAccessProvider>
       </AuthSessionProvider>
     </SafeAreaProvider>
   );

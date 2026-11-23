@@ -1,7 +1,7 @@
 import { useAccount, useAppKit, useProvider } from '@reown/appkit-react-native';
 import { BrowserProvider } from 'ethers';
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PageHeader } from '../../src/components/PageHeader';
@@ -9,6 +9,7 @@ import { connectWallet, requestWalletChallenge } from '../../src/auth';
 import { isAppKitConfigured } from '../../src/appKit';
 import { useAuthSession } from '../../src/providers/AuthSessionProvider';
 import { colors, spacing } from '../../src/theme';
+import { REVIEW_MODE, useReviewAccess } from '../../src/providers/ReviewAccessProvider';
 
 function WalletConfigurationNotice() {
   return (
@@ -110,11 +111,65 @@ function ConnectedWalletPanel() {
 }
 
 export default function WalletScreen() {
+  const review = useReviewAccess();
+  const [reviewUsername, setReviewUsername] = useState('');
+  const [reviewPassword, setReviewPassword] = useState('');
+  const [reviewError, setReviewError] = useState('');
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content}>
         <PageHeader eyebrow="Secure connection" title="Wallet" subtitle="WalletConnect authentication on Base, without exposing private keys." />
         {isAppKitConfigured ? <ConnectedWalletPanel /> : <WalletConfigurationNotice />}
+        {REVIEW_MODE ? (
+          <View style={styles.card}>
+            <Text style={styles.eyebrow}>GOOGLE PLAY REVIEW</Text>
+            <Text style={styles.title}>Reviewer access</Text>
+            <Text style={styles.text}>
+              This access opens a simulated Daily Claim flow. It never connects a wallet, creates a database
+              record, or transfers tokens.
+            </Text>
+            {reviewError ? <Text style={styles.error}>{reviewError}</Text> : null}
+            {review.enabled ? (
+              <Pressable style={styles.secondaryButton} onPress={() => void review.clear()}>
+                <Text style={styles.secondaryButtonText}>End reviewer access</Text>
+              </Pressable>
+            ) : (
+              <>
+                <TextInput
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  onChangeText={setReviewUsername}
+                  placeholder="Reviewer username"
+                  placeholderTextColor={colors.muted}
+                  style={styles.input}
+                  value={reviewUsername}
+                />
+                <TextInput
+                  autoCapitalize="none"
+                  onChangeText={setReviewPassword}
+                  placeholder="Reviewer password"
+                  placeholderTextColor={colors.muted}
+                  secureTextEntry
+                  style={styles.input}
+                  value={reviewPassword}
+                />
+                <Pressable
+                  style={styles.primaryButton}
+                  onPress={() => {
+                    if (!review.authenticate(reviewUsername, reviewPassword)) {
+                      setReviewError('Reviewer credentials are not valid.');
+                    } else {
+                      setReviewError('');
+                    }
+                  }}
+                >
+                  <Text style={styles.primaryButtonText}>Open reviewer mode</Text>
+                </Pressable>
+              </>
+            )}
+          </View>
+        ) : null}
       </ScrollView>
     </SafeAreaView>
   );
@@ -141,4 +196,5 @@ const styles = StyleSheet.create({
   sessionRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 },
   sessionLabel: { color: colors.muted },
   sessionValue: { color: colors.text, fontWeight: '900' },
+  input: { backgroundColor: colors.background, borderColor: colors.border, borderRadius: 10, borderWidth: 1, color: colors.text, marginTop: 12, padding: 13 },
 });

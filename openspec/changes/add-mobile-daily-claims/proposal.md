@@ -50,6 +50,10 @@ prevention logic.
 - Public configuration uses `EXPO_PUBLIC_*`; secrets remain backend-only.
 - The mobile app does not send a claim until all required client checks pass, but
   backend validation remains mandatory even when client checks indicate readiness.
+- Initial Play production distribution SHALL be limited to a legal-reviewed
+  country allowlist. Expansion to additional countries requires a new regional
+  crypto/token, age, promotion, tax, and privacy review plus updated Play and
+  backend controls before enabling availability.
 
 ## Impact
 
@@ -68,3 +72,4 @@ prevention logic.
 - Admin claim management
 - New reward tiers, cooldown rules, payout rules, or smart contracts
 - iOS and Play Store production submission
+- Worldwide production distribution

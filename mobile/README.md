@@ -92,3 +92,12 @@ The store description must not promise a guaranteed reward, token value,
 investment return, lifetime availability, payout timing, or odds. Publish the
 public privacy, terms, support, age/jurisdiction, and data-deletion information
 before requesting review.
+
+## Play reviewer build
+
+The `play-review` EAS profile produces an AAB with a clearly labeled, isolated
+review mode. Reviewer credentials unlock only simulated screens and cannot access
+the production claim endpoint or create token transfers.
+
+The real production profile does not enable reviewer mode. Replace the reviewer
+password in EAS with a build-specific value before creating an actual review AAB.
